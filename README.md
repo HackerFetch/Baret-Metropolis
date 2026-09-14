@@ -26,12 +26,15 @@ Bu tabloyu her önemli aşama geçişinde (repo açıldığında, ilk deploy old
 |---|---|---|
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Ürün ne, kimin için, uçtan uca ne yapıyor, MVP kapsamı | Projeye ilk kez bakan herkes / AI önce burayı okumalı |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Teknik mimari: monorepo yapısı, veri akışı, zincir sabitleri, ortam değişkenleri | Kod yazmaya başlamadan / bir modülü değiştirmeden önce |
+| [`docs/WALLET.md`](docs/WALLET.md) | Cüzdanın (extension + Mera destekli standalone) tüm yüzeyleri, ekranları, akışları | Cüzdan UI'sına dokunmadan önce |
+| [`docs/FRONTEND.md`](docs/FRONTEND.md) | Marketing/showcase sitesinin her sayfasının içerik spesifikasyonu (Home, Showcase, Agents, Docs, Install) — tasarım/palet içermez | Frontend sayfası yazarken/güncellerken |
 | [`docs/BOUNTIES_AND_TRACKS.md`](docs/BOUNTIES_AND_TRACKS.md) | Track seçimi, hedeflenen bounty'ler, tier listesi, her biri için durum takibi | Kapsam kararı verirken / "bunu yapmalı mıyız" sorusunda |
 | [`docs/RESOURCES.md`](docs/RESOURCES.md) | Hangi sponsor aracı nerede nasıl kullanılacak, claim takibi, env var listesi | Bir entegrasyona başlarken |
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Akıllı sözleşme spesifikasyonları, deploy tablosu, güvenlik kontrol listesi | Sözleşme yazarken/deploy ederken |
 | [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | x402 ödeme akışı ve facilitator tasarımı | x402/agent ödeme katmanına dokunurken |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6 haftalık takvim, haftalık checklist, ilerleyiş | Her hafta başı/sonu güncelle |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Alınan mimari/kapsam kararları ve gerekçeleri (ADR log) | Yeni bir karar alırken önce burayı kontrol et, sonra ekle |
+| `docs/BRAND.md` | Marka kimliği (isim, ton, görsel dil) | **Henüz yazılmadı** — içerik önerileri için sohbet geçmişine bakın, `DECISIONS.md`'de AK-8 olarak takip ediliyor |
 
 ---
 

@@ -48,6 +48,18 @@
 **Gerekçe:** Ürün şekli uyuşmuyor (trading arayüzü / mobil ödeme app / multimodal deneyim istiyorlar, Baret güvenlik katmanı).
 **Durum:** ✅ Kesin (Aurora Intents için hafif bir stretch olasılığı açık bırakıldı)
 
+### D-009 — Extension klasik seed-phrase kalıyor; Mera sadece `apps/wallet`'ta
+**Tarih:** 2026-09-14
+**Karar:** `apps/extension`'ın hesap katmanı Mera'ya taşınmıyor, klasik passphrase+seed self-custody modelini koruyor. Mera passkey entegrasyonu sadece `apps/wallet` (bağımsız standalone) içinde yapılıyor.
+**Gerekçe:** MV3 popup içinde WebAuthn/passkey akışının izin modeli ve güvenilirliği daha karmaşık; `apps/wallet` tam kontrolümüzde bir web sayfası olduğu için Mera'nın "seed phrase yok" vaadini çok daha temiz gösterir. Detay: `WALLET.md` §0, §3.
+**Durum:** ✅ Kesin
+
+### D-010 — Showcase site isimleri aynen korunuyor
+**Tarih:** 2026-09-14
+**Karar:** Baret-Stellar'daki 6 showcase sitesinin isimleri (SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD) değiştirilmeden kullanılacak.
+**Gerekçe:** Kullanıcı talimatı — bu isimler zaten jenerik/marka-tarafsız (bir ağın adını taşımıyorlar), tehdit senaryoları Monad/EVM'e uyarlandı (bkz. `FRONTEND.md` §2.3), sadece Stellar-özel mekanikler (trustline, AccountMerge) EVM eşdeğerleriyle (approval, setApprovalForAll) değiştirildi.
+**Durum:** ✅ Kesin
+
 ### D-008 — Persistans katmanı: Envio, in-memory audit trail'in yerini alacak
 **Tarih:** 2026-09-13
 **Karar:** Eski repolardaki "son 10.000 kayıt bellekte, restart'ta sıfırlanıyor" tasarımı terk edilecek; PaymentGuard/ReputationRegistry event'leri Envio HyperIndex ile indexlenip audit dashboard'unun birincil kaynağı olacak.
@@ -64,8 +76,10 @@
 | AK-2 | x402 demo senaryosunun adı (eski "scrybe" yerine) | `X402_FACILITATOR.md` §6, `apps/showcase` | Hafta 2 |
 | AK-3 | RPC istemcisi: ethers.js mi viem mi? | `ARCHITECTURE.md` §3 | Hafta 1 |
 | AK-4 | Cleanverse için Baret tarafında ek bir "gated asset" demo kontratı gerekiyor mu? | `CONTRACTS.md` §4 | Hafta 3 |
-| AK-5 | Showcase'deki tehdit senaryolarının Monad-temalı yeni isimleri | `ARCHITECTURE.md` §8.4 | Hafta 2 |
 | AK-6 | Track-etiketli bounty'lerin (Kuru/Agora/MetaMask plugin) kazanılması için ayrı track submission'ı gerekip gerekmediği | `BOUNTIES_AND_TRACKS.md` §1 | Platform netleştiğinde |
 | AK-7 | Best Community Team Project eligibility — "community supporter" statüsü teyidi | `BOUNTIES_AND_TRACKS.md` §2 satır 9 | Hafta 4 |
+| AK-8 | `BRAND.md` içeriği — isim/wordmark, ton, renk-nötr görsel dil ilkeleri (Güvenlik + Build teması) | `BRAND.md` (henüz yok) | Kullanıcı yön verince yazılacak |
+
+**Not (AK-5, çözüldü):** Showcase site isimleri Monad-temalı yeniden adlandırılmıyor, orijinal isimler korunuyor — bkz. D-010.
 
 **Kural:** Bir açık karar netleştiğinde bu tablodan silinir, yukarıya numaralı bir D-XXX satırı olarak eklenir ve etkilediği diğer dosyalar (`ARCHITECTURE.md`, `CONTRACTS.md`, vb.) aynı anda güncellenir.
