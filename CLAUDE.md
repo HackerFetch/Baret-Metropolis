@@ -11,7 +11,7 @@ Baret, Monad üzerinde bir cüzdanın, dApp'in veya AI agent'ın bir işlemi imz
 | Kişi | Git kimliği | Rol | Sahip olduğu alanlar |
 |---|---|---|---|
 | **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | Tüm UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/showcase-ui`, marka/`docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Ayrıca her şeyin testi:** kontratlar, backend, SDK, uçtan uca akışlar — test yazma, test çalıştırma, bug raporlama Meriç'te. |
-| **Ezgin** | (GitHub kimliği eklenecek) | **Backend + Contracts + System Developer** | `apps/server` (analiz motoru, dedektörler, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API entegrasyonları (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
+| **Ezgin** | GitHub `Aeztrest` / ezgincapkan64@gmail.com (eski Baret repolarının yazarı) | **Backend + Contracts + System Developer** | `apps/server` (analiz motoru, dedektörler, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API entegrasyonları (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
 
 ## Oturum başlangıcında yapılacaklar (her ajan, her seferinde)
 

@@ -34,6 +34,7 @@ Bu tabloyu her önemli aşama geçişinde (repo açıldığında, ilk deploy old
 | [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | x402 ödeme akışı ve facilitator tasarımı | x402/agent ödeme katmanına dokunurken |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6 haftalık takvim, haftalık checklist, ilerleyiş | Her hafta başı/sonu güncelle |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Alınan mimari/kapsam kararları ve gerekçeleri (ADR log) | Yeni bir karar alırken önce burayı kontrol et, sonra ekle |
+| [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | 5 eski Baret versiyonunun (EVM, Stellar, Casper, Midnight, OKX) karşılaştırmalı incelemesi: ne yeniden kullanılır, hangi hatalar tekrarlanmaz | Bir modülü yazmaya başlamadan önce ilgili bölümü oku |
 | `docs/BRAND.md` | Marka kimliği (isim, ton, görsel dil) | **Henüz yazılmadı** — içerik önerileri için sohbet geçmişine bakın, `DECISIONS.md`'de AK-8 olarak takip ediliyor |
 
 ---
