@@ -58,4 +58,4 @@ The five previous Baret versions (EVM, Stellar, Casper, Midnight, OKX) live loca
 
 ## Language
 
-Talk to the user in Turkish. Code, commit messages, code comments and technical docs outside README may be in English; the existing `docs/` set is in Turkish, so continue in Turkish there.
+**Everything in the repository is English**: code, comments, commit messages, README, `docs/`, `tasks/`, UI copy. No Turkish text anywhere in files. The only exception: **talk to the user in Turkish** in the chat (Meriç asked for this explicitly).

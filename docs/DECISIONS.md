@@ -1,85 +1,85 @@
-# Baret — Karar Günlüğü (ADR Log)
+# Baret — Decision Log (ADR Log)
 
-> Format: her karar için Tarih, Karar, Gerekçe, Değerlendirilen alternatifler, Durum. **Yeni bir mimari/kapsam kararı almadan önce bu dosyayı tara** — aynı tartışma tekrar yapılmasın. Karar değişirse eski satır silinmez, "Güncellendi →" ile yeni karara referans verilir.
-
----
-
-### D-001 — Sıfırdan repo, taze git geçmişi
-**Tarih:** 2026-09-13
-**Karar:** Yeni bir git repo açılacak, commit geçmişi bugünden başlayacak. `Baret-Stellar` ve `Baret-EVM` repolarının git geçmişi taşınmayacak.
-**Gerekçe:** Hackathon kuralı/kullanıcı talimatı — proje Monad Metropolis için "sıfırdan" yapılmış olarak sunulmalı.
-**Alternatif:** Baret-EVM'i fork edip temizlemek — reddedildi, git geçmişi eski commit'leri taşır.
-**Durum:** ✅ Kesin
-
-### D-002 — İsim: Baret
-**Tarih:** 2026-09-13
-**Karar:** Proje adı her yerde "Baret". Eski kod adları (`Premon`, `stellar-thorn`, `Blackthorn`, `DELTAG_*`) kullanılmayacak.
-**Gerekçe:** Kullanıcı talebi; marka tutarlılığı.
-**Durum:** ✅ Kesin
-
-### D-003 — Sadece Monad, "any EVM chain" genellemesi yok
-**Tarih:** 2026-09-13
-**Karar:** `chain.ts` sadece `testnet` (10143) ve `mainnet` (143) içerir. Env değişkenleri `MONAD_TESTNET_*` / `MONAD_MAINNET_*` olarak adlandırılır (genel `RPC_URL`/`CHAIN_ID` değil).
-**Gerekçe:** Kullanıcı talimatı — hiçbir dosyada başka ağ adı geçmeyecek; Baret-EVM'in son commit'i tam tersini yapmıştı ("generalize from Monad to any EVM chain"), burada bilerek tersine çevriliyor.
-**Durum:** ✅ Kesin
-
-### D-004 — Ana track: Trust, Identity & AI Infrastructure
-**Tarih:** 2026-09-13
-**Karar:** Consumer Products & Payments veya Onchain Finance & Trading yerine Trust/Identity/AI Infra track'i seçildi.
-**Gerekçe:** Bkz. `BOUNTIES_AND_TRACKS.md` §1.
-**Durum:** ✅ Kesin
-
-### D-005 — Dynamic seçildi, Privy atlandı
-**Tarih:** 2026-09-13
-**Karar:** Agent/server wallet + delegasyon için Dynamic SDK kullanılacak; Privy bounty'si hedeflenmeyecek.
-**Gerekçe:** İkisi de aynı "wallet/onboarding SDK" slotunu dolduruyor; ikisini derinlemesine entegre etmek efor israfı ve ürün anlatısını bulanıklaştırır. Dynamic'in headless/agent-wallet/CLI odağı `agent-kit`'in ihtiyacına daha iyi oturuyor.
-**Alternatif:** Privy → `apps/wallet`'ta insan onboarding'i için kullanmak — reddedildi, Mera zaten o slotu (insan hesap katmanı) dolduruyor; 3 wallet SDK'sı birden fazla.
-**Durum:** ✅ Kesin (kapasite büyürse yeniden açılabilir)
-
-### D-006 — Mera, apps/wallet'ın hesap katmanı; Dynamic, agent-kit'in hesap katmanı
-**Tarih:** 2026-09-13
-**Karar:** İki farklı yüzey (insan cüzdanı vs. agent/server wallet), iki farklı sponsor SDK'sı — çakışma yok.
-**Gerekçe:** Her bounty'nin "beyond login" / "core to product" şartını gerçek, ayrı bir kullanım alanında karşılamak.
-**Durum:** ✅ Kesin
-
-### D-007 — Kuru/Perpl trading bounty'leri, Agora bounty'leri, Aurora Intents, Hunyuan atlandı
-**Tarih:** 2026-09-13
-**Karar:** Bkz. `BOUNTIES_AND_TRACKS.md` §4.
-**Gerekçe:** Ürün şekli uyuşmuyor (trading arayüzü / mobil ödeme app / multimodal deneyim istiyorlar, Baret güvenlik katmanı).
-**Durum:** ✅ Kesin (Aurora Intents için hafif bir stretch olasılığı açık bırakıldı)
-
-### D-009 — Extension klasik seed-phrase kalıyor; Mera sadece `apps/wallet`'ta
-**Tarih:** 2026-09-14
-**Karar:** `apps/extension`'ın hesap katmanı Mera'ya taşınmıyor, klasik passphrase+seed self-custody modelini koruyor. Mera passkey entegrasyonu sadece `apps/wallet` (bağımsız standalone) içinde yapılıyor.
-**Gerekçe:** MV3 popup içinde WebAuthn/passkey akışının izin modeli ve güvenilirliği daha karmaşık; `apps/wallet` tam kontrolümüzde bir web sayfası olduğu için Mera'nın "seed phrase yok" vaadini çok daha temiz gösterir. Detay: `WALLET.md` §0, §3.
-**Durum:** ✅ Kesin
-
-### D-010 — Showcase site isimleri aynen korunuyor
-**Tarih:** 2026-09-14
-**Karar:** Baret-Stellar'daki 6 showcase sitesinin isimleri (SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD) değiştirilmeden kullanılacak.
-**Gerekçe:** Kullanıcı talimatı — bu isimler zaten jenerik/marka-tarafsız (bir ağın adını taşımıyorlar), tehdit senaryoları Monad/EVM'e uyarlandı (bkz. `FRONTEND.md` §2.3), sadece Stellar-özel mekanikler (trustline, AccountMerge) EVM eşdeğerleriyle (approval, setApprovalForAll) değiştirildi.
-**Durum:** ✅ Kesin
-
-### D-008 — Persistans katmanı: Envio, in-memory audit trail'in yerini alacak
-**Tarih:** 2026-09-13
-**Karar:** Eski repolardaki "son 10.000 kayıt bellekte, restart'ta sıfırlanıyor" tasarımı terk edilecek; PaymentGuard/ReputationRegistry event'leri Envio HyperIndex ile indexlenip audit dashboard'unun birincil kaynağı olacak.
-**Gerekçe:** Hem Envio bounty'sini organik hale getiriyor hem de gerçek bir ürün eksikliğini (kalıcı audit yok) çözüyor.
-**Durum:** ✅ Kesin
+> Format: for every decision, Date, Decision, Rationale, Alternatives considered, Status. **Scan this file before taking a new architecture/scope decision** — so the same discussion is not repeated. If a decision changes, the old entry is not deleted; it points to the new decision with "Updated →".
 
 ---
 
-## Açık Kararlar (henüz verilmedi — ilerledikçe doldurulacak)
+### D-001 — Repo from scratch, fresh git history
+**Date:** 2026-09-13
+**Decision:** A new git repo will be created; commit history will start today. The git history of the `Baret-Stellar` and `Baret-EVM` repos will not be carried over.
+**Rationale:** Hackathon rule / user instruction — the project must be presented as built "from scratch" for Monad Metropolis.
+**Alternative:** Fork Baret-EVM and clean it up — rejected, the git history would carry the old commits.
+**Status:** ✅ Final
 
-| # | Konu | Nerede etkiliyor | Karar tarihi |
+### D-002 — Name: Baret
+**Date:** 2026-09-13
+**Decision:** The project name is "Baret" everywhere. The old code names (`Premon`, `stellar-thorn`, `Blackthorn`, `DELTAG_*`) will not be used.
+**Rationale:** User request; brand consistency.
+**Status:** ✅ Final
+
+### D-003 — Monad only, no "any EVM chain" generalization
+**Date:** 2026-09-13
+**Decision:** `chain.ts` contains only `testnet` (10143) and `mainnet` (143). Env variables are named `MONAD_TESTNET_*` / `MONAD_MAINNET_*` (not generic `RPC_URL`/`CHAIN_ID`).
+**Rationale:** User instruction — no other network's name will appear in any file; Baret-EVM's last commit did the exact opposite ("generalize from Monad to any EVM chain"), and that is being deliberately reversed here.
+**Status:** ✅ Final
+
+### D-004 — Main track: Trust, Identity & AI Infrastructure
+**Date:** 2026-09-13
+**Decision:** The Trust/Identity/AI Infra track was chosen instead of Consumer Products & Payments or Onchain Finance & Trading.
+**Rationale:** See `BOUNTIES_AND_TRACKS.md` §1.
+**Status:** ✅ Final
+
+### D-005 — Dynamic chosen, Privy skipped
+**Date:** 2026-09-13
+**Decision:** The Dynamic SDK will be used for agent/server wallet + delegation; the Privy bounty will not be targeted.
+**Rationale:** Both fill the same "wallet/onboarding SDK" slot; integrating both in depth is wasted effort and blurs the product narrative. Dynamic's headless/agent-wallet/CLI focus fits `agent-kit`'s needs better.
+**Alternative:** Privy → use it for human onboarding in `apps/wallet` — rejected, Mera already fills that slot (the human account layer); 3 wallet SDKs is too many.
+**Status:** ✅ Final (can be reopened if capacity grows)
+
+### D-006 — Mera is the account layer of apps/wallet; Dynamic is the account layer of agent-kit
+**Date:** 2026-09-13
+**Decision:** Two different surfaces (human wallet vs. agent/server wallet), two different sponsor SDKs — no overlap.
+**Rationale:** Meet each bounty's "beyond login" / "core to product" requirement in a real, separate use case.
+**Status:** ✅ Final
+
+### D-007 — Kuru/Perpl trading bounties, Agora bounties, Aurora Intents, Hunyuan skipped
+**Date:** 2026-09-13
+**Decision:** See `BOUNTIES_AND_TRACKS.md` §4.
+**Rationale:** Product shape does not match (they want a trading interface / mobile payment app / multimodal experience; Baret is a security layer).
+**Status:** ✅ Final (a slight stretch possibility was left open for Aurora Intents)
+
+### D-009 — Extension stays classic seed-phrase; Mera only in `apps/wallet`
+**Date:** 2026-09-14
+**Decision:** The account layer of `apps/extension` is not being moved to Mera; it keeps the classic passphrase+seed self-custody model. The Mera passkey integration is done only inside `apps/wallet` (the independent standalone).
+**Rationale:** The permission model and reliability of a WebAuthn/passkey flow inside an MV3 popup are more complicated; since `apps/wallet` is a web page fully under our control, it demonstrates Mera's "no seed phrase" promise much more cleanly. Details: `WALLET.md` §0, §3.
+**Status:** ✅ Final
+
+### D-010 — Showcase site names kept as they are
+**Date:** 2026-09-14
+**Decision:** The names of the 6 showcase sites from Baret-Stellar (SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD) will be used unchanged.
+**Rationale:** User instruction — these names are already generic/brand-neutral (they do not carry any network's name), the threat scenarios were adapted to Monad/EVM (see `FRONTEND.md` §2.3), and only the Stellar-specific mechanics (trustline, AccountMerge) were replaced with their EVM equivalents (approval, setApprovalForAll).
+**Status:** ✅ Final
+
+### D-008 — Persistence layer: Envio will replace the in-memory audit trail
+**Date:** 2026-09-13
+**Decision:** The "last 10,000 records in memory, reset on restart" design from the old repos will be abandoned; PaymentGuard/ReputationRegistry events will be indexed with Envio HyperIndex and become the primary source of the audit dashboard.
+**Rationale:** It both makes the Envio bounty organic and solves a real product gap (no persistent audit).
+**Status:** ✅ Final
+
+---
+
+## Open Decisions (not yet taken — to be filled in as we progress)
+
+| # | Topic | Where it has impact | Decision date |
 |---|---|---|---|
-| AK-1 | Kendi x402 facilitator'ımızı mı yazacağız yoksa standart birini mi kullanacağız? | `X402_FACILITATOR.md` §4.4 | Hafta 4'te netleşecek |
-| AK-2 | x402 demo senaryosunun adı (eski "scrybe" yerine) | `X402_FACILITATOR.md` §6, `apps/showcase` | Hafta 2 |
-| AK-3 | RPC istemcisi: ethers.js mi viem mi? | `ARCHITECTURE.md` §3 | Hafta 1 |
-| AK-4 | Cleanverse için Baret tarafında ek bir "gated asset" demo kontratı gerekiyor mu? | `CONTRACTS.md` §4 | Hafta 3 |
-| AK-6 | Track-etiketli bounty'lerin (Kuru/Agora/MetaMask plugin) kazanılması için ayrı track submission'ı gerekip gerekmediği | `BOUNTIES_AND_TRACKS.md` §1 | Platform netleştiğinde |
-| AK-7 | Best Community Team Project eligibility — "community supporter" statüsü teyidi | `BOUNTIES_AND_TRACKS.md` §2 satır 9 | Hafta 4 |
-| AK-8 | `BRAND.md` içeriği — isim/wordmark, ton, renk-nötr görsel dil ilkeleri (Güvenlik + Build teması) | `BRAND.md` (henüz yok) | Kullanıcı yön verince yazılacak |
+| AK-1 | Will we write our own x402 facilitator or use a standard one? | `X402_FACILITATOR.md` §4.4 | To be settled in Week 4 |
+| AK-2 | Name of the x402 demo scenario (replacing the old "scrybe") | `X402_FACILITATOR.md` §6, `apps/showcase` | Week 2 |
+| AK-3 | RPC client: ethers.js or viem? | `ARCHITECTURE.md` §3 | Week 1 |
+| AK-4 | Is an additional "gated asset" demo contract needed on the Baret side for Cleanverse? | `CONTRACTS.md` §4 | Week 3 |
+| AK-6 | Whether a separate track submission is required to win the track-tagged bounties (Kuru/Agora/MetaMask plugin) | `BOUNTIES_AND_TRACKS.md` §1 | When the platform clarifies |
+| AK-7 | Best Community Team Project eligibility — confirmation of "community supporter" status | `BOUNTIES_AND_TRACKS.md` §2 row 9 | Week 4 |
+| AK-8 | `BRAND.md` content — name/wordmark, tone, color-neutral visual language principles (Security + Build theme) | `BRAND.md` (does not exist yet) | To be written once the user gives direction |
 
-**Not (AK-5, çözüldü):** Showcase site isimleri Monad-temalı yeniden adlandırılmıyor, orijinal isimler korunuyor — bkz. D-010.
+**Note (AK-5, resolved):** Showcase site names are not being renamed with a Monad theme; the original names are kept — see D-010.
 
-**Kural:** Bir açık karar netleştiğinde bu tablodan silinir, yukarıya numaralı bir D-XXX satırı olarak eklenir ve etkilediği diğer dosyalar (`ARCHITECTURE.md`, `CONTRACTS.md`, vb.) aynı anda güncellenir.
+**Rule:** When an open decision is settled, it is removed from this table, added above as a numbered D-XXX entry, and the other files it affects (`ARCHITECTURE.md`, `CONTRACTS.md`, etc.) are updated at the same time.

@@ -1,17 +1,17 @@
-# Ezgin için görevler
+# Tasks for Ezgin
 
-> Meriç (frontend + QA) tarafından Ezgin'e (backend + contracts + system) bırakılan işler. Format ve kurallar: `CLAUDE.md` → "Görev aktarımı". Yeni görev en üste eklenir. Bug'lar 🐛 ile başlar.
+> Work left by Meriç (frontend + QA) for Ezgin (backend + contracts + system). Format and rules: `CLAUDE.md` → "Task handoff". New tasks are added at the top. Bugs start with 🐛.
 
-## Bekleyen
+## Open
 
-- [ ] **Referans repo incelemesini oku** — `docs/REFERENCE_REPOS.md` (5 eski repo karşılaştırması). Özellikle §3 "tekrarlayan hatalar" ve §4.1 backend/kontrat kısmı. Baret-EVM'deki `PaymentGuard.sol` en yakın başlangıç ama agent allowlist, gerçek kayan pencere, SafeERC20 ve withdraw rezervi eklenmeli. Bırakan: Meriç · Tarih: 2026-09-15
-- [ ] **Ölü kod yasağı** — Yeni server'da tanımlanan her finding kodu bir dedektör tarafından emit edilmeli, her `GuardPolicy` alanı motor tarafından okunmalı (eski repolarda 11–18 ölü kod/alan vardı). Meriç bunu test edecek; tanımlarken listeyi `docs/ARCHITECTURE.md` §6–§7 ile senkron tut. Bırakan: Meriç · Tarih: 2026-09-15
+- [ ] **Read the reference repo review** — `docs/REFERENCE_REPOS.md` (comparison of the 5 old repos). Especially §3 "repeated mistakes" and the §4.1 backend/contract part. `PaymentGuard.sol` from Baret-EVM is the closest starting point, but the agent allowlist, a truly rolling window, SafeERC20 and the withdraw reserve must be added. Left by: Meriç · Date: 2026-09-15
+- [ ] **Dead code ban** — Every finding code defined in the new server must be emitted by a detector, and every `GuardPolicy` field must be read by the engine (the old repos had 11–18 dead codes/fields). Meriç will test this; while defining them, keep the list in sync with `docs/ARCHITECTURE.md` §6–§7. Left by: Meriç · Date: 2026-09-15
 
-- [ ] **Hafta 1 iskeleti** — pnpm workspace (`apps/`, `packages/`, `contracts/`, `workflows/`, `indexer/`) + `apps/server` boş Fastify uygulaması + `/health` endpoint'i. Meriç'in showcase/extension'ı bağlayabilmesi için önce bu lazım. Bkz. `docs/ROADMAP.md` Hafta 1. Bırakan: Meriç · Tarih: 2026-09-15
-- [ ] **PaymentGuard.sol** — `docs/CONTRACTS.md` §2'deki spec'e göre yaz, Foundry testleri (cap aşımı, revoke sonrası pay revert, withdraw rezerv) + Monad testnet deploy, adresi `docs/CONTRACTS.md` §2.6'ya yaz. Meriç deploy sonrası `cast call` ve UI üzerinden test edecek. Bırakan: Meriç · Tarih: 2026-09-15
-- [ ] **`/v1/analyze` sözleşmesi** — Request/response şemasını (Zod) ve `GuardPolicy` tipini `packages/guard` içinde erken yayınla ki extension/showcase mock'suz bağlanabilsin. Şema `docs/ARCHITECTURE.md` §5 ve §7 ile aynı olmalı. Bırakan: Meriç · Tarih: 2026-09-15
-- [ ] **AK-3 kararı** — ethers mi viem mi? `docs/DECISIONS.md`'ye D-011 olarak yaz; frontend paketleri aynı kütüphaneyi kullanacak. Bırakan: Meriç · Tarih: 2026-09-15
+- [ ] **Week 1 skeleton** — pnpm workspace (`apps/`, `packages/`, `contracts/`, `workflows/`, `indexer/`) + empty Fastify app in `apps/server` + `/health` endpoint. This is needed first so that Meriç can wire up the showcase/extension. See `docs/ROADMAP.md` Week 1. Left by: Meriç · Date: 2026-09-15
+- [ ] **PaymentGuard.sol** — Write it according to the spec in `docs/CONTRACTS.md` §2, Foundry tests (cap overflow, pay reverts after revoke, withdraw reserve) + Monad testnet deploy, write the address into `docs/CONTRACTS.md` §2.6. Meriç will test via `cast call` and the UI after deploy. Left by: Meriç · Date: 2026-09-15
+- [ ] **`/v1/analyze` contract** — Publish the request/response schema (Zod) and the `GuardPolicy` type early inside `packages/guard` so that the extension/showcase can connect without mocks. The schema must match `docs/ARCHITECTURE.md` §5 and §7. Left by: Meriç · Date: 2026-09-15
+- [ ] **AK-3 decision** — ethers or viem? Write it into `docs/DECISIONS.md` as D-011; the frontend packages will use the same library. Left by: Meriç · Date: 2026-09-15
 
-## Tamamlananlar
+## Done
 
-_(henüz yok)_
+_(none yet)_

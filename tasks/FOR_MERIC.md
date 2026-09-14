@@ -1,12 +1,12 @@
-# Meriç için görevler
+# Tasks for Meriç
 
-> Ezgin (backend + contracts + system) tarafından Meriç'e (frontend + QA) bırakılan işler. Format ve kurallar: `CLAUDE.md` → "Görev aktarımı". Yeni görev en üste eklenir.
+> Work left by Ezgin (backend + contracts + system) for Meriç (frontend + QA). Format and rules: `CLAUDE.md` → "Task handoff". New tasks are added at the top.
 
-## Bekleyen
+## Open
 
-- [ ] **`docs/BRAND.md`** — henüz yazılmadı, 5 doküman ona referans veriyor (AK-8). İsim/wordmark, ton, renk-nötr görsel dil ilkeleri. Bırakan: (self, planlama) · Tarih: 2026-09-15
-- [ ] **Doküman çelişkilerini temizle** — showcase isimleri (D-010 "aynen kalıyor" vs ARCHITECTURE §8.4 / ROADMAP Hafta 2 "yeni isimler"), FRONTEND'deki "25+ dedektör" / "1 sözleşme" rakamları, README'deki "git repo açılmadı" satırı, DECISIONS sıralaması (D-008 sonda). Bırakan: (self, planlama) · Tarih: 2026-09-15
+- [ ] **`docs/BRAND.md`** — not written yet, 5 documents reference it (AK-8). Name/wordmark, tone, color-neutral visual language principles. Left by: (self, planning) · Date: 2026-09-15
+- [ ] **Clean up documentation contradictions** — showcase names (D-010 "stay as is" vs ARCHITECTURE §8.4 / ROADMAP Week 2 "new names"), the "25+ detectors" / "1 contract" figures in FRONTEND, the "git repo not created" line in the README, DECISIONS ordering (D-008 at the end). Left by: (self, planning) · Date: 2026-09-15
 
-## Tamamlananlar
+## Done
 
-_(henüz yok)_
+_(none yet)_

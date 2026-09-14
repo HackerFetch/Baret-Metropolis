@@ -1,81 +1,81 @@
-# Baret — Track & Bounty Stratejisi
+# Baret — Track & Bounty Strategy
 
-> Bu dosya "neyi neden hedefliyoruz / hedeflemiyoruz" sorusunun tek otoritesidir. Kapsam tartışması çıktığında önce burası kontrol edilir. Durum sütunları ilerledikçe güncellenmelidir.
+> This file is the single authority on "what we target and why / what we do not target". When a scope debate comes up, check here first. The Status columns must be updated as work progresses.
 
-Son güncelleme: 2026-09-13 · Kaynak: `Bounties.txt` (2026-09-13 itibarıyla platformdan alınmış tracks & bounties listesi)
-
----
-
-## 1. Track Seçimi
-
-**Seçilen ana track: Trust, Identity & AI Infrastructure — $30,000**
-
-**Gerekçe:** Baret bire bir "Protocol-level primitives for trust, provenance, and user-owned data that make AI genuinely useful without any single platform capturing the value" tanımına giriyor. Agent guard, policy-bound/zaman-sınırlı/iptal edilebilir delegasyon, x402 firewall, on-chain itibar registry — hepsi bu track'in çekirdek teması. Diğer track'lerdeki rakip havuzu muhtemelen daha "ürün" ağırlıklı olacağından, Baret burada altyapı olarak daha net farklılaşır.
-
-**Değerlendirilip elenen alternatifler:**
-- *Consumer Products & Payments* — Baret bir tüketici finansal ürünü değil, bir güvenlik katmanı; zorlarsak konumlandırma bulanıklaşır.
-- *Onchain Finance & Trading* — Baret trading arayüzü değil; MetaMask plugin bounty'si bu track'te olsa da proje kimliğini buraya taşımak yanlış.
-
-> **Doğrulanması gereken açık soru:** Track-etiketli sponsor bounty'lerinin (ör. Kuru, Agora, MetaMask plugin → Onchain Finance & Trading) kazanılması için projenin *o* track'te de gönderilmesi mi gerekiyor, yoksa bounty'ler ana track'ten bağımsız mı değerlendiriliyor? Platform netleştiğinde bu dosyaya not düşülecek. Bu belirsizlik plana yansıtıldı: track-uyumsuz bounty'ler için efor ayrılmadı, sadece "All tracks" etiketli veya doğal track uyumu olanlar planlandı.
+Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulled from the platform as of 2026-09-13)
 
 ---
 
-## 2. Tier S — Kesin Hedef (mimarinin doğal parçası)
+## 1. Track Selection
 
-| # | Bounty | Sponsor | Tutar | Track | Nasıl kazanılır | Sorumlu bileşen | Durum |
+**Selected main track: Trust, Identity & AI Infrastructure — $30,000**
+
+**Rationale:** Baret fits the definition "Protocol-level primitives for trust, provenance, and user-owned data that make AI genuinely useful without any single platform capturing the value" one-to-one. Agent guard, policy-bound/time-limited/revocable delegation, x402 firewall, on-chain reputation registry — all of these are the core theme of this track. Since the competitor pool in the other tracks will probably be more "product"-heavy, Baret differentiates more clearly here as infrastructure.
+
+**Alternatives evaluated and rejected:**
+- *Consumer Products & Payments* — Baret is not a consumer financial product but a security layer; forcing it in blurs the positioning.
+- *Onchain Finance & Trading* — Baret is not a trading interface; even though the MetaMask plugin bounty lives in this track, moving the project's identity there would be wrong.
+
+> **Open question that needs verification:** To win track-tagged sponsor bounties (e.g. Kuru, Agora, MetaMask plugin → Onchain Finance & Trading), does the project also have to be submitted in *that* track, or are bounties evaluated independently of the main track? A note will be added to this file once the platform clarifies. This uncertainty has been reflected in the plan: no effort was allocated to track-incompatible bounties; only those tagged "All tracks" or with a natural track fit were planned.
+
+---
+
+## 2. Tier S — Firm Targets (natural part of the architecture)
+
+| # | Bounty | Sponsor | Amount | Track | How to win | Responsible component | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | Ana track ödülü | Monad Foundation | $30,000 | Trust/Identity/AI | Ürün bütünlüğü + demo kalitesi | Tüm proje | ⬜ Başlanmadı |
-| 2 | Best use of Nansen | Nansen AI | $5,000 (havuz) | All tracks | `reputation.ts` dedektörü Nansen API/CLI/MCP ile adres segmentasyonu yapar (whale/fresh/market-maker/public figure) — ham skor değil, segment gösterilir | `apps/server/src/risk/detectors/reputation.ts` | ⬜ Başlanmadı |
-| 3 | Best Use of Dynamic | Dynamic | $5,000 | All tracks | `agent-kit` içinde autonomous/server wallet + delegated permission modeli — login-only DEĞİL | `packages/agent-kit` | ⬜ Başlanmadı |
-| 4 | Best Mera-Powered UX on Monad | Monad Foundation | $2,500 | All tracks | `apps/wallet` tamamen Mera passkey account layer — seed phrase yok | `apps/wallet` | ⬜ Başlanmadı |
-| 5 | Mera: One Passkey, Many Keys | Monad Foundation | $2,500 | All tracks | PaymentGuard'ın agent imzalayıcısı Mera PRF-türetilmiş sub-key'den geliyor (non-wallet, yaratıcı kullanım) | `apps/wallet` + `contracts/PaymentGuard.sol` | ⬜ Başlanmadı |
-| 6 | Best Integration of Cleanverse | Cleanverse | $2,000 | Trust/Identity/AI | Compliance detector: CVI doğrulaması geçmeyen transfer asla yürümüyor (silinince ürün kırılıyor testi) | `risk/detectors/compliance.ts` | ⬜ Başlanmadı |
-| 7 | Best Use of Envio | Envio | $1,000 | All tracks | PaymentGuard + ReputationRegistry event'leri HyperIndex ile indexlenip audit dashboard'u besliyor | `indexer/` | ⬜ Başlanmadı |
-| 8 | Best Projects using Alchemy | Alchemy | $1,000 kredi | All tracks | RPC + `debug_traceCall` + Smart Wallets SDK (gas sponsorship) + webhook izleme + Alchemy CLI dev akışında | `apps/server/src/infra/`, agent gas sponsorship | ⬜ Başlanmadı |
-| 9 | Best Community Team Project | Monad Foundation | $5,000 | All tracks | Ek iş yok — platformda "community supporter" statüsünü doğrula | — | ⬜ Doğrulanmadı |
+| 1 | Main track prize | Monad Foundation | $30,000 | Trust/Identity/AI | Product completeness + demo quality | Whole project | ⬜ Not started |
+| 2 | Best use of Nansen | Nansen AI | $5,000 (pool) | All tracks | The `reputation.ts` detector performs address segmentation via the Nansen API/CLI/MCP (whale/fresh/market-maker/public figure) — the segment is shown, not a raw score | `apps/server/src/risk/detectors/reputation.ts` | ⬜ Not started |
+| 3 | Best Use of Dynamic | Dynamic | $5,000 | All tracks | Autonomous/server wallet + delegated permission model inside `agent-kit` — NOT login-only | `packages/agent-kit` | ⬜ Not started |
+| 4 | Best Mera-Powered UX on Monad | Monad Foundation | $2,500 | All tracks | `apps/wallet` is entirely a Mera passkey account layer — no seed phrase | `apps/wallet` | ⬜ Not started |
+| 5 | Mera: One Passkey, Many Keys | Monad Foundation | $2,500 | All tracks | PaymentGuard's agent signer comes from a Mera PRF-derived sub-key (non-wallet, creative use) | `apps/wallet` + `contracts/PaymentGuard.sol` | ⬜ Not started |
+| 6 | Best Integration of Cleanverse | Cleanverse | $2,000 | Trust/Identity/AI | Compliance detector: a transfer that fails CVI verification never goes through (the "remove it and the product breaks" test) | `risk/detectors/compliance.ts` | ⬜ Not started |
+| 7 | Best Use of Envio | Envio | $1,000 | All tracks | PaymentGuard + ReputationRegistry events are indexed with HyperIndex and feed the audit dashboard | `indexer/` | ⬜ Not started |
+| 8 | Best Projects using Alchemy | Alchemy | $1,000 credits | All tracks | RPC + `debug_traceCall` + Smart Wallets SDK (gas sponsorship) + webhook monitoring + Alchemy CLI in the dev workflow | `apps/server/src/infra/`, agent gas sponsorship | ⬜ Not started |
+| 9 | Best Community Team Project | Monad Foundation | $5,000 | All tracks | No extra work — verify "community supporter" status on the platform | — | ⬜ Not verified |
 
-**Tier S toplam potansiyel (ana track hariç): ~$24,000**
+**Tier S total potential (excluding the main track): ~$24,000**
 
 ---
 
-## 3. Tier A — Kapasite Kalırsa (orta efor, düşük çakışma, iyi anlatı)
+## 3. Tier A — If Capacity Remains (medium effort, low overlap, good narrative)
 
-| # | Bounty | Sponsor | Tutar | Track | Nasıl kazanılır | Sorumlu bileşen | Durum |
+| # | Bounty | Sponsor | Amount | Track | How to win | Responsible component | Status |
 |---|---|---|---|---|---|---|---|
-| 10 | Best workflow with CRE | Chainlink | $3,000 | All tracks | "Reputation oracle" workflow: dış tehdit-istihbaratı API'si → CRE → `ReputationRegistry.sol`'a doğrulanmış yazma. Simülasyon kaydı bile hackathon'da kabul edilebilir | `workflows/reputation-oracle`, `contracts/ReputationRegistry.sol` | ⬜ Başlanmadı |
-| 11 | Best Builds with Qwen 3.8 Max | Alibaba Cloud | $5,000 kredi | Trust/Identity/AI | `agent-kit`'e "adversarial CFO agent" katmanı — agent imzalamadan önce Qwen pending tx'i policy+bağlamla değerlendirip veto edebilir | `packages/agent-kit` (reviewer hook) | ⬜ Başlanmadı |
-| 12 | Best Agent Wallet Plugin | Metamask | $2,500 | Onchain Finance & Trading | Baret guard/policy motoru MetaMask Agent Wallet plugin manifest'i olarak paketlenir | `packages/metamask-plugin` | ⬜ Başlanmadı |
-| 13 | Best Builds Powered by KIMI | Kimi (Moonshot AI) | $3,000 kredi | All tracks | Risk bulgularını düz dille açıklayan LLM katmanı (`baret_explain` MCP aracı / popup metni) | `apps/server/src/mcp/`, extension popup | ⬜ Başlanmadı |
-| 14 | Best Analytics / Risk Tool | Perpl | $3,000 | Onchain Finance & Trading | Audit dashboard'a Perpl pozisyon-likidasyon riski paneli (opsiyonel veri kaynağı) | `apps/server` audit modülü | ⬜ Başlanmadı |
+| 10 | Best workflow with CRE | Chainlink | $3,000 | All tracks | "Reputation oracle" workflow: external threat-intelligence API → CRE → verified write to `ReputationRegistry.sol`. Even a simulation recording can be acceptable at a hackathon | `workflows/reputation-oracle`, `contracts/ReputationRegistry.sol` | ⬜ Not started |
+| 11 | Best Builds with Qwen 3.8 Max | Alibaba Cloud | $5,000 credits | Trust/Identity/AI | An "adversarial CFO agent" layer in `agent-kit` — before the agent signs, Qwen evaluates the pending tx against policy+context and can veto it | `packages/agent-kit` (reviewer hook) | ⬜ Not started |
+| 12 | Best Agent Wallet Plugin | Metamask | $2,500 | Onchain Finance & Trading | The Baret guard/policy engine is packaged as a MetaMask Agent Wallet plugin manifest | `packages/metamask-plugin` | ⬜ Not started |
+| 13 | Best Builds Powered by KIMI | Kimi (Moonshot AI) | $3,000 credits | All tracks | LLM layer that explains risk findings in plain language (`baret_explain` MCP tool / popup text) | `apps/server/src/mcp/`, extension popup | ⬜ Not started |
+| 14 | Best Analytics / Risk Tool | Perpl | $3,000 | Onchain Finance & Trading | Perpl position-liquidation risk panel in the audit dashboard (optional data source) | `apps/server` audit module | ⬜ Not started |
 
 ---
 
-## 4. Açıkça Atlanacaklar (ve neden)
+## 4. Explicitly Skipped (and why)
 
-| Bounty | Sponsor | Neden atlanıyor |
+| Bounty | Sponsor | Why it is skipped |
 |---|---|---|
-| Best Cross-Border Payments App | Agora | Ürün şekli tamamen farklı (mobil ödeme app); Baret bir güvenlik katmanı |
-| Best Mobile Trading App | Agora | Aynı gerekçe — mobil trading app değiliz |
-| Build the Next Consumer Trading App on Kuru | Kuru | Trading arayüzü inşa etmek istiyor, Baret trading ürünü değil |
-| Bring New Assets and Markets to Kuru | Kuru | Aynı gerekçe |
-| Best use of Perpl's API (trading bot) | Perpl | Trading bot inşası ayrı bir ürün — kapsam dışı |
-| Bring Any-Chain Liquidity (Aurora Intents) | Aurora | İlginç ama çekirdek teze dolaylı katkı; zaman kalırsa "korumalı cüzdana herhangi bir zincirden fonlama" olarak 1 haftalık stretch değerlendirilebilir, garanti verilmiyor |
-| Best Builds with Hunyuan | Tencent | Yanlış track (Social/Culture), multimodal deneyim istiyor |
-| Privy! | Privy | Dynamic ile aynı slotu (wallet/onboarding SDK) paylaşıyor; ikisini derinlemesine entegre etmek efor israfı ve anlatıyı bulanıklaştırır — Dynamic seçildi |
+| Best Cross-Border Payments App | Agora | Completely different product shape (mobile payments app); Baret is a security layer |
+| Best Mobile Trading App | Agora | Same reason — we are not a mobile trading app |
+| Build the Next Consumer Trading App on Kuru | Kuru | Wants a trading interface built; Baret is not a trading product |
+| Bring New Assets and Markets to Kuru | Kuru | Same reason |
+| Best use of Perpl's API (trading bot) | Perpl | Building a trading bot is a separate product — out of scope |
+| Bring Any-Chain Liquidity (Aurora Intents) | Aurora | Interesting but only an indirect contribution to the core thesis; if time remains it can be evaluated as a 1-week stretch as "fund the guarded wallet from any chain", no guarantee |
+| Best Builds with Hunyuan | Tencent | Wrong track (Social/Culture), wants a multimodal experience |
+| Privy! | Privy | Shares the same slot (wallet/onboarding SDK) as Dynamic; integrating both deeply is wasted effort and blurs the narrative — Dynamic was chosen |
 
 ---
 
-## 5. Her Bounty İçin Teslim Gereksinimleri (genel, sponsor bazlı netleşecek)
+## 5. Submission Requirements Per Bounty (general, to be refined per sponsor)
 
-Genel prensip (Aurora örneğinden genellenmiş, her sponsor kendi kriterini yayınlıyor — platformdan teyit edilmeli):
-- [ ] Public repository (bu repo)
-- [ ] Teknik demo (özellik bazlı, kısa)
+General principle (generalized from the Aurora example; each sponsor publishes its own criteria — must be confirmed on the platform):
+- [ ] Public repository (this repo)
+- [ ] Technical demo (feature-based, short)
 - [ ] Pitch video
-- [ ] Canlı link (mümkünse)
-- [ ] Sponsor'a özel alanlar (submission formunda doldurulacak — her sponsor bounty'sinin kendine özel "review criteria" listesi olabilir, hafta 5-6'da tek tek kontrol edilecek)
+- [ ] Live link (if possible)
+- [ ] Sponsor-specific fields (to be filled in on the submission form — each sponsor bounty may have its own "review criteria" list, to be checked one by one in weeks 5-6)
 
 ---
 
-## 6. Güncelleme Kuralı
+## 6. Update Rule
 
-Bu dosyadaki her satırın **Durum** sütunu şu değerlerden birini alır: `⬜ Başlanmadı`, `🔶 Devam ediyor`, `✅ Tamamlandı`, `❌ Vazgeçildi (gerekçe eklenmeli)`. Bir bounty'nin kapsamı/durumu değiştiğinde bu tablo güncellenir ve gerekirse `DECISIONS.md`'ye kısa bir not düşülür.
+The **Status** column of every row in this file takes one of these values: `⬜ Not started`, `🔶 In progress`, `✅ Done`, `❌ Dropped (reason must be added)`. When a bounty's scope/status changes, this table is updated and, if needed, a short note is added to `DECISIONS.md`.
