@@ -1,0 +1,14 @@
+# Ezgin için görevler
+
+> Meriç (frontend + QA) tarafından Ezgin'e (backend + contracts + system) bırakılan işler. Format ve kurallar: `CLAUDE.md` → "Görev aktarımı". Yeni görev en üste eklenir. Bug'lar 🐛 ile başlar.
+
+## Bekleyen
+
+- [ ] **Hafta 1 iskeleti** — pnpm workspace (`apps/`, `packages/`, `contracts/`, `workflows/`, `indexer/`) + `apps/server` boş Fastify uygulaması + `/health` endpoint'i. Meriç'in showcase/extension'ı bağlayabilmesi için önce bu lazım. Bkz. `docs/ROADMAP.md` Hafta 1. Bırakan: Meriç · Tarih: 2026-09-15
+- [ ] **PaymentGuard.sol** — `docs/CONTRACTS.md` §2'deki spec'e göre yaz, Foundry testleri (cap aşımı, revoke sonrası pay revert, withdraw rezerv) + Monad testnet deploy, adresi `docs/CONTRACTS.md` §2.6'ya yaz. Meriç deploy sonrası `cast call` ve UI üzerinden test edecek. Bırakan: Meriç · Tarih: 2026-09-15
+- [ ] **`/v1/analyze` sözleşmesi** — Request/response şemasını (Zod) ve `GuardPolicy` tipini `packages/guard` içinde erken yayınla ki extension/showcase mock'suz bağlanabilsin. Şema `docs/ARCHITECTURE.md` §5 ve §7 ile aynı olmalı. Bırakan: Meriç · Tarih: 2026-09-15
+- [ ] **AK-3 kararı** — ethers mi viem mi? `docs/DECISIONS.md`'ye D-011 olarak yaz; frontend paketleri aynı kütüphaneyi kullanacak. Bırakan: Meriç · Tarih: 2026-09-15
+
+## Tamamlananlar
+
+_(henüz yok)_

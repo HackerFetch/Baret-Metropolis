@@ -1,0 +1,22 @@
+# Reference repos (old Baret versions on other chains) — never committed
+baret-repos/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies / build
+node_modules/
+dist/
+build/
+.next/
+out/
+target/
+cache/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
