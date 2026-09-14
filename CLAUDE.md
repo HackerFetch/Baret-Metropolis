@@ -1,61 +1,61 @@
-# Baret — Monad Metropolis Hackathon · Ajan Talimatları
+# Baret — Monad Metropolis Hackathon · Agent Instructions
 
-Bu dosya her Claude Code oturumunun başında otomatik yüklenir. Önce bunu, sonra `README.md`'yi, sonra ihtiyaca göre `docs/` altındaki ilgili dosyayı oku.
+This file is loaded automatically at the start of every Claude Code session. Read it first, then `README.md`, then whichever `docs/` file matches the task.
 
-## Proje tek cümlede
+## The project in one sentence
 
-Baret, Monad üzerinde bir cüzdanın, dApp'in veya AI agent'ın bir işlemi imzalamasından **önce** devreye giren güvenlik/politika katmanıdır: işlemi simüle eder, risk dedektörlerinden geçirir, kullanıcının policy'sine göre `Safe / Caution / Blocked` kararı ve gerekçe döner. Agent'lar için harcama-limitli on-chain vault (PaymentGuard) sağlar. Detay: `docs/PROJECT_OVERVIEW.md`, mimari: `docs/ARCHITECTURE.md`.
+Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or AI agent signs a transaction: it simulates the transaction, runs it through risk detectors, applies the user's policy and returns a `Safe / Caution / Blocked` verdict with reasons. For agents it provides an on-chain spending-limited vault (PaymentGuard). Details: `docs/PROJECT_OVERVIEW.md`, architecture: `docs/ARCHITECTURE.md`.
 
-## Ekip ve roller (2 kişi)
+## Team and roles (2 people)
 
-| Kişi | Git kimliği | Rol | Sahip olduğu alanlar |
+| Person | Git identity | Role | Owns |
 |---|---|---|---|
-| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | Tüm UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/showcase-ui`, marka/`docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Ayrıca her şeyin testi:** kontratlar, backend, SDK, uçtan uca akışlar — test yazma, test çalıştırma, bug raporlama Meriç'te. |
-| **Ezgin** | GitHub `Aeztrest` / ezgincapkan64@gmail.com (eski Baret repolarının yazarı) | **Backend + Contracts + System Developer** | `apps/server` (analiz motoru, dedektörler, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API entegrasyonları (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
+| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | All UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/showcase-ui`, brand / `docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Also testing of everything:** contracts, backend, SDK, end-to-end flows — writing tests, running tests and reporting bugs are Meriç's job. |
+| **Ezgin** | GitHub `Aeztrest` / ezgincapkan64@gmail.com (author of the five earlier Baret repos) | **Backend + Contracts + System Developer** | `apps/server` (analysis engine, detectors, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API integrations (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
 
-## Oturum başlangıcında yapılacaklar (her ajan, her seferinde)
+## At the start of every session (every agent, every time)
 
-1. `git config user.name` / `user.email` ile kiminle çalıştığını belirle. Emin değilsen sor.
-2. İlk mesajında kişiye rolünü hatırlat, tek paragrafla "şu an projede neredeyiz"i söyle (`README.md` durum tablosu + `docs/ROADMAP.md` hangi hafta).
-3. Kişiye ait görev dosyasını oku ve bekleyen görevleri özetle:
-   - Meriç ile çalışıyorsan → `tasks/FOR_MERIC.md` (Ezgin'in Meriç'e bıraktığı işler)
-   - Ezgin ile çalışıyorsan → `tasks/FOR_EZGIN.md` (Meriç'in Ezgin'e bıraktığı işler)
-4. Sonra kullanıcının o günkü isteğine geç.
+1. Identify who you are working with via `git config user.name` / `user.email`. If unsure, ask.
+2. In your first message remind the person of their role and give a one-paragraph "where the project is right now" (`README.md` status table + the current week in `docs/ROADMAP.md`).
+3. Read the person's task file and summarise the open items:
+   - Working with Meriç → `tasks/FOR_MERIC.md` (work Ezgin left for Meriç)
+   - Working with Ezgin → `tasks/FOR_EZGIN.md` (work Meriç left for Ezgin)
+4. Then move on to the user's request for the day.
 
-## Görev aktarımı (karşı tarafa iş çıkarma)
+## Task handoff (creating work for the other side)
 
-- Bir iş bitince ya da bir bağımlılık ortaya çıkınca, **karşı tarafın** dosyasına görev ekle:
-  - Meriç'in ajanı → `tasks/FOR_EZGIN.md`'ye yazar (ör. "şu endpoint'in şu alanı dönmesi lazım", "kontratta şu event eksik", "şu test kırıldı, sebebi backend'de").
-  - Ezgin'in ajanı → `tasks/FOR_MERIC.md`'ye yazar (ör. "endpoint hazır, UI bağlanabilir", "kontrat deploy oldu, adres şu, test edilsin").
-- Görev formatı (her görev bir madde, en üste eklenir):
+- When a piece of work is finished, or a dependency on the other side appears, add a task to the **other person's** file:
+  - Meriç's agent → writes to `tasks/FOR_EZGIN.md` (e.g. "this endpoint must return field X", "contract is missing event Y", "test Z broke, root cause is in the backend").
+  - Ezgin's agent → writes to `tasks/FOR_MERIC.md` (e.g. "endpoint is ready, UI can connect", "contract deployed at address X, please test").
+- Task format (one bullet per task, newest on top):
   ```
-  - [ ] **Kısa başlık** — ne yapılacak, neden, hangi dosya/endpoint/kontrat. Bağımlılık: (varsa). Bırakan: Meriç/Ezgin · Tarih: YYYY-MM-DD
+  - [ ] **Short title** — what to do, why, which file/endpoint/contract. Depends on: (if any). Left by: Meriç/Ezgin · Date: YYYY-MM-DD
   ```
-- Tamamlanan görevi silme; `[x]` yap ve altına tek satır sonuç yaz. Dosya şişince ajan "Tamamlananlar" bölümüne taşır.
-- Kendi görev dosyandaki bir işi bitirdiğinde de `[x]` yap.
-- Test bulguları (bug'lar) Meriç tarafından `tasks/FOR_EZGIN.md`'ye "🐛" öneki ile yazılır: tekrar adımları, beklenen/gerçek, ilgili dosya.
+- Do not delete completed tasks; mark them `[x]` and add a one-line result underneath. When the file gets long, the agent moves them to the "Done" section.
+- When you finish an item in your own task file, mark it `[x]` too.
+- Test findings (bugs) are written by Meriç into `tasks/FOR_EZGIN.md` with a 🐛 prefix: steps to reproduce, expected vs actual, related file.
 
-## Git / PR kuralları
+## Git / PR rules
 
-- `main` korunur; doğrudan `main`'e commit yok.
-- Meriç'in çalışma dalı: **`frontend`** (açık PR: "frontend"). Meriç'in ajanı bu dala commit'ler, PR'ı **sadece Meriç açıkça "mergele" dediğinde** merge eder. Asla kendiliğinden merge etme.
-- Ezgin kendi dalını/PR'ını açar (öneri: `backend`, `contracts`). Aynı kural: merge sadece açık talimatla.
-- Commit mesajları İngilizce, kısa, ne değiştiğini söyler. Sonuna `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` eklenir.
-- Push sadece kullanıcı isteyince ya da PR açma/güncelleme akışının parçasıysa.
+- `main` is protected; no direct commits to `main`.
+- Meriç's working branch: **`frontend`** (open PR: "frontend"). Meriç's agent commits to this branch and merges the PR **only when Meriç explicitly says "mergele" / "merge it"**. Never merge on your own initiative.
+- Ezgin opens their own branch/PR (suggested: `backend`, `contracts`). Same rule: merge only on explicit instruction.
+- Commit messages in English, short, describing what changed. End them with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
+- Push only when the user asks, or as part of opening/updating a PR.
 
-## Kritik kısıtlar (README ile aynı, tekrar)
+## Hard constraints (same as README, repeated on purpose)
 
-1. **Sadece Monad.** Kodda başka ağ adı geçmez. Chain ID testnet `10143`, mainnet `143`. Env prefix'i `MONAD_TESTNET_*` / `MONAD_MAINNET_*`, uygulama prefix'i `BARET_*`.
-2. **Eski isimler yok:** `Premon`, `stellar-thorn`, `Blackthorn`, `DELTAG_*` yeni dosyalarda kullanılmaz.
-3. **Fail-closed:** veri eksikse karar "blok"tur.
-4. **Sponsor entegrasyonu ürünün çekirdeğidir**, rozet değil.
-5. **Kod + doküman birlikte güncellenmeden iş bitmiş sayılmaz.** İlgili `docs/*.md` durum tablosunu güncelle.
-6. **Secret'lar asla repoya yazılmaz.** `.env` + `.gitignore`.
+1. **Monad only.** No other chain name appears in code. Chain IDs: testnet `10143`, mainnet `143`. Env prefix `MONAD_TESTNET_*` / `MONAD_MAINNET_*`; application prefix `BARET_*`.
+2. **No legacy names:** `Premon`, `stellar-thorn`, `Blackthorn`, `DELTAG_*` are not used in any new file.
+3. **Fail-closed:** when data is missing, the decision is "block".
+4. **Sponsor integrations are the core of the product**, not a badge.
+5. **Work is not done until code and docs are updated together.** Update the status table in the relevant `docs/*.md`.
+6. **Secrets never go into the repo.** `.env` + `.gitignore`.
 
-## Referans repolar (`baret-repos/`, gitignore'da)
+## Reference repos (`baret-repos/`, gitignored)
 
-Baret'in önceki 5 versiyonu (EVM, Stellar, Casper, Midnight, OKX) `baret-repos/` altında yerel olarak durur ve **asla commit edilmez**. Git geçmişleri taşınmaz, dosyalar kopyalanmaz; sadece fikir/kod ilhamı alınır ve sıfırdan yazılır. Karşılaştırmalı inceleme: `docs/REFERENCE_REPOS.md`.
+The five previous Baret versions (EVM, Stellar, Casper, Midnight, OKX) live locally under `baret-repos/` and are **never committed**. Their git history is not carried over and files are not copied; they are read for ideas and everything is written from scratch. Comparative review: `docs/REFERENCE_REPOS.md`.
 
-## Dil
+## Language
 
-Kullanıcıyla Türkçe konuş. Kod, commit mesajları, kod içi yorumlar ve README dışındaki teknik dokümanlar İngilizce olabilir; mevcut `docs/` seti Türkçe olduğu için orada Türkçe devam et.
+Talk to the user in Turkish. Code, commit messages, code comments and technical docs outside README may be in English; the existing `docs/` set is in Turkish, so continue in Turkish there.
