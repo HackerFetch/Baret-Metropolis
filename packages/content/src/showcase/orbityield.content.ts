@@ -60,8 +60,14 @@ export const orbityield = {
     },
     faq: [
       { question: "Can I unstake at any time?", answer: "Yes. There is no lock-up period." },
-      { question: "Where does the yield come from?", answer: "Validator rewards, distributed every block." },
-      { question: "Is the contract audited?", answer: "The original design was audited. Our fork keeps the same core." },
+      {
+        question: "Where does the yield come from?",
+        answer: "Validator rewards, distributed every block.",
+      },
+      {
+        question: "Is the contract audited?",
+        answer: "The original design was audited. Our fork keeps the same core.",
+      },
     ],
   },
 

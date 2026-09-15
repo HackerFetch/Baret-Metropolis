@@ -5,8 +5,8 @@
  * shared files. See README.md for the conventions and the copy rules.
  */
 
-export * from "./types.js";
+export * from "./extension/index.js";
 export * from "./shared/index.js";
 export * from "./showcase/index.js";
+export * from "./types.js";
 export * from "./wallet/index.js";
-export * from "./extension/index.js";

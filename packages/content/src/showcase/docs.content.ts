@@ -25,7 +25,10 @@ export const docs = {
     body: "Every claim on this site is backed by one of these files. They live in the repository, so what you read here is what is running.",
     actions: {
       primary: { label: "Read the architecture", href: "#build" },
-      secondary: { label: "View the source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
+      secondary: {
+        label: "View the source",
+        href: "https://github.com/HackerFetch/Baret-Metropolis",
+      },
     },
   },
 
@@ -125,9 +128,18 @@ export const docs = {
   summary: {
     title: "The short version",
     steps: [
-      { title: "Decode", body: "Turn raw calldata into a named function call with readable arguments." },
-      { title: "Simulate", body: "Run it against live Monad state and record every internal call." },
-      { title: "Detect", body: "Score it with independent detectors: approvals, reputation, compliance, opcodes, fees, payments." },
+      {
+        title: "Decode",
+        body: "Turn raw calldata into a named function call with readable arguments.",
+      },
+      {
+        title: "Simulate",
+        body: "Run it against live Monad state and record every internal call.",
+      },
+      {
+        title: "Detect",
+        body: "Score it with independent detectors: approvals, reputation, compliance, opcodes, fees, payments.",
+      },
       { title: "Decide", body: "Apply your policy. Missing data counts as a failure, not a pass." },
     ],
   },

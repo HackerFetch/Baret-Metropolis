@@ -54,7 +54,10 @@ export const optionsPolicies = {
 
   transfer: {
     export: { label: "Export", hint: "A JSON file you can keep or share with a teammate." },
-    import: { label: "Import", hint: "Replaces everything on this screen. You can still cancel before saving." },
+    import: {
+      label: "Import",
+      hint: "Replaces everything on this screen. You can still cancel before saving.",
+    },
   },
 } as const;
 

@@ -10,7 +10,8 @@
 export const novaswap = {
   meta: {
     title: "NovaSwap",
-    description: "A fake DEX where the swap works and the output goes somewhere else. Part of the Baret showcase.",
+    description:
+      "A fake DEX where the swap works and the output goes somewhere else. Part of the Baret showcase.",
   },
 
   scenario: {

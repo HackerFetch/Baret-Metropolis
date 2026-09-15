@@ -26,7 +26,14 @@ export const x402 = {
 
   merchants: {
     title: "By merchant",
-    columns: { merchant: "Merchant", perTx: "Per payment", hourly: "Per hour", daily: "Per day", spent: "Spent today", status: "Status" },
+    columns: {
+      merchant: "Merchant",
+      perTx: "Per payment",
+      hourly: "Per hour",
+      daily: "Per day",
+      spent: "Spent today",
+      status: "Status",
+    },
     empty: {
       title: "No agent payments yet",
       body: "When a site asks for payment over HTTP 402, you approve it once and set a cap. After that it runs inside the cap.",
@@ -44,20 +51,41 @@ export const x402 = {
     title: "Needs attention",
     body: "Payments that did not finish cleanly.",
     types: {
-      orphan: { title: "Signed but never settled", body: "You paid {origin} {amount} {time} and the merchant never confirmed it." },
-      noDelivery: { title: "Paid but nothing arrived", body: "The payment settled and the site never returned what you paid for." },
-      mismatch: { title: "Blocked for a mismatch", body: "The payment address did not match what {origin} asked for." },
+      orphan: {
+        title: "Signed but never settled",
+        body: "You paid {origin} {amount} {time} and the merchant never confirmed it.",
+      },
+      noDelivery: {
+        title: "Paid but nothing arrived",
+        body: "The payment settled and the site never returned what you paid for.",
+      },
+      mismatch: {
+        title: "Blocked for a mismatch",
+        body: "The payment address did not match what {origin} asked for.",
+      },
     },
     actions: { investigate: "Look at it", block: "Block this merchant", dismiss: "Dismiss" },
-    empty: { title: "Nothing needs attention", body: "Every payment settled and every merchant delivered." },
+    empty: {
+      title: "Nothing needs attention",
+      body: "Every payment settled and every merchant delivered.",
+    },
   },
 
   settings: {
     title: "Defaults for new merchants",
     body: "What a site gets the first time it asks, before you set a specific cap.",
-    autoApprove: { label: "Pay without asking", hint: "Inside the cap. Turn this off to be asked every time." },
-    defaultCap: { label: "Starting cap", hint: "Per hour, for a merchant you have not met before." },
-    allowedAssets: { label: "Assets", hint: "Only the canonical USDC on Monad unless you add more." },
+    autoApprove: {
+      label: "Pay without asking",
+      hint: "Inside the cap. Turn this off to be asked every time.",
+    },
+    defaultCap: {
+      label: "Starting cap",
+      hint: "Per hour, for a merchant you have not met before.",
+    },
+    allowedAssets: {
+      label: "Assets",
+      hint: "Only the canonical USDC on Monad unless you add more.",
+    },
   },
 } as const;
 

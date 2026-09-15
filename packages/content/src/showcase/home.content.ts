@@ -92,12 +92,20 @@ export const home = {
       {
         title: "Before you sign",
         body: "Baret decodes the transaction, runs it against live Monad state, and explains every finding in one sentence. It adds about a second and it is the second that matters.",
-        points: ["Decoded, not just displayed", "Simulated on real state", "One sentence per finding"],
+        points: [
+          "Decoded, not just displayed",
+          "Simulated on real state",
+          "One sentence per finding",
+        ],
       },
       {
         title: "Your rules, not ours",
         body: "You pick a rule set once. After that a block is a block, not a warning you have to read at two in the morning and decide about.",
-        points: ["Three starting sets", "Every rule is yours to change", "Plain JSON you can export"],
+        points: [
+          "Three starting sets",
+          "Every rule is yours to change",
+          "Plain JSON you can export",
+        ],
       },
       {
         title: "After you sign",
@@ -143,17 +151,20 @@ export const home = {
       {
         title: "An agent that pays every minute",
         gap: "Nothing in the protocol shows a running total, so a slow leak looks identical to normal traffic.",
-        answer: "Rolling caps per merchant, by the hour and by the day. Each payment counts against a real number and the one that crosses it does not go.",
+        answer:
+          "Rolling caps per merchant, by the hour and by the day. Each payment counts against a real number and the one that crosses it does not go.",
       },
       {
         title: "A token that says USDC",
         gap: "The handshake checks that the asset field matches. It does not check which contract that name belongs to.",
-        answer: "Baret compares the contract address against the canonical one on Monad. A look-alike fails the check even when the name is perfect.",
+        answer:
+          "Baret compares the contract address against the canonical one on Monad. A look-alike fails the check even when the name is perfect.",
       },
       {
         title: "A key that leaks",
         gap: "One signing key, no scope. Whoever has it can pay anyone, for anything, forever.",
-        answer: "The agent gets a signer that can only call pay on your vault, inside a cap you set. One call ends it, on-chain, without moving any funds.",
+        answer:
+          "The agent gets a signer that can only call pay on your vault, inside a cap you set. One call ends it, on-chain, without moving any funds.",
       },
     ],
     action: { label: "Read the agent docs", href: "/agents" },
@@ -243,35 +254,43 @@ export const home = {
     items: [
       {
         question: "What happens when the analysis server is down?",
-        answer: "Baret tells you it could not check and leaves the decision to you. It never invents a verdict and it never signs on your behalf. Signing without a check is marked in your activity log.",
+        answer:
+          "Baret tells you it could not check and leaves the decision to you. It never invents a verdict and it never signs on your behalf. Signing without a check is marked in your activity log.",
       },
       {
         question: "Is this just another warning I will learn to click through?",
-        answer: "That is the real failure mode of this whole category, so Baret is built the other way around. You choose a rule set once, and after that a block is a block. Baret does not ask you to interpret a risk score in the moment.",
+        answer:
+          "That is the real failure mode of this whole category, so Baret is built the other way around. You choose a rule set once, and after that a block is a block. Baret does not ask you to interpret a risk score in the moment.",
       },
       {
         question: "Can I use it with the wallet I already have?",
-        answer: "Yes. Baret registers as a standard wallet, so it appears in the same picker as the others. You can install it without removing anything.",
+        answer:
+          "Yes. Baret registers as a standard wallet, so it appears in the same picker as the others. You can install it without removing anything.",
       },
       {
         question: "Does Baret slow me down?",
-        answer: "One simulation and one round trip, usually well under a second on testnet. Nothing else in the flow changes.",
+        answer:
+          "One simulation and one round trip, usually well under a second on testnet. Nothing else in the flow changes.",
       },
       {
         question: "What does Blocked actually do?",
-        answer: "Baret refuses to sign. You can override, but that is a separate step, it is deliberate, and it is written to your log so you can find it later.",
+        answer:
+          "Baret refuses to sign. You can override, but that is a separate step, it is deliberate, and it is written to your log so you can find it later.",
       },
       {
         question: "Who writes the rules?",
-        answer: "You do. Start from Strict, Balanced or Permissive, then change any single rule. The policy is plain JSON that you own, and you can export it.",
+        answer:
+          "You do. Start from Strict, Balanced or Permissive, then change any single rule. The policy is plain JSON that you own, and you can export it.",
       },
       {
         question: "Is it free?",
-        answer: "Yes, and the source is public under the MIT licence. There is no fee taken from your transactions, now or later.",
+        answer:
+          "Yes, and the source is public under the MIT licence. There is no fee taken from your transactions, now or later.",
       },
       {
         question: "When is mainnet?",
-        answer: "Testnet today. Mainnet after store review and more real use. We would rather ship the firewall late than wrong.",
+        answer:
+          "Testnet today. Mainnet after store review and more real use. We would rather ship the firewall late than wrong.",
       },
     ],
   },

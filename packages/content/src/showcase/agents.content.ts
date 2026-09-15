@@ -57,12 +57,22 @@ export const agents = {
       {
         title: "A vault with a limit",
         body: "Deposit once into a PaymentGuard vault on Monad and give the agent a signer that can only call pay, inside a per-payment cap and a rolling daily cap. The cap lives in the contract, not in your code.",
-        points: ["Per-merchant cap", "Rolling 24 hour cap", "Owner keeps deposit and withdraw", "Revoke in one call"],
+        points: [
+          "Per-merchant cap",
+          "Rolling 24 hour cap",
+          "Owner keeps deposit and withdraw",
+          "Revoke in one call",
+        ],
       },
       {
         title: "An x402 check",
         body: "When your agent hits an HTTP 402, Baret reads what the server actually asked for and compares it with what is about to be paid. Wrong address, wrong asset, or over your cap means the payment is never sent.",
-        points: ["Compare against the request", "Check the asset contract, not its name", "Count it against the cap", "Return an error, not a payment"],
+        points: [
+          "Compare against the request",
+          "Check the asset contract, not its name",
+          "Count it against the cap",
+          "Return an error, not a payment",
+        ],
       },
     ],
   },
@@ -77,7 +87,11 @@ export const agents = {
       { subject: "What to do next", who: "The agent", note: "Your code" },
       { subject: "Whether the transaction is safe", who: "Baret", note: "The analysis server" },
       { subject: "Whether it is allowed", who: "Your policy", note: "A JSON object you own" },
-      { subject: "Whether the payment fits the cap", who: "PaymentGuard", note: "A contract on Monad" },
+      {
+        subject: "Whether the payment fits the cap",
+        who: "PaymentGuard",
+        note: "A contract on Monad",
+      },
       { subject: "Whether the agent still has access", who: "You", note: "One call, any time" },
     ],
   },
@@ -110,12 +124,14 @@ export const agents = {
     sdk: {
       title: "TypeScript",
       before: "Wrap the signer and send a transaction the way you already do.",
-      after: "A blocked transaction throws GuardBlockedError. The key never signs, so there is nothing to undo.",
+      after:
+        "A blocked transaction throws GuardBlockedError. The key never signs, so there is nothing to undo.",
     },
     cli: {
       title: "Any language",
       before: "Pipe a transaction to the CLI and read the exit code.",
-      after: "Exit 0 means it was sent. Exit 1 means your policy blocked it. Exit 2 means Baret itself failed.",
+      after:
+        "Exit 0 means it was sent. Exit 1 means your policy blocked it. Exit 2 means Baret itself failed.",
     },
     secrets: {
       title: "About the secret",
@@ -152,20 +168,24 @@ export const agents = {
     title: "Run a real transaction through it.",
     body: "This calls the same analysis the SDK calls. Paste an unsigned transaction and see exactly what your agent would get back.",
     fields: {
-      address: { label: "Agent address", hint: "Any Monad address. Use the button for a random one." },
+      address: {
+        label: "Agent address",
+        hint: "Any Monad address. Use the button for a random one.",
+      },
       network: { label: "Network", hint: "Testnet only for now." },
       policy: { label: "Policy", hint: "Comes from the selector above." },
       transaction: {
         label: "Transaction",
         hint: "Raw hex, or JSON with from, to, value and data.",
-        placeholder: "0x02f8... or { \"to\": \"0x...\", \"data\": \"0x...\" }",
+        placeholder: '0x02f8... or { "to": "0x...", "data": "0x..." }',
       },
     },
     action: { label: "Check it" },
     result: {
       allow: "Allowed. Your agent would sign this.",
       block: "Blocked. Your agent would get an error and nothing would be signed.",
-      advisory: "Allowed with a warning. Your agent would sign, and the warning is in the response.",
+      advisory:
+        "Allowed with a warning. Your agent would sign, and the warning is in the response.",
       empty: "Paste a transaction to see what your agent would get back.",
       error: "That transaction could not be read. Check that it is valid hex or valid JSON.",
     },
@@ -177,27 +197,33 @@ export const agents = {
     items: [
       {
         question: "Does Baret ever hold my agent's key?",
-        answer: "No. The key stays in your process. Baret receives an unsigned transaction, returns a decision, and your code decides what to do with it. The analysis server never sees a key and never signs anything.",
+        answer:
+          "No. The key stays in your process. Baret receives an unsigned transaction, returns a decision, and your code decides what to do with it. The analysis server never sees a key and never signs anything.",
       },
       {
         question: "What happens if the agent ignores the result?",
-        answer: "It cannot, if you use the guarded signer, because the signer refuses. If you call evaluate yourself and ignore the answer, the vault is still there: the cap is enforced by the contract, not by your code.",
+        answer:
+          "It cannot, if you use the guarded signer, because the signer refuses. If you call evaluate yourself and ignore the answer, the vault is still there: the cap is enforced by the contract, not by your code.",
       },
       {
         question: "How fast is it?",
-        answer: "One simulation and one round trip. On testnet that is usually well under a second. For a payment loop that runs every few seconds, that is the cost of not blind-signing.",
+        answer:
+          "One simulation and one round trip. On testnet that is usually well under a second. For a payment loop that runs every few seconds, that is the cost of not blind-signing.",
       },
       {
         question: "Can I use it without the vault?",
-        answer: "Yes. The guarded signer works on its own and is the smaller change. The vault is what protects you when the key itself leaks.",
+        answer:
+          "Yes. The guarded signer works on its own and is the smaller change. The vault is what protects you when the key itself leaks.",
       },
       {
         question: "Which policy should an agent start with?",
-        answer: "Balanced, with the spending caps set to what you would be comfortable losing in a day. Tighten from there once you see real traffic in the activity log.",
+        answer:
+          "Balanced, with the spending caps set to what you would be comfortable losing in a day. Tighten from there once you see real traffic in the activity log.",
       },
       {
         question: "Is it free?",
-        answer: "Yes, and the source is public. The hosted analysis server is rate limited and testnet only.",
+        answer:
+          "Yes, and the source is public. The hosted analysis server is rate limited and testnet only.",
       },
     ],
   },

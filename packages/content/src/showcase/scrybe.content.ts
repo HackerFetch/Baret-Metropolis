@@ -12,7 +12,8 @@
 export const scrybe = {
   meta: {
     title: "Scrybe",
-    description: "A working pay-per-answer service that an agent pays automatically, inside a cap you set.",
+    description:
+      "A working pay-per-answer service that an agent pays automatically, inside a cap you set.",
   },
 
   scenario: {

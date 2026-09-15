@@ -15,13 +15,19 @@ export const optionsHome = {
     title: "Standing permissions",
     body: "Live caps for every site and agent that can spend from this wallet.",
     viewAll: "Manage them",
-    empty: { title: "Nothing can spend from this wallet", body: "Approvals you grant show up here with a cap." },
+    empty: {
+      title: "Nothing can spend from this wallet",
+      body: "Approvals you grant show up here with a cap.",
+    },
   },
 
   sites: {
     title: "Connected sites",
     viewAll: "Manage them",
-    empty: { title: "No sites connected", body: "Sites you connect to appear here and can be disconnected at any time." },
+    empty: {
+      title: "No sites connected",
+      body: "Sites you connect to appear here and can be disconnected at any time.",
+    },
     row: "Connected {time}, last used {lastUsed}",
   },
 

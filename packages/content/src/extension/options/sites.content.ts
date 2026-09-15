@@ -13,7 +13,13 @@ export const sites = {
     { id: "spending", label: "Can spend" },
   ],
 
-  columns: { site: "Site", connected: "Connected", lastUsed: "Last used", permissions: "Can spend", status: "Status" },
+  columns: {
+    site: "Site",
+    connected: "Connected",
+    lastUsed: "Last used",
+    permissions: "Can spend",
+    status: "Status",
+  },
 
   status: { connected: "Connected", blocked: "Blocked", disconnected: "Disconnected" },
 
@@ -47,10 +53,16 @@ export const sites = {
     },
 
     actions: {
-      disconnect: { label: "Disconnect", hint: "It has to ask again next time. Nothing on-chain changes." },
+      disconnect: {
+        label: "Disconnect",
+        hint: "It has to ask again next time. Nothing on-chain changes.",
+      },
       block: { label: "Block this site", hint: "It cannot ask again until you unblock it." },
       unblock: { label: "Unblock" },
-      revoke: { label: "Revoke what it can spend", hint: "Sends a transaction. Costs a network fee." },
+      revoke: {
+        label: "Revoke what it can spend",
+        hint: "Sends a transaction. Costs a network fee.",
+      },
     },
 
     disconnect: {

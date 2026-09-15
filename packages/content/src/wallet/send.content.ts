@@ -17,7 +17,11 @@ export const send = {
       available: "{amount} available",
       hint: "Some MON is kept back to pay the network fee.",
     },
-    memo: { label: "Reference", optional: "Optional", hint: "Only you and the recipient see this." },
+    memo: {
+      label: "Reference",
+      optional: "Optional",
+      hint: "Only you and the recipient see this.",
+    },
   },
 
   summary: {
@@ -51,7 +55,10 @@ export const send = {
       title: "Not enough for the fee",
       body: "Leave at least {fee} MON so the transfer can pay its way.",
     },
-    amountZero: { title: "Enter an amount", body: "A transfer of zero does nothing and still costs a fee." },
+    amountZero: {
+      title: "Enter an amount",
+      body: "A transfer of zero does nothing and still costs a fee.",
+    },
   },
 
   poisoning: {

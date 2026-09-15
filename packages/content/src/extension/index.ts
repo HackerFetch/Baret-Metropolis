@@ -1,2 +1,2 @@
-export * from "./popup/index.js";
 export * from "./options/index.js";
+export * from "./popup/index.js";

@@ -24,7 +24,11 @@ export const optionsAllowances = {
       perDay: "Per day",
       used: "{spent} of {cap}",
     },
-    signer: { title: "Signing address", hint: "The address that can spend under this permission.", explorer: "View on the explorer" },
+    signer: {
+      title: "Signing address",
+      hint: "The address that can spend under this permission.",
+      explorer: "View on the explorer",
+    },
     transactions: { title: "Payments under this permission", empty: "It has never been used." },
     created: "Granted {date} from {origin}",
     lastUsed: "Last used {date}",
@@ -41,7 +45,10 @@ export const optionsAllowances = {
       label: "Cap everything that has no limit",
       body: "{count} permissions have no ceiling. This replaces each one with a cap you choose.",
     },
-    all: { label: "Revoke everything", body: "Every site and agent loses access. One fee per permission." },
+    all: {
+      label: "Revoke everything",
+      body: "Every site and agent loses access. One fee per permission.",
+    },
   },
 
   empty: {

@@ -10,7 +10,8 @@
 export const pixeldrop = {
   meta: {
     title: "PixelDrop",
-    description: "A fake NFT mint that hands over your whole collection. Part of the Baret showcase.",
+    description:
+      "A fake NFT mint that hands over your whole collection. Part of the Baret showcase.",
   },
 
   scenario: {

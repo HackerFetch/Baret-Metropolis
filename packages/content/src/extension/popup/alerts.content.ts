@@ -58,7 +58,10 @@ export const alerts = {
     rows: [
       { label: "Unsigned movement", hint: "Anything leaving the account that Baret did not sign." },
       { label: "Caps", hint: "When a site or agent reaches or approaches its limit." },
-      { label: "Payments that never settle", hint: "Signed, sent, and never confirmed by the merchant." },
+      {
+        label: "Payments that never settle",
+        hint: "Signed, sent, and never confirmed by the merchant.",
+      },
       { label: "Expiring permissions", hint: "A day before a permission stops working." },
     ],
   },

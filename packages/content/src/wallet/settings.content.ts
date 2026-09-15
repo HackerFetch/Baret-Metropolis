@@ -9,14 +9,23 @@ export const settings = {
       rows: [
         { label: "Account name", hint: "Only you see this. It is stored on this device." },
         { label: "Address", hint: "Your Monad address. Safe to share." },
-        { label: "Passkey", hint: "The key lives on this device and in your password manager if you sync one." },
+        {
+          label: "Passkey",
+          hint: "The key lives on this device and in your password manager if you sync one.",
+        },
       ],
     },
     {
       title: "Security",
       rows: [
-        { label: "Lock after inactivity", hint: "Locks the wallet when you walk away. Fifteen minutes by default." },
-        { label: "Require a passkey to sign", hint: "Ask for your fingerprint or face on every signature, not just on unlock." },
+        {
+          label: "Lock after inactivity",
+          hint: "Locks the wallet when you walk away. Fifteen minutes by default.",
+        },
+        {
+          label: "Require a passkey to sign",
+          hint: "Ask for your fingerprint or face on every signature, not just on unlock.",
+        },
         { label: "Rules", hint: "What Baret blocks on its own." },
       ],
     },
@@ -24,15 +33,27 @@ export const settings = {
       title: "Network",
       rows: [
         { label: "Network", hint: "Monad testnet. Mainnet is not enabled yet." },
-        { label: "Node", hint: "Where balances and simulations are read from. Change only if you run your own." },
-        { label: "Analysis server", hint: "Where transactions are checked. Change only if you run your own." },
+        {
+          label: "Node",
+          hint: "Where balances and simulations are read from. Change only if you run your own.",
+        },
+        {
+          label: "Analysis server",
+          hint: "Where transactions are checked. Change only if you run your own.",
+        },
       ],
     },
     {
       title: "Privacy",
       rows: [
-        { label: "Usage data", hint: "Off, and there is no switch to turn it on. Nothing is collected." },
-        { label: "Export your data", hint: "Activity, permissions and rules as a single file on your device." },
+        {
+          label: "Usage data",
+          hint: "Off, and there is no switch to turn it on. Nothing is collected.",
+        },
+        {
+          label: "Export your data",
+          hint: "Activity, permissions and rules as a single file on your device.",
+        },
       ],
     },
     {

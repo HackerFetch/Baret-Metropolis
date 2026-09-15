@@ -52,13 +52,25 @@ export const policy = {
     },
     contracts: { title: "Contracts", body: "Which contracts you are willing to touch." },
     approvals: { title: "Approvals", body: "How much a site is allowed to spend on your behalf." },
-    dangerous: { title: "Dangerous calls", body: "Operations that can hand over control of an account or a contract." },
+    dangerous: {
+      title: "Dangerous calls",
+      body: "Operations that can hand over control of an account or a contract.",
+    },
     limits: { title: "Loss limits", body: "The most a single transaction may cost you." },
-    reputation: { title: "Reputation", body: "What Baret does with what it knows about the other address." },
-    compliance: { title: "Compliance", body: "Rules for assets that require a verified identity to move." },
+    reputation: {
+      title: "Reputation",
+      body: "What Baret does with what it knows about the other address.",
+    },
+    compliance: {
+      title: "Compliance",
+      body: "Rules for assets that require a verified identity to move.",
+    },
     resources: { title: "Fees", body: "Ceilings on what a transaction may spend on gas." },
     x402: { title: "Agent payments", body: "Caps for automatic payments made over HTTP 402." },
-    general: { title: "General", body: "How Baret treats findings that are warnings rather than blocks." },
+    general: {
+      title: "General",
+      body: "How Baret treats findings that are warnings rather than blocks.",
+    },
   },
 
   fields: {

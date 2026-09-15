@@ -15,9 +15,18 @@ export const optionsSettings = {
   security: {
     title: "Security",
     rows: [
-      { label: "Change your passphrase", hint: "Re-encrypts the wallet on this device. Your address does not change." },
-      { label: "Lock after inactivity", hint: "Fifteen minutes by default. Lower it if you share the machine." },
-      { label: "Show your recovery phrase", hint: "Needs your passphrase. Do this somewhere nobody can see the screen." },
+      {
+        label: "Change your passphrase",
+        hint: "Re-encrypts the wallet on this device. Your address does not change.",
+      },
+      {
+        label: "Lock after inactivity",
+        hint: "Fifteen minutes by default. Lower it if you share the machine.",
+      },
+      {
+        label: "Show your recovery phrase",
+        hint: "Needs your passphrase. Do this somewhere nobody can see the screen.",
+      },
       { label: "Rules", hint: "What Baret blocks on its own." },
     ],
     reveal: {
@@ -33,19 +42,30 @@ export const optionsSettings = {
     rows: [
       { label: "Network", hint: "Monad testnet. Mainnet is not enabled yet." },
       { label: "Node", hint: "Where balances and simulations are read from." },
-      { label: "Analysis server", hint: "Where transactions are checked. Change only if you run your own." },
+      {
+        label: "Analysis server",
+        hint: "Where transactions are checked. Change only if you run your own.",
+      },
     ],
     custom: {
       label: "Use my own",
-      warning: "A node you do not control can lie to you about your balance and about what a transaction does.",
-      test: { label: "Test the connection", ok: "Connected. Chain ID {chainId}.", fail: "Could not reach it." },
+      warning:
+        "A node you do not control can lie to you about your balance and about what a transaction does.",
+      test: {
+        label: "Test the connection",
+        ok: "Connected. Chain ID {chainId}.",
+        fail: "Could not reach it.",
+      },
     },
   },
 
   notifications: {
     title: "Notifications",
     rows: [
-      { label: "Unsigned movement", hint: "When something leaves the account that Baret did not sign." },
+      {
+        label: "Unsigned movement",
+        hint: "When something leaves the account that Baret did not sign.",
+      },
       { label: "Caps", hint: "When a site or agent reaches its limit." },
       { label: "Payments that never settle", hint: "Signed and sent, never confirmed." },
       { label: "Expiring permissions", hint: "A day before one stops working." },
@@ -55,10 +75,22 @@ export const optionsSettings = {
   privacy: {
     title: "Privacy",
     rows: [
-      { label: "Usage data", hint: "Off, and there is no switch. Nothing is collected and nothing is sent." },
-      { label: "What the analysis server sees", hint: "The unsigned transaction and the address it came from. Never a key." },
-      { label: "Export your data", hint: "Activity, permissions and rules as one file on this device." },
-      { label: "Clear activity", hint: "Deletes the local log. On-chain history is public and stays public." },
+      {
+        label: "Usage data",
+        hint: "Off, and there is no switch. Nothing is collected and nothing is sent.",
+      },
+      {
+        label: "What the analysis server sees",
+        hint: "The unsigned transaction and the address it came from. Never a key.",
+      },
+      {
+        label: "Export your data",
+        hint: "Activity, permissions and rules as one file on this device.",
+      },
+      {
+        label: "Clear activity",
+        hint: "Deletes the local log. On-chain history is public and stays public.",
+      },
     ],
   },
 
@@ -66,7 +98,10 @@ export const optionsSettings = {
     title: "Advanced",
     rows: [
       { label: "Show raw transaction data", hint: "Adds the calldata panel to every sign screen." },
-      { label: "Request timeout", hint: "How long a site may keep a request open before it is declined." },
+      {
+        label: "Request timeout",
+        hint: "How long a site may keep a request open before it is declined.",
+      },
       { label: "Debug log", hint: "For reporting a bug. It contains addresses but never keys." },
     ],
   },

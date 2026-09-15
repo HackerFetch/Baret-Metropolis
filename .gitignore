@@ -23,3 +23,16 @@ cache/
 
 # Local asset-generation prompt notebook — never committed
 prompts/
+
+# Build output
+.output/
+.wxt/
+*.tsbuildinfo
+dist-types/
+
+# Vite
+.vite/
+vite.config.ts.timestamp-*
+
+# Vitest / coverage
+coverage/

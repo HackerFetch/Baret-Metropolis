@@ -54,7 +54,10 @@ export const onboarding = {
     action: { label: "Open the faucet" },
     waiting: "Watching for the transfer",
     arrived: "Funds arrived.",
-    skip: { label: "Skip for now", note: "You can look around, but you cannot send anything until you have a balance." },
+    skip: {
+      label: "Skip for now",
+      note: "You can look around, but you cannot send anything until you have a balance.",
+    },
     minimum: "You need at least 0.1 MON to continue.",
   },
 
@@ -69,9 +72,21 @@ export const onboarding = {
     title: "You are protected.",
     body: "Every transaction from here on is decoded, simulated and checked against the rules you just picked.",
     suggestions: [
-      { title: "Try the showcase", body: "Six sites, six attacks, all caught live.", action: { label: "Open it", href: "/showcase" } },
-      { title: "Set up an agent", body: "Give a bot a spending limit instead of a key.", action: { label: "Agent delegation" } },
-      { title: "Read your rules", body: "See exactly what you just agreed to block.", action: { label: "Policies" } },
+      {
+        title: "Try the showcase",
+        body: "Six sites, six attacks, all caught live.",
+        action: { label: "Open it", href: "/showcase" },
+      },
+      {
+        title: "Set up an agent",
+        body: "Give a bot a spending limit instead of a key.",
+        action: { label: "Agent delegation" },
+      },
+      {
+        title: "Read your rules",
+        body: "See exactly what you just agreed to block.",
+        action: { label: "Policies" },
+      },
     ],
     action: { label: "Open the wallet" },
   },

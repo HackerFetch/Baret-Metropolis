@@ -12,7 +12,11 @@ export const extOnboarding = {
   welcome: {
     title: "A wallet that reads before it signs.",
     body: "Baret decodes every transaction, runs it against live Monad state, and tells you what it found before your key moves.",
-    points: ["Checked before signing", "Caps on standing permissions", "Alerts when something moves"],
+    points: [
+      "Checked before signing",
+      "Caps on standing permissions",
+      "Alerts when something moves",
+    ],
     action: { label: "Get started" },
     footnote: "Monad testnet. Self-custody. Open source under the MIT licence.",
   },
@@ -21,7 +25,10 @@ export const extOnboarding = {
     title: "Choose a passphrase",
     body: "It encrypts the wallet on this device. It is not an account password, so there is no reset and no email to recover it with.",
     fields: {
-      passphrase: { label: "Passphrase", hint: "At least 12 characters. A short sentence works well." },
+      passphrase: {
+        label: "Passphrase",
+        hint: "At least 12 characters. A short sentence works well.",
+      },
       confirm: { label: "Type it again" },
     },
     strength: { weak: "Too easy to guess", fair: "Acceptable", good: "Good", strong: "Strong" },
@@ -41,7 +48,11 @@ export const extOnboarding = {
     title: "Creating your keys",
     body: "This happens on your device. Nothing is sent anywhere.",
     working: "Generating",
-    done: { title: "Your account is ready", body: "Created just now", addressLabel: "Your address" },
+    done: {
+      title: "Your account is ready",
+      body: "Created just now",
+      addressLabel: "Your address",
+    },
     action: { label: "Continue" },
   },
 
@@ -54,7 +65,10 @@ export const extOnboarding = {
       "Never type them into a website, not even one that looks like ours.",
       "Anyone who has these words has this account.",
     ],
-    copy: { label: "Copy", warning: "Your clipboard is readable by other software. Paper is safer." },
+    copy: {
+      label: "Copy",
+      warning: "Your clipboard is readable by other software. Paper is safer.",
+    },
     confirm: { label: "I have written them down" },
     quiz: {
       title: "Quick check",
@@ -107,9 +121,19 @@ export const extOnboarding = {
     title: "You are protected.",
     body: "Every transaction from here on is decoded, simulated and checked against the rules you just chose.",
     suggestions: [
-      { title: "Watch it catch something", body: "Six demo sites, six real attacks.", action: { label: "Open the showcase", href: "/showcase" } },
-      { title: "Connect to a real site", body: "Baret shows up in the wallet picker like any other wallet." },
-      { title: "Pin the toolbar icon", body: "Chrome hides new extensions behind the puzzle piece." },
+      {
+        title: "Watch it catch something",
+        body: "Six demo sites, six real attacks.",
+        action: { label: "Open the showcase", href: "/showcase" },
+      },
+      {
+        title: "Connect to a real site",
+        body: "Baret shows up in the wallet picker like any other wallet.",
+      },
+      {
+        title: "Pin the toolbar icon",
+        body: "Chrome hides new extensions behind the puzzle piece.",
+      },
     ],
     action: { label: "Open the wallet" },
   },

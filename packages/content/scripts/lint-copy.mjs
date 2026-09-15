@@ -100,16 +100,12 @@ function stripComments(source) {
 
 /** Pull every single-quoted, double-quoted and backtick string out of a file. */
 function stringsOf(source) {
-  const found = [];
   const code = stripComments(source);
   const re = /(["'`])((?:\\.|(?!\1)[^\\])*)\1/g;
-  let match;
-  while ((match = re.exec(code)) !== null) {
-    const value = match[2];
-    const line = code.slice(0, match.index).split("\n").length;
-    found.push({ value, line });
-  }
-  return found;
+  return [...code.matchAll(re)].map((match) => ({
+    value: match[2] ?? "",
+    line: code.slice(0, match.index).split("\n").length,
+  }));
 }
 
 const problems = [];
@@ -131,7 +127,9 @@ for (const file of walk(srcDir)) {
     }
 
     if (TURKISH.test(value)) {
-      problems.push(`${rel}:${line} contains Turkish characters. Copy is English.\n    ${value.slice(0, 90)}`);
+      problems.push(
+        `${rel}:${line} contains Turkish characters. Copy is English.\n    ${value.slice(0, 90)}`,
+      );
     }
 
     const lower = value.toLowerCase();

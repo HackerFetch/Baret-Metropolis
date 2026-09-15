@@ -20,7 +20,8 @@ export const signRequest = {
     subtitle: "{origin} wants you to sign a message",
     body: "This does not move anything on its own. It proves you control this address.",
     contentLabel: "What you are signing",
-    unreadable: "This message is not readable text. That is normal for some sites and is also how blind signing attacks work.",
+    unreadable:
+      "This message is not readable text. That is normal for some sites and is also how blind signing attacks work.",
     warning: {
       title: "Be careful with unreadable messages",
       body: "A signature can authorise a transfer later, without ever appearing as a transaction. Only sign this if you started the action.",
@@ -52,7 +53,10 @@ export const signRequest = {
     manual: {
       title: "First payment to this site",
       body: "{origin} wants {amount}. Approve once and set a cap, or decline and nothing is sent.",
-      capField: { label: "Cap for this site", hint: "The most it may spend per hour without asking again." },
+      capField: {
+        label: "Cap for this site",
+        hint: "The most it may spend per hour without asking again.",
+      },
       actions: { approve: "Approve and set a cap", decline: "Decline" },
     },
     blocked: {

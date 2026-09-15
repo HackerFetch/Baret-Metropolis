@@ -22,7 +22,10 @@ export const delegation = {
     title: "How it is arranged",
     rows: [
       { label: "Your passkey", value: "Full control. Deposit, withdraw, set limits, end it." },
-      { label: "The agent key", value: "Can only call pay, inside the limits, to merchants you listed." },
+      {
+        label: "The agent key",
+        value: "Can only call pay, inside the limits, to merchants you listed.",
+      },
       { label: "The vault", value: "Holds the funds and enforces the limits on-chain." },
     ],
     note: "Your passkey is never used by the agent and never leaves this device.",
@@ -69,7 +72,13 @@ export const delegation = {
   merchants: {
     title: "Who the agent may pay",
     add: "Add a merchant",
-    columns: { merchant: "Merchant", perPayment: "Per payment", perDay: "Per day", spent: "Spent today", status: "Status" },
+    columns: {
+      merchant: "Merchant",
+      perPayment: "Per payment",
+      perDay: "Per day",
+      spent: "Spent today",
+      status: "Status",
+    },
     empty: {
       title: "No merchants yet",
       body: "An agent can only pay addresses on this list. Add one to get started.",
@@ -78,7 +87,10 @@ export const delegation = {
       address: { label: "Merchant address", hint: "The address that receives the payments." },
       perTx: { label: "Most per payment", hint: "A single payment above this reverts on-chain." },
       perDay: { label: "Most per day", hint: "A rolling 24 hours, not a calendar day." },
-      expiry: { label: "Expires after", hint: "The limit stops working on its own. Leave empty for no expiry." },
+      expiry: {
+        label: "Expires after",
+        hint: "The limit stops working on its own. Leave empty for no expiry.",
+      },
     },
   },
 
@@ -103,7 +115,10 @@ export const delegation = {
     body: "One call kills the agent key on-chain. Any payment it tries afterwards reverts, including one it signed a second ago. You do not need the agent to cooperate and your funds do not move.",
     options: [
       { label: "Pause the vault", hint: "Stops everything, keeps the setup. Reversible." },
-      { label: "Revoke the agent key", hint: "Kills the key permanently. You can create a new one." },
+      {
+        label: "Revoke the agent key",
+        hint: "Kills the key permanently. You can create a new one.",
+      },
       { label: "Set a merchant to zero", hint: "Stops one merchant without touching the rest." },
       { label: "Withdraw everything", hint: "Takes back what is left. The limits stay for later." },
     ],

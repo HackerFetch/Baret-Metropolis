@@ -20,7 +20,10 @@ export const popupHome = {
   activity: {
     title: "Recent",
     viewAll: "See all",
-    empty: { title: "Nothing signed yet", body: "Connect to a site or send something to get started." },
+    empty: {
+      title: "Nothing signed yet",
+      body: "Connect to a site or send something to get started.",
+    },
   },
 
   allowances: {
@@ -47,7 +50,11 @@ export const popupHome = {
       action: { label: "Try again" },
     },
     capNear: { title: "{origin} is near its cap", body: "{spent} of {cap} used this hour." },
-    drift: { title: "Something moved", body: "A transfer left this account and you did not sign it.", action: { label: "Look at it" } },
+    drift: {
+      title: "Something moved",
+      body: "A transfer left this account and you did not sign it.",
+      action: { label: "Look at it" },
+    },
   },
 
   tabs: { home: "Home", activity: "Activity", allowances: "Permissions", settings: "Settings" },

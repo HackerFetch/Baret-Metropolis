@@ -13,7 +13,8 @@
 export const claimhub = {
   meta: {
     title: "ClaimHub",
-    description: "A fake airdrop claim page that signs away your stablecoins. Part of the Baret showcase.",
+    description:
+      "A fake airdrop claim page that signs away your stablecoins. Part of the Baret showcase.",
   },
 
   /** The scenario card, also rendered on the hub and the landing page. */
@@ -66,10 +67,14 @@ export const claimhub = {
     faq: [
       {
         question: "Why do I need to approve a token to claim?",
-        answer: "The distributor contract needs permission to move tokens on your behalf during the claim.",
+        answer:
+          "The distributor contract needs permission to move tokens on your behalf during the claim.",
       },
       { question: "Is there a fee?", answer: "No. You only pay the network fee." },
-      { question: "What if I miss the window?", answer: "Unclaimed allocations return to the treasury." },
+      {
+        question: "What if I miss the window?",
+        answer: "Unclaimed allocations return to the treasury.",
+      },
     ],
   },
 

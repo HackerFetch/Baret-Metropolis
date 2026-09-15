@@ -15,10 +15,10 @@
     "./extension": "./src/extension/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "lint:copy": "node ./scripts/lint-copy.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "6.0.3"
   }
 }

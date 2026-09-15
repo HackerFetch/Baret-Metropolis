@@ -13,7 +13,8 @@
 export const install = {
   meta: {
     title: "Install Baret",
-    description: "Install the Baret wallet for Chrome or Firefox. Takes about three minutes, no account needed.",
+    description:
+      "Install the Baret wallet for Chrome or Firefox. Takes about three minutes, no account needed.",
   },
 
   hero: {
@@ -148,11 +149,13 @@ export const install = {
     items: [
       {
         question: "Chrome says the manifest is invalid",
-        answer: "You probably picked the archive instead of the extracted folder. Pick the folder that contains manifest.json.",
+        answer:
+          "You probably picked the archive instead of the extracted folder. Pick the folder that contains manifest.json.",
       },
       {
         question: "Baret disappeared after I restarted Firefox",
-        answer: "Firefox clears temporary add-ons on restart. Load it again from the debugging page. Your wallet and settings are still there.",
+        answer:
+          "Firefox clears temporary add-ons on restart. Load it again from the debugging page. Your wallet and settings are still there.",
       },
       {
         question: "The toolbar icon is not showing",
@@ -160,7 +163,8 @@ export const install = {
       },
       {
         question: "It says it cannot reach the analysis server",
-        answer: "The hosted server is rate limited. Wait a moment and try again, or run your own and point the extension at it in advanced settings.",
+        answer:
+          "The hosted server is rate limited. Wait a moment and try again, or run your own and point the extension at it in advanced settings.",
       },
     ],
   },

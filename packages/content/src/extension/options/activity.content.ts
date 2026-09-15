@@ -9,12 +9,26 @@ export const optionsActivity = {
   filters: {
     type: { label: "Type", all: "Everything" },
     verdict: { label: "Verdict", all: "Any verdict" },
-    dateRange: { label: "Dates", all: "All time", today: "Today", week: "Last 7 days", month: "Last 30 days", custom: "Custom" },
+    dateRange: {
+      label: "Dates",
+      all: "All time",
+      today: "Today",
+      week: "Last 7 days",
+      month: "Last 30 days",
+      custom: "Custom",
+    },
     amount: { label: "Amount", min: "From", max: "To" },
     account: { label: "Account", all: "All accounts" },
   },
 
-  columns: { time: "Time", type: "Type", site: "Site", amount: "Amount", verdict: "Verdict", status: "Status" },
+  columns: {
+    time: "Time",
+    type: "Type",
+    site: "Site",
+    amount: "Amount",
+    verdict: "Verdict",
+    status: "Status",
+  },
 
   bulk: {
     recheck: {
