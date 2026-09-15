@@ -1,36 +1,36 @@
-# Baret — Sistem Mimarisi
+# Baret — System Architecture
 
-> Bu doküman Monad Metropolis için sıfırdan yazılacak Baret implementasyonunun **hedef mimarisidir** (henüz kod yok). Kod yazılmaya başlandıkça bu dosya kodla senkron tutulmalı — bir çelişki görülürse kaynak kod otorite kabul edilir ve bu dosya güncellenir.
+> This document is the **target architecture** for the Baret implementation to be written from scratch for Monad Metropolis (no code yet). As code starts being written, this file must be kept in sync with the code — if a contradiction is found, the source code is treated as the authority and this file is updated.
 
-Son güncelleme: 2026-09-13 · Durum: **Tasarım aşaması**
-
----
-
-## 1. Tasarım İlkeleri
-
-1. **Sadece Monad.** Hiçbir dosyada "any EVM chain" / "point at any chain" genellemesi yok. `chain.ts` (veya eşdeğeri) sadece iki girişe sahip: `testnet` (10143) ve `mainnet` (143). Başka bir zincirin adı hiçbir yerde geçmez.
-2. **Fail-closed.** Yeterli veri yoksa (simülasyon başarısız, hesap durumu eksik) karar **blok** yönünde düşer, "allow" değil.
-3. **SDK'lar zincir kütüphanesinden bağımsız tüketilebilir.** `@baret/guard` gibi paketler `ethers`/`viem` import etmeden tüketilebilmeli — cüzdan UI'ları hafif kalsın.
-4. **Sponsor entegrasyonu ürünün içinde, ayrı bir "demo modu" değil.** Nansen, Cleanverse, Mera, Dynamic, Envio entegrasyonları ana analiz akışının parçası; kapatıldığında ürün gerçekten eksilir.
-5. **Politika kullanıcının, motor Baret'in.** `GuardPolicy` tamamen veri (JSON) olarak taşınır; motor kodu policy'yi yorumlar ama policy'ye gömülü değildir.
+Last updated: 2026-09-13 · Status: **Design phase**
 
 ---
 
-## 2. Üst Düzey Bileşen Diyagramı
+## 1. Design Principles
+
+1. **Monad only.** No file contains an "any EVM chain" / "point at any chain" generalization. `chain.ts` (or its equivalent) has exactly two entries: `testnet` (10143) and `mainnet` (143). No other chain's name appears anywhere.
+2. **Fail-closed.** When there is insufficient data (simulation failed, account state missing), the decision falls on the **block** side, not "allow".
+3. **SDKs can be consumed independently of the chain library.** Packages such as `@baret/guard` must be consumable without importing `ethers`/`viem` — wallet UIs should stay lightweight.
+4. **Sponsor integrations are inside the product, not a separate "demo mode".** The Nansen, Cleanverse, Mera, Dynamic and Envio integrations are part of the main analysis flow; when switched off, the product genuinely loses capability.
+5. **The policy belongs to the user, the engine to Baret.** `GuardPolicy` is carried entirely as data (JSON); the engine code interprets the policy but is not embedded in it.
+
+---
+
+## 2. High-Level Component Diagram
 
 ```mermaid
 flowchart TB
     subgraph Clients
         EXT[apps/extension<br/>Chrome MV3 wallet + x402 interceptor]
         WAL[apps/wallet<br/>Mera-powered standalone smart wallet]
-        SHOW[apps/showcase<br/>tehdit senaryoları + /agents kontrol paneli]
-        MM[MetaMask Agent Wallet<br/>packages/metamask-plugin üzerinden]
+        SHOW[apps/showcase<br/>threat scenarios + /agents control panel]
+        MM[MetaMask Agent Wallet<br/>via packages/metamask-plugin]
     end
 
     subgraph Core
         SDK[packages/guard<br/>TransactionGuard SDK]
         AGENT[packages/agent-kit<br/>guarded signer + CLI]
-        API[apps/server<br/>Fastify analiz API]
+        API[apps/server<br/>Fastify analysis API]
     end
 
     subgraph OnChain["Monad testnet / mainnet"]
@@ -55,66 +55,66 @@ flowchart TB
     SDK --> API
     API --> NANSEN
     API --> CLEAN
-    API -->|okur| RR
-    API -->|okur/yazar| IDX
-    CRE -->|threat intel yazar| RR
+    API -->|reads| RR
+    API -->|reads/writes| IDX
+    CRE -->|writes threat intel| RR
     WAL --> MERA
     AGENT --> DYNAMIC
     AGENT -->|guardedSign/guardedSubmit| PG
     MERA -->|PRF sub-key| PG
-    IDX -->|indexler| PG
-    IDX -->|indexler| RR
+    IDX -->|indexes| PG
+    IDX -->|indexes| RR
 ```
 
 ---
 
-## 3. Monorepo Yapısı
+## 3. Monorepo Layout
 
 ```
 baret/
 ├── apps/
-│   ├── server/        Fastify + TypeScript analiz API'si (motorun kalbi)
-│   ├── wallet/        Mera passkey ile çalışan bağımsız akıllı cüzdan demosu
-│   ├── extension/     Chrome MV3 (+ mümkünse Firefox) tarayıcı eklentisi
-│   └── showcase/      Tehdit senaryoları galerisi + /agents kontrol sayfası
+│   ├── server/        Fastify + TypeScript analysis API (the heart of the engine)
+│   ├── wallet/        Standalone smart wallet demo running on Mera passkeys
+│   ├── extension/     Chrome MV3 (+ Firefox if possible) browser extension
+│   └── showcase/      Threat scenario gallery + /agents control page
 ├── packages/
 │   ├── guard/             @baret/guard — TransactionGuard + GuardPolicy SDK
-│   ├── agent-kit/         @baret/agent-kit — guarded signer (Dynamic destekli) + CLI
-│   ├── metamask-plugin/   Baret firewall'ının MetaMask Agent Wallet plugin paketi
-│   ├── wallet-adapter/    dApp ↔ cüzdan postMessage köprüsü
-│   ├── ext-protocol/      Eklenti mesaj-yolu tipleri
-│   ├── ui/                Tasarım token'ları + paylaşılan React bileşenleri
-│   └── showcase-ui/       Showcase siteleri için ortak UI iskeleti
+│   ├── agent-kit/         @baret/agent-kit — guarded signer (Dynamic-backed) + CLI
+│   ├── metamask-plugin/   MetaMask Agent Wallet plugin package for the Baret firewall
+│   ├── wallet-adapter/    dApp ↔ wallet postMessage bridge
+│   ├── ext-protocol/      Extension message-bus types
+│   ├── ui/                Design tokens + shared React components
+│   └── showcase-ui/       Shared UI skeleton for showcase sites
 ├── contracts/         Foundry — PaymentGuard.sol, ReputationRegistry.sol
 ├── workflows/         Chainlink CRE — reputation-oracle workflow
-├── indexer/           Envio HyperIndex config + handler'lar
-├── docs/              Bu doküman seti
+├── indexer/           Envio HyperIndex config + handlers
+├── docs/              This documentation set
 ├── pnpm-workspace.yaml
 └── docker-compose.yml / render.yaml / vercel.json (deploy config)
 ```
 
-**Teknoloji seçimleri:**
-- **Fastify** — API sunucusu (TypeScript).
-- **ethers.js veya viem** — Monad RPC etkileşimi (karar: `DECISIONS.md`'de netleşecek).
-- **Zod** — env ve request şema doğrulaması.
-- **Foundry** — sözleşme geliştirme/test/deploy.
-- **React + Vite** — wallet/extension/showcase UI'ları.
-- **Envio HyperIndex** — on-chain event indexleme (GraphQL sorgu yüzeyi).
+**Technology choices:**
+- **Fastify** — API server (TypeScript).
+- **ethers.js or viem** — Monad RPC interaction (decision: to be settled in `DECISIONS.md`).
+- **Zod** — env and request schema validation.
+- **Foundry** — contract development/test/deploy.
+- **React + Vite** — wallet/extension/showcase UIs.
+- **Envio HyperIndex** — on-chain event indexing (GraphQL query surface).
 
 ---
 
-## 4. Zincir Konfigürasyonu (SADECE Monad)
+## 4. Chain Configuration (Monad ONLY)
 
 ```ts
-// apps/server/src/config/chains.ts — hedef şekil
+// apps/server/src/config/chains.ts — target shape
 export const CHAINS = {
   testnet: {
     chainId: 10143,
-    rpcUrl: process.env.MONAD_TESTNET_RPC_URL, // Alchemy birincil
+    rpcUrl: process.env.MONAD_TESTNET_RPC_URL, // Alchemy primary
     explorerUrl: "https://testnet.monadexplorer.com",
     nativeSymbol: "MON",
     nativeDecimals: 18,
-    usdcAddress: process.env.MONAD_TESTNET_USDC_ADDRESS, // build sırasında doğrulanacak, placeholder YOK
+    usdcAddress: process.env.MONAD_TESTNET_USDC_ADDRESS, // to be verified during build, NO placeholder
     faucetUrl: "https://faucet.monad.xyz",
   },
   mainnet: {
@@ -129,145 +129,145 @@ export const CHAINS = {
 } as const;
 ```
 
-> Not: Önceki (Monad dışı) implementasyonlarda "any EVM chain"e genişletmek için `RPC_URL`/`CHAIN_ID` gibi genel env değişkenleri kullanılmıştı. Bu projede **bilerek tersine çevriliyor**: env değişkenleri `MONAD_TESTNET_*` / `MONAD_MAINNET_*` şeklinde adlandırılır, kod hiçbir yerde "generic EVM chain" varsayımı yapmaz.
+> Note: Previous (non-Monad) implementations used generic env variables such as `RPC_URL`/`CHAIN_ID` to extend to "any EVM chain". In this project that is **deliberately reversed**: env variables are named `MONAD_TESTNET_*` / `MONAD_MAINNET_*`, and the code makes no "generic EVM chain" assumption anywhere.
 
 ---
 
-## 5. Bir Analiz İsteğinin Yaşam Döngüsü
+## 5. Lifecycle of an Analysis Request
 
-`POST /v1/analyze` — girdi: `{ network, transaction, userWallet?, policy?, integratorRequestId? }`
+`POST /v1/analyze` — input: `{ network, transaction, userWallet?, policy?, integratorRequestId? }`
 
 ```
-[1] Rate limit (IP bazlı)
-[2] Auth (API key veya x402 ödeme — DELTAG_* değil, BARET_* prefix'i kullanılacak)
-[3] Zod gövde doğrulama
+[1] Rate limit (per IP)
+[2] Auth (API key or x402 payment — the BARET_* prefix will be used, not DELTAG_*)
+[3] Zod body validation
      ↓  apps/server/src/application/analyze-transaction.ts
-[4]  decodeTransaction()          raw hex veya {from,to,value,data} → normalize edilmiş tx
-[5]  collectTouchedAddresses()    dokunulan kontrat/adresler toplanır
-[6]  simulate()                   Monad RPC: eth_call + debug_traceCall (varsa) ile call-trace
-[7]  extractEstimatedChanges()    bakiye/allowance delta'ları (native MON + ERC-20)
-[8]  fetchReputationLabels()      Nansen API: adres etiketleri (whale/fresh/market-maker/flagged)
-[9]  readOnchainReputation()      ReputationRegistry.sol'dan CRE-beslemeli itibar verisi
-[10] checkCompliance()            Cleanverse: CVI kimlik doğrulaması + CVA transfer kuralı
-[11] runRiskDetection()           tüm dedektörler (bkz. §6) sırayla çalışır, bulgular birleşir
-[12] evaluatePolicy()             GuardPolicy uygulanır → Decision
-[13] generateSuggestions()        "şöyle yapsan daha güvenli" önerileri
-[14] audit.record()               Envio indexer'ın okuyacağı on-chain event + (varsa) yerel audit kaydı
+[4]  decodeTransaction()          raw hex or {from,to,value,data} → normalized tx
+[5]  collectTouchedAddresses()    collect the touched contracts/addresses
+[6]  simulate()                   Monad RPC: call-trace via eth_call + debug_traceCall (if available)
+[7]  extractEstimatedChanges()    balance/allowance deltas (native MON + ERC-20)
+[8]  fetchReputationLabels()      Nansen API: address labels (whale/fresh/market-maker/flagged)
+[9]  readOnchainReputation()      CRE-fed reputation data from ReputationRegistry.sol
+[10] checkCompliance()            Cleanverse: CVI identity verification + CVA transfer rule
+[11] runRiskDetection()           all detectors (see §6) run in sequence, findings are merged
+[12] evaluatePolicy()             GuardPolicy is applied → Decision
+[13] generateSuggestions()        "this would be safer" suggestions
+[14] audit.record()               on-chain event to be read by the Envio indexer + (if any) local audit record
      ↓
-YANIT { safe, reasons, findingCodes, estimatedChanges, confidence, meta, suggestions }
+RESPONSE { safe, reasons, findingCodes, estimatedChanges, confidence, meta, suggestions }
 ```
 
 ---
 
-## 6. Risk Dedektörleri
+## 6. Risk Detectors
 
-| Dedektör | Dosya (hedef) | Ne yakalar | Örnek bulgu kodları |
+| Detector | File (target) | What it catches | Example finding codes |
 |---|---|---|---|
-| simulation | `risk/detectors/simulation.ts` | Simülasyon başarısız, sadece-calldata (trace yok) | `SIMULATION_FAILED`, `LOW_CONFIDENCE_INCOMPLETE_DATA` |
-| approvals | `risk/detectors/approvals.ts` | Sınırsız `approve`, `setApprovalForAll`, EIP-2612 `permit` | `ERC20_APPROVAL_GRANTED`, `ERC20_APPROVAL_UNLIMITED`, `NFT_OPERATOR_GRANTED` |
-| programs | `risk/detectors/programs.ts` | Riskli listedeki kontrat / bilinmeyen kontrat | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE` |
-| evm-danger | `risk/detectors/evm-danger.ts` | `SELFDESTRUCT`, `DELEGATECALL`, sahiplik devri | `SELFDESTRUCT_CALL`, `DELEGATECALL_DETECTED`, `OWNERSHIP_TRANSFER` |
-| reputation | `risk/detectors/reputation.ts` | Nansen etiketleri + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY` |
-| compliance | `risk/detectors/compliance.ts` **(yeni)** | Cleanverse CVI doğrulaması geçmemiş transfer | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED` |
-| cpi | `risk/detectors/cpi.ts` | Derin internal-call nesting, yüksek işlem sayısı | `DEEP_CALL_NESTING`, `HIGH_OPERATION_COUNT` |
-| compute | `risk/detectors/compute.ts` | Aşırı gas tavanı | `EXCESSIVE_GAS` |
-| x402 | `risk/detectors/x402.ts` | Memo eksik, allowlist dışı asset, hedef/asset uyuşmazlığı | `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH`, `X402_NON_CANONICAL_ASSET` |
+| simulation | `risk/detectors/simulation.ts` | Simulation failed, calldata-only (no trace) | `SIMULATION_FAILED`, `LOW_CONFIDENCE_INCOMPLETE_DATA` |
+| approvals | `risk/detectors/approvals.ts` | Unlimited `approve`, `setApprovalForAll`, EIP-2612 `permit` | `ERC20_APPROVAL_GRANTED`, `ERC20_APPROVAL_UNLIMITED`, `NFT_OPERATOR_GRANTED` |
+| programs | `risk/detectors/programs.ts` | Contract on the risky list / unknown contract | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE` |
+| evm-danger | `risk/detectors/evm-danger.ts` | `SELFDESTRUCT`, `DELEGATECALL`, ownership transfer | `SELFDESTRUCT_CALL`, `DELEGATECALL_DETECTED`, `OWNERSHIP_TRANSFER` |
+| reputation | `risk/detectors/reputation.ts` | Nansen labels + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY` |
+| compliance | `risk/detectors/compliance.ts` **(new)** | Transfer that has not passed Cleanverse CVI verification | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED` |
+| cpi | `risk/detectors/cpi.ts` | Deep internal-call nesting, high operation count | `DEEP_CALL_NESTING`, `HIGH_OPERATION_COUNT` |
+| compute | `risk/detectors/compute.ts` | Excessive gas ceiling | `EXCESSIVE_GAS` |
+| x402 | `risk/detectors/x402.ts` | Missing memo, asset outside the allowlist, destination/asset mismatch | `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH`, `X402_NON_CANONICAL_ASSET` |
 
-Her bulgu: `{ code, severity: low|medium|high|critical, message, details? }`.
+Every finding: `{ code, severity: low|medium|high|critical, message, details? }`.
 
 ---
 
-## 7. Policy Motoru
+## 7. Policy Engine
 
-`GuardPolicy` — tamamen veri, ~20 bağımsız aç/kapa + eşik alanı:
+`GuardPolicy` — pure data, ~20 independent on/off + threshold fields:
 
-| Kategori | Alanlar |
+| Category | Fields |
 |---|---|
-| Simülasyon | `requireSuccessfulSimulation` |
-| Kontrat | `blockRiskyContracts`, `blockUnknownContractExposure` |
+| Simulation | `requireSuccessfulSimulation` |
+| Contract | `blockRiskyContracts`, `blockUnknownContractExposure` |
 | Approval | `blockUnlimitedApprovals`, `blockSetApprovalForAll`, `blockPermit` |
-| Tehlikeli opcode | `blockSelfdestruct`, `blockDelegatecall`, `blockOwnershipTransfer` |
-| Kayıp limiti | `maxLossPercent`, `minPostUsdcBalance`, `minPostNativeBalance` |
-| İtibar | `blockKnownMalicious`, `minNansenTrustLevel` |
+| Dangerous opcodes | `blockSelfdestruct`, `blockDelegatecall`, `blockOwnershipTransfer` |
+| Loss limits | `maxLossPercent`, `minPostUsdcBalance`, `minPostNativeBalance` |
+| Reputation | `blockKnownMalicious`, `minNansenTrustLevel` |
 | Compliance | `requireComplianceCheck`, `allowedCountries`, `minComplianceTier` |
-| Kaynak | `maxGas` |
+| Resources | `maxGas` |
 | x402 | `requireMemo`, `maxPerTxCap`, `maxHourlyCap`, `maxDailyCap`, `allowedAssets`, `allowedMerchantOrigins` |
-| Genel | `allowWarnings` |
+| General | `allowWarnings` |
 
-**Hazır şablonlar:** `STRICT_POLICY`, `BALANCED_POLICY` (üretim varsayılanı), `PERMISSIVE_POLICY` — `packages/guard/src/policy-templates.ts`.
+**Ready-made templates:** `STRICT_POLICY`, `BALANCED_POLICY` (production default), `PERMISSIVE_POLICY` — `packages/guard/src/policy-templates.ts`.
 
-**Karar mantığı fail-closed'dur:** kayıp hesaplanamıyorsa, compliance verisi çekilemiyorsa, itibar API'sine ulaşılamıyorsa → blok.
+**The decision logic is fail-closed:** if the loss cannot be computed, if compliance data cannot be fetched, if the reputation API is unreachable → block.
 
 ---
 
-## 8. Bileşen Detayları
+## 8. Component Details
 
 ### 8.1 `apps/server`
-Analiz motorunun tamamı burada. Endpoint'ler:
+The entire analysis engine lives here. Endpoints:
 
-| Method | Path | Açıklama |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/health`, `/health/ready` | Liveness / RPC hazır mı |
-| POST | `/v1/analyze` | Tek işlem analizi |
-| POST | `/v1/analyze/batch` | ≤25 işlem |
-| POST | `/v1/analyze/stream` | SSE sonuç akışı |
-| POST | `/v1/replay` | Yeniden simülasyon |
-| GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-destekli) |
-| GET/POST | `/mcp/tools`, `/mcp/call` | AI agent araçları |
-| GET | `/demo/paywall` | x402 demo (bkz. `X402_FACILITATOR.md`) |
+| GET | `/health`, `/health/ready` | Liveness / is the RPC ready |
+| POST | `/v1/analyze` | Single transaction analysis |
+| POST | `/v1/analyze/batch` | ≤25 transactions |
+| POST | `/v1/analyze/stream` | SSE result stream |
+| POST | `/v1/replay` | Re-simulation |
+| GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-backed) |
+| GET/POST | `/mcp/tools`, `/mcp/call` | AI agent tools |
+| GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
 
-MCP araçları: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM destekli düz-dil açıklama — KIMI/Qwen).
+MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM-backed plain-language explanation — KIMI/Qwen).
 
-### 8.2 `apps/wallet` — Mera destekli bağımsız cüzdan
-- Passkey ile hesap oluşturma (seed phrase yok).
-- Mera PRF-türetilmiş anahtar materyalinden agent sub-key türetme akışı.
-- Görsel policy editörü (`Policies` sayfası) — şablon seç, sonra tek tek kuralı ayarla.
-- Her imza öncesi `@baret/guard` üzerinden analiz.
+### 8.2 `apps/wallet` — Mera-powered standalone wallet
+- Account creation with a passkey (no seed phrase).
+- Flow for deriving an agent sub-key from Mera's PRF-derived key material.
+- Visual policy editor (`Policies` page) — pick a template, then adjust each rule individually.
+- Analysis via `@baret/guard` before every signature.
 
 ### 8.3 `apps/extension` — Chrome MV3
 - EIP-1193 / EIP-6963 provider.
-- `background`: hesap durum makinesi, IndexedDB (keystore, history, allowances, site izinleri), zincir monitörü (WebSocket — polling değil, notes.txt'nin Alchemy tavsiyesine göre).
-- `inpage`: `window.ethereum` sağlayıcı + x402 fetch interceptor.
-- Her imza talebi guard'dan geçer; riskli işlem dApp'te değil cüzdanda bloklanır.
+- `background`: account state machine, IndexedDB (keystore, history, allowances, site permissions), chain monitor (WebSocket — not polling, per the Alchemy recommendation in notes.txt).
+- `inpage`: `window.ethereum` provider + x402 fetch interceptor.
+- Every signature request goes through the guard; a risky transaction is blocked in the wallet, not in the dApp.
 
 ### 8.4 `apps/showcase`
-- En az 4-5 tehdit senaryosu (safe/danger varyantlı sahte dApp'ler — Monad temalı isimlerle, eski repodaki "novaswap" gibi isimler yeniden kullanılmayacak, yeni Monad-temalı isimler seçilecek).
-- `/agents` sayfası: agent-kit + PaymentGuard + (varsa) Qwen adversarial reviewer canlı playground'u.
+- At least 4-5 threat scenarios (fake dApps with safe/danger variants — with Monad-themed names; names like "novaswap" from the old repo will not be reused, new Monad-themed names will be chosen).
+- `/agents` page: live playground for agent-kit + PaymentGuard + (if available) the Qwen adversarial reviewer.
 
 ### 8.5 `packages/guard`
-`TransactionGuard.evaluate({ transaction, userWallet, policy })` → `{ decision, blockingReasons, analysis }`. **Asla imzalamaz/göndermez** — sadece karar döner.
+`TransactionGuard.evaluate({ transaction, userWallet, policy })` → `{ decision, blockingReasons, analysis }`. **Never signs/submits** — only returns a decision.
 
 ### 8.6 `packages/agent-kit`
-`AgentWallet` sınıfı: `evaluate()`, `guardedSign()`, `guardedSubmit()`. Dynamic SDK ile agent/server wallet oluşturma ve delege yetki yönetimi. CLI: `baret analyze | sign | submit | address | policy list`. Exit kodları: `0` allow, `1` policy bloğu, `2` hata.
+`AgentWallet` class: `evaluate()`, `guardedSign()`, `guardedSubmit()`. Agent/server wallet creation and delegated permission management with the Dynamic SDK. CLI: `baret analyze | sign | submit | address | policy list`. Exit codes: `0` allow, `1` policy block, `2` error.
 
 ### 8.7 `packages/metamask-plugin`
-Baret'in guard/policy motorunu MetaMask Agent Wallet plugin manifest formatına saran ayrı paket. Salt-okunur + tx-request-öneren yetkilerle sınırlı; agent-wallet policy motorunu bypass edemez (bounty'nin şartı).
+A separate package that wraps Baret's guard/policy engine in the MetaMask Agent Wallet plugin manifest format. Limited to read-only + tx-request-proposing permissions; it cannot bypass the agent-wallet policy engine (a condition of the bounty).
 
 ---
 
-## 9. Ortam Değişkenleri (taslak — `BARET_*` prefix'i, `DELTAG_*` değil)
+## 9. Environment Variables (draft — `BARET_*` prefix, not `DELTAG_*`)
 
-| Değişken | Zorunlu | Açıklama |
+| Variable | Required | Description |
 |---|---|---|
-| `MONAD_TESTNET_RPC_URL` | Evet | Alchemy Monad testnet RPC |
-| `MONAD_MAINNET_RPC_URL` | Hayır | Alchemy Monad mainnet RPC |
-| `MONAD_TESTNET_USDC_ADDRESS` | Evet (x402/compliance için) | Build sırasında doğrulanmış gerçek adres |
-| `BARET_API_KEYS` | Hayır | Virgülle ayrılmış API key'leri |
-| `BARET_AUTH_MODE` | Hayır | `api_key` / `x402` / `both` |
-| `NANSEN_API_KEY` | Nansen entegrasyonu için | |
-| `CLEANVERSE_API_KEY` / `CLEANVERSE_VALIDATOR_ADDRESS` | Compliance detector için | |
-| `X402_ENABLED` / `X402_PAY_TO` / `X402_NETWORK=eip155:10143` / `X402_FACILITATOR_URL` | x402 için | bkz. `X402_FACILITATOR.md` |
-| `ENVIO_ENDPOINT` | Audit/dashboard için | Envio HyperIndex GraphQL endpoint'i |
-| `DYNAMIC_ENVIRONMENT_ID` | agent-kit için | |
-| `MERA_*` | apps/wallet için | Mera doküman setine göre netleşecek |
-| `QWEN_API_KEY` / `KIMI_API_KEY` | Stretch — LLM açıklama/reviewer katmanı | |
+| `MONAD_TESTNET_RPC_URL` | Yes | Alchemy Monad testnet RPC |
+| `MONAD_MAINNET_RPC_URL` | No | Alchemy Monad mainnet RPC |
+| `MONAD_TESTNET_USDC_ADDRESS` | Yes (for x402/compliance) | Real address verified during build |
+| `BARET_API_KEYS` | No | Comma-separated API keys |
+| `BARET_AUTH_MODE` | No | `api_key` / `x402` / `both` |
+| `NANSEN_API_KEY` | For the Nansen integration | |
+| `CLEANVERSE_API_KEY` / `CLEANVERSE_VALIDATOR_ADDRESS` | For the compliance detector | |
+| `X402_ENABLED` / `X402_PAY_TO` / `X402_NETWORK=eip155:10143` / `X402_FACILITATOR_URL` | For x402 | see `X402_FACILITATOR.md` |
+| `ENVIO_ENDPOINT` | For audit/dashboard | Envio HyperIndex GraphQL endpoint |
+| `DYNAMIC_ENVIRONMENT_ID` | For agent-kit | |
+| `MERA_*` | For apps/wallet | To be settled based on the Mera documentation set |
+| `QWEN_API_KEY` / `KIMI_API_KEY` | Stretch — LLM explanation/reviewer layer | |
 
-Tam liste kod yazılırken `apps/server/.env.example`'da tutulacak; bu tablo değiştikçe güncellenmeli.
+The full list will be kept in `apps/server/.env.example` as the code is written; this table must be updated as it changes.
 
 ---
 
-## 10. Açıkça Yapılmayacaklar
+## 10. Explicit Non-Goals
 
-- Genel "her EVM zincirinde çalışır" konfigürasyonu yok.
-- Kalıcı olmayan (in-memory only) audit trail'e geri dönülmeyecek — Envio indexer birincil kaynak.
-- Akıllı cüzdan adresi placeholder olarak bırakılmayacak (önceki repolardaki bilinen eksik) — Mera entegrasyonu ile gerçek hesap.
+- No generic "works on every EVM chain" configuration.
+- No going back to a non-persistent (in-memory only) audit trail — the Envio indexer is the primary source.
+- The smart wallet address will not be left as a placeholder (a known gap in the previous repos) — a real account via the Mera integration.

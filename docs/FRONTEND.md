@@ -1,196 +1,196 @@
-# Baret — Frontend İçerik Spesifikasyonu (Showcase / Marketing Sitesi)
+# Baret — Frontend Content Specification (Showcase / Marketing Site)
 
-> **Bu dosya sadece İÇERİK içindir: her sayfada ne anlatılıyor, hangi bölümler var, hangi metin/mesaj/veri gösteriliyor, kullanıcı ne yapabiliyor.** Renk, tipografi, spacing, animasyon, palet — hiçbiri bu dosyada yok ve olmayacak; bunlar `BRAND.md` (henüz yazılmadı) ve frontend ekibinin kendi tasarım kararlarına ait. Bu dosyayı okuyan bir tasarımcı/geliştirici "bu sayfada ne olmalı"yı öğrenmeli, "nasıl görünmeli"yi değil.
+> **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
-Son güncelleme: 2026-09-14 · Durum: **İçerik spesifikasyonu, tasarım/implementasyon yok** · Kaynak: Baret-Stellar'ın `apps/showcase` kod tabanı — Monad/EVM'e uyarlanmış içerik. Site isimleri kullanıcı talimatıyla **aynen korunmuştur**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (bkz. `DECISIONS.md` D-010).
+Last updated: 2026-09-14 · Status: **Content specification, no design/implementation** · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
-Bu, `apps/showcase`'in sahip olduğu tüm sayfaları kapsar: **Home**, **Showcase hub + 6 site**, **Agents**, **Docs**, **Install**.
+This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites**, **Agents**, **Docs**, **Install**.
 
 ---
 
 ## 1. Home / Landing Page
 
-**Amaç:** Ürünü hiç bilmeyen birine 60 saniyede "bu ne yapıyor ve neden önemli" sorusunu cevaplamak. Profesyonel, iddiasız, sayılarla konuşan bir ton.
+**Purpose:** Answer "what does this do and why does it matter" in 60 seconds for someone who has never heard of the product. A professional, unpretentious tone that speaks in numbers.
 
-### 1.1 Sinematik açılış (opsiyonel, scroll-tetiklemeli)
-Sayfa scroll edildikçe ilerleyen kısa bir video/animasyon dizisi, sırayla şu cümleleri gösterir (her biri bir scroll adımı):
-1. "Her cüzdan dApp'in gösterdiği her şeyi imzalar."
-2. "Bir Confirm butonu. Sonra zincir karar verir."
-3. "Baret önce okur."
-4. "Simüle edildi. Decode edildi. 25+ dedektör."
-5. "Rolling cap'ler. Site bazlı policy. On-chain guard."
-6. "Safe / Caution / Blocked. Anahtarlarınız hareket etmeden önce."
-7. Marka anı: "Baret. İmzanız için bir firewall."
+### 1.1 Cinematic opener (optional, scroll-triggered)
+A short video/animation sequence that advances as the page scrolls, showing the following lines in order (one per scroll step):
+1. "Every wallet signs whatever the dApp shows it."
+2. "One Confirm button. Then the chain decides."
+3. "Baret reads first."
+4. "Simulated. Decoded. 25+ detectors."
+5. "Rolling caps. Per-site policy. On-chain guard."
+6. "Safe / Caution / Blocked. Before your keys move."
+7. Brand moment: "Baret. A firewall for your signature."
 
-Bu bölüm opsiyonel/stretch — asset yoksa hiç render edilmez, sayfa doğrudan Hero'dan başlar.
+This section is optional/stretch — if there are no assets it is not rendered at all, and the page starts directly at the Hero.
 
 ### 1.2 Hero
-- Canlı-durum rozeti: "Monad testnet'te canlı"
-- Başlık: **"Önce oku. Sonra imzala."**
-- Alt başlık: "Baret her Monad transaction'ını imzalamadan önce okur. Transaction'ı decode eder, ne yapacağını simüle eder, ve anahtarlarınız hareket etmeden önce düz dille bir karar verir: Safe / Caution / Blocked."
-- İki CTA: **"Showcase'i aç"** (birincil), **"Docs'u oku"** (ikincil)
-- Güven rozetleri (dört kısa etiket): "İmzalamadan önce simüle edilir" · "Düz dilde karar" · "Rolling harcama cap'leri" · "Sapmada uyarı"
-- Sağ tarafta: gerçek Sign Request popup'ının bire bir küçük bir kopyası (pazarlama mockup'ı ile gerçek cüzdan ekranı aynı bileşeni paylaşır) — bloklanmış bir işlem örneği gösterir (ör. "evil-drainer.xyz" origin'inden gelen sınırsız approval isteği + "Blocked by your policy" kararı).
+- Live-status badge: "Live on Monad testnet"
+- Headline: **"Read first. Then sign."**
+- Subheadline: "Baret reads every Monad transaction before you sign it. It decodes the transaction, simulates what it will do, and gives you a plain-language verdict before your keys move: Safe / Caution / Blocked."
+- Two CTAs: **"Open the Showcase"** (primary), **"Read the Docs"** (secondary)
+- Trust badges (four short labels): "Simulated before signing" · "Plain-language verdict" · "Rolling spend caps" · "Alerts on drift"
+- On the right: a pixel-for-pixel miniature of the real Sign Request popup (the marketing mockup and the real wallet screen share the same component) — showing an example of a blocked transaction (e.g. an unlimited approval request from the origin "evil-drainer.xyz" + the verdict "Blocked by your policy").
 
-### 1.3 Dedektör marquee'si
-Kayan/statik bir şerit, dedektörlerin isimlerini listeler (örnek etiketler — gerçek liste `ARCHITECTURE.md` §6 ile senkron tutulmalı):
+### 1.3 Detector marquee
+A scrolling/static strip listing the detector names (example labels — the real list must stay in sync with `ARCHITECTURE.md` §6):
 "Wallet drainer" · "Unlimited approval" · "Hidden contract call" · "Admin key handoff" · "Fee abuse vs simulated baseline" · "Look-alike asset" · "Memo omission" · "Rug-pull pattern" · "Agent drift" · "Allowance overflow" · "Facilitator impostor" · "Unknown contract" · "LP unlock" · "Compliance gate" · "Phishing payload" · "Silent re-sign"
 
-### 1.4 Üç Sütun (The Product)
-Başlık: "Üç katman, tek imza." Açıklama: "Baret anahtarlarınız hareket etmeden önce üç kontrol çalıştırır. Her biri kendi başına ayakta durur. Birlikte, drainer'ların, bayat approval'ların ve sessiz agent'ların bugün geçtiği boşluğu kapatırlar."
+### 1.4 Three Columns (The Product)
+Headline: "Three layers, one signature." Description: "Baret runs three checks before your keys move. Each one stands on its own. Together, they close the gap that drainers, stale approvals and silent agents walk through today."
 
-1. **Pre-sign Guard** — "Baret her transaction'ı sunucuda decode edip simüle eder, sonra 25+ risk dedektörü çalıştırır. Popup her bulguyu tek cümlede açıklar." Alt noktalar: Sunucu simülasyonu · 25+ risk dedektörü · Policy motoru kapısı.
-2. **Authorization Ledger** — "Her approval bir cap'i, bir saati ve canlı bir progress bar'ı olan bir satır olur. Unuttuğunuz sınırsız approval artık yok." Alt noktalar: Rolling cap'ler · Tek-tık iptal · Duraklat/devam ettir. (Canlı demo değeri: "acme-dapp.xyz günlük cap: 62/100 USDC")
-3. **Post-sign Monitor** — "Baret hesabınızı ve smart wallet'ınızı bir WebSocket üzerinden izler. İmzalamadığınız bir şey hareket ederse anında tarayıcı bildirimi alırsınız." Alt noktalar: WebSocket subscribe · Sapma tespiti · Soğuk-başlangıç backfill.
+1. **Pre-sign Guard** — "Baret decodes and simulates every transaction on the server, then runs 25+ risk detectors. The popup explains every finding in a single sentence." Sub-points: Server simulation · 25+ risk detectors · Policy engine gate.
+2. **Authorization Ledger** — "Every approval becomes a row with a cap, a clock and a live progress bar. No more unlimited approvals you forgot about." Sub-points: Rolling caps · One-click revoke · Pause/resume. (Live demo value: "acme-dapp.xyz daily cap: 62/100 USDC")
+3. **Post-sign Monitor** — "Baret watches your account and your smart wallet over a WebSocket. If something you never signed moves, you get an instant browser notification." Sub-points: WebSocket subscribe · Drift detection · Cold-start backfill.
 
-### 1.5 "x402 Boşluğu" Bölümü (The Wedge)
-Başlık: "x402 durumsuzdur. Baret değil." Açıklama: "x402, Monad'da şimdi canlı olan agentic-ödeme protokolü. Tasarım gereği **durumsuz** bir challenge-pay-settle el sıkışması. Her ödeme taze imzalanmış bir transferdir. Protokolün kendisinde allowance nesnesi yok, revoke endpoint'i yok, harcama cap'i yok. Baret protokol değil — üstüne oturan **durumlu bir kontrol katmanı** ve x402'nin bilerek dışarıda bıraktığı cap'leri ekliyor."
+### 1.5 The "x402 Gap" Section (The Wedge)
+Headline: "x402 is stateless. Baret isn't." Description: "x402 is the agentic-payment protocol now live on Monad. By design it is a **stateless** challenge-pay-settle handshake. Every payment is a freshly signed transfer. The protocol itself has no allowance object, no revoke endpoint, no spend cap. Baret is not the protocol — it is a **stateful control layer** that sits on top and adds the caps x402 deliberately left out."
 
-Karşılaştırma (x402 tek başına vs x402 + Baret), dört adımlı bir track üzerinden (402 Challenge → Sign → Pay → Settle): sade x402'de her adım bir öncekini unutur; Baret ile altındaki ledger her çağrı boyunca hatırlayan tek şeydir.
+A comparison (x402 alone vs x402 + Baret) along a four-step track (402 Challenge → Sign → Pay → Settle): in plain x402, every step forgets the one before it; with Baret, the ledger underneath is the one thing that remembers across every call.
 
-Üç somut boşluk/yanıt çifti:
-1. **Sessiz agent sapması** — Bir agent her dakika mikro-ödeme yeniden imzalar; protokolde allowance nesnesi olmadığı için hiçbir şey çalışan toplamı göstermez. → Baret'in yanıtı: saatlik/günlük rolling per-merchant cap'ler; her imza gerçek bir sayıyı düşer, cap'e ulaşınca bir sonraki bloklanır.
-2. **Sahte-benzeri asset swap'i** — Bir merchant yanlış issuer'dan "USDC" etiketli bir token sunar; spec sadece asset alanının eşleştiğini kontrol eder, hangi issuer'ın gerçek olduğunu değil. → Baret'in yanıtı: ağın kanonik USDC'siyle tohumlanmış cüzdan-taraflı bir asset allowlist'i; bilinmeyen kontratlar imzalamadan önce açık bir override ister.
-3. **Yetki anahtarı ele geçirilmesi** — İmza anahtarı sızarsa, x402'de hasarı sınırlayacak merchant-bazlı bir kapsam yoktur. → Baret'in yanıtı: tek tıkla on-chain iptal edilen, merchant-bazlı kapsamlı bir sub-key; harcama cap'leri bugün extension tarafından uygulanıyor, sınırlı bir on-chain allowance yol haritada.
+Three concrete gap/answer pairs:
+1. **Silent agent drift** — An agent re-signs a micro-payment every minute; with no allowance object in the protocol, nothing shows the running total. → Baret's answer: hourly/daily rolling per-merchant caps; every signature decrements a real number, and once the cap is hit the next one is blocked.
+2. **Look-alike asset swap** — A merchant offers a token labeled "USDC" from the wrong issuer; the spec only checks that the asset field matches, not which issuer is the real one. → Baret's answer: a wallet-side asset allowlist seeded with the network's canonical USDC; unknown contracts require an explicit override before signing.
+3. **Authorization key compromise** — If the signing key leaks, x402 has no per-merchant scope to limit the damage. → Baret's answer: a per-merchant scoped sub-key revoked on-chain with a single click; spend caps are enforced by the extension today, a bounded on-chain allowance is on the roadmap.
 
-### 1.6 İstatistik Şeridi
-Dört rakam: "25+" Risk dedektörü · "6" Tehdit senaryosu · "3" Savunma katmanı · "1" Monad testnet'te sözleşme.
+### 1.6 Stats Strip
+Four figures: "25+" Risk detectors · "6" Threat scenarios · "3" Layers of defense · "1" Contract on Monad testnet.
 
-### 1.7 Showcase Şeridi
-Başlık: "Altı sahte-ama-gerçek dApp." Açıklama: "Bir cüzdan bağlayın ve bir butona tıklayın. Baret tehdidi canlı yakalar. Slayt yok, mockup yok." Altı site kartı (isim, kategori etiketi, "Catches: X" satırı) + "Showcase'i aç" linki. Kartlar Showcase hub'ındaki §2'nin özet hâlidir.
+### 1.7 Showcase Strip
+Headline: "Six fake-but-real dApps." Description: "Connect a wallet and click a button. Baret catches the threat live. No slides, no mockups." Six site cards (name, category tag, "Catches: X" line) + "Open the Showcase" link. The cards are the condensed version of §2 on the Showcase hub.
 
-### 1.8 Karşılaştırma Bölümü
-Başlık: "Aynı imza, iki cüzdan." Açıklama: "Burada hiçbir cüzdan kötülenmiyor. Bu, bir pre-sign kontrolün uygulama ile anahtarlarınız arasına girdiğinde ne değiştiğidir." Dört satırlık yan yana karşılaştırma:
+### 1.8 Comparison Section
+Headline: "Same signature, two wallets." Description: "No wallet is being bashed here. This is what changes when a pre-sign check sits between the app and your keys." A four-row side-by-side comparison:
 
-| | Standart bir Monad cüzdanı | Baret |
+| | A standard Monad wallet | Baret |
 |---|---|---|
-| İmzalamadan önce | Bir kontrat adresi ve bir Confirm butonu. Gerisine zincir karar verir. | Decode edilmiş bir transaction, bir simülasyon, ve bir karar: Safe/Caution/Blocked. |
-| Sınırsız approval'lar | Bir kere verilir, siz hatırlayıp iptal edene kadar yaşar. | Her approval bir cap'i ve saati olan bir satırdır. Duraklatmak/iptal etmek tek tık. |
-| Agent ödemeleri | Bir agent gün boyu tavan olmadan mikro-ödemeleri yeniden imzalayabilir. | Saatlik ve günlük site-bazlı cap'ler, imza anında ve tekrar on-chain kontrol edilir. |
-| İmzaladıktan sonra | Ne olduğunu bir block explorer'dan öğrenirsiniz. | Baret hesabınızı izler, imzalamadığınız bir şey hareket ederse uyarır. |
+| Before signing | A contract address and a Confirm button. The chain decides the rest. | A decoded transaction, a simulation, and a verdict: Safe/Caution/Blocked. |
+| Unlimited approvals | Granted once, lives until you remember to revoke it. | Every approval is a row with a cap and a clock. Pausing/revoking is one click. |
+| Agent payments | An agent can re-sign micro-payments all day with no ceiling. | Hourly and daily per-site caps, checked at signing time and again on-chain. |
+| After signing | You find out what happened from a block explorer. | Baret watches your account and alerts you if something you never signed moves. |
 
-### 1.9 Güvenlik ve Gizlilik Bölümü
-Başlık: "Ne nerede çalışıyor." Açıklama: "Anahtarlarınızın hareket etmeden önceki o ana Baret'i güveniyorsunuz, o yüzden onunla tam olarak ne yaptığımız burada."
+### 1.9 Security and Privacy Section
+Headline: "What runs where." Description: "You are trusting Baret with the moment right before your keys move, so here is exactly what we do with it."
 
-Dört kart:
-1. **Analiz bir sunucuda çalışır** — "Cüzdan imzasız transaction'ı decode ve simülasyon için analiz sunucusuna gönderir. Sunucu o imzasız transaction'ı görür. Anahtarlarınızı asla görmez."
-2. **Sizsiz hiçbir şey imzalanmaz** — "Karar, popup size herhangi bir şey sormadan önce geri gelir. Siz onaylamadan hiçbir şey imzalanmaz. Baret Blocked dediğinde imzalamayı reddeder."
-3. **Anahtarlar cihazınızda kalır** — "Anahtarlarınız cihazınızda şifreli olarak durur. Asla analiz sunucusuna veya başka bir yere gönderilmez."
-4. **Simülasyon bir preflight'tır** — "Kararlar simüle edilmiş durumu yansıtır, garanti değil. Gaz, süre dolması ve ağ koşulları gerçek yürütmenin simülasyondan sapmasına neden olabilir."
+Four cards:
+1. **Analysis runs on a server** — "The wallet sends the unsigned transaction to the analysis server for decoding and simulation. The server sees that unsigned transaction. It never sees your keys."
+2. **Nothing is signed without you** — "The verdict comes back before the popup asks you anything. Nothing is signed until you approve it. When Baret says Blocked, it refuses to sign."
+3. **Keys stay on your device** — "Your keys are stored encrypted on your device. They are never sent to the analysis server or anywhere else."
+4. **Simulation is a preflight** — "Verdicts reflect simulated state, not a guarantee. Gas, expiry and network conditions can make real execution deviate from the simulation."
 
-Alt not: "Henüz denetim yok. Kod açık. Okuyun." + "Kaynağı görüntüle" linki (GitHub).
+Footnote: "No audit yet. The code is open. Read it." + "View source" link (GitHub).
 
-### 1.10 SSS
-Bir cüzdana sign butonunu emanet etmeden önce insanların sorduğu adil sorular:
-- "Analiz sunucusu çökerse ne olur?" → "Baret transaction'ın kontrol edilmediğini söyler ve kararı size bırakır. Asla sahte bir karar üretmez, asla sizin adınıza imzalamaz."
-- "Diğer cüzdanlarla birlikte çalışır mı?" → "Evet. Baret standart bir EIP-6963 sağlayıcısı olarak kaydolur, zaten kullandıklarınızın yanında aynı cüzdan seçicide görünür. Hiçbir şeyi kaldırmadan kurabilirsiniz."
-- "Ücretsiz mi?" → "Evet. Baret ücretsiz ve MIT lisansı altında açık kaynak."
-- "Mainnet ne zaman?" → "Bugün testnet. Mainnet, mağaza listelemeleri ve daha fazla gerçek dünya testinden sonra gelecek. Firewall'ı geç ama doğru göndermeyi tercih ederiz."
-- "Blocked gerçekte ne yapar?" → "Baret imzalamayı reddeder. Geçersiz kılabilirsiniz ama bu ayrı, bilinçli bir adımdır ve sonra görebilmeniz için loglanır."
-- "Anahtarlarım nerede?" → "Cihazınızda şifreli. Hiçbir yere gönderilmez — ne analiz sunucusuna ne bize."
+### 1.10 FAQ
+The fair questions people ask before trusting a wallet with the sign button:
+- "What happens if the analysis server goes down?" → "Baret tells you the transaction was not checked and leaves the decision to you. It never fabricates a verdict, and it never signs on your behalf."
+- "Does it work alongside other wallets?" → "Yes. Baret registers as a standard EIP-6963 provider and shows up in the same wallet picker next to the ones you already use. You can install it without removing anything."
+- "Is it free?" → "Yes. Baret is free and open source under the MIT license."
+- "When mainnet?" → "Testnet today. Mainnet comes after store listings and more real-world testing. We would rather ship the firewall late than wrong."
+- "What does Blocked actually do?" → "Baret refuses to sign. You can override it, but that is a separate, deliberate step, and it is logged so you can see it afterwards."
+- "Where are my keys?" → "Encrypted on your device. They are never sent anywhere — not to the analysis server, not to us."
 
-### 1.11 Son CTA
-Başlık: "Gözleriniz açıkken imzalayın." Açıklama: "Showcase'i açın, bir cüzdan bağlayın, ve Baret'in gerçek zamanlı bir wallet drainer'ı reddetmesini izleyin." İki CTA: "Showcase'i aç", "Cüzdanı kur". Alt not: "Ücretsiz ve açık kaynak, MIT lisanslı. Bugün Monad testnet'te. Mağaza incelemesi bekleniyor."
+### 1.11 Final CTA
+Headline: "Sign with your eyes open." Description: "Open the Showcase, connect a wallet, and watch Baret refuse a wallet drainer in real time." Two CTAs: "Open the Showcase", "Install the wallet". Footnote: "Free and open source, MIT licensed. On Monad testnet today. Store review pending."
 
 ---
 
-## 2. Showcase Hub Sayfası
+## 2. Showcase Hub Page
 
-**Amaç:** "Muayene sahası." Altı sahte-ama-gerçek dApp, her biri farklı bir saldırı örüntüsüne bağlanmış.
+**Purpose:** "The proving ground." Six fake-but-real dApps, each wired to a different attack pattern.
 
 ### 2.1 Hero
-Başlık: **"Altı dApp. Altı tehdit. Yapmadığınız bir imza."** Açıklama: "Aşağıdaki her site production-hazır görünüyor ve gerçek şey gibi davranıyor. Bir cüzdan bağlayın, bir butona basın, ve Baret saldırıyı düz dille yakalasın izleyin — anahtarlarınız hiç imzalamadan önce." CTA'lar: "Senaryoları gör", "Cüzdanı kur", "Docs'u oku". Canlı bir "ticker" cümlesi, sırayla farklı tehdit türlerini döndürür: "wallet drainer'lar", "sınırsız approval'lar", "rug-pull örüntüleri", "sessiz agent sapması", "sahte-benzeri asset'ler", "gizli kontrat çağrıları".
+Headline: **"Six dApps. Six threats. One signature you never made."** Description: "Every site below looks production-ready and behaves like the real thing. Connect a wallet, press a button, and watch Baret catch the attack in plain language — before your keys ever sign." CTAs: "See the scenarios", "Install the wallet", "Read the Docs". A live "ticker" line rotates through different threat types in turn: "wallet drainers", "unlimited approvals", "rug-pull patterns", "silent agent drift", "look-alike assets", "hidden contract calls".
 
-### 2.2 İstatistik Şeridi
-"6" Demo dApp · "3" Tehdit sınıfı · "25+" Risk dedektörü · "1" Monad testnet'te sözleşme.
+### 2.2 Stats Strip
+"6" Demo dApps · "3" Threat classes · "25+" Risk detectors · "1" Contract on Monad testnet.
 
-### 2.3 Senaryo Kartları (filtrelenebilir: Tümü / Drainer'lar / Güven tuzakları / Sessiz agent'lar)
+### 2.3 Scenario Cards (filterable: All / Drainers / Trust traps / Silent agents)
 
-Her kart: isim, kategori etiketi, tagline, açıklama, "Watch for" listesi (3 madde), tehdit sınıfı etiketi, "neden önemli" tek cümlesi, verdict (Blocked/Caution/Capped).
+Each card: name, category tag, tagline, description, "Watch for" list (3 items), threat class tag, a one-line "why it matters", verdict (Blocked/Caution/Capped).
 
 #### 01 — SCRYBE (x402, flagship)
-- **Tagline:** Soru-başına oracle
-- **Açıklama:** x402 üzerinden cevap başına $0.001 USDC ücretlendiren bir AI Soru-Cevap servisi. Gerçek bir 402 challenge, gerçek bir on-chain settlement, ve agent'ın harcamasına tavan koyan bir cüzdan.
-- **Watch for:** Merchant-bazlı rolling harcama cap'i · Facilitator allowlist enforcement · Ödeme bacağı için asset allowlist'i
-- **Tehdit sınıfı:** Sessiz agent · Sapma riski
-- **Neden önemli:** Agent ödemeleri tasarım gereği tekrar eder, o yüzden küçük bir sızıntı her istekle birikir.
+- **Tagline:** Pay-per-question oracle
+- **Description:** An AI Q&A service that charges $0.001 USDC per answer over x402. A real 402 challenge, a real on-chain settlement, and a wallet that puts a ceiling on what the agent can spend.
+- **Watch for:** Per-merchant rolling spend cap · Facilitator allowlist enforcement · Asset allowlist for the payment leg
+- **Threat class:** Silent agent · Drift risk
+- **Why it matters:** Agent payments repeat by design, so a small leak compounds with every request.
 - **Verdict:** Capped
 
 #### 02 — NOVASWAP (DeFi)
-- **Tagline:** On-chain emir defterine yönlenen token swap
-- **Açıklama:** Temiz bir DEX aggregator klonu. Danger modunu açın ve gizli bir operasyon çıktı token'ınızı taze bir cüzdana yönlendirir.
-- **Watch for:** Bilinmeyen bir cüzdana çıktı transferi · Simüle edilen baseline'a karşı fee/gas suistimali · İtibar indeksi tarafından doğrulanmamış kontrat
-- **Tehdit sınıfı:** Fon drenajı · Bilinmeyen kontrat
-- **Neden önemli:** Çıktı yönlendirmeleri iyi saklanır çünkü swap'in kendisi yine de başarılı olur.
+- **Tagline:** Token swap routed to an on-chain order book
+- **Description:** A clean DEX aggregator clone. Flip on Danger mode and a hidden operation reroutes your output token to a fresh wallet.
+- **Watch for:** Output transfer to an unknown wallet · Fee/gas abuse against the simulated baseline · Contract not verified by the reputation index
+- **Threat class:** Fund drain · Unknown contract
+- **Why it matters:** Output reroutes hide well because the swap itself still succeeds.
 - **Verdict:** Blocked
 
 #### 03 — PIXELDROP (NFT)
 - **Tagline:** Generative NFT mint
-- **Açıklama:** Bir "Cyber Phantoms" mint sayfası. Görselin arkasında, cüzdanınızdaki her varlığı boşaltan gizli bir yetki değişikliği oturuyor.
-- **Watch for:** İstemediğiniz bir operatör yetkisi (`setApprovalForAll`) değişikliği · Wallet-drainer örüntü imzası · Mint ile ilgisiz varlıkların transferi
-- **Tehdit sınıfı:** Wallet drainer · Yetki hırsızlığı
-- **Neden önemli:** Mint sayfaları iyi bir drainer kılığı çünkü alıcılar hızlı imzalamayı bekler.
+- **Description:** A "Cyber Phantoms" mint page. Behind the artwork sits a hidden authorization change that empties every asset in your wallet.
+- **Watch for:** An operator authorization (`setApprovalForAll`) change you never asked for · Wallet-drainer pattern signature · Transfers of assets unrelated to the mint
+- **Threat class:** Wallet drainer · Authorization theft
+- **Why it matters:** Mint pages make a good drainer disguise because buyers expect to sign fast.
 - **Verdict:** Blocked
 
 #### 04 — ORBITYIELD (Staking)
-- **Tagline:** Likit staking · %14 APY
-- **Açıklama:** Bir likit-staking landing sayfası. Havuz gerçekten var ama on-chain unstake yolu olmayan anonim bir fork. Tek yönlü bir depozito.
-- **Watch for:** Doğrulanmamış havuz kontratı · Keşfedilebilir unstake fonksiyonu yok · Kendi-depozitolarla şişirilmiş TVL
-- **Tehdit sınıfı:** Güven tuzağı · Çıkış yolu yok
-- **Neden önemli:** Tek yönlü bir depozito UI'da gayet iyi görünür. Eksik çıkış sadece on-chain'de ortaya çıkar.
+- **Tagline:** Liquid staking · 14% APY
+- **Description:** A liquid-staking landing page. The pool really exists, but it is an anonymous fork with no on-chain unstake path. A one-way deposit.
+- **Watch for:** Unverified pool contract · No discoverable unstake function · TVL inflated with self-deposits
+- **Threat class:** Trust trap · No exit path
+- **Why it matters:** A one-way deposit looks perfectly fine in the UI. The missing exit only shows up on-chain.
 - **Verdict:** Caution
 
 #### 05 — CLAIMHUB (Airdrop)
-- **Tagline:** Ekosistem airdrop claim'i
-- **Açıklama:** Kullandığınız her airdrop sitesi gibi görünüyor. "Eligibility check" aslında stabil coin'leriniz üzerinde sınırsız bir approval imzalıyor.
-- **Watch for:** Bir spender cüzdanına sınırsız approval · Allowlist tarafından doğrulanmamış domain · Bir transferi gizleyen claim operasyonu
-- **Tehdit sınıfı:** Phishing · Sınırsız approval
-- **Neden önemli:** Approval drainer'ları, imzaların kör olduğu her yerdeki en yaygın cüzdan saldırısıdır.
+- **Tagline:** Ecosystem airdrop claim
+- **Description:** Looks like every airdrop site you have ever used. The "eligibility check" actually signs an unlimited approval on your stablecoins.
+- **Watch for:** Unlimited approval to a spender wallet · Domain not verified by the allowlist · A claim operation hiding a transfer
+- **Threat class:** Phishing · Unlimited approval
+- **Why it matters:** Approval drainers are the most common wallet attack anywhere signatures are blind.
 - **Verdict:** Blocked
 
 #### 06 — LAUNCHPAD (Launch)
-- **Tagline:** Onaylı token IDO'su
-- **Açıklama:** Geri sayımlı ve tokenomics'li cilalı bir launchpad. Simülasyon, deployer'ın token admin key'ini elinde tuttuğunu ve LP'nin kilitli olmadığını ortaya çıkarır.
-- **Watch for:** Deployer token admin key'ini elinde tutuyor · Likidite havuzu kilitli değil · Launch sonrası dondurulabilir token
-- **Tehdit sınıfı:** Rug pull · LP kilidi yok
-- **Neden önemli:** Elde tutulan bir admin key, deployer'ın launch gününden çok sonra mint veya dondurma yapmasına izin verir.
+- **Tagline:** Approved token IDO
+- **Description:** A polished launchpad with a countdown and tokenomics. The simulation reveals that the deployer still holds the token admin key and the LP is not locked.
+- **Watch for:** Deployer retains the token admin key · Liquidity pool not locked · Token can be frozen after launch
+- **Threat class:** Rug pull · No LP lock
+- **Why it matters:** A retained admin key lets the deployer mint or freeze long after launch day.
 - **Verdict:** Caution
 
-### 2.4 "Nasıl Çalışır" (dört adımlı, interaktif)
-1. **Cüzdan bağla** — Baret'i veya seçiciden herhangi bir EIP-6963 cüzdanını seçin.
-2. **Bir aksiyon tetikle** — Swap, Mint, Stake, Claim veya Buy'a basın. Site transaction'ı inşa eder.
-3. **Baret inceler** — İmzasız tx üzerinde sunucu-taraflı simülasyon + 25+ dedektör + yerel policy'niz çalışır.
-4. **Karar** — Safe / Caution / Blocked, her bulgu düz dilde. Gözleriniz açıkken imzalarsınız, ya da reddedersiniz.
+### 2.4 "How It Works" (four steps, interactive)
+1. **Connect a wallet** — Pick Baret or any EIP-6963 wallet from the picker.
+2. **Trigger an action** — Press Swap, Mint, Stake, Claim or Buy. The site builds the transaction.
+3. **Baret inspects** — Server-side simulation + 25+ detectors + your local policy run on the unsigned tx.
+4. **Verdict** — Safe / Caution / Blocked, every finding in plain language. You sign with your eyes open, or you reject.
 
-### 2.5 Dedektör Izgarası ("Under the hood")
-Başlık: "25+ dedektör her imzada ateşleniyor." Açıklama: "Her senaryo farklı bir alt küme tetikler. Popup size sadece önemli olan bulguları gösterir. Her biri transaction'ın neden şüpheli olduğunu tek cümlede açıklar." Üç öne çıkan kart: Pre-sign Guard (sunucu simülasyonu + dedektörler), Authorization Ledger (her grant cap+expiry+progress bar'lı bir satır), Post-sign Monitor (WebSocket subscribe, imzalamadığınız her şeyde uyarı). Yanında dedektör etiketlerinin bir listesi/ızgarası (bkz. §1.3 marquee listesi).
+### 2.5 Detector Grid ("Under the hood")
+Headline: "25+ detectors fire on every signature." Description: "Every scenario trips a different subset. The popup only shows you the findings that matter. Each one explains in a single sentence why the transaction is suspicious." Three featured cards: Pre-sign Guard (server simulation + detectors), Authorization Ledger (every grant is a row with cap+expiry+progress bar), Post-sign Monitor (WebSocket subscribe, alert on anything you never signed). Alongside, a list/grid of detector labels (see the §1.3 marquee list).
 
-### 2.6 Son CTA
-Başlık: "Bir kart seç. Firewall'ın ateşlenmesini izle." Açıklama: "Slayt yok, mockup yok. Yukarıdaki her senaryo gerçek bir analiz sunucusuna karşı gerçek bir transaction çalıştırır ve imzalamadan önce kararı gösterir."
+### 2.6 Final CTA
+Headline: "Pick a card. Watch the firewall fire." Description: "No slides, no mockups. Every scenario above runs a real transaction against a real analysis server and shows the verdict before signing."
 
 ---
 
-## 3. Agents Sayfası
+## 3. Agents Page
 
-**Amaç:** Baret'in sadece bir cüzdan olmadığını, agent/bot cüzdanlarının kullanabileceği bir **NPM paketi + CLI** olarak da var olduğunu göstermek. Cüzdanı koruyan aynı firewall, agent geliştiricileri için bir SDK ve CLI olarak sunulur.
+**Purpose:** Show that Baret is not just a wallet — it also exists as an **NPM package + CLI** that agent/bot wallets can use. The same firewall that protects the wallet is offered to agent developers as an SDK and a CLI.
 
 ### 3.1 Hero
-Başlık: **"Agent'ınız imzalar. Baret önce kontrol eder."** Açıklama: "Cüzdanınızı koruyan aynı pre-sign firewall, artık agent'lar ve bot cüzdanları için bir SDK ve CLI. Baret, agent'ınızın inşa ettiği her transaction'ı anahtar ona dokunmadan **önce** simüle eder ve policy kontrolünden geçirir. Drenajlar, sınırsız approval'lar ve haydut kontratlar imzalanmaz, bloklanır."
+Headline: **"Your agent signs. Baret checks first."** Description: "The same pre-sign firewall that protects your wallet, now an SDK and CLI for agents and bot wallets. Baret simulates and policy-checks every transaction your agent builds **before** the key touches it. Drains, unlimited approvals and rogue contracts don't get signed, they get blocked."
 
-### 3.2 Nasıl Çalışır (üç adım)
-1. **Kur** — Agent'ınıza `@baret/agent-kit` ekleyin, veya herhangi bir dilden `baret` CLI'ı kullanın.
-2. **Bir policy yapılandır** — Strict, Balanced veya Permissive seçin. Bunlar agent'ınızın uyması gereken firewall kurallarıdır.
-3. **Signer'ınızı sarın** — `guardedSubmit()` çağırın (veya raw tx'i `baret submit -`'a pipe edin). Safe → imzalanır ve gönderilir. Unsafe → bloklanır.
+### 3.2 How It Works (three steps)
+1. **Install** — Add `@baret/agent-kit` to your agent, or use the `baret` CLI from any language.
+2. **Configure a policy** — Pick Strict, Balanced or Permissive. These are the firewall rules your agent has to follow.
+3. **Wrap your signer** — Call `guardedSubmit()` (or pipe the raw tx into `baret submit -`). Safe → signed and submitted. Unsafe → blocked.
 
-### 3.3 Quickstart (kod örnekleri — içerik olarak, gerçek paket adları `ARCHITECTURE.md` ile senkron)
+### 3.3 Quickstart (code samples — as content; the real package names stay in sync with `ARCHITECTURE.md`)
 
-**Kurulum:** `pnpm add @baret/agent-kit`
+**Install:** `pnpm add @baret/agent-kit`
 
-**SDK (TypeScript/Node) örneği içeriği:**
+**SDK (TypeScript/Node) sample content:**
 ```
 import { AgentWallet } from "@baret/agent-kit";
 
-// Secret BARET_AGENT_SECRET'tan okunur; asla hard-code edilmez.
+// The secret is read from BARET_AGENT_SECRET; never hard-coded.
 const agent = AgentWallet.fromSecret(process.env.BARET_AGENT_SECRET!, {
   serverUrl: "http://localhost:8080",
   network: "testnet",
@@ -198,98 +198,98 @@ const agent = AgentWallet.fromSecret(process.env.BARET_AGENT_SECRET!, {
 });
 
 const { hash, explorerUrl } = await agent.guardedSubmit(txRequest);
-//  ↳ policy bloklarsa GuardBlockedError fırlatır. Anahtar asla imzalamaz.
+//  ↳ throws GuardBlockedError if the policy blocks. The key never signs.
 ```
 
-**CLI (herhangi bir dilden) örneği içeriği:**
+**CLI (from any language) sample content:**
 ```
 baret init --server http://localhost:8080 --network testnet --policy balanced
 export BARET_AGENT_SECRET=0x...agent-private-key
-echo "$TX_JSON" | baret submit -      # exit 0 gönderildi · 1 bloklandı · 2 hata
+echo "$TX_JSON" | baret submit -      # exit 0 submitted · 1 blocked · 2 error
 ```
 
-Yanında bir not: **"Fail-closed by design."** Baret sunucusuna ulaşılamıyorsa `evaluate` fırlatır ve imzalama hiç gerçekleşmez. Agent'ınız kör imzalamak yerine durur.
+A note alongside: **"Fail-closed by design."** If the Baret server is unreachable, `evaluate` throws and signing never happens. Your agent stops instead of signing blind.
 
-### 3.4 Policy Seçici
-Üç şablon kartı (Strict / Balanced / Permissive), her biri kısa bir açıklama ve seçildiğinde altındaki kod örneklerini/playground'u güncelleyen bir seçim durumu.
+### 3.4 Policy Picker
+Three template cards (Strict / Balanced / Permissive), each with a short description and a selection state that, when chosen, updates the code samples/playground below it.
 
-### 3.5 Canlı Playground
-Başlık: "Live playground." Açıklama: "Seçtiğiniz policy ile gerçek `/v1/analyze` pipeline'ını çalıştırır. Bir imzasız transaction (raw hex veya `{from,to,value,data}` isteği) yapıştırın ve agent'ınızın alacağı kararı görün."
+### 3.5 Live Playground
+Headline: "Live playground." Description: "Runs the real `/v1/analyze` pipeline with the policy you selected. Paste an unsigned transaction (raw hex or a `{from,to,value,data}` request) and see the verdict your agent would get."
 
-**Girdi alanları:** Agent adresi (0x…, "rastgele üret" butonu ile), Network seçici (testnet/mainnet), Policy (seçiciden gelir, salt-okunur gösterim), Transaction girdisi (raw hex veya JSON tx-request, textarea).
+**Input fields:** Agent address (0x…, with a "generate random" button), Network picker (testnet/mainnet), Policy (comes from the picker, read-only display), Transaction input (raw hex or JSON tx-request, textarea).
 
-**Buton:** "Analyze as agent" → gerçek analiz sonucu döner.
+**Button:** "Analyze as agent" → returns the real analysis result.
 
-**Sonuç paneli:** ALLOW/ADVISORY/BLOCK etiketi + nedenler, risk bulguları (kod + şiddet + mesaj), tahmini MON/token bakiye hareketleri.
+**Result panel:** ALLOW/ADVISORY/BLOCK label + reasons, risk findings (code + severity + message), estimated MON/token balance movements.
 
-Not metni: "Bu playground Baret'in rate-limited, sadece-testnet hosted demo sunucusuyla konuşur — kurulum gerekmez. Kendi sunucunuza mı bağlamak istiyorsunuz? `pnpm dev:server` ile bir tane başlatın ve SDK'nın `serverUrl`'ini değiştirin."
+Note text: "This playground talks to Baret's rate-limited, testnet-only hosted demo server — no setup required. Want to point it at your own server? Spin one up with `pnpm dev:server` and change the SDK's `serverUrl`."
 
-Alt not: "Agent-bazlı bir audit monitörü kimlik doğrulamalı sunucu-taraflı erişim gerektirir, bu yüzden bu genel demonun parçası değil."
+Footnote: "A per-agent audit monitor requires authenticated server-side access, so it is not part of this public demo."
 
 ---
 
-## 4. Docs Sayfası
+## 4. Docs Page
 
-**Amaç:** Baret'in nasıl çalıştığını anlatan tüm dokümanlara tek bir index'ten erişim. Her kart bu projenin `docs/` ağacındaki gerçek bir dosyaya işaret eder (GitHub linki).
+**Purpose:** Access to every document describing how Baret works from a single index. Each card points to a real file in this project's `docs/` tree (GitHub link).
 
 ### 4.1 Hero
-Başlık: "Baret nasıl çalışır, detaylı." Açıklama: "Ana sayfadaki her iddiayı destekleyen spec'ler, protokoller ve tasarım notları. Aşağıdaki her giriş projenin `docs/` ağacındaki bir dosyaya karşılık gelir."
+Headline: "How Baret works, in detail." Description: "The specs, protocols and design notes behind every claim on the home page. Every entry below corresponds to a file in the project's `docs/` tree."
 
-### 4.2 Doküman Kartları
+### 4.2 Document Cards
 
-Bu proje için Docs sayfasının işaret ettiği gerçek dosyalar (bu doküman setiyle senkron tutulmalı — yeni bir `docs/*.md` eklendiğinde burası da güncellenir):
+The real files the Docs page points to for this project (must stay in sync with this doc set — whenever a new `docs/*.md` is added, this list is updated too):
 
-| Kart başlığı | Açıklama | Karşılık gelen dosya |
+| Card title | Description | Corresponding file |
 |---|---|---|
-| Vision | Bir transaction firewall'ının neden dApp'te değil cüzdanda olması gerektiği | `PROJECT_OVERVIEW.md` |
-| Architecture | Sunucu, risk dedektörleri, policy motoru, veri akışı | `ARCHITECTURE.md` |
-| Wallet Spec | Cüzdan primitifleri, hesap katmanları, oturum modeli, tüm ekranlar/akışlar | `WALLET.md` |
-| Frontend Content | Bu sitenin her sayfasının içerik spesifikasyonu | `FRONTEND.md` (bu dosya) |
-| Contracts | PaymentGuard ve ReputationRegistry sözleşme spec'leri | `CONTRACTS.md` |
-| x402 Defense | x402 çağı için saldırı matrisi ve Baret'in yanıtı | `X402_FACILITATOR.md` |
-| Resources | Hangi sponsor aracının nerede nasıl kullanıldığı | `RESOURCES.md` |
-| Bounties & Track | Hedeflenen ödüller, track seçimi, öncelik sırası | `BOUNTIES_AND_TRACKS.md` |
-| Roadmap | Haftalık plan ve ilerleyiş takibi | `ROADMAP.md` |
-| Decisions | Alınan mimari/kapsam kararları ve gerekçeleri | `DECISIONS.md` |
-| Brand | Marka kimliği, ton, tasarım tokenleri | `BRAND.md` (henüz yazılmadı) |
+| Vision | Why a transaction firewall belongs in the wallet, not in the dApp | `PROJECT_OVERVIEW.md` |
+| Architecture | Server, risk detectors, policy engine, data flow | `ARCHITECTURE.md` |
+| Wallet Spec | Wallet primitives, account layers, session model, every screen/flow | `WALLET.md` |
+| Frontend Content | The content specification for every page of this site | `FRONTEND.md` (this file) |
+| Contracts | PaymentGuard and ReputationRegistry contract specs | `CONTRACTS.md` |
+| x402 Defense | The attack matrix for the x402 era and Baret's answer | `X402_FACILITATOR.md` |
+| Resources | Which sponsor tool is used where and how | `RESOURCES.md` |
+| Bounties & Track | Targeted bounties, track selection, priority order | `BOUNTIES_AND_TRACKS.md` |
+| Roadmap | Weekly plan and progress tracking | `ROADMAP.md` |
+| Decisions | Architecture/scope decisions taken and their rationale | `DECISIONS.md` |
+| Brand | Brand identity, tone, design tokens | `BRAND.md` |
 
-### 4.3 Alt CTA
-Başlık: "Çalışırken görmeyi mi tercih edersiniz?" Açıklama: "Showcase, cüzdanın her katmanını tarayıcınızda test eder." CTA: "Showcase'i aç".
+### 4.3 Bottom CTA
+Headline: "Would you rather see it in action?" Description: "The Showcase exercises every layer of the wallet in your browser." CTA: "Open the Showcase".
 
 ---
 
-## 5. Install Sayfası
+## 5. Install Page
 
-**Amaç:** Kullanıcının Baret cüzdan eklentisini indirip birkaç dakikada kurmasını sağlamak.
+**Purpose:** Get the user to download the Baret wallet extension and install it in a few minutes.
 
 ### 5.1 Hero
-Rozet: "Baret'i kur." Başlık: **"Baret'i birkaç dakikada kurun."** Açıklama: "Transaction firewall'lı bir Monad cüzdanı. Her transaction'ı simüle eder, policy'nize karşı kontrol eder, ve her agent'ın x402 üzerinden harcayabileceğine tavan koyar — anahtarlarınız imzalamadan önce. Mağaza listelemeleri gelene kadar bir geliştirici build'i gibi yüklenir." Tarayıcı algılama notu: "Chromium tabanlı bir tarayıcı algıladık (Chrome/Brave/Edge)." / "Firefox algıladık." / "Tarayıcınıza uyan build'i seçin."
+Badge: "Install Baret." Headline: **"Install Baret in a few minutes."** Description: "A Monad wallet with a transaction firewall. It simulates every transaction, checks it against your policy, and puts a ceiling on what any agent can spend over x402 — before your keys sign. Until store listings arrive, it loads like a developer build." Browser-detection note: "We detected a Chromium-based browser (Chrome/Brave/Edge)." / "We detected Firefox." / "Pick the build that matches your browser."
 
-### 5.2 İndirme Kartı
-Birincil indirme: algılanan tarayıcıya göre "Baret for Chrome/Brave/Edge" veya "Baret for Firefox" (ZIP arşivi, en son build, MV3 manifest notu). Altında ikincil bir link: "Ayrıca mevcut: [diğer tarayıcı build'i]".
+### 5.2 Download Card
+Primary download: "Baret for Chrome/Brave/Edge" or "Baret for Firefox" depending on the detected browser (ZIP archive, latest build, MV3 manifest note). Below it, a secondary link: "Also available: [the other browser build]".
 
-### 5.3 Kurulum Adımları (üç adım, tarayıcıya göre değişir)
+### 5.3 Install Steps (three steps, vary by browser)
 
 **Chrome/Brave/Edge:**
-1. **ZIP'i çıkar** — `baret-chrome.zip`'i çıkarın, klasörü hatırlayın.
-2. **`chrome://extensions/`'ı aç** — Adres çubuğuna yapıştırın, sağ üstten "Developer mode"u açın.
-3. **"Load unpacked"** — Çıkardığınız `baret-chrome` klasörünü seçin. Baret toolbar'da belirir. Tıklayıp cüzdanınızı oluşturun. Kurulum tam bir sekmede açılır: passphrase, secret yedekleme, testnet fonlama. Yaklaşık üç dakika.
+1. **Unzip** — Extract `baret-chrome.zip` and remember the folder.
+2. **Open `chrome://extensions/`** — Paste it into the address bar, turn on "Developer mode" in the top right.
+3. **"Load unpacked"** — Select the `baret-chrome` folder you extracted. Baret appears in the toolbar. Click it and create your wallet. Setup opens in a full tab: passphrase, secret backup, testnet funding. About three minutes.
 
 **Firefox:**
-1. **ZIP'i çıkar** — Aynı.
-2. **`about:debugging#/runtime/this-firefox`'u aç**
-3. **"Load Temporary Add-on…"** — Çıkardığınız klasördeki `manifest.json`'ı seçin. Not: Firefox geçici eklentileri tarayıcı yeniden başlatıldığında temizlenir; her yeniden başlatmadan sonra Baret'i yeniden yükleyin.
+1. **Unzip** — Same.
+2. **Open `about:debugging#/runtime/this-firefox`**
+3. **"Load Temporary Add-on…"** — Select the `manifest.json` in the folder you extracted. Note: Firefox clears temporary add-ons when the browser restarts; reload Baret after every restart.
 
-### 5.4 Özellik Izgarası ("Why this wallet")
-- **Pre-sign simulation** — "Baret popup imzalamanızı istemeden önce her transaction'ı decode edip simüle eder."
-- **x402 firewall** — "Baret HTTP 402 ödemelerini saat/gün başına sınırlar ve allowlist'inize karşı kontrol eder."
-- **On-chain revoke** — "Her site kendi sub-key'ini alır. Tek dokunuşla on-chain iptal edin."
+### 5.4 Feature Grid ("Why this wallet")
+- **Pre-sign simulation** — "Baret decodes and simulates every transaction before the popup asks you to sign."
+- **x402 firewall** — "Baret caps HTTP 402 payments per hour/day and checks them against your allowlist."
+- **On-chain revoke** — "Every site gets its own sub-key. Revoke it on-chain with a single tap."
 
-### 5.5 Kurulum Sonrası CTA
-Başlık: "Showcase'de bir tur atın." Açıklama: "Altı sahte-ama-gerçek dApp altı farklı saldırı örüntüsünü tetikler. Baret her birini canlı yakalar. İmzalamadan önce analizi görürsünüz." CTA'lar: "Showcase'i aç", "Docs'u oku".
+### 5.5 Post-install CTA
+Headline: "Take a lap through the Showcase." Description: "Six fake-but-real dApps trigger six different attack patterns. Baret catches every one of them live. You see the analysis before you sign." CTAs: "Open the Showcase", "Read the Docs".
 
 ---
 
-## 6. Sayfa-Doküman Senkronizasyon Kuralı
+## 6. Page–Doc Sync Rule
 
-Bu dosyadaki içerik gerçek kodla senkron tutulmalı: bir sayfaya yeni bir bölüm eklenirse, kaldırılırsa veya kopyası değişirse önce bu dosya güncellenir. Docs sayfasının kart listesi (§4.2) özellikle bu doküman setinin (`docs/*.md`) mevcut dosyalarıyla bire bir eşleşmeli — yeni bir doküman eklendiğinde iki yerde de (kart listesi + gerçek Docs sayfası implementasyonu) güncelleme yapılmalı.
+The content in this file must stay in sync with the real code: whenever a section is added to, removed from, or has its copy changed on a page, this file is updated first. The Docs page card list (§4.2) in particular must match the existing files of this doc set (`docs/*.md`) one to one — whenever a new document is added, both places (the card list + the real Docs page implementation) must be updated.
