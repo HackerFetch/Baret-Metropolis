@@ -1,10 +1,23 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/content" },
-    { "path": "./packages/ui" },
-    { "path": "./apps/showcase" },
-    { "path": "./apps/wallet" },
-    { "path": "./apps/extension" }
+    {
+      "path": "./packages/content"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/routes"
+    },
+    {
+      "path": "./apps/showcase"
+    },
+    {
+      "path": "./apps/wallet"
+    },
+    {
+      "path": "./apps/extension"
+    }
   ]
 }

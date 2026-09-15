@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@baret/content": "workspace:*",
+    "@baret/routes": "workspace:*",
     "@baret/ui": "workspace:*",
     "lucide-react": "1.46.0",
     "motion": "13.3.0",

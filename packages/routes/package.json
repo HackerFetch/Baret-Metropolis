@@ -1,0 +1,16 @@
+{
+  "name": "@baret/routes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The route registry type, the href builder and the checks that keep three surfaces in sync.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

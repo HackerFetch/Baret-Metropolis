@@ -2,14 +2,11 @@ import { common } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { cn, Mark, Tag } from "@baret/ui";
 import { NavLink, Outlet, useLocation, useRouteError } from "react-router";
-import { routes } from "../routes.js";
+import { routes } from "./routes.js";
 
-const NAV = navRoutes(routes, "app");
+const NAV = navRoutes(routes, "main");
 
-/**
- * Sidebar plus content. The popup routes and onboarding render outside this,
- * which is why they are declared at the top level of the router.
- */
+/** 240px sidebar plus a 1024 content column, per docs/WALLET.md section 2.5. */
 export function Component() {
   const { pathname } = useLocation();
   const match = Object.values(routes).find((route) => route.path === pathname);
@@ -31,7 +28,7 @@ export function Component() {
             {common.networks.testnet.label}
           </Tag>
 
-          <nav aria-label="Wallet" className="grid gap-0.5">
+          <nav aria-label="Settings" className="grid gap-0.5">
             {NAV.map((route) => (
               <NavLink
                 key={route.key}
@@ -64,7 +61,6 @@ export function ErrorBoundary() {
   const error = useRouteError();
   return (
     <div className="grid gap-4 p-8">
-      <title>Something went wrong</title>
       <Tag tone="blocked">Error</Tag>
       <h1 className="text-display-l">This screen did not load.</h1>
       <p className="text-[color:var(--fg-muted)]">

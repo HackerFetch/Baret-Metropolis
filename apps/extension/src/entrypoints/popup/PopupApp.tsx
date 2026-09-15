@@ -1,19 +1,67 @@
 import { common, popupHome, uninitialized } from "@baret/content";
-import { Mark, Tag } from "@baret/ui";
+import { cn, Mark, Tag } from "@baret/ui";
+import { useReducer } from "react";
+import {
+  INITIAL_STATE,
+  openOptions,
+  reducePopup,
+  showsChrome,
+  TABS,
+  type Tab,
+} from "./navigation.js";
 
 /**
- * The popup. 360 by 600, no router: the phase decides which screen renders,
- * and a sign request replaces everything.
+ * The popup, 360 by 600.
  *
- * Phases come from docs/WALLET.md section 1.1:
- *   uninitialized | locked | ready | signing | alert
+ * Navigation is a state machine rather than a router, for the reason set out
+ * in navigation.ts: a pending signature has to own the whole canvas, and a
+ * router makes that rule one stray link away from being broken.
  */
 export function PopupApp() {
-  // TODO(week 2): read the real phase over the messaging port.
-  const phase = "uninitialized" as const;
+  const [state, dispatch] = useReducer(reducePopup, INITIAL_STATE);
 
-  if (phase === "uninitialized") return <Uninitialized />;
-  return null;
+  // TODO(week 2): subscribe to the background and dispatch phase changes.
+
+  if (state.phase === "uninitialized") return <Uninitialized />;
+  if (state.phase === "locked") return <Placeholder label="Locked" />;
+  if (state.phase === "signing") return <Placeholder label="Sign request" />;
+  if (state.phase === "connecting") return <Placeholder label="Connection request" />;
+
+  return (
+    <div className="grid h-full grid-rows-[1fr_auto] bg-[color:var(--ground)]">
+      <div className="overflow-y-auto p-4">
+        <Placeholder label={state.tab} />
+      </div>
+
+      {showsChrome(state.phase) ? (
+        <TabBar active={state.tab} onSelect={(tab) => dispatch({ type: "tab", tab })} />
+      ) : null}
+    </div>
+  );
+}
+
+function TabBar({ active, onSelect }: { active: Tab; onSelect: (tab: Tab) => void }) {
+  return (
+    <nav
+      aria-label="Wallet"
+      className="grid grid-cols-4 border-t border-[color:var(--rule)] bg-[color:var(--surface)]"
+    >
+      {TABS.map((tab) => (
+        <button
+          key={tab}
+          type="button"
+          aria-current={active === tab ? "page" : undefined}
+          onClick={() => onSelect(tab)}
+          className={cn(
+            "py-2.5 font-display text-xs uppercase tracking-[0.06em]",
+            active === tab ? "text-[color:var(--accent)]" : "text-[color:var(--fg-faint)]",
+          )}
+        >
+          {popupHome.tabs[tab]}
+        </button>
+      ))}
+    </nav>
+  );
 }
 
 function Uninitialized() {
@@ -51,7 +99,7 @@ function Uninitialized() {
         </Tag>
         <button
           type="button"
-          onClick={() => browser.runtime.openOptionsPage()}
+          onClick={() => openOptions("onboarding")}
           className="chamfer-sm h-11 bg-[color:var(--accent)] font-display text-base uppercase tracking-[0.08em] text-[color:var(--on-accent)]"
         >
           {uninitialized.action.label}
@@ -64,5 +112,11 @@ function Uninitialized() {
   );
 }
 
-/** Exported so the tab bar labels stay in one place once phases land. */
-export const TABS = popupHome.tabs;
+/** Stands in until each screen lands. Named so the tab bar is testable now. */
+function Placeholder({ label }: { label: string }) {
+  return (
+    <div className="grid place-content-center gap-2 p-6 text-center">
+      <span className="font-mono text-label uppercase text-[color:var(--fg-faint)]">{label}</span>
+    </div>
+  );
+}

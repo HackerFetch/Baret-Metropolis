@@ -1,30 +1,31 @@
 import { common } from "@baret/content";
+import { navRoutes } from "@baret/routes";
 import { cn, Mark, Tag } from "@baret/ui";
 import { Link, NavLink, Outlet, useLocation, useRouteError } from "react-router";
+import { DEMO_PATHS, routes } from "../routes.js";
 
 /**
- * The marketing chrome: a sticky document header and a three-column footer.
+ * The marketing chrome: a sticky header and a three-column footer.
  *
- * The six demo sites render without it. They are supposed to look like real
- * products, and a Baret header on top would give the game away.
+ * The six demo sites render without it. They are meant to look like real
+ * products, and a Baret header on top would give the game away before the
+ * visitor has pressed anything.
+ *
+ * The document title comes from the registry. React 19 hoists a <title>
+ * rendered anywhere in the tree into the head, so there is no effect to run
+ * and no cleanup to get wrong.
  */
 
-const DEMO_ROUTES = new Set([
-  "/scrybe",
-  "/novaswap",
-  "/pixeldrop",
-  "/orbityield",
-  "/claimhub",
-  "/launchpad",
-]);
+const NAV = navRoutes(routes, "marketing");
 
 export function Component() {
   const { pathname } = useLocation();
-  const bare = DEMO_ROUTES.has(pathname);
+  const title = titleFor(pathname);
 
-  if (bare) {
+  if (DEMO_PATHS.has(pathname)) {
     return (
       <>
+        <title>{title}</title>
         <Outlet />
         <DemoRibbon />
       </>
@@ -33,6 +34,7 @@ export function Component() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <title>{title}</title>
       <SiteHeader />
       <main className="flex-1">
         <Outlet />
@@ -42,11 +44,17 @@ export function Component() {
   );
 }
 
+/** The registry is the only place a title is written. */
+function titleFor(pathname: string): string {
+  const match = Object.values(routes).find((route) => route.path === pathname);
+  return match?.title ?? routes.notFound.title;
+}
+
 function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--rule)] bg-[color:var(--ground)]/85 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-[1180px] items-center justify-between gap-4 px-5">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to={routes.home.path} className="flex items-center gap-2.5">
           <Mark size={22} slit="var(--ground)" />
           <span className="font-stencil text-xl uppercase tracking-[0.04em]">
             {common.brand.wordmark}
@@ -54,10 +62,10 @@ function SiteHeader() {
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1">
-          {common.nav.links.map((link) => (
+          {NAV.map((route) => (
             <NavLink
-              key={link.href}
-              to={link.href}
+              key={route.key}
+              to={route.path}
               className={({ isActive }) =>
                 cn(
                   "px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.06em] transition-colors",
@@ -67,7 +75,7 @@ function SiteHeader() {
                 )
               }
             >
-              {link.label}
+              {route.label}
             </NavLink>
           ))}
         </nav>
@@ -101,12 +109,7 @@ function SiteFooter() {
             <ul className="grid gap-1.5">
               {group.links.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
-                  >
-                    {link.label}
-                  </Link>
+                  <FooterLink href={link.href} label={link.label} />
                 </li>
               ))}
             </ul>
@@ -117,11 +120,29 @@ function SiteFooter() {
   );
 }
 
-/** Fixed to the corner of every demo site so nobody mistakes one for real. */
+/** Footer hrefs come from the copy, so some of them leave the site. */
+function FooterLink({ href, label }: { href: string; label: string }) {
+  const className = "text-sm text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]";
+
+  if (href.startsWith("http")) {
+    return (
+      <a href={href} className={className} rel="noreferrer">
+        {label}
+      </a>
+    );
+  }
+  return (
+    <Link to={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
+/** Pinned to every demo site so nobody mistakes one for a real product. */
 function DemoRibbon() {
   return (
     <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-      <Link to="/showcase" className="pointer-events-auto">
+      <Link to={routes.showcase.path} className="pointer-events-auto">
         <Tag tone="brand" size="sm">
           Demo site
         </Tag>
@@ -136,11 +157,12 @@ export function ErrorBoundary() {
 
   return (
     <div className="mx-auto grid min-h-dvh max-w-[640px] place-content-start gap-4 px-5 py-24">
+      <title>Something went wrong</title>
       <Tag tone="blocked">Error</Tag>
       <h1 className="font-display text-display-l uppercase">This page did not load.</h1>
       <p className="text-[color:var(--fg-muted)]">{message}</p>
       <Link
-        to="/"
+        to={routes.home.path}
         className="chamfer-sm w-max border border-[color:var(--fg)] px-4 py-2 font-display text-sm uppercase tracking-[0.08em]"
       >
         Back to the start
