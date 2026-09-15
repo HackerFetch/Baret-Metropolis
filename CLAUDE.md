@@ -15,6 +15,9 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 
 ## At the start of every session (every agent, every time)
 
+0. Read `docs/HANDOFF.md`. It carries what is built, what is only stubbed, the
+   decisions that are already settled with their reasons, and the traps that
+   have already cost time. It is shorter than finding all of that out again.
 1. Identify who you are working with via `git config user.name` / `user.email`. If unsure, ask.
 2. In your first message remind the person of their role and give a one-paragraph "where the project is right now" (`README.md` status table + the current week in `docs/ROADMAP.md`).
 3. Read the person's task file and summarise the open items:
@@ -40,7 +43,7 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 - `main` is protected; no direct commits to `main`.
 - Meriç's working branch: **`frontend`** (open PR: "frontend"). Meriç's agent commits to this branch and merges the PR **only when Meriç explicitly says "mergele" / "merge it"**. Never merge on your own initiative.
 - Ezgin opens their own branch/PR (suggested: `backend`, `contracts`). Same rule: merge only on explicit instruction.
-- Commit messages in English, short, describing what changed. End them with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
+- Commit messages in English, short, describing what changed. End them with a `Co-Authored-By:` line naming the model you are actually running as, not a pinned one.
 - Push only when the user asks, or as part of opening/updating a PR.
 
 ## Hard constraints (same as README, repeated on purpose)

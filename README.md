@@ -6,15 +6,19 @@ This repository and this document set are meant for **live** tracking. They were
 
 ---
 
-## Status Summary (last updated: 2026-09-13)
+## Status Summary (last updated: 2026-09-15)
 
 | Area | Status |
 |---|---|
-| Phase | Planning complete, coding has not started |
+| Phase | Frontend scaffolded. Copy, design system and routing done. No backend yet |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
-| Repo | Git repo not created yet (this folder is `Is a git repository: false`) |
+| Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
+| Copy | 44 files in `packages/content`, one per page, complete |
+| Design system | 37 components in `packages/ui` |
+| Apps | `showcase`, `wallet`, `extension` build. Pages render copy; most are not designed |
+| Server and contracts | Not started |
 | Contract deploy | None |
-| Week | 0 / 6 |
+| Week | 1 / 6 |
 
 Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
 
@@ -24,6 +28,7 @@ Update this table at every major phase transition (when the repo is created, on 
 
 | File | What it is for | When to read it |
 |---|---|---|
+| [`docs/HANDOFF.md`](docs/HANDOFF.md) | What is built, what is stubbed, the decisions already made and the traps that have already bitten | **Any new session or new AI agent reads this first** |
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | What the product is, who it is for, what it does end to end, MVP scope | Anyone / any AI looking at the project for the first time should read this first |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture: monorepo layout, data flow, chain constants, environment variables | Before starting to write code / before changing a module |
 | [`docs/WALLET.md`](docs/WALLET.md) | All surfaces, screens and flows of the wallet (extension + Mera-backed standalone) | Before touching the wallet UI |
