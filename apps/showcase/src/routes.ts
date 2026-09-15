@@ -89,6 +89,15 @@ export const routes = defineRoutes({
     load: () => import("./sites/LaunchPadPage.js"),
   },
 
+  /** Not in any nav. The component gallery, for reviewing the system. */
+  kit: {
+    path: "/kit",
+    title: "Baret kit",
+    group: "utility",
+    hidden: true,
+    load: () => import("./pages/KitPage.js"),
+  },
+
   notFound: {
     path: "/*",
     title: "Not found",
