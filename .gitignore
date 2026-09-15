@@ -36,3 +36,6 @@ vite.config.ts.timestamp-*
 
 # Vitest / coverage
 coverage/
+
+# Local handoff notes, not shared with the repo
+docs/HANDOFF.md

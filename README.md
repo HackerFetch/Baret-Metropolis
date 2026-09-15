@@ -28,7 +28,6 @@ Update this table at every major phase transition (when the repo is created, on 
 
 | File | What it is for | When to read it |
 |---|---|---|
-| [`docs/HANDOFF.md`](docs/HANDOFF.md) | What is built, what is stubbed, the decisions already made and the traps that have already bitten | **Any new session or new AI agent reads this first** |
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | What the product is, who it is for, what it does end to end, MVP scope | Anyone / any AI looking at the project for the first time should read this first |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture: monorepo layout, data flow, chain constants, environment variables | Before starting to write code / before changing a module |
 | [`docs/WALLET.md`](docs/WALLET.md) | All surfaces, screens and flows of the wallet (extension + Mera-backed standalone) | Before touching the wallet UI |

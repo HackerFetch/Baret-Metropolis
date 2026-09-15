@@ -15,9 +15,10 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 
 ## At the start of every session (every agent, every time)
 
-0. Read `docs/HANDOFF.md`. It carries what is built, what is only stubbed, the
-   decisions that are already settled with their reasons, and the traps that
-   have already cost time. It is shorter than finding all of that out again.
+0. If `docs/HANDOFF.md` exists locally, read it first. It is Meriç's working
+   notes, deliberately not committed: what is built against what is only
+   stubbed, the decisions already settled with their reasons, and the traps
+   that have already cost time. Absent on a fresh clone, and that is expected.
 1. Identify who you are working with via `git config user.name` / `user.email`. If unsure, ask.
 2. In your first message remind the person of their role and give a one-paragraph "where the project is right now" (`README.md` status table + the current week in `docs/ROADMAP.md`).
 3. Read the person's task file and summarise the open items:
