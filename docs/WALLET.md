@@ -1,6 +1,6 @@
 # Baret — Wallet Specification
 
-> Every surface, every screen, every flow of the wallet. This document is **binding**: adding a new screen requires updating this file first, then implementing it. Color/typography will come from `BRAND.md` (not written yet). See `ARCHITECTURE.md` for the overall architecture, `CONTRACTS.md` for contract details, and `X402_FACILITATOR.md` for x402 mechanics.
+> Every surface, every screen, every flow of the wallet. This document is **binding**: adding a new screen requires updating this file first, then implementing it. Color/typography will come from `BRAND.md`. See `ARCHITECTURE.md` for the overall architecture, `CONTRACTS.md` for contract details, and `X402_FACILITATOR.md` for x402 mechanics.
 
 Last updated: 2026-09-14 · Status: **Specification phase, no implementation** · Source: Baret-Stellar's `docs/wallet-spec.md` — adapted to Monad/EVM (Soroban→EVM, trustline→ERC-20 approval, XLM→MON, Horizon→Monad RPC, Friendbot→Monad faucet).
 

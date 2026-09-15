@@ -1,6 +1,6 @@
 # Baret — Frontend Content Specification (Showcase / Marketing Site)
 
-> **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` (not yet written) and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
+> **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
 Last updated: 2026-09-14 · Status: **Content specification, no design/implementation** · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
@@ -251,7 +251,7 @@ The real files the Docs page points to for this project (must stay in sync with 
 | Bounties & Track | Targeted bounties, track selection, priority order | `BOUNTIES_AND_TRACKS.md` |
 | Roadmap | Weekly plan and progress tracking | `ROADMAP.md` |
 | Decisions | Architecture/scope decisions taken and their rationale | `DECISIONS.md` |
-| Brand | Brand identity, tone, design tokens | `BRAND.md` (not yet written) |
+| Brand | Brand identity, tone, design tokens | `BRAND.md` |
 
 ### 4.3 Bottom CTA
 Headline: "Would you rather see it in action?" Description: "The Showcase exercises every layer of the wallet in your browser." CTA: "Open the Showcase".

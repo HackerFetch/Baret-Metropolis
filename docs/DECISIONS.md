@@ -66,6 +66,13 @@
 **Rationale:** It both makes the Envio bounty organic and solves a real product gap (no persistent audit).
 **Status:** ✅ Final
 
+### D-011 — Brand system: lockout/tagout, International Orange on concrete, Big Shoulders
+**Date:** 2026-09-15
+**Decision:** The identity is built on the industrial lockout/tagout procedure: the hard-hat mark (dome, visor slit, chamfered brim), the safety **tag** as the signature device, a concrete/chalk/ink materials palette with International Orange `#FF4F00` as the single signal and Monad violet reserved for network facts, Big Shoulders (Stencil + Display) for wordmark and headlines, Instrument Sans body, JetBrains Mono data, square corners with a single chamfer, no gradients. Generated imagery lives in three scenes (night skyline, day site, tag macro) and never contains text. Full spec: `BRAND.md`; rendered kit: the "Baret Brand Kit" artifact.
+**Rationale:** Every wallet-security brand uses shields and padlocks; the tag is an action, not a promise, and gives every screen a recognizable object at thumbnail size. Orange keeps the brand distinct from Monad's own violet while staying "of the network". Meriç reviewed Rev 01 (hard hat only, cream/orange, Archivo) and asked for something more professional and unusual; Rev 02 was approved.
+**Alternatives:** Rev 01 hard-hat-only system — rejected as too generic; Monad violet as accent — rejected (screens would read as foundation pages and fight the Blocked state).
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
@@ -78,7 +85,8 @@
 | AK-4 | Is an additional "gated asset" demo contract needed on the Baret side for Cleanverse? | `CONTRACTS.md` §4 | Week 3 |
 | AK-6 | Whether a separate track submission is required to win the track-tagged bounties (Kuru/Agora/MetaMask plugin) | `BOUNTIES_AND_TRACKS.md` §1 | When the platform clarifies |
 | AK-7 | Best Community Team Project eligibility — confirmation of "community supporter" status | `BOUNTIES_AND_TRACKS.md` §2 row 9 | Week 4 |
-| AK-8 | `BRAND.md` content — name/wordmark, tone, color-neutral visual language principles (Security + Build theme) | `BRAND.md` (does not exist yet) | To be written once the user gives direction |
+
+**Note (AK-8, resolved):** brand spec written as `BRAND.md` — see D-011.
 
 **Note (AK-5, resolved):** Showcase site names are not being renamed with a Monad theme; the original names are kept — see D-010.
 
