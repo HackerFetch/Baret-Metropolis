@@ -39,3 +39,6 @@ coverage/
 
 # Local handoff notes, not shared with the repo
 docs/HANDOFF.md
+
+# Raw generated image originals, converted into apps/*/public/assets before commit
+assets-raw/

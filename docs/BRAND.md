@@ -173,6 +173,6 @@ Every text token meets WCAG AA on its surface; faint text only at ≤ 12 px · f
 
 ## 12 · Implementation home
 
-Tokens `packages/ui/src/tokens.css` · mark `packages/ui/src/brand/Mark.tsx` · tag `packages/ui/src/primitives/Tag.tsx` · primitives `packages/ui/src/primitives/` (Button, Tag, Card, Meter, Input, Dialog, Sheet) · showcase-only pieces `packages/showcase-ui` · generated imagery delivered to `apps/showcase/public/img/` and `apps/extension/public/img/` under the file names in the prompt notebook.
+Tokens `packages/ui/src/tokens.css` · mark `packages/ui/src/brand/Mark.tsx` · tag `packages/ui/src/primitives/Tag.tsx` · primitives `packages/ui/src/primitives/` (Button, Tag, Card, Meter, Input, Dialog, Sheet) · showcase-only pieces `packages/showcase-ui` · generated imagery delivered as WebP, long edge capped at 1536 px, to `apps/showcase/public/assets/`, `apps/wallet/public/assets/` and `apps/extension/public/assets/`, one folder per prompt group (`brand/`, `landing/`, `showcase/`, `agents/`, `docs/`, `install/`, `social/`, `wallet/`, `extension/`) under the prompt ID as file name (`landing/l-01.webp`). The wallet and the extension carry their own copies of the marks they use (`brand/m-01.webp`, `brand/m-10.webp`). Motion clips live in `apps/showcase/public/assets/video/` as WebM (VP9, 1280 × 576, 24 fps, no audio).
 
 When in doubt, the sentence at the top outranks any rule below it: **Calm. Technical. Candid.**
