@@ -1,114 +1,160 @@
+import type { ScenarioSite } from "../types.js";
+
 /**
- * /claimhub on apps/showcase. Threat demo 1 of 6.
+ * /claimhub on apps/showcase. Drainer. The hub's first stop.
  *
- * Attack: approval phishing. The "eligibility check" signs an unlimited
- * approval on the visitor's stablecoins. This is the most common wallet
- * attack there is, so it is the one we send people to first.
+ * Story: an airdrop page. The eligibility check is theatre. What the claim
+ * button builds is the whole scenario.
  *
- * The site copy below has to be convincing. It is written the way a real
- * airdrop page is written, including the urgency. Our own voice only appears
- * in the `analysis` block.
+ * Honest version: claim() on the demo distributor. HUB arrives, nothing of
+ * yours can be spent later. Expected Safe, no findings. Needs: the distributor
+ * on a list Baret reads (or UNKNOWN_CONTRACT_EXPOSURE turns it into Caution),
+ * repeat claims allowed per address (or the second try reverts), 2,410 HUB
+ * sent per claim to match the page.
+ *
+ * Attack version: approve(spender, max uint256) on the canonical test USDC.
+ * Expected Blocked. Codes:
+ *   ERC20_APPROVAL_UNLIMITED   always, from the calldata; blockUnlimitedApprovals
+ *   KNOWN_MALICIOUS_ADDRESS    only if the demo spender is on the registry
+ *                              blocklist; blockKnownMalicious
+ * The approval simulates fine with a zero USDC balance, so a visitor with
+ * only faucet MON still sees it.
+ *
+ * Watch for -> source:
+ *   1 unlimited allowance         ERC20_APPROVAL_UNLIMITED
+ *   2 spender on the blocklist    KNOWN_MALICIOUS_ADDRESS (seeded)
+ *   3 nothing arriving            What changes (estimatedChanges): no HUB in
  */
 
 export const claimhub = {
   meta: {
-    title: "ClaimHub",
+    title: "ClaimHub airdrop scenario · Baret",
     description:
-      "A fake airdrop claim page that signs away your stablecoins. Part of the Baret showcase.",
+      "A simulated airdrop on Monad testnet whose claim button asks for an unlimited allowance on your USDC. See what Baret checks before you sign.",
   },
 
-  /** The scenario card, also rendered on the hub and the landing page. */
   scenario: {
     slug: "claimhub",
     name: "ClaimHub",
     category: "Airdrop",
-    tagline: "Ecosystem rewards, claimed in one step",
+    tagline: "Season 2 rewards, claimed in one step",
     summary:
-      "It looks like every airdrop page you have ever used. The eligibility check is real. What it asks you to sign is an unlimited approval on your stablecoins.",
+      "An airdrop page with a countdown and an eligibility check. In the attack version, the claim button asks for an unlimited allowance that lets a stranger take your USDC.",
     watchFor: [
-      "An unlimited approval to an address with no history",
-      "A domain that does not match the project it claims to be",
-      "A claim button that never actually claims anything",
+      "An unlimited allowance on your USDC",
+      "A spender on the Baret blocklist",
+      "A claim where no tokens arrive",
     ],
     threatClass: "drainer",
     whyItMatters:
-      "Approval phishing is the most common way wallets get emptied, because the signature looks ordinary and never expires. You do not lose anything at the moment you sign. You lose it whenever the attacker decides.",
+      "Signing an allowance moves nothing at first. The spender takes your tokens later, whenever it decides, until you revoke it.",
     verdict: "blocked",
   },
 
-  /** The fake product's own voice. Convincing on purpose. */
   site: {
     brand: "ClaimHub",
+    hostname: "claimhub.example",
     nav: ["Claim", "Eligibility", "Distribution", "FAQ"],
     hero: {
-      badge: "Season 2 distribution is live",
-      title: "Your ecosystem rewards are ready",
-      body: "Wallets active on Monad during the qualifying period are eligible for a share of the season 2 pool. Check your allocation and claim in one step.",
+      badge: "Season 2 is live",
+      title: "Your HUB rewards are ready",
+      body: "Early ClaimHub users share a pool of 12,000,000 HUB. Check your wallet and claim before the window closes.",
       cta: "Check eligibility",
-      countdown: "Claim window closes in",
+    },
+    panel: {
+      title: "Your allocation",
+      input: "Or paste a wallet address",
+      rows: [
+        { label: "Status", value: "Eligible" },
+        { label: "Allocation", value: "2,410 HUB" },
+        { label: "Claim fee", value: "None, only the network fee" },
+        { label: "Window", value: "Closes in 3 days" },
+      ],
+      cta: "Claim 2,410 HUB",
+      note: "One signature. Your HUB arrives in the same transaction.",
     },
     stats: [
       { value: "48,213", label: "wallets eligible" },
-      { value: "12.4M", label: "tokens allocated" },
-      { value: "72h", label: "left to claim" },
+      { value: "12M", label: "HUB in the pool" },
+      { value: "3 days", label: "left to claim" },
     ],
-    steps: [
-      { title: "Connect", body: "Connect the wallet you used during the qualifying period." },
-      { title: "Check", body: "We read your on-chain activity and calculate your allocation." },
-      { title: "Claim", body: "Approve the claim and the tokens arrive in the same transaction." },
-    ],
-    eligibility: {
-      title: "You are eligible",
-      allocation: "2,410 tokens",
-      note: "Allocation is final and is calculated from activity before the snapshot.",
-      cta: "Claim now",
-      fineprint: "Claiming requires one approval so the distributor can deliver your tokens.",
-    },
-    faq: [
+    sections: [
       {
-        question: "Why do I need to approve a token to claim?",
-        answer:
-          "The distributor contract needs permission to move tokens on your behalf during the claim.",
+        title: "How claiming works",
+        body: "Connect the wallet you used before the snapshot. We read its activity and show your allocation. One signature sends the tokens to you.",
       },
-      { question: "Is there a fee?", answer: "No. You only pay the network fee." },
+      {
+        title: "Why season 2 has a deadline",
+        body: "Unclaimed HUB goes back to the community pool when the window closes. Claim early to keep your share.",
+      },
+    ],
+    faq: [
+      { question: "Is there a fee to claim?", answer: "No. You only pay the network fee in MON." },
+      {
+        question: "Why does my wallet ask for a permission?",
+        answer: "The distributor needs it to deliver your tokens. Every claim works this way.",
+      },
       {
         question: "What if I miss the window?",
-        answer: "Unclaimed allocations return to the treasury.",
+        answer: "Unclaimed HUB returns to the pool for season 3.",
       },
     ],
+    progress: ["Checking your wallet", "Confirm in your wallet", "Claiming", "Claimed"],
+    done: {
+      title: "Claim submitted",
+      body: "Your 2,410 HUB are on the way. They can take a few minutes to show in your wallet.",
+    },
+    footer: "ClaimHub distributes season rewards to early users. Allocations are final.",
   },
 
-  /** Our voice. This is the layer that tells the truth about the site. */
   analysis: {
     modes: {
       safe: {
-        label: "Safe version",
-        body: "The claim asks for a capped approval that matches the amount being claimed. This is what an honest claim page looks like.",
+        label: "Honest version",
+        body: "The claim button calls claim. HUB arrives in your wallet, and nothing of yours can be spent later.",
+        asks: "ClaimHub wants you to claim HUB from {contract}.",
+        call: "claim()",
+        expected: "safe",
+        expectedBody:
+          "No rule should fire. The simulation should show HUB arriving and nothing leaving but the network fee.",
       },
       danger: {
         label: "Attack version",
-        body: "The same button now signs an unlimited approval on your USDC to an address with no history. Nothing is claimed.",
+        body: "The same button asks for an unlimited allowance on your USDC. No HUB is sent.",
+        asks: "ClaimHub wants you to let {spender} spend all of your USDC.",
+        call: "approve(spender, unlimited)",
+        expected: "blocked",
+        expectedBody:
+          "Balanced rules block unlimited allowances, so that rule should fire. For this demo, the spender is also on the Baret blocklist.",
       },
     },
-    before: {
-      title: "Before you press it",
-      body: "Read the approval amount in the popup. An honest claim asks for the amount it is about to give you. This one asks for everything you have and everything you will have.",
+    claims: [
+      {
+        claim: "One signature. Your HUB arrives in the same transaction.",
+        check: "Baret simulates the signature and lists what arrives and what leaves.",
+      },
+      {
+        claim: "The distributor needs a permission. Every claim works this way.",
+        check: "Baret checks the size of every allowance and the address that receives it.",
+      },
+      {
+        claim: "You are eligible for 2,410 HUB.",
+        check: "Not checked. Eligibility is something the page says about itself.",
+      },
+    ],
+    watch: {
+      title: "Before you press Claim",
+      body: "Look at what leaves your wallet, not at the button. A claim sends tokens to you. It never needs permission to take yours.",
     },
-    after: {
-      blocked: {
-        title: "Blocked",
-        body: "Baret refused to sign. The rule that fired was the one blocking unlimited approvals, and the spender is an address that appeared four days ago.",
-      },
-      allowed: {
-        title: "Signed",
-        body: "The capped approval matched the claim, so nothing was flagged. You can see the exact allowance in the Allowances tab.",
-      },
+    without: {
+      title: "If this were signed",
+      body: "Nothing would leave at first. The spender could then take all of your USDC at any time, until you revoke the allowance.",
     },
     lesson: {
-      title: "What to take from this",
-      body: "The word claim on the button has nothing to do with what the transaction does. Read the approval, not the page.",
+      title: "A claim sends, it never takes",
+      body: "A real claim sends tokens to you. If a claim asks to spend your tokens, it is not a claim.",
     },
   },
-} as const;
+} as const satisfies ScenarioSite;
 
 export type ClaimhubContent = typeof claimhub;

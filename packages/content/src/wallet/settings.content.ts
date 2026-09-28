@@ -1,4 +1,8 @@
-/** apps/wallet, settings. Every option gets a one-line plain explanation. */
+/**
+ * apps/wallet, settings. Order: grouped settings, the danger zone, and the
+ * record notice (what Baret keeps and who sees what). Every row gets one
+ * plain line. The danger zone states every consequence before the button.
+ */
 
 export const settings = {
   title: "Settings",
@@ -7,39 +11,36 @@ export const settings = {
     {
       title: "Account",
       rows: [
-        { label: "Account name", hint: "Only you see this. It is stored on this device." },
-        { label: "Address", hint: "Your Monad address. Safe to share." },
+        { label: "Account name", hint: "Only you see it. It is stored in this browser." },
+        { label: "Address", hint: "Your Monad address. Share it to get paid." },
         {
           label: "Passkey",
-          hint: "The key lives on this device and in your password manager if you sync one.",
+          hint: "Created with Mera. It is the only way into this account, so keep it.",
         },
       ],
     },
     {
       title: "Security",
       rows: [
+        { label: "Lock after inactivity", hint: "Locks the wallet after 15 minutes without use." },
         {
-          label: "Lock after inactivity",
-          hint: "Locks the wallet when you walk away. Fifteen minutes by default.",
+          label: "Ask for your passkey on every signature",
+          hint: "On, every signature needs Face ID, Touch ID, Windows Hello or your security key. Off, only opening the wallet does.",
         },
-        {
-          label: "Require a passkey to sign",
-          hint: "Ask for your fingerprint or face on every signature, not just on unlock.",
-        },
-        { label: "Rules", hint: "What Baret blocks on its own." },
+        { label: "Rules", hint: "What Baret stops before you sign." },
       ],
     },
     {
       title: "Network",
       rows: [
-        { label: "Network", hint: "Monad testnet. Mainnet is not enabled yet." },
+        { label: "Network", hint: "Monad testnet. Mainnet is not available yet." },
         {
           label: "Node",
-          hint: "Where balances and simulations are read from. Change only if you run your own.",
+          hint: "Where your balance is read and your transactions are sent. Change it only if you run your own.",
         },
         {
           label: "Analysis server",
-          hint: "Where transactions are checked. Change only if you run your own.",
+          hint: "Where Baret checks your requests. Change it only if you run your own.",
         },
       ],
     },
@@ -47,12 +48,12 @@ export const settings = {
       title: "Privacy",
       rows: [
         {
-          label: "Usage data",
-          hint: "Off, and there is no switch to turn it on. Nothing is collected.",
+          label: "Usage analytics",
+          hint: "Off. Baret collects no analytics, and there is no switch to turn it on.",
         },
         {
           label: "Export your data",
-          hint: "Activity, permissions and rules as a single file on your device.",
+          hint: "Your activity, permissions and rules, as one file saved on this device.",
         },
       ],
     },
@@ -60,8 +61,8 @@ export const settings = {
       title: "About",
       rows: [
         { label: "Version", hint: "Open source under the MIT licence." },
-        { label: "Source", hint: "Read the code that is running." },
-        { label: "What it cannot do", hint: "The honest list of limits." },
+        { label: "Source code", hint: "Read the code this wallet runs." },
+        { label: "Known limits", hint: "What Baret can't do yet, listed plainly." },
       ],
     },
   ],
@@ -70,18 +71,42 @@ export const settings = {
     title: "Danger zone",
     reset: {
       label: "Reset this wallet",
-      hint: "Removes the account, the activity and the rules from this device.",
+      consequences: [
+        "Deletes the activity log, rules and settings stored in this browser.",
+        "Leaves your funds where they are, on your Monad address.",
+        "Leaves your agent key active. Revoke it first if payments should stop.",
+        "Keeps your passkey. Use it to open the same account again.",
+      ],
       confirm: {
-        title: "This cannot be undone",
-        body: "The passkey stays in your browser, but everything Baret stored here is deleted. If you have funds on this account, move them first.",
-        acknowledge: "I have moved anything I want to keep",
+        title: "Reset this wallet?",
+        body: "This can't be undone. Your funds and your vault stay on Monad.",
+        acknowledge: "I have revoked anything I want stopped",
         action: "Reset the wallet",
-        cancel: "Keep it",
+        cancel: "Keep everything",
       },
     },
   },
 
+  /** What is recorded, and who sees the request. */
+  record: {
+    title: "What Baret keeps",
+    body: "Checks run on the Baret server. It sees the unsigned request, your address and the site that asked, and keeps an audit record of each check.",
+    points: [
+      "Every verdict goes into your activity log, with the rule that fired.",
+      "Every override is logged with the rule it went past.",
+      "Baret never receives your passkey or your keys.",
+    ],
+  },
+
   saved: "Saved.",
+
+  errors: {
+    save: {
+      title: "That setting was not saved",
+      body: "The previous value still applies. Try again.",
+      action: { label: "Try again" },
+    },
+  },
 } as const;
 
 export type SettingsContent = typeof settings;

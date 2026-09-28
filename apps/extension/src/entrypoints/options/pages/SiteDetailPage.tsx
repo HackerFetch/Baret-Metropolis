@@ -4,5 +4,5 @@ import { Page } from "./Page.js";
 
 export function Component() {
   const { origin } = useParams();
-  return <Page title={origin ?? sites.title} body={sites.detail.permissions.title} />;
+  return <Page title={origin ?? sites.title} body={sites.detail.lead} />;
 }

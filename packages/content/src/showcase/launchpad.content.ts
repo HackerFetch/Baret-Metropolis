@@ -1,101 +1,172 @@
+import type { ScenarioSite } from "../types.js";
+
 /**
- * /launchpad on apps/showcase. Threat demo 5 of 6.
+ * /launchpad on apps/showcase. Trust trap. Caution, on purpose.
  *
- * Attack: a rug in waiting. The sale is real, the tokens arrive. The deployer
- * keeps the admin key and the liquidity is not locked, so the exit is
- * available to them whenever they want it.
+ * Story: a polished token sale. The tokens really arrive. The risk is what the
+ * deployer can change after the sale, and that shows in the call trace, not
+ * on the page.
  *
- * Caution, not Blocked. Nothing bad has happened yet. That is the finding.
+ * Old versions claimed checks for "admin key kept" and "LP not locked". No
+ * detector reads either, so this version uses what the evm-danger detector
+ * does see: the sale runs borrowed code (a proxy the deployer can repoint).
+ *
+ * Honest version: contribute(), payable, on a plain sale contract with fixed
+ * code. LNTL arrives in the same transaction. Expected Safe, no findings.
+ * Needs: the sale contract on a list Baret reads; 0.001 MON per LNTL,
+ * minimum 0.01 MON, maximum 1 MON per wallet to match the page.
+ *
+ * Attack version: the same button calls a sale proxy that delegatecalls into
+ * an implementation its deployer can replace. LNTL still arrives. Expected
+ * Caution under Balanced, Blocked under Strict. Codes:
+ *   DELEGATECALL_DETECTED        needs a call trace (debug_traceCall on the
+ *                                Monad RPC); blockDelegatecall
+ *   UNKNOWN_CONTRACT_EXPOSURE    proxy and implementation on no list;
+ *                                blockUnknownContractExposure (off in Balanced)
+ *   ESTIMATED_LOSS_EXCEEDS_MAX   only when the amount typed crosses the
+ *                                visitor's loss limit; then Blocked
+ * If no trace is available, expect LOW_CONFIDENCE_INCOMPLETE_DATA instead of
+ * DELEGATECALL_DETECTED.
+ *
+ * Watch for -> source:
+ *   1 borrowed code              DELEGATECALL_DETECTED
+ *   2 a sale Baret does not know UNKNOWN_CONTRACT_EXPOSURE
+ *   3 loss above your limit      ESTIMATED_LOSS_EXCEEDS_MAX (amount-dependent)
  */
 
 export const launchpad = {
   meta: {
-    title: "LaunchPad",
-    description: "A fake token sale where the deployer keeps the keys. Part of the Baret showcase.",
+    title: "LaunchPad token sale scenario · Baret",
+    description:
+      "A simulated token sale on Monad testnet whose contract runs code its deployer can replace after you pay. See what Baret checks before you buy.",
   },
 
   scenario: {
     slug: "launchpad",
     name: "LaunchPad",
     category: "Token sale",
-    tagline: "Vetted launches on Monad",
+    tagline: "Reviewed launches on Monad",
     summary:
-      "A polished sale page with a countdown and a full tokenomics chart. The simulation shows the deployer still holds the token admin key and the liquidity is not locked.",
+      "A polished token sale with a countdown and a tokenomics chart. In the attack version, your tokens still arrive, but the sale runs code its deployer can replace after you pay.",
     watchFor: [
-      "An admin key the deployer never gave up",
-      "Liquidity that can be removed at any moment",
-      "A token that can be frozen after the sale closes",
+      "A sale that runs code borrowed from another contract",
+      "A sale contract Baret does not know",
+      "A contribution above the loss limit in your rules",
     ],
     threatClass: "trap",
     whyItMatters:
-      "Nothing has gone wrong yet, and that is what makes it work. A retained admin key means the deployer can mint, freeze or pull liquidity long after launch day, when nobody is watching.",
+      "Nothing goes wrong on the day you buy. The risk is what the deployer can change after the sale closes.",
     verdict: "caution",
   },
 
   site: {
     brand: "LaunchPad",
+    hostname: "launchpad.example",
     nav: ["Sale", "Tokenomics", "Vesting", "Team"],
     hero: {
-      badge: "Vetted launch",
-      title: "Nimbus public sale",
-      body: "Fixed price, no allocation tiers, no whitelist. Tokens are delivered the moment the sale closes.",
-      cta: "Buy in",
-      countdown: "Sale closes in",
+      badge: "Reviewed launch",
+      title: "Lintel public sale",
+      body: "Fixed price, no tiers, no allowlist. LNTL arrives in your wallet the moment you contribute.",
+      cta: "Buy LNTL",
     },
-    sale: {
-      raised: "Raised",
-      target: "Target",
-      price: "Price",
-      min: "Minimum",
-      max: "Maximum per wallet",
-      cta: "Buy",
+    panel: {
+      title: "Contribute",
+      input: "Amount of MON",
+      rows: [
+        { label: "Price", value: "0.001 MON per LNTL" },
+        { label: "Minimum", value: "0.01 MON" },
+        { label: "Maximum per wallet", value: "1 MON" },
+        { label: "Raised", value: "8,420 of 10,000 MON" },
+      ],
+      cta: "Contribute",
+      note: "LNTL is sent to you in the same transaction.",
     },
-    tokenomics: [
-      { label: "Public sale", value: "40%" },
-      { label: "Liquidity", value: "25%" },
-      { label: "Team", value: "20%" },
-      { label: "Treasury", value: "15%" },
+    stats: [
+      { value: "8,420 MON", label: "raised" },
+      { value: "1,318", label: "contributors" },
+      { value: "2 days", label: "left in the sale" },
     ],
-    vesting: {
-      title: "Team tokens vest over 24 months",
-      body: "The team allocation is locked for six months and then releases linearly. Liquidity is added at close.",
+    sections: [
+      {
+        title: "Tokenomics",
+        body: "40% public sale, 25% liquidity, 20% team, 15% treasury.",
+      },
+      {
+        title: "Team tokens vest over 24 months",
+        body: "The team allocation is locked for six months, then releases monthly.",
+      },
+      {
+        title: "Every launch is reviewed",
+        body: "Projects submit their contracts before listing. We check the supply, the vesting and the liquidity plan.",
+      },
+    ],
+    faq: [
+      {
+        question: "When do I get my tokens?",
+        answer: "In the same transaction as your contribution.",
+      },
+      {
+        question: "Can the contract change after the sale?",
+        answer: "The sale follows the contract we reviewed.",
+      },
+      { question: "Is there a minimum?", answer: "Yes, 0.01 MON per wallet." },
+    ],
+    progress: ["Preparing your order", "Confirm in your wallet", "Buying", "Contribution received"],
+    done: {
+      title: "Contribution received",
+      body: "Your LNTL is in your wallet. Trading opens when the sale closes.",
     },
-    trust: {
-      title: "Every launch is reviewed",
-      body: "Projects submit their contracts before listing. We check the supply, the vesting schedule and the liquidity plan.",
-    },
+    footer: "LaunchPad lists reviewed token sales on Monad.",
   },
 
   analysis: {
     modes: {
       safe: {
-        label: "Safe version",
-        body: "A small buy into a sale where the admin rights are burned and the liquidity is locked. The simulation confirms both.",
+        label: "Honest version",
+        body: "The contribution goes to a plain sale contract with fixed code. LNTL arrives in the same transaction.",
+        asks: "LaunchPad wants you to buy LNTL on {contract}.",
+        call: "contribute()",
+        expected: "safe",
+        expectedBody:
+          "No rule should fire. The simulation should show MON out, LNTL in, and no code borrowed from another contract.",
       },
       danger: {
         label: "Attack version",
-        body: "A larger buy into the version where the deployer still holds the admin key and the liquidity pool is open.",
+        body: "The same button pays a sale contract that runs code from another contract. Its deployer can swap that code at any time. LNTL still arrives.",
+        asks: "LaunchPad wants you to buy LNTL on {contract}.",
+        call: "contribute()",
+        expected: "caution",
+        expectedBody:
+          "Borrowed code and an unknown contract should both show up. Balanced rules treat them as Caution, so you can still sign after you read why. Strict rules block it.",
       },
     },
-    before: {
-      title: "Before you press it",
-      body: "The page will not tell you who holds the keys. The simulation will.",
+    claims: [
+      {
+        claim: "Every launch is reviewed.",
+        check: "Not checked. A review badge is something the page says about itself.",
+      },
+      {
+        claim: "The sale follows the contract we reviewed.",
+        check: "Baret traces the call and flags code that runs from another contract.",
+      },
+      {
+        claim: "LNTL arrives in the same transaction.",
+        check: "Baret simulates the purchase and lists what arrives.",
+      },
+    ],
+    watch: {
+      title: "Before you press Contribute",
+      body: "Tokens that arrive today say little about next week. Read the Caution: it tells you whether the code that ran can be replaced.",
     },
-    after: {
-      caution: {
-        title: "Caution",
-        body: "Baret will sign if you tell it to. The deployer can still mint and freeze this token, and the liquidity can be removed at any time.",
-      },
-      allowed: {
-        title: "Signed",
-        body: "Admin rights are burned and the liquidity is locked. The buy is a plain transfer.",
-      },
+    without: {
+      title: "If this were signed",
+      body: "LNTL would arrive and the page would look fine. Your MON would sit behind code the deployer can replace whenever they choose.",
     },
     lesson: {
-      title: "What to take from this",
-      body: "A launch page describes launch day. The risk lives in what the deployer can still do the week after.",
+      title: "Ask who can change it",
+      body: "A sale page describes launch day. Check whether the code that holds your money can change after it.",
     },
   },
-} as const;
+} as const satisfies ScenarioSite;
 
 export type LaunchpadContent = typeof launchpad;

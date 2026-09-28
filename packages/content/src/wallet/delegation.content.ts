@@ -1,34 +1,58 @@
 /**
- * apps/wallet, the Agent Delegation page. The Mera sub-key demo.
+ * apps/wallet, agent delegation (route /agents). A PaymentGuard vault plus a
+ * Mera sub-key that only the agent uses.
  *
- * Research notes:
- *  - The clearest framing in the category is that a private key is not unsafe,
- *    it is unexpressive. It can only say yes to everything. Lead with that.
- *  - Revocation is an afterthought in every competitor. Here it is a section
- *    with its own heading and a button that is always visible.
+ * Order: explanation, model, steps, vault, merchant list, agent key, revoke,
+ * activity.
+ *
+ * Facts this copy is held to (docs/CONTRACTS.md section 2):
+ *  - The vault enforces two caps per merchant on-chain: per payment and per
+ *    rolling 24 hours. The contract has no hourly cap and no expiry, so this
+ *    page offers neither.
+ *  - The agent key can only call pay. A payment over a cap, to a merchant off
+ *    the list, or from a revoked key reverts. Nothing asks the owner.
+ *  - The contract has no pause. Setting a merchant's caps to zero is the pause.
+ *  - A withdrawal cannot take what active merchants reserve.
  */
 
 export const delegation = {
   title: "Agent delegation",
-  body: "Give an agent a spending limit instead of a key. The limit lives in a contract on Monad, so a bug in the agent cannot talk its way around it.",
+  body: "Give an agent a budget instead of your key. The caps live in a contract on Monad, so the agent can't talk its way past them.",
 
   explainer: {
-    title: "Why not just give it a key?",
-    body: "A key can only say yes to everything. There is no way to tell a key to allow payments up to ten dollars a day, to these merchants only. A vault can hold that sentence. A key cannot.",
+    title: "Why not hand the agent your key?",
+    body: "A key can only say yes to everything. A vault can say: this much, to these merchants, until you say stop.",
+    points: [
+      {
+        title: "A budget",
+        body: "It spends only what you put in the vault. Your wallet balance stays out of reach.",
+      },
+      {
+        title: "A leash",
+        body: "It pays only the merchants you list, and only up to their caps.",
+      },
+      {
+        title: "A kill switch",
+        body: "One revoke, and the vault refuses its key.",
+      },
+    ],
   },
 
-  /** The mental model, in the fewest possible words. */
   model: {
-    title: "How it is arranged",
+    title: "Who can do what",
     rows: [
-      { label: "Your passkey", value: "Full control. Deposit, withdraw, set limits, end it." },
+      { label: "Your passkey", value: "Everything: deposit, withdraw, set caps, revoke." },
       {
         label: "The agent key",
-        value: "Can only call pay, inside the limits, to merchants you listed.",
+        value: "One thing: pay merchants on your list, inside their caps.",
       },
-      { label: "The vault", value: "Holds the funds and enforces the limits on-chain." },
+      {
+        label: "The vault",
+        value: "PaymentGuard, a contract on Monad. It holds the budget and enforces the caps.",
+      },
     ],
-    note: "Your passkey is never used by the agent and never leaves this device.",
+    subKey:
+      "The agent key is a separate key that Mera derives from your passkey, for this vault only. The agent never sees your passkey.",
   },
 
   steps: {
@@ -36,23 +60,23 @@ export const delegation = {
     items: [
       {
         short: "Fund",
-        title: "Put money in the vault",
-        body: "Only what you are willing to lose in a bad week. You can withdraw the rest at any time.",
+        title: "Put a budget in the vault",
+        body: "Deposit only what you want the agent to be able to spend. You can withdraw what is not reserved.",
       },
       {
-        short: "Limit",
-        title: "Set the limits",
-        body: "A ceiling per payment and a ceiling per day, for each merchant you allow.",
+        short: "List",
+        title: "Add merchants and their caps",
+        body: "For each merchant, set the most per payment and the most per rolling 24 hours.",
       },
       {
-        short: "Derive",
+        short: "Create",
         title: "Create the agent key",
-        body: "Derived from your passkey with a different salt. It is a separate key that can only do one thing.",
+        body: "Confirm with your passkey. Mera derives the key, and you register it with the vault.",
       },
       {
-        short: "Connect",
-        title: "Give it to the agent",
-        body: "The agent uses it to call pay. It cannot deposit, withdraw or change a limit.",
+        short: "Hand over",
+        title: "Give the key to your agent",
+        body: "It uses the key to pay from the vault. It can't deposit, withdraw or change a cap.",
       },
     ],
   },
@@ -60,37 +84,71 @@ export const delegation = {
   vault: {
     title: "Vault",
     balance: "In the vault",
-    deposit: "Deposit",
-    withdraw: "Withdraw",
+    reserved: "Reserved by active merchants",
+    free: "Free to withdraw",
+    deposit: { label: "Deposit" },
+    withdraw: { label: "Withdraw" },
+    reservedNote:
+      "{amount} {asset} is reserved for your active merchants. Lower their caps or remove them to withdraw it.",
     empty: {
       title: "The vault is empty",
-      body: "Deposit something to give an agent a budget. Nothing is spendable until you do.",
+      body: "Deposit a budget to let an agent pay. Until then, it can't spend anything.",
+      action: { label: "Deposit" },
     },
-    reserved: "{amount} is reserved by active limits and cannot be withdrawn until you lower them.",
   },
 
   merchants: {
-    title: "Who the agent may pay",
+    title: "Merchants the agent may pay",
     add: "Add a merchant",
     columns: {
       merchant: "Merchant",
       perPayment: "Per payment",
-      perDay: "Per day",
-      spent: "Spent today",
+      perDay: "Per 24 hours",
+      spent: "Spent, last 24 hours",
       status: "Status",
+    },
+    status: {
+      active: "Active",
+      paused: "Paused, caps at zero",
+      removed: "Removed",
     },
     empty: {
       title: "No merchants yet",
-      body: "An agent can only pay addresses on this list. Add one to get started.",
+      body: "The agent can only pay merchants on this list. Add the first one.",
+      action: { label: "Add a merchant" },
     },
     form: {
-      address: { label: "Merchant address", hint: "The address that receives the payments." },
-      perTx: { label: "Most per payment", hint: "A single payment above this reverts on-chain." },
-      perDay: { label: "Most per day", hint: "A rolling 24 hours, not a calendar day." },
-      expiry: {
-        label: "Expires after",
-        hint: "The limit stops working on its own. Leave empty for no expiry.",
+      address: { label: "Merchant address", hint: "The Monad address that receives the payments." },
+      perPayment: { label: "Most per payment", hint: "A single payment above this reverts." },
+      perDay: { label: "Most per 24 hours", hint: "A rolling 24 hours, not a calendar day." },
+    },
+
+    /** Shown before the first payment to a merchant is possible: the terms you sign. */
+    mandate: {
+      title: "What you are allowing",
+      body: "Your agent can pay {merchant} from the vault, without asking you, up to these caps.",
+      rows: {
+        merchant: "Paid to",
+        perPayment: "Most per payment",
+        perDay: "Most per rolling 24 hours",
+        from: "Paid from",
+        fromValue: "Your vault, not your wallet",
+        signer: "Signed by",
+        signerValue: "Your agent key",
       },
+      note: "You can lower a cap or remove {merchant} at any time.",
+      action: { label: "Add the merchant" },
+    },
+
+    refuses: {
+      title: "What the vault refuses",
+      points: [
+        "A payment to anyone who is not on this list.",
+        "A payment above that merchant's cap per payment.",
+        "A payment that takes the last 24 hours past the daily cap.",
+        "Any payment from a revoked agent key.",
+      ],
+      note: "Both caps are hard limits. A payment over either one reverts, nothing is paid, and the agent can't ask for more.",
     },
   },
 
@@ -98,44 +156,81 @@ export const delegation = {
     title: "Agent key",
     none: {
       title: "No agent key yet",
-      body: "Create one when you are ready to hand it over. Nothing can spend until you do.",
+      body: "Create one when the vault and your merchants are ready. Until then, nothing can pay from the vault.",
       action: { label: "Create the agent key" },
     },
+    creating: "Confirm with your passkey. Mera derives the agent key from it.",
+    registering: "Sign to register the agent key with your vault.",
     active: {
       title: "Active",
-      body: "Created {date}. It has made {count} payments and spent {amount}.",
+      body: "Created {date}. {count} payments so far.",
       address: "Agent address",
     },
-    creating: "Confirm with your passkey to create the agent key.",
+    handover: {
+      title: "Give it to your agent",
+      body: "Put the key in your agent's configuration. Anyone holding it can pay your listed merchants up to their caps, and nothing else.",
+      reveal: "Show the agent key",
+      copy: "Copy the agent key",
+      copied: "Copied. Paste it only into your agent.",
+    },
+    errors: {
+      cancelled: {
+        title: "No agent key yet",
+        body: "You closed the passkey prompt, so nothing was created.",
+        action: { label: "Try again" },
+      },
+    },
   },
 
-  /** Its own section, deliberately. */
+  /** Its own section, deliberately. Stopping the agent never depends on the agent. */
   revoke: {
-    title: "Ending it",
-    body: "One call kills the agent key on-chain. Any payment it tries afterwards reverts, including one it signed a second ago. You do not need the agent to cooperate and your funds do not move.",
+    title: "Stop the agent",
+    body: "One transaction revokes the agent key on-chain. The agent does not have to cooperate, and your funds stay in the vault.",
     options: [
-      { label: "Pause the vault", hint: "Stops everything, keeps the setup. Reversible." },
       {
         label: "Revoke the agent key",
-        hint: "Kills the key permanently. You can create a new one.",
+        hint: "The vault refuses every payment from this key. Create a new key to start again.",
       },
-      { label: "Set a merchant to zero", hint: "Stops one merchant without touching the rest." },
-      { label: "Withdraw everything", hint: "Takes back what is left. The limits stay for later." },
+      { label: "Pause a merchant", hint: "Sets its caps to zero. Raise them again to resume." },
+      {
+        label: "Remove a merchant",
+        hint: "Takes one merchant off the list. The others keep working.",
+      },
+      { label: "Withdraw", hint: "Takes back whatever no active merchant reserves." },
     ],
     confirm: {
-      title: "Revoke the agent key",
-      body: "The agent will stop being able to pay immediately. Anything it has in flight will fail. Your funds stay in the vault.",
-      action: "Revoke it",
-      cancel: "Keep it running",
+      title: "Revoke the agent key?",
+      body: "It can't pay from the vault after this. A payment that lands after the revoke reverts, even one the agent already signed. Your funds stay in the vault.",
+      action: "Revoke the agent key",
+      cancel: "Keep it active",
     },
-    done: "Revoked. The key is dead on-chain.",
+    done: "Revoked. The vault refuses this key from now on.",
   },
 
   activity: {
-    title: "What the agent has done",
+    title: "Agent payments",
+    body: "Read from the vault's on-chain events, indexed by Envio.",
+    row: "Paid {amount} {asset} to {merchant}",
+    spent: "{actual} of {cap} in the last 24 hours",
     empty: {
       title: "No payments yet",
-      body: "Every payment the agent makes appears here, with the merchant and the running total.",
+      body: "Every payment your agent makes from the vault shows up here, with the merchant and the running total.",
+    },
+  },
+
+  errors: {
+    vault: {
+      title: "Can't reach your vault",
+      body: "Monad did not answer, so nothing changed. Try again in a moment.",
+      action: { label: "Try again" },
+    },
+    reverted: {
+      title: "That did not go through",
+      body: "The vault rejected the transaction, so nothing changed. Check the amount and try again.",
+    },
+    reserved: {
+      title: "That amount is reserved",
+      body: "Active merchants reserve {amount} {asset}. Lower their caps or remove them, then withdraw.",
     },
   },
 } as const;

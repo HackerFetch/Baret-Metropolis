@@ -1,90 +1,150 @@
 /**
- * Extension options, the agent payments dashboard.
+ * Extension options, Payments. Automatic payments that sites and agents ask
+ * for over x402, and the caps that hold them. "Payments" in the UI, "x402" as
+ * the secondary label.
  *
- * The thing nobody else builds: a running total for a protocol that has none.
- * Every number here comes from the wallet's own ledger, not from a merchant.
+ * x402 keeps no running total, so the totals here exist nowhere else. Every
+ * number comes from the wallet's own ledger, not from a merchant. Cap labels
+ * and hints live in shared/policy; this page shows spending against them.
  */
 
 export const x402 = {
-  title: "Agent payments",
-  body: "Automatic payments made over HTTP 402, and the caps that stop them. x402 keeps no running total of its own, so this is the only place the total exists.",
+  title: "Payments",
+  tag: "x402",
+  lead: "Payments that sites and agents ask for over x402, checked against your caps before anything is sent.",
+
+  wedge: {
+    title: "x402 forgets every payment. Baret keeps count.",
+    body: "Each x402 request stands alone, so nothing in the protocol adds up what you have paid. Baret keeps that running total. Your caps do the rest: anything over one stops and asks you first.",
+  },
 
   summary: {
-    today: "Today",
+    today: "Spent today",
     week: "This week",
     month: "This month",
-    merchants: "Merchants with a cap",
-    alerts: "Needs attention",
+    merchants: "Merchants with caps",
+    declined: "Declined",
+    attention: "Needs a look",
   },
 
   ticker: {
-    title: "Last 7 days",
-    body: "Each payment as it went through the three stages.",
-    stages: { checked: "Checked", verified: "Verified", settled: "Settled" },
-    empty: "No payments in the last week.",
+    title: "Live payments",
+    body: "Each payment as it moves through three stages, over the last 7 days.",
+    live: "Live",
+    stages: {
+      checked: { label: "Checked", hint: "Baret checked it against your rules and caps." },
+      verified: { label: "Verified", hint: "The facilitator confirmed the payment signature." },
+      settled: { label: "Settled", hint: "The payment landed on Monad." },
+    },
+    empty: "No payments in the last 7 days.",
   },
 
   merchants: {
-    title: "By merchant",
+    title: "Merchants",
+    body: "Every site you let take payments, its caps and what it has spent against them.",
     columns: {
       merchant: "Merchant",
-      perTx: "Per payment",
+      perPayment: "Per payment",
       hourly: "Per hour",
       daily: "Per day",
-      spent: "Spent today",
+      spent: "Spent",
       status: "Status",
     },
+    spent: "{spent} of {cap}",
+    status: { active: "Active", paused: "Paused", revoked: "Revoked" },
+    actions: { pause: "Pause", resume: "Resume", caps: "Change caps", revoke: "Revoke" },
+    firstPayment: "The first payment to a new merchant always asks you.",
     empty: {
-      title: "No agent payments yet",
-      body: "When a site asks for payment over HTTP 402, you approve it once and set a cap. After that it runs inside the cap.",
+      title: "No merchants yet",
+      body: "The first time a site asks for an x402 payment, you approve it once and set its caps. It shows up here after that.",
+      action: { label: "Try SCRYBE in the showcase" },
     },
   },
 
   facilitators: {
-    title: "By facilitator",
-    body: "The service that verifies and settles each payment. A facilitator you have not seen before is worth a look.",
-    columns: { name: "Facilitator", payments: "Payments", volume: "Volume", trust: "Standing" },
-    trust: { known: "Seen before", new: "New to you", blocked: "Blocked" },
+    title: "Facilitators",
+    body: "The services that verify and settle each payment for the merchant. Your caps apply whichever one a merchant uses.",
+    columns: {
+      name: "Facilitator",
+      payments: "Payments",
+      volume: "Volume",
+      standing: "Standing",
+    },
+    standing: { known: "Used before", new: "New to you" },
+    newHint: "You have not paid through this facilitator before. It is worth a look.",
+    empty: "No facilitators yet. One appears with your first payment.",
   },
 
   problems: {
-    title: "Needs attention",
-    body: "Payments that did not finish cleanly.",
+    title: "Needs a look",
+    body: "Payments Baret declined, with the rule that fired, and payments that never settled.",
     types: {
-      orphan: {
-        title: "Signed but never settled",
-        body: "You paid {origin} {amount} {time} and the merchant never confirmed it.",
+      declined: {
+        title: "Declined by a rule",
+        body: "{merchant} asked for {amount}. {rule} stopped it. Nothing was sent.",
       },
-      noDelivery: {
-        title: "Paid but nothing arrived",
-        body: "The payment settled and the site never returned what you paid for.",
+      overCap: {
+        title: "Over a cap",
+        body: "{merchant} asked for {amount}, which goes over {rule} ({cap}). Nothing was sent.",
       },
       mismatch: {
-        title: "Blocked for a mismatch",
-        body: "The payment address did not match what {origin} asked for.",
+        title: "Wrong payee",
+        body: "{merchant} asked to be paid at {expected}, but the payment would have gone to {actual}. Nothing was sent.",
+      },
+      asset: {
+        title: "Wrong token",
+        body: "{merchant} asked for {asset} from a contract that is not on your list. Nothing was sent.",
+      },
+      unsettled: {
+        title: "Signed, not settled",
+        body: "You authorized {amount} to {merchant}, and it has not landed on Monad.",
       },
     },
-    actions: { investigate: "Look at it", block: "Block this merchant", dismiss: "Dismiss" },
+    actions: { details: "See details", pause: "Pause this merchant", dismiss: "Dismiss" },
     empty: {
-      title: "Nothing needs attention",
-      body: "Every payment settled and every merchant delivered.",
+      title: "Nothing needs a look",
+      body: "No payment was declined, and every payment settled.",
     },
   },
 
+  receipts: {
+    title: "Settlement receipts",
+    body: "Proof that each payment landed on Monad.",
+    columns: {
+      time: "Time",
+      merchant: "Merchant",
+      amount: "Amount",
+      facilitator: "Facilitator",
+      transaction: "Transaction",
+    },
+    explorer: "View on the explorer",
+    empty: "No settled payments yet.",
+  },
+
   settings: {
-    title: "Defaults for new merchants",
-    body: "What a site gets the first time it asks, before you set a specific cap.",
+    title: "Payment settings",
+    body: "How Baret handles a payment request before you set anything for that merchant.",
     autoApprove: {
-      label: "Pay without asking",
-      hint: "Inside the cap. Turn this off to be asked every time.",
+      label: "Pay within caps without asking",
+      hint: "Every payment is still checked first. Turn this off to approve each one yourself.",
     },
-    defaultCap: {
-      label: "Starting cap",
-      hint: "Per hour, for a merchant you have not met before.",
+    caps: {
+      label: "Caps and allowed tokens",
+      hint: "Per payment, per hour and per day caps come from your rules.",
+      action: { label: "Edit them in Rules", href: "/rules" },
     },
-    allowedAssets: {
-      label: "Assets",
-      hint: "Only the canonical USDC on Monad unless you add more.",
+  },
+
+  errors: {
+    load: {
+      title: "Payment history did not load",
+      body: "Reload the page. Nothing was changed.",
+      action: { label: "Reload" },
+    },
+    save: {
+      title: "That change did not save",
+      body: "The merchant keeps its previous caps. Try again.",
+      action: { label: "Try again" },
     },
   },
 } as const;

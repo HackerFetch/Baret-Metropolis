@@ -99,3 +99,76 @@ export interface Scenario {
   /** The verdict the user should expect to see. */
   verdict: VerdictKind | "capped";
 }
+
+/**
+ * One threat scenario page on the showcase. The six files in showcase/ satisfy
+ * this, so one component renders all six. Three layers, in page order:
+ *
+ *   scenario  the story, in Baret's voice. Also the card on the hub.
+ *   site      the fake product's own voice. Convincing on purpose, and the
+ *             same in both versions: only the transaction changes.
+ *   analysis  Baret's framing around the live result. Labels, the expected
+ *             verdict and the lesson. Never a finding: findings come live from
+ *             shared/findings.
+ *
+ * Copy that is identical on all six pages (the frame, the panel labels, the
+ * empty and error states) lives in `hub.frame`.
+ */
+export interface ScenarioSite {
+  meta: Meta;
+  scenario: Scenario & { threatClass: "drainer" | "trap" | "agent" };
+  site: {
+    brand: string;
+    /** A made-up hostname on the reserved .example domain. Never a real one. */
+    hostname: string;
+    nav: readonly string[];
+    hero: { badge: string; title: string; body: string; cta: string };
+    /** The main card: the swap form, the mint box, the question box. */
+    panel: {
+      title: string;
+      /** Placeholder text of the card's one input. */
+      input: string;
+      rows: readonly { label: string; value: string }[];
+      cta: string;
+      note: string;
+    };
+    stats: readonly { value: string; label: string }[];
+    sections: readonly Block[];
+    faq: readonly Faq[];
+    /** The site's own progress line while the request runs. */
+    progress: readonly string[];
+    /** What the site says once you sign. The same in both versions. */
+    done: Block;
+    footer: string;
+  };
+  analysis: {
+    /** The two versions. Same page, same button, a different transaction. */
+    modes: Record<
+      "safe" | "danger",
+      {
+        /** Label on the version switch. */
+        label: string;
+        /** What this version builds, in one or two sentences. */
+        body: string;
+        /** "{Site} wants you to ...". Placeholders are filled live. */
+        asks: string;
+        /** The function the site calls, shown in mono. */
+        call: string;
+        /** The verdict this version should get under the Balanced rules. */
+        expected: VerdictKind | "capped";
+        /** Why that verdict is expected. Framed as expected, never as found. */
+        expectedBody: string;
+      }
+    >;
+    /** "The site says" beside "Baret checks". */
+    claims: readonly { claim: string; check: string }[];
+    /** What to look at before pressing the button. */
+    watch: Block;
+    /** What the attack version would do if it were signed. */
+    without: Block;
+    /** One takeaway the reader can use on any site. */
+    lesson: Block;
+  };
+  /** Only SCRYBE has this: the bridge to the agents page. */
+  cta?: Block & { action: Action };
+}

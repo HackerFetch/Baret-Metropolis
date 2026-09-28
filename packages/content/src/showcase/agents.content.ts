@@ -4,27 +4,35 @@
  * Audience: a developer who is about to give an autonomous agent access to
  * money and is nervous about it. Sell the boundary, not fear.
  *
+ * Section order (page plan, 2026-09-28): hero, problem, layer diagram, control
+ * model, three steps, quickstart, chooser, fail-closed, revoke flow, policy
+ * picker, live playground, FAQ, CTA.
+ *
  * Research notes that shaped this page:
- *  - Nobody in the agent-wallet category claims "simulate before signing".
+ *  - Nobody in the agent-wallet category leads with "simulate before signing".
  *    That is our opening line and we keep it concrete.
  *  - Revocation is an afterthought everywhere else. It gets its own section.
  *  - "Guardrails" is a dead word, four vendors use it interchangeably. Banned.
  *  - The x402 client side is unwritten. Everyone explains how to charge an
  *    agent. Nobody explains what the agent should check before it pays.
  *  - Docs that work read: one sentence, then one command.
+ *
+ * API names follow docs/ARCHITECTURE.md sections 8.5 and 8.6. Code samples are
+ * arrays of lines so the copy linter reads them line by line; the page joins
+ * them with newlines. Samples use a local server, never a hosted domain.
  */
 
 export const agents = {
   meta: {
-    title: "Baret for agents",
+    title: "Pre-sign checks for AI agents · Baret",
     description:
-      "Give an AI agent a spending limit instead of a private key. Baret simulates and checks every transaction before the key signs.",
+      "Baret simulates every transaction your AI agent builds on Monad and checks it against your policy before the key signs. A vault caps what it spends.",
   },
 
   hero: {
-    eyebrow: "SDK and CLI",
+    eyebrow: "SDK · CLI · MCP tools",
     title: "Your agent signs. Baret checks first.",
-    body: "An agent with a private key can do anything the key can do. There is no way to say 'only payments, only to these merchants, only up to this much' to a key. Baret adds that sentence. Every transaction your agent builds is simulated and checked against your policy before the key ever touches it.",
+    body: "Baret simulates every transaction your agent builds and checks it against your policy before the key signs. When a rule says no, your agent stops instead of signing blind. A vault on Monad caps what it can spend.",
     actions: {
       primary: { label: "Read the quickstart", href: "#quickstart" },
       secondary: { label: "Try the playground", href: "#playground" },
@@ -32,67 +40,118 @@ export const agents = {
     install: "pnpm add @baret/agent-kit",
   },
 
-  /** The argument, in three short paragraphs. Concrete over scary. */
+  /** The argument. Concrete over scary. */
   problem: {
     eyebrow: "The problem",
-    title: "A private key can only say yes.",
-    body: "The key is not dangerous because it is secret. It is dangerous because it is not expressive. It cannot hold a limit, it cannot name a merchant, and it cannot be narrowed after you hand it over. Anything you build on top of it lives in your own code, where a bug in the agent goes straight around it.",
+    title: "An agent key signs whatever it is handed.",
+    body: "A private key cannot hold a limit, name a merchant or be narrowed after you hand it over. Whatever the agent is told to sign, the key signs.",
     points: [
-      "A model cannot reliably tell instructions from data. Text that reaches its context can decide what it signs.",
-      "An agent that pays over HTTP 402 usually never compares the payment it is about to make with the one the server asked for.",
-      "When something goes wrong at three in the morning, you want one place to turn it off.",
+      "An x402 client pays a 402 response as written. Nothing compares the address, the token or the amount with what the agent expected.",
+      "A model cannot reliably tell instructions from data. A poisoned page, prompt or tool can decide what it signs.",
+      "A leaked agent key has no ceiling. Everything the key can reach, whoever holds it can move.",
     ],
   },
 
-  /** Three layers, each one sentence. This is the whole product. */
+  /** The layer diagram. Each layer works alone; stacked, a gap in one still
+   *  meets the next. `flow` is the path one transaction takes, for the
+   *  diagram itself. */
   layers: {
-    eyebrow: "What you get",
+    eyebrow: "How it fits",
     title: "Three layers between your agent and your money.",
+    body: "Each layer works on its own. Stack them and a gap in one still meets the next.",
+    flow: [
+      "Your agent builds a transaction",
+      "The signer asks Baret",
+      "Baret simulates and checks it",
+      "Your policy decides",
+      "The key signs, or the signer throws",
+      "Payments meet the vault caps on-chain",
+    ],
     items: [
       {
-        title: "A guarded signer",
-        body: "Wrap the signer your agent already uses. Every transaction is decoded, simulated on Monad and checked against your policy. If it fails, the signer throws and the key never runs.",
-        points: ["Decode and simulate", "Run the risk detectors", "Apply your policy", "Then sign"],
+        title: "The check",
+        body: "Baret simulates the transaction over Alchemy RPC without sending it. Nine detectors read the result. Your policy decides what blocks.",
+        points: [
+          "Simulate on Monad",
+          "Run nine detectors",
+          "Compare an x402 payment with its 402",
+          "Apply your policy",
+        ],
       },
       {
-        title: "A vault with a limit",
-        body: "Deposit once into a PaymentGuard vault on Monad and give the agent a signer that can only call pay, inside a per-payment cap and a rolling daily cap. The cap lives in the contract, not in your code.",
+        title: "The guarded signer",
+        body: "Your agent keeps its key, wrapped. The signer asks Baret first and signs only when the answer is allow. On block it throws and the key never runs.",
         points: [
-          "Per-merchant cap",
-          "Rolling 24 hour cap",
-          "Owner keeps deposit and withdraw",
+          "TypeScript SDK",
+          "CLI for any language",
+          "MCP tools for agent frameworks",
+          "Agent wallets from Dynamic",
+        ],
+      },
+      {
+        title: "The vault",
+        body: "PaymentGuard holds the agent's budget in a contract on Monad. The agent key can only call pay, to merchants you listed, inside the caps you set.",
+        points: [
+          "Per-payment cap for each merchant",
+          "Rolling 24-hour cap",
+          "Only you deposit and withdraw",
           "Revoke in one call",
         ],
       },
-      {
-        title: "An x402 check",
-        body: "When your agent hits an HTTP 402, Baret reads what the server actually asked for and compares it with what is about to be paid. Wrong address, wrong asset, or over your cap means the payment is never sent.",
-        points: [
-          "Compare against the request",
-          "Check the asset contract, not its name",
-          "Count it against the cap",
-          "Return an error, not a payment",
-        ],
-      },
     ],
+    note: "Skip the SDK and the vault still says no. A payment over a cap, or from a revoked key, reverts in the contract.",
   },
 
-  /** Who decides what. Borrowed structure: a control column earns more trust
-   *  than a page of security prose. */
+  /** Who decides what. A control table earns more trust than a page of
+   *  security prose. */
   control: {
-    eyebrow: "Who decides what",
-    title: "Nothing here is decided by the model.",
-    columns: { subject: "Decision", who: "Decided by", note: "Where it lives" },
-    rows: [
-      { subject: "What to do next", who: "The agent", note: "Your code" },
-      { subject: "Whether the transaction is safe", who: "Baret", note: "The analysis server" },
-      { subject: "Whether it is allowed", who: "Your policy", note: "A JSON object you own" },
+    eyebrow: "Control model",
+    title: "A leash, a budget and a kill switch.",
+    body: "The model decides what to try. It never decides what is allowed, how much it may spend or whether it keeps its key.",
+    items: [
       {
-        subject: "Whether the payment fits the cap",
+        short: "Leash",
+        title: "Your policy",
+        body: "Which contracts, allowances, tokens and merchants the agent may touch. Baret checks it before every signature.",
+      },
+      {
+        short: "Budget",
+        title: "The vault caps",
+        body: "A per-payment cap and a rolling 24-hour cap for each merchant. The contract enforces them, not your code.",
+      },
+      {
+        short: "Kill switch",
+        title: "Your revoke",
+        body: "One owner call ends the agent key on-chain. The agent does not have to agree.",
+      },
+    ],
+    evidence: {
+      title: "Evidence is not a decision.",
+      body: "Findings list everything Baret saw, every time. Your policy decides which of them may block. A finding that does not block still comes back, so you can log it.",
+    },
+    caps: {
+      title: "Two places hold a cap.",
+      body: "Your policy checks per-payment, hourly and daily caps before the key signs. The vault checks its per-payment and rolling 24-hour caps again when the payment lands.",
+    },
+    columns: { subject: "Decision", who: "Made by", note: "Where it lives" },
+    rows: [
+      { subject: "What to try next", who: "The agent", note: "Your code" },
+      {
+        subject: "What the transaction would do",
+        who: "Baret",
+        note: "Simulation and nine detectors",
+      },
+      { subject: "Whether it may be signed", who: "Your policy", note: "A JSON object you own" },
+      {
+        subject: "How much a merchant can take",
         who: "PaymentGuard",
         note: "A contract on Monad",
       },
-      { subject: "Whether the agent still has access", who: "You", note: "One call, any time" },
+      {
+        subject: "Whether the agent keeps its key",
+        who: "You",
+        note: "One owner call, any time",
+      },
     ],
   },
 
@@ -102,138 +161,372 @@ export const agents = {
     items: [
       {
         short: "Install",
-        title: "Add the kit",
-        body: "One package for TypeScript and Node. From any other language, use the CLI and pipe it a transaction.",
+        title: "Install the kit",
+        body: "Add @baret/agent-kit to a TypeScript or Node agent. From any other language, use the baret CLI.",
       },
       {
-        short: "Choose",
-        title: "Pick a policy",
+        short: "Policy",
+        title: "Define a policy",
         body: "Start from Strict, Balanced or Permissive, then change any single rule. The policy is plain JSON that you own and can version.",
       },
       {
         short: "Wrap",
         title: "Wrap your signer",
-        body: "Swap sendTransaction for guardedSubmit. Safe means it signs and sends. Blocked means it throws before the key is touched.",
+        body: "Replace your send call with guardedSubmit. Allow means it signs and sends. Block means it throws before the key runs.",
       },
     ],
   },
 
   quickstart: {
     eyebrow: "Quickstart",
-    title: "Two minutes, from nothing to a blocked transaction.",
+    title: "From install to your first blocked transaction.",
     sdk: {
       title: "TypeScript",
-      before: "Wrap the signer and send a transaction the way you already do.",
-      after:
-        "A blocked transaction throws GuardBlockedError. The key never signs, so there is nothing to undo.",
+      before: "Wrap the signer, then send the way you already do.",
+      code: [
+        'import { AgentWallet } from "@baret/agent-kit";',
+        "",
+        "const agent = AgentWallet.fromSecret(process.env.BARET_AGENT_SECRET!, {",
+        '  serverUrl: "http://localhost:8080",',
+        '  network: "testnet",',
+        '  policy: "balanced",',
+        "});",
+        "",
+        "const { hash } = await agent.guardedSubmit(txRequest);",
+      ],
+      after: "A block throws GuardBlockedError. The key never signed, so there is nothing to undo.",
     },
     cli: {
       title: "Any language",
-      before: "Pipe a transaction to the CLI and read the exit code.",
+      before: "Pipe a transaction to the CLI and branch on the exit code.",
+      code: [
+        "export BARET_AGENT_SECRET=0x...",
+        "baret address        # prints the agent address",
+        "baret policy list    # Strict, Balanced, Permissive",
+        "",
+        'echo "$TX_JSON" | baret submit - \\',
+        "  --server http://localhost:8080 \\",
+        "  --network testnet \\",
+        "  --policy balanced",
+      ],
       after:
-        "Exit 0 means it was sent. Exit 1 means your policy blocked it. Exit 2 means Baret itself failed.",
+        "Exit 0 means allowed. Exit 1 means a rule blocked it and nothing was signed. Exit 2 means the check could not finish, so nothing was signed either.",
+    },
+    mcp: {
+      title: "Agent frameworks",
+      before: "List the tools, then have the agent call baret_analyze before it signs anything.",
+      code: [
+        "GET  http://localhost:8080/mcp/tools",
+        "POST http://localhost:8080/mcp/call",
+        "",
+        "# tools: baret_analyze, baret_health, baret_list_profiles",
+      ],
+      after: "Tell the agent in its instructions: a Blocked answer is final. Do not retry it.",
+    },
+    /** Three levels of involvement, smallest first. */
+    levels: {
+      title: "Pick how much Baret does",
+      items: [
+        {
+          name: "evaluate",
+          body: "Returns allow or block, with the reasons. Your code signs, or does not.",
+        },
+        {
+          name: "guardedSign",
+          body: "Signs only when the answer is allow. Your code sends it.",
+        },
+        {
+          name: "guardedSubmit",
+          body: "Signs and sends only when the answer is allow.",
+        },
+      ],
+    },
+    /** For a wallet or dApp that only wants the decision. */
+    guard: {
+      title: "Only want the decision?",
+      before: "The guard SDK never signs and never sends. It returns a decision.",
+      code: [
+        'import { TransactionGuard } from "@baret/guard";',
+        "",
+        "const { decision, blockingReasons } = await TransactionGuard.evaluate({",
+        "  transaction,",
+        "  userWallet,",
+        "  policy,",
+        "});",
+        "",
+        'if (decision === "block") return blockingReasons;',
+      ],
+    },
+    /** Plain first, raw on demand. Collapsed by default. */
+    raw: {
+      toggle: "Show the raw request and response",
+      request: {
+        label: "You send",
+        code: [
+          "POST http://localhost:8080/v1/analyze",
+          "{",
+          '  "network": "testnet",',
+          '  "transaction": {',
+          '    "from": "<agent address>",',
+          '    "to": "<token contract>",',
+          '    "value": "0",',
+          '    "data": "0x095ea7b3..."',
+          "  },",
+          '  "policy": "balanced"',
+          "}",
+        ],
+      },
+      response: {
+        label: "You get back",
+        code: [
+          "{",
+          '  "safe": false,',
+          '  "reasons": ["Unlimited allowance to a contract Baret does not know."],',
+          '  "findingCodes": ["ERC20_APPROVAL_UNLIMITED", "UNKNOWN_CONTRACT_EXPOSURE"],',
+          '  "suggestions": ["Approve only the amount this call needs."]',
+          "}",
+        ],
+      },
+      note: "Trimmed for length: estimatedChanges, confidence and meta are left out. findingCodes lists everything Baret found. safe is what your policy decided.",
     },
     secrets: {
       title: "About the secret",
-      body: "The agent key is read from BARET_AGENT_SECRET and is never written to a file, a log or a prompt. If you are giving an agent a key at all, give it one that only holds gas and can only call pay on your vault.",
+      body: "The agent key comes from BARET_AGENT_SECRET. Keep it out of files, logs and prompts. Better still, give the agent a key that holds only gas and can only call pay on your vault.",
     },
+  },
+
+  /** SDK, CLI or MCP, in two sentences each. */
+  chooser: {
+    title: "Which one do I want?",
+    items: [
+      {
+        name: "SDK",
+        body: "Your agent runs on TypeScript or Node. Wrap the signer and a block becomes an exception.",
+      },
+      {
+        name: "CLI",
+        body: "Your agent is Python, Go, a shell script or anything else. Pipe the transaction in and read the exit code.",
+      },
+      {
+        name: "MCP tools",
+        body: "Your agent picks its own tools. Pair it with the vault, because a model can skip a tool and the contract cannot be skipped.",
+      },
+    ],
   },
 
   failClosed: {
     eyebrow: "When Baret is down",
     title: "No answer means no signature.",
-    body: "If the analysis server cannot be reached, evaluate throws and nothing is signed. That is the default and it is deliberate. An agent that keeps signing when the check is unavailable is an agent with no check.",
-    note: "You can opt out per call if you know what you are doing. It is logged as an unchecked signature.",
+    body: "If Baret cannot finish a check, evaluate throws and nothing is signed. The server may be down, the simulation may fail or a data source may not answer. Each of those counts as Blocked.",
+    note: "There is no flag that skips the check. Your agent can retry later, but it cannot sign around it.",
   },
 
+  /** The revoke flow, in the order an owner reaches for it. */
   revoke: {
-    eyebrow: "Turning it off",
+    eyebrow: "Revoke",
     title: "One call ends it.",
-    body: "Call revokeAgentSigner on the vault and the agent's key is dead on-chain. Any payment it attempts after that reverts, including one it signed a second earlier. You do not need the agent to cooperate and you do not need to move any funds.",
+    body: "Call revokeAgentSigner on the vault and the agent key stops working on-chain. Any payment that lands after it reverts, even one the agent signed before. The agent does not have to cooperate, and your funds stay in the vault.",
     points: [
-      "Revoke the signer to stop every future payment",
-      "Set a merchant cap to zero to stop one merchant",
-      "Pause the vault to stop everything without losing the setup",
-      "Withdraw to take back what is left",
+      "revokeAgentSigner: the agent key can no longer pay anyone.",
+      "revokeMerchant: one merchant comes off the list. The rest keep working.",
+      "setMerchantCap: lower a cap without ending anything.",
+      "withdraw: take back what active merchants do not have reserved.",
     ],
+    note: "The revoke is final when its block is: 800 ms on Monad. You can also revoke from the Agents page of the Baret wallet.",
   },
 
+  /** Template descriptions stay inside what the rule fields express. No
+   *  numbers: there is no template file with values yet. */
   policySelector: {
-    title: "Pick a starting policy",
-    body: "The examples below update when you change this. Any rule can be changed afterwards.",
+    eyebrow: "Policy",
+    title: "Pick a starting policy.",
+    body: "The code samples and the playground use the one you pick. You can change any rule afterwards.",
+    options: {
+      strict: {
+        name: "Strict",
+        body: "Any finding blocks, even one that breaks no rule. For an agent with a budget you would miss.",
+      },
+      balanced: {
+        name: "Balanced",
+        body: "The default. Findings that break a rule block. Caution findings pass, with the reasons attached.",
+      },
+      permissive: {
+        name: "Permissive",
+        body: "Fewer rules switched on, so less blocks. Every finding still comes back, so you can log what passed.",
+      },
+    },
+    note: "Every template blocks when Baret cannot finish a check. No rule changes that.",
   },
 
+  /**
+   * Nothing here is a result. The playground sends a real transaction to the
+   * analysis server and renders what comes back. Action descriptions say what
+   * the agent tries; they never say what Baret will find.
+   */
   playground: {
     eyebrow: "Playground",
-    title: "Run a real transaction through it.",
-    body: "This calls the same analysis the SDK calls. Paste an unsigned transaction and see exactly what your agent would get back.",
+    title: "Watch an agent ask first.",
+    body: "Pick something an agent might try and a starting policy. The playground sends it to the same analysis the SDK calls and shows what your agent would get back.",
+    picker: {
+      label: "What the agent tries",
+      items: {
+        pay: {
+          label: "Pay a listed merchant",
+          body: "A small USDC payment to a merchant on the list, inside its caps.",
+        },
+        unlimitedAllowance: {
+          label: "Approve unlimited USDC",
+          body: "An allowance with no ceiling, to a router Baret has not seen before.",
+        },
+        wrongPayee: {
+          label: "Pay a 402 to the wrong address",
+          body: "The payment goes to an address the 402 response never named.",
+        },
+        lookalikeToken: {
+          label: "Pay with a look-alike token",
+          body: "The token is called USDC, but it is not the USDC contract on your list.",
+        },
+        operatorApproval: {
+          label: "Hand over an NFT collection",
+          body: "An operator approval over every item in a collection, now and later.",
+        },
+        flaggedAddress: {
+          label: "Send to a flagged address",
+          body: "A transfer to an address on the ReputationRegistry's flagged list.",
+        },
+      },
+      custom: {
+        label: "Paste your own",
+        body: "Any unsigned Monad transaction, as raw hex or JSON.",
+      },
+    },
     fields: {
       address: {
         label: "Agent address",
         hint: "Any Monad address. Use the button for a random one.",
       },
-      network: { label: "Network", hint: "Testnet only for now." },
-      policy: { label: "Policy", hint: "Comes from the selector above." },
+      network: { label: "Network", hint: "The playground runs on testnet." },
+      policy: { label: "Policy", hint: "Comes from the picker above." },
       transaction: {
         label: "Transaction",
         hint: "Raw hex, or JSON with from, to, value and data.",
         placeholder: '0x02f8... or { "to": "0x...", "data": "0x..." }',
       },
     },
-    action: { label: "Check it" },
-    result: {
-      allow: "Allowed. Your agent would sign this.",
-      block: "Blocked. Your agent would get an error and nothing would be signed.",
-      advisory:
-        "Allowed with a warning. Your agent would sign, and the warning is in the response.",
-      empty: "Paste a transaction to see what your agent would get back.",
-      error: "That transaction could not be read. Check that it is valid hex or valid JSON.",
+    randomAddress: { label: "Use a random address" },
+    action: { label: "Check it as the agent" },
+    /** Terminal lines, printed in order as the check runs. */
+    terminal: {
+      asking: "agent > asking Baret before signing",
+      safe: ["baret > Safe. No rule broken.", "agent > signing and sending."],
+      caution: [
+        "baret > Caution. {count} findings, no rule broken.",
+        "agent > signing and logging the findings.",
+      ],
+      blocked: ["baret > Blocked. Rule: {rule}", "agent > refusing to sign. transaction dropped."],
+      unreachable: ["baret > no answer", "agent > no check, no signature. stopping."],
     },
-    note: "This talks to a rate-limited testnet server, so there is nothing to install. To run your own, start the server locally and point serverUrl at it.",
+    result: {
+      safe: { label: "Safe", body: "Allowed. Your agent signs and sends." },
+      caution: {
+        label: "Caution",
+        body: "Allowed. Nothing broke a rule, but a check found something. The findings come back with the answer.",
+      },
+      blocked: {
+        label: "Blocked",
+        body: "Your agent never signs. It gets the rule that fired and every finding.",
+      },
+      unreachable: {
+        label: "Can't reach Baret",
+        body: "The check did not finish, so this counts as Blocked. Your agent signs nothing.",
+      },
+      findings: "Findings",
+      noFindings: "No findings. Every check ran and found nothing to report.",
+      changes: "What would change",
+      rawToggle: "Show the raw response",
+    },
+    empty: {
+      title: "Nothing checked yet",
+      body: "Pick an action, or paste a transaction, to see what your agent would get back.",
+    },
+    errors: {
+      unreadable: {
+        title: "That transaction could not be read",
+        body: "Paste raw hex, or JSON with from, to, value and data.",
+      },
+      rateLimited: {
+        title: "Too many checks at once",
+        body: "The playground server is rate limited. Wait a moment, then run it again.",
+      },
+      unreachable: {
+        title: "Can't reach Baret",
+        body: "The check did not run, so your agent would sign nothing. Try again in a moment.",
+      },
+    },
+    note: "The playground calls the same /v1/analyze endpoint as the SDK, on a rate-limited testnet server. To run your own, start the server locally and point serverUrl at it.",
+    footnote:
+      "Per-agent activity needs an authenticated server, so it is not part of this public playground.",
+    more: { label: "Wire this into your own agent", href: "#quickstart" },
   },
 
   faq: {
+    eyebrow: "FAQ",
     title: "Fair questions",
     items: [
       {
         question: "Does Baret ever hold my agent's key?",
         answer:
-          "No. The key stays in your process. Baret receives an unsigned transaction, returns a decision, and your code decides what to do with it. The analysis server never sees a key and never signs anything.",
+          "No. The key stays in your process. Baret gets the unsigned transaction and returns a decision. The server never sees a key and never signs. The vault holds what you deposit, and only you can withdraw it.",
       },
       {
-        question: "What happens if the agent ignores the result?",
+        question: "What if the agent ignores the answer?",
         answer:
-          "It cannot, if you use the guarded signer, because the signer refuses. If you call evaluate yourself and ignore the answer, the vault is still there: the cap is enforced by the contract, not by your code.",
+          "With the guarded signer it cannot, because the signer refuses. If you call evaluate and sign anyway, the vault still enforces its caps. They live in the contract, not in your code.",
+      },
+      {
+        question: "What if the agent key leaks?",
+        answer:
+          "A vault agent key can only call pay. Every payment still meets the per-payment and rolling 24-hour caps, and you can revoke the key in one call.",
+      },
+      {
+        question: "What does Blocked mean?",
+        answer:
+          "The transaction broke one of your rules, or a check could not finish. It does not mean someone is malicious. The findings say which rule fired and why.",
+      },
+      {
+        question: "Should my agent retry a blocked transaction?",
+        answer:
+          "No. A block is the answer, not a glitch. Retry only on exit code 2 or a thrown error, when the check itself did not finish.",
       },
       {
         question: "How fast is it?",
         answer:
-          "One simulation and one round trip. On testnet that is usually well under a second. For a payment loop that runs every few seconds, that is the cost of not blind-signing.",
+          "Each transaction costs one round trip to the server and one simulation, before the key signs. There is no published latency figure yet. Measure it on your own traffic.",
       },
       {
         question: "Can I use it without the vault?",
         answer:
-          "Yes. The guarded signer works on its own and is the smaller change. The vault is what protects you when the key itself leaks.",
+          "Yes. The guarded signer works on its own and is the smaller change. The vault is what limits the damage when the key itself leaks.",
       },
       {
         question: "Which policy should an agent start with?",
         answer:
-          "Balanced, with the spending caps set to what you would be comfortable losing in a day. Tighten from there once you see real traffic in the activity log.",
+          "Balanced, with caps set to what you could lose in a day without trouble. Tighten it once you have seen real traffic.",
       },
       {
-        question: "Is it free?",
+        question: "Do I need an account?",
         answer:
-          "Yes, and the source is public. The hosted analysis server is rate limited and testnet only.",
+          "Not for the playground. A server you run yourself can require an API key, an x402 payment per check, or both. You set it with BARET_AUTH_MODE.",
       },
     ],
   },
 
   cta: {
-    title: "Give it a limit instead of a key.",
-    body: "Install the kit, pick a policy, and watch the first blocked transaction in your own logs.",
+    title: "Your agent stops instead of signing blind.",
+    body: "Install the kit, pick a policy and wrap the signer. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
     actions: {
       primary: { label: "Read the quickstart", href: "#quickstart" },
-      secondary: { label: "See the contract", href: "/docs#contracts" },
+      secondary: { label: "Read the vault spec", href: "/docs#contracts-and-payments" },
     },
   },
 } as const;

@@ -1,88 +1,114 @@
 /**
- * Extension popup, the sign request.
+ * Extension popup, the sign request phase.
  *
- * The screen itself is the same component as the wallet, so the verdict, the
- * findings, the changes list and the override all come from wallet/sign. This
- * file only holds what exists because it is an extension: a queue of pending
- * requests, message signing, and the x402 payment variant.
+ * The screen is the wallet's sign request. Header, the site's claim, verdict,
+ * impact, what changes, findings (including the batched-call prefix), rules,
+ * raw data, countdown, override, the Can't reach Baret panel and the result
+ * all come from wallet/sign. This file holds only what exists because this is
+ * an extension:
+ *  - the queue, when several requests wait at once
+ *  - message signing (personal_sign), which has nothing to simulate
+ *  - typed data, and the allowance a permit hides inside it
+ *  - the x402 payment variant and its first-payment caps
+ *  - the first-time site warning
+ *  - the window note
+ *
+ * Fail-closed: a request Baret could not check gets the wallet's Can't reach
+ * Baret state, which counts as Blocked. Nothing here offers a way around it.
+ *
+ * Placeholders follow the shared vocabulary. {origin} is the site that holds
+ * the caps, {merchant} is who receives a payment. {amount} is a number and
+ * {asset} its token. {cap} and {actual} (spent so far) arrive with their unit.
  */
 
 export const signRequest = {
   queue: {
-    label: "{index} of {total}",
+    label: "1 of {count}",
+    body: "{count} requests are waiting. You decide on them one at a time.",
     next: "Next request",
-    body: "More than one site is waiting. They are handled one at a time.",
+    declineAll: "Decline all",
   },
 
-  /** Signing a message is not a transaction and needs its own framing. */
+  /** personal_sign. A message is not a transaction and cannot be simulated. */
   message: {
-    title: "Signature request",
-    subtitle: "{origin} wants you to sign a message",
-    body: "This does not move anything on its own. It proves you control this address.",
-    contentLabel: "What you are signing",
-    unreadable:
-      "This message is not readable text. That is normal for some sites and is also how blind signing attacks work.",
-    warning: {
-      title: "Be careful with unreadable messages",
-      body: "A signature can authorise a transfer later, without ever appearing as a transaction. Only sign this if you started the action.",
+    title: "Sign a message",
+    subtitle: "{origin} asks you to sign this text",
+    body: "Signing sends no transaction. Sites often use it to confirm this address is yours.",
+    check: "A message can't be simulated. Baret shows it exactly as the site sent it.",
+    contentLabel: "The message",
+    unreadable: {
+      title: "This isn't readable text",
+      body: "It's raw data, and it can authorize things you can't see. Sign only if you started this.",
     },
-    actions: { sign: "Sign the message", decline: "Decline" },
+    actions: { sign: "Sign message", decline: "Decline" },
   },
 
-  /** The typed-data variant, where a permit hides. */
+  /** eth_signTypedData_v4. Where a permit hides. */
   typedData: {
-    title: "Signature request",
-    subtitle: "{origin} wants a structured signature",
-    permitWarning: {
-      title: "This is an approval, not a login",
-      body: "Signing gives {spender} permission to move your {asset}. It costs nothing now and it never appears in your history.",
+    title: "Sign structured data",
+    subtitle: "{origin} asks you to sign these fields",
+    body: "Baret decodes each field below. The site can use this signature later without asking again.",
+    fieldsLabel: "What you're signing",
+    permit: {
+      title: "This grants an allowance",
+      body: "It looks like a plain signature, but it lets {spender} spend your {asset}.",
+      validUntil: "Valid until",
     },
-    fields: "What it contains",
+    actions: { sign: "Sign data", decline: "Decline" },
   },
 
-  /** Automatic payments over HTTP 402. */
+  /** A site asked for payment over HTTP 402. The header title becomes this. */
   payment: {
+    label: "x402",
     title: "Payment request",
-    subtitle: "{origin} is asking for {amount}",
+
+    /** The first payment to a site sets the caps for every later one. */
+    firstPayment: {
+      title: "First payment to this site",
+      body: "Set caps for {origin} before you pay. You can revoke them any time in Allowances.",
+      caps: { perPayment: "Per payment", hour: "Per hour", day: "Per day" },
+      rule: "Anything over a cap stops and asks you first.",
+      autoOn: "Later payments inside these caps go through without this window.",
+      autoOff: "Automatic payments are off, so you approve each one.",
+      errors: {
+        empty: "Set all three caps.",
+        belowPayment: "The per-payment cap can't be lower than this payment.",
+        order: "The hourly cap can't be higher than the daily cap.",
+      },
+      actions: { approve: "Pay {amount} {asset}", decline: "Decline" },
+    },
+
+    /** A later payment that passed every check and fit every cap. */
     auto: {
       title: "Paid automatically",
-      body: "{amount} to {origin}. It matched what the site asked for and fits inside your cap.",
-      counter: "{spent} of {cap} this {period}",
-      undo: "Change the cap",
+      body: "{amount} {asset} to {merchant}. It passed every check and stayed inside your caps.",
+      meter: "{actual} of {cap} today",
+      edit: "Edit caps",
     },
-    manual: {
-      title: "First payment to this site",
-      body: "{origin} wants {amount}. Approve once and set a cap, or decline and nothing is sent.",
-      capField: {
-        label: "Cap for this site",
-        hint: "The most it may spend per hour without asking again.",
-      },
-      actions: { approve: "Approve and set a cap", decline: "Decline" },
+
+    overCap: {
+      title: "Over your cap",
+      perPayment: "This payment is more than the {cap} per-payment cap for {origin}.",
+      hour: "This payment would take {origin} past its {cap} hourly cap.",
+      day: "This payment would take {origin} past its {cap} daily cap.",
+      body: "Nothing is sent unless you raise the cap.",
+      actions: { raise: "Raise the cap", decline: "Decline" },
     },
-    blocked: {
-      overCap: {
-        title: "Over your cap",
-        body: "{origin} has used {spent} of {cap} this {period}. This payment would go over, so it was not sent.",
-        actions: [{ label: "Raise the cap" }, { label: "Leave it" }],
-      },
-      mismatch: {
-        title: "This payment does not match the request",
-        body: "The site asked to be paid at {expected} and this transaction pays {actual}. Nothing was sent.",
-      },
-      asset: {
-        title: "Wrong token",
-        body: "This token is named {asset} but it is not the {asset} you allow. Nothing was sent.",
-      },
+
+    /** An automatic payment Baret could not check. It never goes out. */
+    notChecked: {
+      title: "Payment not sent",
+      body: "Baret couldn't check this payment, so it stopped it. Nothing was paid.",
     },
   },
 
-  /** Shown once, the first time a site triggers a signature. */
+  /** Shown the first time a site sends a sign request. */
   firstTime: {
     title: "First request from this site",
-    body: "You have not signed anything here before. Check the address bar.",
+    body: "You haven't signed anything for {origin} before. Check the address bar for a look-alike name.",
   },
 
-  windowNote: "This window closes when you decide. Closing it counts as declining.",
+  windowNote: "Closing this window counts as declining.",
 } as const;
 
 export type SignRequestContent = typeof signRequest;

@@ -1,62 +1,92 @@
 /**
- * apps/wallet, the policy editor. Field labels come from shared/policy.
+ * apps/wallet, the rules page (route /policies). Order: current rules,
+ * actions, preview, history, help. The 25-field editor renders here.
  *
- * This screen is the product's differentiator, so the framing matters: these
- * are the reader's rules, written down, not our risk score.
+ * Field labels, hints, group names, template descriptions and the editor's
+ * save strings all come from shared/policy. Nothing here repeats them.
+ *
+ * Two things this page must never say:
+ *  - that a template does anything its fields do not express;
+ *  - that any rule turns off fail-closed. Can't reach Baret always counts as
+ *    Blocked, and the rule for findings only decides what Caution does.
  */
 
 export const policies = {
   title: "Your rules",
-  body: "Baret checks every transaction against this list. Nothing here is a score and nothing here is our opinion. Change a rule and it applies to the next transaction.",
+  body: "Baret runs every sign request past these rules before you can sign. They are yours, and a change applies to the next request.",
 
+  /** The label is honest: once any rule differs from the template, it reads Custom. */
   current: {
-    label: "Current rule set",
-    custom: "Custom, started from {template}",
-    changed: "{count} rules changed from the template",
+    title: "Current rules",
+    matches: "Matches the {template} template.",
+    custom: {
+      label: "Custom",
+      note: "Started from {template}. {count} rules changed.",
+    },
   },
 
   actions: {
-    useTemplate: "Use this set",
-    customise: "Change a rule",
-    reset: "Back to the template",
-    export: "Export",
-    import: "Import",
+    useTemplate: "Start from this template",
+    edit: "Change a rule",
+    reset: "Go back to {template}",
+    export: "Export rules",
+    import: "Import rules",
   },
 
   preview: {
-    title: "What changes if you save this",
-    nothing: "Nothing changes. This matches what you already have.",
-    stricter: "{count} things that pass today would be blocked.",
-    looser: "{count} things that are blocked today would pass.",
-    recheck: "Check my last 20 transactions against this",
+    title: "Before you save",
+    body: "Your last {count} requests, checked again under these rules.",
+    run: "Run the preview",
+    running: "Checking your recent requests again",
+    same: "Same outcome for all of them.",
+    stricter: "{count} that went through would now be blocked.",
+    looser: "{count} that were blocked would now go through.",
+    empty: "No requests yet, so there is nothing to compare.",
   },
 
   history: {
-    title: "Rule changes",
-    row: "{field} changed from {from} to {to}",
-    empty: "You have not changed anything since setup.",
+    title: "Changes to your rules",
+    row: "{rule} changed from {previous} to {value}",
+    empty: "No changes since setup.",
   },
 
   help: {
-    title: "How to think about this",
+    title: "How the rules work",
     items: [
       {
-        title: "Start looser than you think",
-        body: "A rule set that blocks everything gets turned off. Balanced blocks the attacks that actually empty wallets and stays quiet otherwise.",
+        title: "Start from a template",
+        body: "Pick the one closest to how you use this account, then change single rules. The label reads Custom as soon as you do.",
       },
       {
-        title: "Tighten after you see traffic",
-        body: "Run it for a week, read your activity log, then tighten the rules that never fired and loosen the ones that fired for no reason.",
+        title: "What a finding does",
+        body: "One rule decides this. On, a Caution verdict can be signed after you read the finding. Off, any finding blocks the request.",
       },
       {
-        title: "Loss limits are per transaction",
-        body: "They compare your balance before and after a single transaction. They do not track a daily total, which is what the spending caps are for.",
+        title: "Missing data never passes",
+        body: "If a check can't run, or a rule is missing its data, the request counts as Blocked. No rule changes that.",
       },
       {
-        title: "Missing data counts as a failure",
-        body: "If Baret cannot check a rule, it treats the rule as failed. Turning on Let warnings through changes that.",
+        title: "Loss limits cover one request",
+        body: "They compare your balance before and after a single request. Payment caps are what add up spending per hour and per day.",
       },
     ],
+  },
+
+  errors: {
+    save: {
+      title: "Your rules were not saved",
+      body: "Your previous rules still apply. Try again.",
+      action: { label: "Try again" },
+    },
+    import: {
+      title: "Baret can't read that file",
+      body: "It is not a rule set Baret recognises. Nothing changed.",
+    },
+    preview: {
+      title: "Can't reach Baret",
+      body: "The preview could not run. Your rules did not change.",
+      action: { label: "Try again" },
+    },
   },
 } as const;
 

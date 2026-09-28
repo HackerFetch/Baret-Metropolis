@@ -1,33 +1,43 @@
-/** Extension popup, locked state. One input, nothing else. */
+/**
+ * Extension popup, locked. One field, nothing else.
+ *
+ * The button never says "unlock" (docs/BRAND.md section 09). `reason` is the
+ * small line under the title that says why the wallet is locked right now.
+ * {count} in `reason.idle` is the auto-lock setting, in minutes.
+ */
 
 export const locked = {
   title: "Welcome back",
-  body: "Enter your passphrase to unlock.",
-  field: { label: "Passphrase", placeholder: "Your passphrase" },
-  action: { label: "Unlock" },
-  unlocking: "Unlocking",
+  body: "Enter your passphrase to open your wallet.",
+  field: { label: "Passphrase", placeholder: "Your passphrase", show: "Show", hide: "Hide" },
+  action: { label: "Open wallet" },
+  working: "Opening",
 
   reason: {
-    idle: "Locked after 15 minutes without activity.",
+    idle: "Locked after {count} minutes without activity.",
     manual: "You locked it.",
-    restart: "The browser restarted.",
-    signRequest: "A site is waiting for a signature. Unlock to see it.",
+    restart: "Locked when the browser restarted.",
+    signRequest: "{origin} is waiting for your signature. Open the wallet to review it.",
+    connectRequest: "{origin} wants to connect. Open the wallet to review it.",
   },
 
   errors: {
-    wrong: { title: "That passphrase is not right", body: "Check your capitals and try again." },
+    wrong: { title: "Wrong passphrase", body: "Check Caps Lock and try again." },
     throttled: {
-      title: "Too many attempts",
-      body: "Wait {time} before trying again. This slows down anyone guessing.",
+      title: "Too many tries",
+      body: "Wait {seconds} seconds, then try again. The pause slows down anyone guessing.",
     },
   },
 
   forgot: {
-    label: "I forgot my passphrase",
-    title: "There is no reset",
-    body: "The passphrase is what encrypts the wallet on this device. Nobody, including us, can recover it. If you have your recovery phrase you can reset and restore. If you do not, the account on this device is gone.",
-    reset: { label: "Reset and restore from a recovery phrase" },
-    cancel: { label: "Let me try again" },
+    label: "Forgot your passphrase?",
+    title: "It can't be recovered",
+    body: "Your passphrase encrypts the wallet on this device. Nobody can recover it, including us.",
+    restore: "With your recovery phrase, you can reset Baret and restore the wallet.",
+    noPhrase: "Without that phrase, this wallet can't be opened again.",
+    resetNote: "Resetting erases the wallet, activity and rules on this device.",
+    reset: { label: "Reset and restore" },
+    cancel: { label: "Try again" },
   },
 } as const;
 

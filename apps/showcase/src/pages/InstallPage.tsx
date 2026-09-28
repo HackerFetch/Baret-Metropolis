@@ -124,16 +124,16 @@ export function Component() {
         <div className="max-w-[80ch]">
           {install.troubleshooting.items.map((item) => (
             <details
-              key={item.question}
+              key={item.symptom}
               className="border-t border-[color:var(--rule)] last:border-b"
             >
               <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-display text-xl uppercase tracking-[0.03em]">
-                {item.question}
+                {item.symptom}
                 <span aria-hidden="true" className="font-mono text-[color:var(--accent)]">
                   +
                 </span>
               </summary>
-              <p className="max-w-[70ch] pb-5 text-[color:var(--fg-muted)]">{item.answer}</p>
+              <p className="max-w-[70ch] pb-5 text-[color:var(--fg-muted)]">{item.fix}</p>
             </details>
           ))}
         </div>

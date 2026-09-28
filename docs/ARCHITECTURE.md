@@ -164,16 +164,17 @@ RESPONSE { safe, reasons, findingCodes, estimatedChanges, confidence, meta, sugg
 | Detector | File (target) | What it catches | Example finding codes |
 |---|---|---|---|
 | simulation | `risk/detectors/simulation.ts` | Simulation failed, calldata-only (no trace) | `SIMULATION_FAILED`, `LOW_CONFIDENCE_INCOMPLETE_DATA` |
-| approvals | `risk/detectors/approvals.ts` | Unlimited `approve`, `setApprovalForAll`, EIP-2612 `permit` | `ERC20_APPROVAL_GRANTED`, `ERC20_APPROVAL_UNLIMITED`, `NFT_OPERATOR_GRANTED` |
+| approvals | `risk/detectors/approvals.ts` | Unlimited `approve`, `setApprovalForAll`, EIP-2612 `permit` | `ERC20_APPROVAL_GRANTED`, `ERC20_APPROVAL_UNLIMITED`, `NFT_OPERATOR_GRANTED`, `PERMIT_SIGNATURE_DETECTED` |
 | programs | `risk/detectors/programs.ts` | Contract on the risky list / unknown contract | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE` |
 | evm-danger | `risk/detectors/evm-danger.ts` | `SELFDESTRUCT`, `DELEGATECALL`, ownership transfer | `SELFDESTRUCT_CALL`, `DELEGATECALL_DETECTED`, `OWNERSHIP_TRANSFER` |
-| reputation | `risk/detectors/reputation.ts` | Nansen labels + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY` |
-| compliance | `risk/detectors/compliance.ts` **(new)** | Transfer that has not passed Cleanverse CVI verification | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED` |
+| reputation | `risk/detectors/reputation.ts` | Nansen labels + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY`, `NANSEN_TRUST_BELOW_MINIMUM`, `REPUTATION_DATA_UNAVAILABLE` |
+| compliance | `risk/detectors/compliance.ts` **(new)** | Transfer that has not passed Cleanverse CVI verification | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED`, `COMPLIANCE_DATA_UNAVAILABLE` |
 | cpi | `risk/detectors/cpi.ts` | Deep internal-call nesting, high operation count | `DEEP_CALL_NESTING`, `HIGH_OPERATION_COUNT` |
 | compute | `risk/detectors/compute.ts` | Excessive gas ceiling | `EXCESSIVE_GAS` |
-| x402 | `risk/detectors/x402.ts` | Missing memo, asset outside the allowlist, destination/asset mismatch | `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH`, `X402_NON_CANONICAL_ASSET` |
+| x402 | `risk/detectors/x402.ts` | Missing memo, asset outside the allowlist, destination/asset mismatch | `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH`, `X402_NON_CANONICAL_ASSET`, `X402_MEMO_MISSING`, `X402_ASSET_NOT_ALLOWED` |
+| policy engine | `policy/evaluate.ts` | Rule thresholds that need the user's limits or spend history: loss limits, balance floors, x402 caps and merchant allowlist | `ESTIMATED_LOSS_EXCEEDS_MAX`, `LOSS_PERCENT_UNAVAILABLE`, `POST_BALANCE_TOO_LOW`, `POST_BALANCE_UNAVAILABLE`, `X402_PER_TX_CAP_EXCEEDED`, `X402_HOURLY_CAP_EXCEEDED`, `X402_DAILY_CAP_EXCEEDED`, `X402_MERCHANT_NOT_ALLOWED`, `X402_SPEND_HISTORY_UNAVAILABLE` |
 
-Every finding: `{ code, severity: low|medium|high|critical, message, details? }`.
+Every finding: `{ code, severity: low|medium|high|critical, values, details? }`. The server sends the code and the values to interpolate, never a sentence: the words, the placeholders each code takes and the emitter of each code live in `packages/content/src/shared/findings.content.ts`, which is the contract (38 codes). Each `GuardPolicy` field lists the codes it can produce in `packages/content/src/shared/policy.content.ts`. The `*_UNAVAILABLE` codes are the fail-closed branches: when a data source does not answer, the check fails instead of passing.
 
 ---
 
@@ -231,7 +232,7 @@ MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explai
 - Every signature request goes through the guard; a risky transaction is blocked in the wallet, not in the dApp.
 
 ### 8.4 `apps/showcase`
-- At least 4-5 threat scenarios (fake dApps with safe/danger variants — with Monad-themed names; names like "novaswap" from the old repo will not be reused, new Monad-themed names will be chosen).
+- Six threat scenarios (fake dApps with safe/danger variants): SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD. The names are kept from the earlier version by decision D-010.
 - `/agents` page: live playground for agent-kit + PaymentGuard + (if available) the Qwen adversarial reviewer.
 
 ### 8.5 `packages/guard`

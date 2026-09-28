@@ -1,16 +1,22 @@
-/** Extension popup, first run. No wallet exists yet. */
+/**
+ * Extension popup, first run. No wallet exists yet.
+ *
+ * Setup does not fit in 360 by 600, so this screen makes the case in three
+ * verbs and hands off to the options page, where the eight steps live.
+ * `restore` goes to the same setup, starting from a recovery phrase.
+ */
 
 export const uninitialized = {
-  title: "Set up Baret",
-  body: "A Monad wallet that reads every transaction before you sign it. Setup takes about three minutes and happens in a full tab.",
+  title: "Read first. Then sign.",
+  body: "Baret checks every Monad transaction before you sign it. Setup opens in a full tab.",
   points: [
-    "No account and no email",
-    "Your keys stay on this device",
-    "You choose what gets blocked",
+    "Reads it. Every transaction is simulated and checked before you sign.",
+    "Caps it. Agent payments stay inside the caps you set.",
+    "Holds it. Anything over a cap stops and asks you first.",
   ],
-  action: { label: "Start setup" },
-  restore: { label: "I already have a recovery phrase" },
-  footnote: "Monad testnet only.",
+  action: { label: "Set up Baret" },
+  restore: { label: "Restore a wallet", note: "Have your recovery phrase ready." },
+  footnote: "Your keys stay on this device.",
 } as const;
 
 export type UninitializedContent = typeof uninitialized;

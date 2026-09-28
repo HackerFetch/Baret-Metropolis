@@ -1,7 +1,11 @@
 /**
- * Strings that more than one app renders. Changing a word here changes it in
- * the popup, the wallet and the marketing mockup at the same time, which is
- * the point.
+ * Strings that more than one surface renders. Changing a word here changes it
+ * in the popup, the wallet and the showcase at the same time, which is the
+ * point.
+ *
+ * Every key that existed before stays: page files and apps read them. Add keys
+ * freely, rename none. Placeholders follow the vocabulary documented at the
+ * top of shared/findings.content.ts.
  */
 
 export const common = {
@@ -11,38 +15,57 @@ export const common = {
     tagline: "Read first. Then sign.",
     oneLine: "The firewall for your signature on Monad.",
     description:
-      "Baret reads every Monad transaction before you sign it. It decodes the transaction, simulates what it will do, and gives you a plain answer: Safe, Caution or Blocked.",
+      "Baret reads every Monad transaction before you sign it. It simulates what the transaction will do, checks it against your rules and gives you a verdict with the reasons: Safe, Caution or Blocked.",
+    /** The plain claim to use wherever a page is tempted to promise safety. */
+    checkLine: "Baret checks every sign request before you sign it.",
   },
 
-  /** The four things a verdict can say. Used on every sign screen and card. */
+  /**
+   * The four verdicts. Used on every sign screen, card and tag. A verdict says
+   * what was checked. It never promises an outcome.
+   */
   verdicts: {
     safe: {
-      label: "Safe to sign",
+      label: "Safe",
       short: "Safe",
-      line: "Nothing in this transaction breaks your rules.",
+      line: "Simulated and checked against your rules. No check found a problem.",
+      aria: "Verdict: Safe",
     },
     caution: {
-      label: "Sign with caution",
+      label: "Caution",
       short: "Caution",
-      line: "This is allowed, but here is what you should know first.",
+      line: "Nothing broke your rules, but a check found something worth a look.",
+      aria: "Verdict: Caution",
     },
     blocked: {
       label: "Blocked",
       short: "Blocked",
-      line: "One of your rules stopped this transaction.",
+      line: "A rule you set stopped this request. Nothing was signed.",
+      aria: "Verdict: Blocked",
     },
     unreachable: {
-      label: "Not checked",
-      short: "Not checked",
-      line: "Baret could not reach the analysis server, so nothing was checked.",
+      label: "Can't reach Baret",
+      short: "Can't reach Baret",
+      line: "Baret could not finish its checks, so this request counts as Blocked.",
+      aria: "Verdict: Can't reach Baret, treated as Blocked",
     },
   },
 
-  /** How we describe how sure the analysis is. */
+  /** How complete the simulation behind a verdict was. */
   confidence: {
-    high: "Simulated with a full trace.",
-    medium: "Simulated, but the node did not return a call trace.",
-    low: "Some data was missing, so treat this result as incomplete.",
+    title: "Confidence",
+    high: "Simulated with a full trace of every call.",
+    medium: "Simulated without a trace of the inner calls, so some checks saw less.",
+    low: "Some data was missing. Treat this result as incomplete.",
+    words: { high: "High", medium: "Medium", low: "Low" },
+  },
+
+  /** The severity a finding carries, as the server sends it. */
+  severity: {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    critical: "Critical",
   },
 
   /** Button labels used across screens. Keep them verbs. */
@@ -56,8 +79,10 @@ export const common = {
     done: "Done",
     close: "Close",
     retry: "Try again",
+    checkAgain: "Check again",
     copy: "Copy",
     copied: "Copied",
+    copyAddress: "Copy the address",
     connect: "Connect",
     disconnect: "Disconnect",
     approve: "Allow",
@@ -68,10 +93,13 @@ export const common = {
     edit: "Edit",
     save: "Save",
     remove: "Remove",
+    seeAll: "See all",
+    whyThisMatters: "Why this matters",
+    showLess: "Show less",
     viewOnExplorer: "View on the explorer",
     readTheDocs: "Read the docs",
     openShowcase: "Open the showcase",
-    installWallet: "Install the wallet",
+    installWallet: "Install the extension",
     learnMore: "How this works",
   },
 
@@ -85,21 +113,53 @@ export const common = {
     fee: "Network fee",
     total: "Total",
     address: "Address",
+    yourAddress: "Your address",
     origin: "Site",
     contract: "Contract",
     spender: "Spender",
+    operator: "Operator",
+    recipient: "Recipient",
     merchant: "Merchant",
     cap: "Cap",
+    perPayment: "Per payment",
+    perHour: "Per hour",
+    perDay: "Per day",
     spent: "Spent",
     remaining: "Remaining",
     status: "Status",
-    policy: "Policy",
+    policy: "Rules",
+    verdict: "Verdict",
     whatChanges: "What changes",
     findings: "Findings",
     policyHits: "Rules that fired",
     rawTransaction: "Raw transaction",
+    transaction: "Transaction",
+    gasLimit: "Gas limit",
     balance: "Balance",
+    estimatedUsd: "Estimated in USD",
     account: "Account",
+    version: "Version",
+  },
+
+  /** State words for permissions, payments and activity rows. */
+  status: {
+    active: "Active",
+    paused: "Paused",
+    revoked: "Revoked",
+    expired: "Expired",
+    pending: "Pending",
+    confirmed: "Confirmed",
+    failed: "Failed",
+  },
+
+  /** Small interface words with no better home. */
+  ui: {
+    stepOf: "Step {n} of {total}",
+    nothingYet: "Nothing here yet",
+    loading: "Loading",
+    checking: "Checking",
+    all: "All",
+    none: "None",
   },
 
   networks: {
@@ -108,38 +168,44 @@ export const common = {
     banner: "Baret runs on Monad testnet today. Mainnet comes after more testing.",
   },
 
-  /** Errors any screen can hit. Each one names what to do next. */
+  /** Errors any screen can hit. Each one names the cause, then the next move. */
   errors: {
     analyzerUnreachable: {
-      title: "Baret could not check this",
-      body: "The analysis server did not answer. You can wait and try again, or sign without a check. Signing without a check is logged.",
-      action: { label: "Try again" },
+      title: "Can't reach Baret",
+      body: "The analysis server did not answer, so nothing was checked. Until it does, this request counts as Blocked.",
+      note: "To sign anyway, press and hold. The override is written to your activity log.",
+      action: { label: "Check again" },
+    },
+    rateLimited: {
+      title: "Too many checks at once",
+      body: "The analysis server is limiting requests from your connection. Until it answers, this request counts as Blocked.",
+      action: { label: "Check again" },
     },
     rpcUnreachable: {
       title: "Monad is not answering",
-      body: "The node did not respond. Your transaction was not sent. Nothing was signed.",
+      body: "The Monad node did not respond. Nothing was signed and nothing was sent.",
       action: { label: "Try again" },
     },
     networkMismatch: {
-      title: "This site wants a different network",
-      body: "The site asked for mainnet and you are on testnet. Switch networks or decline.",
+      title: "This site wants another network",
+      body: "The site asked for {expected} and you are on {actual}. Switch networks or decline.",
       action: { label: "Switch network" },
     },
     insufficientBalance: {
-      title: "Not enough balance",
-      body: "You need more MON to cover the amount and the network fee.",
+      title: "Not enough {asset}",
+      body: "You need {amount} more {asset}. The network fee is paid in MON.",
     },
     simulationFailed: {
-      title: "This transaction would fail",
-      body: "The simulation reverted, which means the chain would reject it. Sending it would still cost a fee.",
+      title: "This would fail on Monad",
+      body: "Baret ran it without sending it, and it failed. Sent now, it would fail and still cost a fee.",
     },
     timedOut: {
       title: "The request expired",
-      body: "The site waited too long, so Baret declined it for you. Nothing was signed.",
+      body: "The site waited too long, so Baret declined it. Nothing was signed.",
     },
     unknown: {
       title: "Something went wrong",
-      body: "The action did not complete and nothing was signed. If this keeps happening, open the activity log and copy the error.",
+      body: "The action did not finish and nothing was signed. If this keeps happening, copy the error from your activity log.",
       action: { label: "Try again" },
     },
   },
@@ -156,7 +222,7 @@ export const common = {
     today24h: "last 24 hours",
   },
 
-  /** Marketing site navigation and footer. */
+  /** Showcase navigation and footer. */
   nav: {
     links: [
       { label: "Showcase", href: "/showcase" },
@@ -164,9 +230,13 @@ export const common = {
       { label: "Docs", href: "/docs" },
       { label: "Install", href: "/install" },
     ],
-    cta: { label: "Install the wallet", href: "/install" },
+    cta: { label: "Install the extension", href: "/install" },
   },
 
+  /**
+   * The footer keys each link by its href, so one group never lists the same
+   * href twice.
+   */
   footer: {
     tagline: "Read first. Then sign.",
     note: "Free and open source under the MIT licence. Running on Monad testnet.",
@@ -176,31 +246,28 @@ export const common = {
         links: [
           { label: "Showcase", href: "/showcase" },
           { label: "Install", href: "/install" },
-          { label: "For agents", href: "/agents" },
         ],
       },
       {
         title: "Developers",
         links: [
+          { label: "Agent SDK", href: "/agents" },
           { label: "Docs", href: "/docs" },
-          { label: "Source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
-          { label: "Contracts", href: "/docs#contracts" },
         ],
       },
       {
         title: "Project",
         links: [
-          { label: "How it works", href: "/docs#architecture" },
-          { label: "What it cannot do", href: "/docs#limits" },
-          { label: "Brand", href: "/docs#brand" },
+          { label: "How it works", href: "/docs" },
+          { label: "Source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
         ],
       },
     ],
   },
 
-  /** One line we repeat wherever a demo could be mistaken for the real thing. */
+  /** One line repeated wherever a showcase site could be taken for a real one. */
   demoNotice:
-    "These sites are fakes built for this showcase. They run on Monad testnet and they cannot touch real money.",
+    "These sites are fakes built for the showcase. They run on Monad testnet, where tokens have no real value.",
 } as const;
 
 export type Common = typeof common;

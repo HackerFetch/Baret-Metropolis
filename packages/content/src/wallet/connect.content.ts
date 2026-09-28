@@ -1,50 +1,59 @@
 /**
- * apps/wallet, the connect request popup. Also used by the extension.
+ * apps/wallet, the connection request. The body is also used by the extension
+ * popup, which adds its own account picker, so nothing here names a route.
  *
- * The pattern that works: say what the site gets, say what it does not get,
- * and make the second list as prominent as the first.
+ * The pattern: say what the site will be able to do, say what it will not,
+ * and give the second list the same weight as the first. The site address is
+ * the one the browser reports, never the name the site gives itself.
  */
 
 export const connect = {
   title: "Connection request",
   subtitle: "{origin} wants to connect",
+  originNote: "The site address as your browser reports it.",
+  note: "Connecting moves nothing. It shares your address.",
 
-  gets: {
-    title: "This site will see",
-    points: ["Your wallet address", "Your balance and activity, which are public anyway"],
-  },
-
-  doesNotGet: {
-    title: "This site cannot",
+  can: {
+    title: "This site will be able to",
     points: [
-      "Move anything without a signature from you",
-      "See your keys or your passkey",
-      "Sign on your behalf, ever",
+      "See your wallet address",
+      "See your balance and activity, which are public on Monad",
+      "Send you sign requests, which Baret checks first",
     ],
   },
 
-  remember: { label: "Do not ask again for this site", hint: "You can undo this in Sites." },
+  /** Rendered crossed out, as prominent as the list above. */
+  cannot: {
+    title: "It will not be able to",
+    points: [
+      "Move funds without your signature",
+      "See your passkey or your keys",
+      "Sign anything for you",
+    ],
+  },
 
-  actions: { approve: "Connect", reject: "Reject" },
+  remember: {
+    label: "Don't ask again for this site",
+    hint: "Sign requests still come to you. You can disconnect the site at any time.",
+  },
+
+  actions: { approve: "Connect", reject: "Decline" },
 
   warnings: {
     firstTime: {
-      title: "You have not connected here before",
-      body: "Check the address bar. Look-alike domains are the most common way people get caught.",
-    },
-    flagged: {
-      title: "This site has been reported",
-      body: "It is on a blocklist for phishing. Connecting alone does not move anything, but nothing good is on the other side of this.",
+      title: "First time on this site",
+      body: "Check the address bar letter by letter. Look-alike addresses are the most common trap.",
     },
     insecure: {
-      title: "This site is not using a secure connection",
-      body: "Anything between you and it can be read or changed on the way.",
+      title: "This site has no secure connection",
+      body: "Anyone on the network between you and the site can read or change what it sends. Decline unless you know why.",
     },
   },
 
-  results: {
+  result: {
     connected: "Connected to {origin}.",
-    rejected: "Rejected. The site was told you declined.",
+    declined: "Declined. {origin} was told you said no.",
+    expired: "The request timed out, so {origin} was not connected.",
   },
 } as const;
 

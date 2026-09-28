@@ -1,124 +1,139 @@
 /**
  * /docs on apps/showcase. An index, not a doc.
  *
+ * Section order (page plan, 2026-09-28): hero, eleven doc cards in a grouped
+ * grid, summary with known limitations, CTA.
+ *
  * Research notes:
  *  - The best docs indexes put a router group first, then expand. Under 20
- *    cards reads as curated, over 40 reads as a sitemap. We have 13.
+ *    cards reads as curated, over 40 reads as a sitemap. We have 11.
  *  - A good card is a noun the reader is already searching for, plus one
  *    sentence that starts with a verb and names an artifact.
  *  - Groups are named after jobs, not after the folder they live in.
+ *  - The page renders each group's title as its anchor, so renaming a group
+ *    changes its link. /agents links to #contracts-and-payments.
  *
- * Every card points at a real file in docs/. When a file is added there, add a
- * card here in the same commit.
+ * Every card points at a real file in docs/, one card per file, matching
+ * docs/FRONTEND.md section 4.2. When a file is added there, add a card here in
+ * the same commit.
  */
 
 export const docs = {
   meta: {
-    title: "Baret docs",
+    title: "Docs · Baret",
     description:
-      "How Baret works: the analysis pipeline, the risk detectors, the policy engine, the contracts, and what it cannot do.",
+      "The specs behind Baret on Monad: how a transaction is simulated, checked by nine detectors and your policy, and what the vault contract enforces.",
   },
 
   hero: {
     eyebrow: "Documentation",
-    title: "How Baret works, in detail.",
-    body: "Every claim on this site is backed by one of these files. They live in the repository, so what you read here is what is running.",
+    title: "Where the check actually happens.",
+    body: "A standard wallet goes straight from the site's request to your signature. Baret adds one step in between. These files explain that step, one topic each.",
+    /** Two timelines side by side: the same request, with and without the
+     *  extra step. */
+    timeline: {
+      without: {
+        label: "A standard wallet",
+        steps: ["The site asks", "You press Sign", "The chain decides"],
+      },
+      with: {
+        label: "With Baret",
+        steps: [
+          "The site asks",
+          "Baret simulates and checks",
+          "Your rules decide",
+          "You sign, or you do not",
+        ],
+      },
+      divider: "Nothing checks the transaction in between.",
+    },
     actions: {
-      primary: { label: "Read the architecture", href: "#build" },
+      primary: { label: "Start with the architecture", href: "#start-here" },
       secondary: {
         label: "View the source",
         href: "https://github.com/HackerFetch/Baret-Metropolis",
       },
     },
+    note: "The specs came first. When the code and a spec disagree, the code wins and the spec gets fixed.",
   },
 
   groups: [
     {
       title: "Start here",
-      body: "Three files answer most questions.",
+      body: "Two files answer most questions.",
       cards: [
         {
           title: "Vision",
-          body: "Read why a transaction firewall belongs in the wallet and not in the dApp, and who it is for.",
+          body: "Read why the check belongs in the wallet and not in the site, and who Baret is for.",
           file: "docs/PROJECT_OVERVIEW.md",
         },
         {
           title: "Architecture",
-          body: "Follow one transaction from the request to the verdict, through the simulator, the detectors and the policy engine.",
+          body: "Follow one transaction from request to verdict: simulation, nine detectors, the policy engine and the API.",
           file: "docs/ARCHITECTURE.md",
-        },
-        {
-          title: "What it cannot do",
-          body: "See the limits of a simulation, which rules are enforced where, and what is still a demo.",
-          file: "docs/ARCHITECTURE.md#limits",
         },
       ],
     },
     {
-      title: "Build on it",
-      body: "The specs a contributor works from.",
+      title: "What you see",
+      body: "The screens, the pages and the words on them.",
       cards: [
         {
           title: "Wallet spec",
-          body: "Open every screen and flow of the extension and the standalone wallet, including the error and empty states.",
+          body: "Walk through every screen of the extension and the passkey wallet, including the empty and error states.",
           file: "docs/WALLET.md",
         },
         {
           title: "Frontend content",
-          body: "Read what belongs on each page of this site, section by section, with no design decisions in it.",
+          body: "See what belongs on each page of this site, section by section.",
           file: "docs/FRONTEND.md",
         },
         {
+          title: "Brand",
+          body: "Get the mark, the colors, the type and the voice, including the words Baret never uses.",
+          file: "docs/BRAND.md",
+        },
+      ],
+    },
+    {
+      title: "Contracts and payments",
+      body: "The parts that hold money or move it.",
+      cards: [
+        {
           title: "Contracts",
-          body: "Inspect PaymentGuard and ReputationRegistry: the functions, the events, the invariants and the deployed addresses.",
+          body: "Read the PaymentGuard vault and the ReputationRegistry: functions, events, invariants and the tests they must pass.",
           file: "docs/CONTRACTS.md",
         },
         {
-          title: "Agent payments",
-          body: "Trace an HTTP 402 payment from the challenge to settlement, and see where Baret checks it.",
+          title: "x402 payments",
+          body: "Trace an HTTP 402 payment from the request to settlement, and see where Baret checks it.",
           file: "docs/X402_FACILITATOR.md",
         },
       ],
     },
     {
-      title: "Decisions and plan",
-      body: "Why the project looks the way it does.",
+      title: "Plan and decisions",
+      body: "Why the project looks the way it does, and what comes next.",
       cards: [
         {
-          title: "Decision log",
-          body: "Read every architecture and scope decision with its reasoning and the alternatives that were rejected.",
-          file: "docs/DECISIONS.md",
+          title: "Resources",
+          body: "See which sponsor tool does which job, from Alchemy RPC to Nansen, Mera, Cleanverse, Envio, Dynamic and Chainlink CRE.",
+          file: "docs/RESOURCES.md",
+        },
+        {
+          title: "Bounties and tracks",
+          body: "Check the hackathon track and the sponsor bounties Baret is built for, in priority order.",
+          file: "docs/BOUNTIES_AND_TRACKS.md",
         },
         {
           title: "Roadmap",
-          body: "Check what week the project is in and what is planned next.",
+          body: "Follow the weekly plan and see what is done.",
           file: "docs/ROADMAP.md",
         },
         {
-          title: "Earlier versions",
-          body: "Compare the five earlier builds of Baret on other chains and the mistakes this one refuses to repeat.",
-          file: "docs/REFERENCE_REPOS.md",
-        },
-        {
-          title: "Integrations",
-          body: "See which sponsor tool is used where, and what breaks if you remove it.",
-          file: "docs/RESOURCES.md",
-        },
-      ],
-    },
-    {
-      title: "Design",
-      body: "How it looks and how it talks.",
-      cards: [
-        {
-          title: "Brand",
-          body: "Get the mark, the palette, the type, the imagery rules and the words we do not use.",
-          file: "docs/BRAND.md",
-        },
-        {
-          title: "Copy",
-          body: "Find any sentence in the product. Every string lives in one package, one file per page.",
-          file: "packages/content/README.md",
+          title: "Decision log",
+          body: "Read each architecture and scope decision with its reason and the options it ruled out.",
+          file: "docs/DECISIONS.md",
         },
       ],
     },
@@ -126,6 +141,7 @@ export const docs = {
 
   /** For readers who arrived from a search and want the short version. */
   summary: {
+    eyebrow: "Pipeline",
     title: "The short version",
     steps: [
       {
@@ -134,22 +150,39 @@ export const docs = {
       },
       {
         title: "Simulate",
-        body: "Run it against live Monad state and record every internal call.",
+        body: "Run it against live Monad state over Alchemy RPC, without sending it, and record every internal call.",
       },
       {
         title: "Detect",
-        body: "Score it with independent detectors: approvals, reputation, compliance, opcodes, fees, payments.",
+        body: "Nine detectors look for risky allowances, flagged contracts, dangerous opcodes, bad reputation, compliance gaps, deep call chains, heavy gas and payment mismatches.",
       },
-      { title: "Decide", body: "Apply your policy. Missing data counts as a failure, not a pass." },
+      {
+        title: "Decide",
+        body: "Apply your policy. Missing data counts as a block, never as a pass.",
+      },
+    ],
+  },
+
+  /** Flat and unapologetic. Each line is a property of the design, not a
+   *  bug waiting for a fix. */
+  limitations: {
+    title: "Known limitations",
+    items: [
+      "A simulation is a preflight. State can change between the check and the block that includes your transaction.",
+      "Baret checks what goes through Baret. A key used somewhere else is not checked before it signs. The monitor can only tell you afterwards.",
+      "The analysis runs on a server. It sees the unsigned transaction, your address and the site asking. It never sees a key.",
+      "Reputation lists only know what has been reported. A drainer nobody has flagged yet is on no list.",
+      "If the server is down, signing through Baret stops. That is on purpose.",
+      "No audit yet. The code is open. Read it.",
     ],
   },
 
   cta: {
     title: "Prefer to watch it work?",
-    body: "The showcase runs six real attacks against the real analysis server.",
+    body: "The showcase has six fake sites, each with a trap built from a real transaction. Every sign request goes through the same analysis the wallet uses.",
     actions: {
       primary: { label: "Open the showcase", href: "/showcase" },
-      secondary: { label: "Install the wallet", href: "/install" },
+      secondary: { label: "Install the extension", href: "/install" },
     },
   },
 } as const;

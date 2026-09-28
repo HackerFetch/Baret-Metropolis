@@ -29,7 +29,7 @@ Last updated: 2026-09-13 · Currently: **Week 0 (planning)**
 - [ ] `apps/server`: decode → simulate (`debug_traceCall`) → basic detectors (approvals, programs, evm-danger, simulation)
 - [ ] Policy engine (first 8-10 rules) + `STRICT/BALANCED/PERMISSIVE` templates
 - [ ] `packages/guard` SDK (TransactionGuard.evaluate)
-- [ ] `apps/showcase`: at least 2 threat scenarios (with safe/danger variants, new Monad-themed names)
+- [ ] `apps/showcase`: at least 2 threat scenarios (with safe/danger variants, names settled by D-010)
 - [ ] **Milestone demo:** live analysis through the showcase, demonstrable in the browser
 
 **Notes:** _(to be filled in)_

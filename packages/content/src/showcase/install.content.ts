@@ -1,59 +1,81 @@
 /**
  * /install on apps/showcase.
  *
+ * Section order (page plan, 2026-09-28): hero, download card, three steps
+ * (extract, open the extensions page, load unpacked), developer-mode warning,
+ * trust, after install, feature trio, troubleshooting, CTA.
+ *
  * Research notes:
  *  - The best extension listings lead with what the user does not have to do:
- *    "It takes one click to install and you don't need to connect your wallet."
- *  - The strongest trust line in the category is Wallet Guard's flat
- *    "Wallet Guard never has access to your wallet." Say the equivalent early.
+ *    no account, nothing to connect. Say the equivalent early.
  *  - Developer mode scares people. Explain why it is needed in one sentence
  *    and say what it does not do.
+ *  - Quote the browser's own wording (buttons, warnings) exactly, so the
+ *    reader can match the page to the screen in front of them.
+ *
+ * Minimum versions come from apps/extension/wxt.config.ts
+ * (minimum_chrome_version, gecko strict_min_version). Keep them in sync.
  */
 
 export const install = {
   meta: {
-    title: "Install Baret",
+    title: "Install the extension · Baret",
     description:
-      "Install the Baret wallet for Chrome or Firefox. Takes about three minutes, no account needed.",
+      "Install the Baret extension for Chrome, Brave, Edge or Firefox. It is a Monad wallet that simulates every sign request and checks it before you sign.",
   },
 
   hero: {
     eyebrow: "Install",
-    title: "Three minutes and you are protected.",
-    body: "A Monad wallet that reads every transaction before you sign it. There is no account, no email and nothing to connect. Until the store listings are approved it installs as a developer build.",
+    title: "Add the check to your browser.",
+    body: "Baret is a Monad wallet that simulates each sign request and checks it against your rules before you sign. It is not in the browser stores yet, so it loads as a developer build. No account, no email.",
     actions: {
-      primary: { label: "Download for Chrome" },
+      primary: { label: "Download for Chrome, Brave and Edge" },
       secondary: { label: "Download for Firefox" },
     },
     detected: {
-      chromium: "You are on a Chromium browser, so the Chrome build is the one you want.",
-      firefox: "You are on Firefox, so the Firefox build is the one you want.",
+      chromium:
+        "You are on a Chromium browser, such as Chrome, Brave or Edge. This build is yours.",
+      firefox: "You are on Firefox. This build is yours.",
       unknown: "Pick the build that matches your browser.",
     },
   },
 
   download: {
     title: "Download the build",
-    body: "A zip archive with the extension inside. Nothing is installed automatically and nothing runs until you load it.",
+    body: "A zip archive with the extension inside. Nothing installs on its own, and nothing runs until you load it.",
+    builds: {
+      chromium: { title: "Baret for Chrome, Brave and Edge", requires: "Version 111 or later" },
+      firefox: { title: "Baret for Firefox", requires: "Version 128 or later" },
+    },
     meta: { version: "Version", size: "Size", updated: "Updated", manifest: "Manifest V3" },
     other: "Also available for",
+    status:
+      "Not in the Chrome Web Store or Firefox Add-ons yet. Until it is, download it here or build it from source.",
   },
 
   steps: {
+    eyebrow: "Steps",
+    /** A page cannot link to a browser's internal pages, so each address
+     *  gets a copy button instead. */
+    copy: { label: "Copy the address", done: "Copied" },
     chrome: {
       title: "Chrome, Brave or Edge",
       items: [
         {
-          title: "Unzip it",
-          body: "Extract the archive somewhere you will not delete by accident. The folder has to stay where it is.",
+          short: "Extract",
+          title: "Extract the zip",
+          body: "Extract the archive to a folder you will keep. The browser loads Baret from that folder, so do not move or delete it.",
         },
         {
+          short: "Open",
           title: "Open the extensions page",
-          body: "Paste chrome://extensions into the address bar, then turn on Developer mode in the top right.",
+          body: "Paste chrome://extensions into the address bar and press Enter. Turn on Developer mode in the top right corner. In Edge, the switch is in the left sidebar.",
+          address: "chrome://extensions",
         },
         {
+          short: "Load",
           title: "Load unpacked",
-          body: "Press Load unpacked and pick the folder you extracted. Baret appears in the toolbar. Click it to create your wallet.",
+          body: "Press Load unpacked and pick the folder you extracted. Pin Baret from the puzzle-piece icon in the toolbar, then click it to set up your wallet.",
         },
       ],
     },
@@ -61,67 +83,100 @@ export const install = {
       title: "Firefox",
       items: [
         {
-          title: "Unzip it",
-          body: "Extract the archive somewhere you will not delete by accident.",
+          short: "Extract",
+          title: "Extract the zip",
+          body: "Extract the archive to a folder you will keep.",
         },
         {
+          short: "Open",
           title: "Open the debugging page",
-          body: "Paste about:debugging#/runtime/this-firefox into the address bar.",
+          body: "Paste about:debugging#/runtime/this-firefox into the address bar and press Enter.",
+          address: "about:debugging#/runtime/this-firefox",
         },
         {
+          short: "Load",
           title: "Load a temporary add-on",
-          body: "Press Load Temporary Add-on and pick manifest.json inside the folder. Firefox removes temporary add-ons when it restarts, so you will need to load it again after a restart.",
+          body: "Press Load Temporary Add-on and pick manifest.json inside the folder you extracted. Firefox removes temporary add-ons when it quits, so load it again after each restart.",
         },
       ],
+      warning:
+        "Back up your recovery phrase before you quit Firefox. If your wallet is gone after you load Baret again, restore it from that backup.",
     },
   },
 
   developerMode: {
-    title: "Why developer mode?",
-    body: "Chrome only allows unpacked extensions when developer mode is on. It does not give Baret any extra access and it does not change anything about your other extensions. You can turn it off again once the store listing is live.",
+    title: "About developer mode",
+    body: "Chrome loads an extension from a folder only when developer mode is on. It gives Baret no extra access and changes nothing about your other extensions.",
+    warning:
+      "Developer mode lets any folder load as an extension. Load only a build you downloaded yourself, from a source you trust.",
+    note: "Once Baret is in the store, install it from there instead.",
   },
 
-  /** The line that does the most work on this page. */
+  /** The section that does the most work on this page. Honest about the
+   *  broad site access, the server, and who else sees what. */
   trust: {
+    eyebrow: "Trust",
     title: "What Baret can and cannot do",
+    siteAccess: {
+      title: "Why it asks for every site",
+      body: "Any site can send a sign request, so Baret runs on every page to catch it. Chrome words this as 'Read and change all your data on all websites'.",
+    },
     can: {
       title: "It can",
       points: [
-        "Read the transaction a site wants you to sign",
-        "Send that unsigned transaction to the analysis server",
+        "Read the sign request a site sends, before you sign it",
+        "Send the unsigned transaction, your address and the site's origin to the Baret server",
         "Refuse to sign when one of your rules blocks it",
-        "Watch your address and tell you when something moves",
+        "Pay x402 requests on its own, but only inside caps you approved",
+        "Watch your address and alert you when something moves without you",
       ],
     },
     cannot: {
       title: "It cannot",
       points: [
-        "See or send your keys anywhere",
-        "Sign anything without you pressing the button",
-        "Take a fee from your transactions",
+        "Send your key or recovery phrase off this device",
+        "Sign anything you did not approve, or pay past a cap you set",
+        "Add a fee to your transactions",
         "Work on any chain other than Monad",
       ],
+    },
+    others: {
+      title: "Who else sees what",
+      points: [
+        "Alchemy RPC runs the simulation, so it sees the unsigned transaction.",
+        "Nansen and Cleanverse see the addresses Baret asks them about.",
+        "Your key and recovery phrase stay on this device.",
+      ],
+    },
+    audit: {
+      body: "No audit yet. The code is open. Read it.",
+      action: {
+        label: "Read the source",
+        href: "https://github.com/HackerFetch/Baret-Metropolis",
+      },
     },
   },
 
   afterInstall: {
+    eyebrow: "After",
     title: "What happens next",
+    body: "Setup opens in its own tab. The popup is too small for it.",
     items: [
       {
-        title: "Set a passphrase",
-        body: "It encrypts the wallet on this device. There is no account and no recovery email, so pick one you will remember.",
+        title: "Set a password",
+        body: "It encrypts your wallet on this device. There is no account and no recovery email, so pick one you will remember.",
       },
       {
         title: "Back up your recovery phrase",
-        body: "Twelve words, written down once. This is the only way back in if you lose the device.",
+        body: "Write it down once and keep it offline. It is the only way back in if you lose this browser.",
       },
       {
-        title: "Get some testnet MON",
-        body: "The faucet link is in the setup flow. Testnet MON has no value and exists for exactly this.",
+        title: "Get testnet MON",
+        body: "Setup links to the Monad faucet. Testnet MON has no value and exists for exactly this.",
       },
       {
-        title: "Pick a rule set",
-        body: "Strict, Balanced or Permissive. Balanced is the one most people should start with.",
+        title: "Pick your rules",
+        body: "Start from Strict, Balanced or Permissive, and change any rule later. Balanced is the default.",
       },
     ],
   },
@@ -131,47 +186,55 @@ export const install = {
     items: [
       {
         title: "A check before every signature",
-        body: "Decoded, simulated and explained in one sentence per finding.",
+        body: "Each sign request is simulated, run through nine detectors and your rules, then explained one finding at a time.",
       },
       {
-        title: "Caps on standing permissions",
-        body: "Every approval becomes a row with a limit, a clock and a revoke button.",
+        title: "Every allowance in one list",
+        body: "See which contracts can spend your tokens or move your NFTs, and revoke any of them.",
       },
       {
-        title: "A ceiling for agent payments",
-        body: "Automatic payments over HTTP 402 stop at an hourly and a daily cap you set.",
+        title: "Caps on agent payments",
+        body: "Payments over HTTP 402 stop at the per-payment, hourly and daily caps you set.",
       },
     ],
   },
 
+  /** Symptom, then fix. Symptoms use the browser's own words where it has
+   *  them. */
   troubleshooting: {
+    eyebrow: "Help",
     title: "If something goes wrong",
     items: [
       {
-        question: "Chrome says the manifest is invalid",
-        answer:
-          "You probably picked the archive instead of the extracted folder. Pick the folder that contains manifest.json.",
+        symptom: "Chrome says the manifest file is missing or unreadable",
+        fix: "You picked the zip or a parent folder. Pick the folder that has manifest.json directly inside it.",
       },
       {
-        question: "Baret disappeared after I restarted Firefox",
-        answer:
-          "Firefox clears temporary add-ons on restart. Load it again from the debugging page. Your wallet and settings are still there.",
+        symptom: "There is no Load unpacked button",
+        fix: "Developer mode is off. Turn it on in the top right corner of the extensions page, or in the left sidebar in Edge.",
       },
       {
-        question: "The toolbar icon is not showing",
-        answer: "Chrome hides new extensions behind the puzzle-piece icon. Open it and pin Baret.",
+        symptom: "Baret is gone after Firefox restarted",
+        fix: "Firefox removes temporary add-ons when it quits. Load it again from the debugging page. If your wallet is empty, restore it from your recovery phrase.",
       },
       {
-        question: "It says it cannot reach the analysis server",
-        answer:
-          "The hosted server is rate limited. Wait a moment and try again, or run your own and point the extension at it in advanced settings.",
+        symptom: "The Baret icon is not in the toolbar",
+        fix: "Browsers hide new extensions behind the puzzle-piece icon. Open it and pin Baret.",
+      },
+      {
+        symptom: "The browser refuses to load Baret",
+        fix: "Baret needs a Chromium browser from version 111, or Firefox 128 or later. Update the browser, then load it again.",
+      },
+      {
+        symptom: "Every sign request says Can't reach Baret",
+        fix: "Baret could not finish its check, so it treats the request as Blocked. Check your connection and try again in a moment.",
       },
     ],
   },
 
   cta: {
     title: "Take it for a run.",
-    body: "Six demo sites trigger six different attacks. Watch Baret catch each one before anything is signed.",
+    body: "Six fake sites set six traps. Open one with Baret installed and read the sign request before you decide.",
     actions: {
       primary: { label: "Open the showcase", href: "/showcase" },
       secondary: { label: "Read the docs", href: "/docs" },

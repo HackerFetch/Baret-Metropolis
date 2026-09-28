@@ -1,107 +1,270 @@
 /**
- * /showcase on apps/showcase. The index of the six threat demos.
+ * /showcase on apps/showcase. The index of the six threat scenarios, plus the
+ * frame copy the six scenario pages share (`frame`).
  *
- * Research notes:
- *  - The best short threat descriptions in the category name the attack, the
- *    asset class and the trust being exploited in one line. Pocket Universe's
- *    "Fake DEX orders which steal your ERC20 tokens using known, trusted DEX
- *    protocols" is the model.
- *  - Security labs title an exercise by what the attacker does, not by the
- *    vulnerability class. That is why each card leads with the fake product.
- *  - A deliberately vulnerable demo has to say so plainly, once, near the top.
+ * Page order (Meric, 2026-09-28): hero, stats, filter strip, six cards, four
+ * steps, detector grid, comparison, CTA.
+ *
+ * Rules this page keeps:
+ *  - Every number traces to the docs: 9 detector modules (ARCHITECTURE 6),
+ *    25 rule fields (ARCHITECTURE 7). No usage counts, no "attacks stopped".
+ *  - A card's "Watch for" lines map to finding codes or rule fields the
+ *    scenario really produces. The mapping sits in each scenario file's header.
+ *  - The expected verdict is always framed as expected. The live verdict comes
+ *    from the analysis server, with findings rendered from shared/findings.
+ *  - The fake sites are fiction. They name no real company, token or person.
  */
 
 export const hub = {
   meta: {
-    title: "Baret showcase",
+    title: "Threat showcase · Baret",
     description:
-      "Six fake sites that run six real attacks on Monad testnet. Connect a wallet, press the button, and watch Baret catch each one.",
+      "Six simulated sites on Monad testnet, each hiding a different trap in its transaction. Trigger one and see what Baret checks before you sign.",
   },
 
   hero: {
     eyebrow: "Showcase",
-    title: "Six sites. Six attacks. One signature you never make.",
-    body: "Each site below looks finished and behaves like the real thing. Connect a wallet, press its main button, and watch the analysis catch the attack in plain language while your key is still yours.",
+    title: "Six sites. Six threats. Read them before you sign.",
+    body: "Each site looks finished and works like the real thing. Each one hides a different threat in the transaction it builds. Press its main button and see what Baret checks before anything is signed.",
     actions: {
-      primary: { label: "See the scenarios", href: "#scenarios" },
-      secondary: { label: "Install the wallet", href: "/install" },
+      primary: { label: "See the six sites", href: "#scenarios" },
+      secondary: { label: "Install the extension", href: "/install" },
     },
-    ticker: [
-      "wallet drainers",
-      "unlimited approvals",
-      "rug pulls",
-      "silent agent spending",
-      "look-alike tokens",
-      "hidden contract calls",
-    ],
     notice:
-      "These sites are fakes built for this showcase. They run on Monad testnet and cannot touch real money.",
+      "These sites are simulations built for this showcase. They run on Monad testnet, where tokens have no value.",
   },
 
   stats: [
-    { value: "6", label: "demo sites" },
-    { value: "3", label: "classes of attack" },
-    { value: "22", label: "detectors running" },
-    { value: "2", label: "contracts on testnet" },
+    { value: "6", label: "simulated sites" },
+    { value: "3", label: "kinds of threat" },
+    { value: "9", label: "detectors on every request" },
+    { value: "25", label: "rules you can change" },
   ],
 
-  filters: [
-    { id: "all", label: "All six" },
-    { id: "drainer", label: "Drainers" },
-    { id: "trap", label: "Trust traps" },
-    { id: "agent", label: "Silent agents" },
-  ],
+  /** The ids match `scenario.threatClass` in each scenario file. */
+  filters: {
+    label: "Show",
+    items: [
+      { id: "all", label: "All six", body: "Every scenario on this page." },
+      { id: "drainer", label: "Drainers", body: "Funds taken without consent." },
+      { id: "trap", label: "Trust traps", body: "Looks legitimate, behaves otherwise." },
+      { id: "agent", label: "Silent agents", body: "Pays while you sleep." },
+    ],
+  },
 
-  /** Card labels used on every scenario card. */
+  /** Labels on every scenario card. The card data lives in each site's file. */
   cardLabels: {
-    watchFor: "What the analysis flags",
-    whyItMatters: "Why this works on people",
+    watchFor: "Watch for",
+    whyItMatters: "Why it matters",
     verdict: "Expected verdict",
+    verdicts: {
+      safe: "Safe",
+      caution: "Caution",
+      blocked: "Blocked",
+      unreachable: "Can't reach Baret",
+      capped: "Blocked at the cap",
+    },
     open: "Open the site",
-    safeMode: "Safe version",
-    dangerMode: "Attack version",
   },
 
   steps: {
-    title: "How each demo runs",
+    eyebrow: "How it works",
+    title: "Four steps, one sign request",
     items: [
       {
+        short: "Connect",
         title: "Connect a wallet",
-        body: "Pick Baret or any wallet in the picker. The sites do not care which one you use.",
+        body: "Baret or any wallet in the picker. The sites run on Monad testnet, where tokens have no value.",
       },
       {
-        title: "Turn on the attack",
-        body: "Each site has a safe version and an attack version. The switch changes what the site actually builds.",
+        short: "Pick a version",
+        title: "Pick a version",
+        body: "Every site has an honest version and an attack version. The page looks the same in both. Only the transaction changes.",
       },
       {
-        title: "Press the button",
-        body: "Swap, mint, stake, claim or buy. The site builds a real unsigned transaction and hands it to your wallet.",
+        short: "Press",
+        title: "Press the main button",
+        body: "Swap, mint, stake, claim, buy or ask. The site builds a real transaction and hands it to your wallet.",
       },
       {
+        short: "Read",
         title: "Read the verdict",
-        body: "Baret decodes it, simulates it, and gives you Safe, Caution or Blocked with one sentence per finding.",
+        body: "Baret simulates it, runs nine detectors and your rules, and answers Safe, Caution or Blocked. Each finding comes with a reason.",
       },
     ],
   },
 
+  /** The nine detector modules in docs/ARCHITECTURE.md section 6, in order. */
   detectors: {
     eyebrow: "Under the hood",
-    title: "Every demo runs the same 22 detectors.",
-    body: "Each scenario trips a different few. The popup only shows you the ones that fired, and each one explains itself in a sentence.",
+    title: "Nine detectors read every request.",
+    body: "Each site trips a different few. The sign request shows only the findings that came up, one sentence each.",
+    items: [
+      {
+        title: "Simulation",
+        body: "Runs the transaction on current Monad state over Alchemy RPC, without sending it. A call that would fail is flagged.",
+      },
+      {
+        title: "Allowances",
+        body: "Flags token allowances, unlimited ones, access to whole collections and signed allowances.",
+      },
+      {
+        title: "Contracts",
+        body: "Checks the contract you call against the reported list and the contracts Baret knows.",
+      },
+      {
+        title: "Dangerous calls",
+        body: "Flags a contract deleting itself, code borrowed from another contract, and ownership changing hands.",
+      },
+      {
+        title: "Reputation",
+        body: "Reads Nansen labels and the on-chain reputation registry that Chainlink CRE threat feeds keep current.",
+      },
+      {
+        title: "Compliance",
+        body: "For assets that need a verified identity, checks both accounts with Cleanverse before the transfer.",
+      },
+      {
+        title: "Call depth",
+        body: "Flags calls that reach many contracts deep or bundle many operations into one signature.",
+      },
+      {
+        title: "Fees",
+        body: "Flags a gas limit far above what the simulation used.",
+      },
+      {
+        title: "Payments",
+        body: "Checks that an x402 payment goes to the address the server asked for, in the real asset it asked for.",
+      },
+    ],
     action: { label: "Read the architecture", href: "/docs" },
   },
 
   comparison: {
-    title: "Try it without Baret first",
-    body: "Every site works with any wallet in the picker. Run the attack version with your usual wallet, read what it shows you, then run it again with Baret. The difference is the point of this page.",
+    eyebrow: "The difference",
+    title: "Same site, same button, two wallets.",
+    body: "Every site works with any wallet in the picker. Run the attack version with the wallet you use today, then again with Baret. No wallet is singled out here. The difference is what gets read before you sign.",
+    columns: { without: "A wallet with no pre-sign check", with: "Baret" },
+    rows: [
+      {
+        aspect: "What you see",
+        without: "A contract address, an amount and a confirm button.",
+        with: "What changes in your balances, and one sentence per finding.",
+      },
+      {
+        aspect: "An unlimited allowance",
+        without: "Shown like any other allowance.",
+        with: "Named as unlimited, and stopped when your rules block it.",
+      },
+      {
+        aspect: "A look-alike router or pool",
+        without: "The page is all you have to go on.",
+        with: "Checked against the reputation registry and the contracts Baret knows.",
+      },
+      {
+        aspect: "A check that cannot finish",
+        without: "There was no check to finish.",
+        with: "Can't reach Baret. It counts as Blocked and nothing is signed.",
+      },
+    ],
   },
 
   cta: {
-    title: "Pick one. Watch it get caught.",
-    body: "Every scenario runs a real transaction against the real analysis server and shows the verdict before anything is signed.",
+    title: "Pick a site. Press the button.",
+    body: "Each site builds a real transaction on Monad testnet. The analysis appears before anything is signed.",
     actions: {
       primary: { label: "Start with ClaimHub", href: "/claimhub" },
-      secondary: { label: "How it works", href: "/docs" },
+      secondary: { label: "Install the extension", href: "/install" },
+    },
+  },
+
+  /**
+   * Shared by the six scenario pages. What differs per site lives in that
+   * site's own file under `analysis`.
+   */
+  frame: {
+    pill: "Simulated site",
+    notice: "A simulation on Monad testnet. Tokens here have no value.",
+    back: { label: "Back to the showcase", href: "/showcase" },
+
+    toggle: {
+      legend: "Which version to build",
+      hint: "Same page, different transaction. Switch versions, then press the site's main button.",
+    },
+
+    claims: {
+      title: "The site says",
+      check: "Baret checks",
+      note: "Nothing a page says about itself is verified. Baret reads the transaction instead.",
+    },
+
+    panel: {
+      title: "Baret analysis",
+      asks: "What the site asks for",
+      call: "The call",
+      expected: "Expected verdict",
+      expectedNote:
+        "Expected under the Balanced rules, the default. Your own rules can change the result.",
+      live: "Live verdict",
+      changes: "What changes",
+      findings: "Findings",
+      noFindings: "No findings. Nothing in this request broke a rule.",
+      phases: [
+        "Reading the transaction",
+        "Simulating on Monad testnet",
+        "Running the nine detectors",
+        "Applying your rules",
+      ],
+      match: "The live verdict matches the expected one.",
+      mismatch:
+        "The live verdict differs from the expected one. Your rules may differ from Balanced, or a check may not have finished.",
+      lesson: "Take this with you",
+    },
+
+    empty: {
+      title: "Nothing to read yet",
+      body: "Press the site's main button. The analysis of that transaction appears here before anything is signed.",
+    },
+
+    errors: {
+      noWallet: {
+        title: "No wallet connected",
+        body: "Connect a wallet so the site can build its transaction. Any wallet in the picker works.",
+        action: { label: "Connect a wallet" },
+      },
+      wrongNetwork: {
+        title: "Wrong network",
+        body: "These sites run on Monad testnet. Switch your wallet to Monad testnet and press the button again.",
+        action: { label: "Switch to Monad testnet" },
+      },
+      buildFailed: {
+        title: "The site could not build its transaction",
+        body: "Monad testnet did not answer. Nothing was sent. Try again in a moment.",
+        action: { label: "Try again" },
+      },
+      unreachable: {
+        title: "Can't reach Baret",
+        body: "The check could not run, so this counts as Blocked. Nothing was signed. Try again in a moment.",
+        action: { label: "Check again" },
+      },
+    },
+
+    outcome: {
+      stopped: {
+        title: "Nothing was signed",
+        body: "The transaction was never sent. Your funds never moved.",
+      },
+      declined: {
+        title: "You declined",
+        body: "Nothing was signed and nothing moved.",
+      },
+      sent: {
+        title: "Signed and sent",
+        body: "The transaction is on Monad testnet.",
+        action: { label: "View it on the explorer" },
+      },
+      again: { label: "Try the other version" },
+      share: { label: "Copy the result", done: "Copied" },
     },
   },
 } as const;

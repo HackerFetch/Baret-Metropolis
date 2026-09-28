@@ -2,7 +2,7 @@
 
 > **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
-Last updated: 2026-09-14 · Status: **Content specification, no design/implementation** · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
+Last updated: 2026-09-14 · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
 This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites**, **Agents**, **Docs**, **Install**.
 
@@ -17,7 +17,7 @@ A short video/animation sequence that advances as the page scrolls, showing the 
 1. "Every wallet signs whatever the dApp shows it."
 2. "One Confirm button. Then the chain decides."
 3. "Baret reads first."
-4. "Simulated. Decoded. 25+ detectors."
+4. "Simulated. Decoded. Nine detectors."
 5. "Rolling caps. Per-site policy. On-chain guard."
 6. "Safe / Caution / Blocked. Before your keys move."
 7. Brand moment: "Baret. A firewall for your signature."
@@ -39,7 +39,7 @@ A scrolling/static strip listing the detector names (example labels — the real
 ### 1.4 Three Columns (The Product)
 Headline: "Three layers, one signature." Description: "Baret runs three checks before your keys move. Each one stands on its own. Together, they close the gap that drainers, stale approvals and silent agents walk through today."
 
-1. **Pre-sign Guard** — "Baret decodes and simulates every transaction on the server, then runs 25+ risk detectors. The popup explains every finding in a single sentence." Sub-points: Server simulation · 25+ risk detectors · Policy engine gate.
+1. **Pre-sign Guard** — "Baret decodes and simulates every transaction on the server, then runs nine risk detectors. The popup explains every finding in a single sentence." Sub-points: Server simulation · 9 risk detectors · Policy engine gate.
 2. **Authorization Ledger** — "Every approval becomes a row with a cap, a clock and a live progress bar. No more unlimited approvals you forgot about." Sub-points: Rolling caps · One-click revoke · Pause/resume. (Live demo value: "acme-dapp.xyz daily cap: 62/100 USDC")
 3. **Post-sign Monitor** — "Baret watches your account and your smart wallet over a WebSocket. If something you never signed moves, you get an instant browser notification." Sub-points: WebSocket subscribe · Drift detection · Cold-start backfill.
 
@@ -54,7 +54,7 @@ Three concrete gap/answer pairs:
 3. **Authorization key compromise** — If the signing key leaks, x402 has no per-merchant scope to limit the damage. → Baret's answer: a per-merchant scoped sub-key revoked on-chain with a single click; spend caps are enforced by the extension today, a bounded on-chain allowance is on the roadmap.
 
 ### 1.6 Stats Strip
-Four figures: "25+" Risk detectors · "6" Threat scenarios · "3" Layers of defense · "1" Contract on Monad testnet.
+Four figures: "9" detectors · "25" rules · "6" fake sites · "800 ms" Monad finality. No contract count until the contracts are deployed. The exact wording lives in `packages/content/src/showcase/home.content.ts`.
 
 ### 1.7 Showcase Strip
 Headline: "Six fake-but-real dApps." Description: "Connect a wallet and click a button. Baret catches the threat live. No slides, no mockups." Six site cards (name, category tag, "Catches: X" line) + "Open the Showcase" link. The cards are the condensed version of §2 on the Showcase hub.
@@ -102,7 +102,7 @@ Headline: "Sign with your eyes open." Description: "Open the Showcase, connect a
 Headline: **"Six dApps. Six threats. One signature you never made."** Description: "Every site below looks production-ready and behaves like the real thing. Connect a wallet, press a button, and watch Baret catch the attack in plain language — before your keys ever sign." CTAs: "See the scenarios", "Install the wallet", "Read the Docs". A live "ticker" line rotates through different threat types in turn: "wallet drainers", "unlimited approvals", "rug-pull patterns", "silent agent drift", "look-alike assets", "hidden contract calls".
 
 ### 2.2 Stats Strip
-"6" Demo dApps · "3" Threat classes · "25+" Risk detectors · "1" Contract on Monad testnet.
+"6" simulated sites · "3" kinds of threat · "9" detectors · "25" rules. The exact wording lives in `packages/content/src/showcase/hub.content.ts`.
 
 ### 2.3 Scenario Cards (filterable: All / Drainers / Trust traps / Silent agents)
 
@@ -126,7 +126,7 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 
 #### 03 — PIXELDROP (NFT)
 - **Tagline:** Generative NFT mint
-- **Description:** A "Cyber Phantoms" mint page. Behind the artwork sits a hidden authorization change that empties every asset in your wallet.
+- **Description:** A "Night Shift" mint page. Behind the artwork sits a hidden authorization change that empties every asset in your wallet.
 - **Watch for:** An operator authorization (`setApprovalForAll`) change you never asked for · Wallet-drainer pattern signature · Transfers of assets unrelated to the mint
 - **Threat class:** Wallet drainer · Authorization theft
 - **Why it matters:** Mint pages make a good drainer disguise because buyers expect to sign fast.
@@ -159,11 +159,11 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 ### 2.4 "How It Works" (four steps, interactive)
 1. **Connect a wallet** — Pick Baret or any EIP-6963 wallet from the picker.
 2. **Trigger an action** — Press Swap, Mint, Stake, Claim or Buy. The site builds the transaction.
-3. **Baret inspects** — Server-side simulation + 25+ detectors + your local policy run on the unsigned tx.
+3. **Baret inspects** — Server-side simulation + nine detectors + your local policy run on the unsigned tx.
 4. **Verdict** — Safe / Caution / Blocked, every finding in plain language. You sign with your eyes open, or you reject.
 
 ### 2.5 Detector Grid ("Under the hood")
-Headline: "25+ detectors fire on every signature." Description: "Every scenario trips a different subset. The popup only shows you the findings that matter. Each one explains in a single sentence why the transaction is suspicious." Three featured cards: Pre-sign Guard (server simulation + detectors), Authorization Ledger (every grant is a row with cap+expiry+progress bar), Post-sign Monitor (WebSocket subscribe, alert on anything you never signed). Alongside, a list/grid of detector labels (see the §1.3 marquee list).
+Headline: "Nine detectors run on every signature." Description: "Every scenario trips a different subset. The popup only shows you the findings that matter. Each one explains in a single sentence why the transaction is suspicious." Three featured cards: Pre-sign Guard (server simulation + detectors), Authorization Ledger (every grant is a row with cap+expiry+progress bar), Post-sign Monitor (WebSocket subscribe, alert on anything you never signed). Alongside, a list/grid of detector labels (see the §1.3 marquee list).
 
 ### 2.6 Final CTA
 Headline: "Pick a card. Watch the firewall fire." Description: "No slides, no mockups. Every scenario above runs a real transaction against a real analysis server and shows the verdict before signing."

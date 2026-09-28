@@ -100,15 +100,7 @@ export function Component() {
             <h3 className="text-display-m">{agents.quickstart.sdk.title}</h3>
             <p className="text-sm text-[color:var(--fg-muted)]">{agents.quickstart.sdk.before}</p>
             <pre className="overflow-x-auto bg-[color:var(--ground-deep)] p-3.5 font-mono text-xs leading-relaxed">
-              {`import { AgentWallet } from "@baret/agent-kit";
-
-const agent = AgentWallet.fromSecret(process.env.BARET_AGENT_SECRET, {
-  serverUrl: "https://api.baret.dev",
-  network: "testnet",
-  policy: "balanced",
-});
-
-const { hash } = await agent.guardedSubmit(tx);`}
+              {agents.quickstart.sdk.code.join("\n")}
             </pre>
             <p className="text-sm text-[color:var(--fg-faint)]">{agents.quickstart.sdk.after}</p>
           </Panel>
@@ -116,10 +108,7 @@ const { hash } = await agent.guardedSubmit(tx);`}
             <h3 className="text-display-m">{agents.quickstart.cli.title}</h3>
             <p className="text-sm text-[color:var(--fg-muted)]">{agents.quickstart.cli.before}</p>
             <pre className="overflow-x-auto bg-[color:var(--ground-deep)] p-3.5 font-mono text-xs leading-relaxed">
-              {`baret init --network testnet --policy balanced
-export BARET_AGENT_SECRET=0x...
-
-echo "$TX_JSON" | baret submit -`}
+              {agents.quickstart.cli.code.join("\n")}
             </pre>
             <p className="text-sm text-[color:var(--fg-faint)]">{agents.quickstart.cli.after}</p>
           </Panel>
