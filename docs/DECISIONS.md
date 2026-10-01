@@ -93,6 +93,13 @@
 **Rationale:** Matches `policy.content.ts` field by field (a test asserts it), so no field is dead and no code is orphaned. The old repos let "critical always blocks" override the user's toggles, which made some toggles meaningless.
 **Status:** ✅ Final (revisit the two x402 mismatch codes if the demo shows they should always block)
 
+### D-015 — Hosting: Vercel for the web apps, Render for the API, GitHub Actions as the gate
+**Date:** 2026-10-01
+**Decision:** `apps/showcase` and `apps/wallet` deploy to Vercel (one project each, Git integration, previews per PR). `apps/server` deploys to Render from `render.yaml` with `autoDeployTrigger: checksPass`, so a `main` commit reaches the API only after CI passes. Vercel rewrites `/api/*` to Render, keeping the browser on one origin like the Vite dev proxy. The extension ships as a CI artifact. Contracts are deployed by hand, never from CI.
+**Rationale:** Static Vite builds fit Vercel; a long-running Fastify process with RPC connections fits Render better than serverless functions. The rewrite avoids CORS and a build-time API URL in the web apps. Keeping the deployer key out of GitHub secrets is worth a manual step we run a few times.
+**Alternative:** API as Vercel functions — rejected (cold starts per request, 10 s limit on the free tier against a trace call); deploying contracts from CI — rejected (key exposure).
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
