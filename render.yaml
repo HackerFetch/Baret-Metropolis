@@ -3,7 +3,7 @@
 # entered in the Render dashboard, never here. See docs/DEPLOYMENT.md.
 services:
   - type: web
-    name: baret-api
+    name: baret-monad-api
     runtime: node
     plan: free
     region: frankfurt
