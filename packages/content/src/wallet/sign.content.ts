@@ -1,0 +1,260 @@
+/**
+ * apps/wallet, the sign request. The body of this screen also renders in the
+ * extension popup and in the landing page hero, so it is the most-read copy in
+ * the product. Keep it surface-neutral: no routes here, and nothing that only
+ * makes sense with a passkey except the keys marked wallet-only.
+ *
+ * Order on screen: header, the site's claim, verdict, impact, what changes,
+ * findings, rules broken, raw data, countdown, override. The offline panel
+ * explains a Can't reach Baret verdict. The result replaces the whole screen.
+ *
+ * Rules this file keeps:
+ *  - Safe is a label, not a promise. Every verdict says what was checked.
+ *  - Blocked has no sign button. The only way past it is the override: press
+ *    and hold, then written to the activity log.
+ *  - Can't reach Baret counts as Blocked, whatever the rules say. Same
+ *    override, same log. There is no one-click way to sign without a check.
+ *  - What the site says about itself is its claim. What changes is the check.
+ *    The screen never mixes the two.
+ *
+ * Placeholders follow the shared vocabulary: {origin} the site, {recipient}
+ * who receives, {spender} who may spend, {operator} an NFT operator,
+ * {contract}, {merchant}, {amount}, {asset}, {cap}, {limit} the rule's
+ * threshold, {actual} the observed value, {rule} the rule's label, {count},
+ * {seconds}. {block} is the block number of a confirmed transaction.
+ */
+
+export const sign = {
+  header: {
+    title: "Sign request",
+    fromSite: "from {origin}",
+    originNote: "The site address as your browser reports it.",
+  },
+
+  /** The verb-and-object line under the header. One per action Baret can name. */
+  actions: {
+    transfer: "Send {amount} {asset} to {recipient}",
+    approval: "Let {spender} spend up to {amount} {asset}",
+    approvalUnlimited: "Let {spender} spend all of your {asset}",
+    operatorGrant: "Let {operator} move every item in {asset}",
+    permit: "Sign a spending permission for {spender}",
+    revoke: "Revoke the allowance {spender} holds on your {asset}",
+    ownershipTransfer: "Hand over control of {contract}",
+    contractCall: "Use {contract}",
+    contractDeploy: "Deploy a new contract",
+    payment: "Pay {amount} {asset} to {merchant}",
+    vaultDeposit: "Deposit {amount} {asset} into your vault",
+    vaultWithdraw: "Withdraw {amount} {asset} from your vault",
+    vaultCaps: "Set the caps for {merchant} in your vault",
+    vaultRemoveMerchant: "Remove {merchant} from your vault",
+    vaultAgentKey: "Register your agent key with your vault",
+    vaultRevokeAgent: "Revoke your agent key",
+    unknown: "Sign a transaction Baret could not name",
+  },
+
+  /** What the site says about this request. Shown, never trusted. */
+  claim: {
+    label: "{origin} says",
+    tag: "The site's claim. Not checked.",
+    note: "What changes below comes from the simulation. If the two disagree, go with What changes.",
+  },
+
+  /** The verdict block. The tag word itself lives in shared/common. */
+  verdict: {
+    checking: {
+      title: "Checking this request",
+      body: "Simulating it on Monad and running it past your rules.",
+    },
+    safe: {
+      title: "Nothing here breaks your rules",
+      summary: "Simulated on Monad and checked against your rules. Nothing turned up.",
+      primary: "Sign and send",
+      secondary: "Decline",
+    },
+    caution: {
+      title: "Allowed, with something to read first",
+      summary: "No rule stopped this, but a check found something. Read it before you sign.",
+      primary: "Sign and send",
+      secondary: "Decline",
+    },
+    blocked: {
+      title: "Blocked by your rules",
+      summary: "{rule} stopped this request. Nothing was signed.",
+      summaryMany: "{rule} and {count} more rules stopped this request. Nothing was signed.",
+      primary: "Decline",
+      secondary: "Override this block",
+      noSign: "There is no sign button on a blocked request.",
+      /** One suggested fix per block, from the server's suggestions. */
+      fix: {
+        title: "Suggested fix",
+        boundedAllowance: "Allow only {amount} {asset}, the amount this request needs.",
+        singleItem: "Allow the one item this needs, not the whole collection.",
+        lowerAmount: "Send less. Your rule allows up to {limit}.",
+        keepFloor: "Send less, so you keep at least {limit} after this.",
+        fallback: "Decline, then ask the site for a request that fits your rules.",
+      },
+    },
+    unreachable: {
+      title: "Can't reach Baret",
+      summary: "Signing stays locked until a check runs.",
+      primary: "Check again",
+      secondary: "Decline",
+      override: "Override",
+    },
+
+    /** Where the check ran. One row, always visible. */
+    checkedBy: {
+      label: "Checked by",
+      value: "Baret server",
+      detail: "Simulated over Alchemy RPC on Monad. Your key signs on this device only.",
+      sources: {
+        reputation: "Reputation from Nansen and threat reports from Chainlink CRE",
+        compliance: "Identity rules from Cleanverse",
+      },
+    },
+    ruleLink: "See the rule",
+  },
+
+  /** One sentence under the verdict: what actually moves if you sign. */
+  impact: {
+    label: "If you sign",
+    transfer: "{amount} {asset} leaves your wallet for {recipient}.",
+    approval: "{spender} can take up to {amount} {asset} at any time, until you revoke it.",
+    approvalUnlimited:
+      "{spender} can take all of your {asset}, now and later, until you revoke it.",
+    operatorGrant: "{operator} can move every item in {asset}, now and later, until you revoke it.",
+    permit: "{spender} can spend your {asset}, and nothing shows in your history until they do.",
+    revoke: "{spender} can no longer spend your {asset}.",
+    ownershipTransfer: "Someone else gets control of {contract}.",
+    payment: "{amount} {asset} goes to {merchant}.",
+    nothing: "Nothing leaves your wallet.",
+    unknown: "Baret could not tell what moves. Treat that as a reason to stop.",
+  },
+
+  changes: {
+    title: "What changes",
+    out: "You send",
+    in: "You receive",
+    allow: "You allow",
+    revoke: "You revoke",
+    fee: "Network fee",
+    unlimited: "Unlimited",
+    none: "Nothing leaves your wallet.",
+    unknown: "Baret could not work out what changes. Treat that as a reason to stop.",
+    disclaimer:
+      "Simulated against Monad as it is right now. If the chain changes before this lands, the result can differ.",
+  },
+
+  /** Titles and explanations per finding code live in shared/findings. */
+  findings: {
+    title: "Findings",
+    count: "{count} found",
+    none: "No findings.",
+    more: "{count} more",
+    why: "Why it matters",
+    batched: "Inside a batched call",
+    severity: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },
+  },
+
+  /** The rules this request breaks. Labels come from shared/policy. */
+  rules: {
+    title: "Rules this breaks",
+    none: "No rule broken.",
+    row: "Requested {actual}. Your rule allows {limit}.",
+    unchecked: "{rule} could not be checked, so it counts as broken.",
+    edit: "Change this rule",
+  },
+
+  raw: {
+    title: "Raw data",
+    hint: "The exact request the site sent. Nothing is left out.",
+    decoded: "Decoded call",
+    notDecoded: "Baret could not decode this call.",
+    to: "To",
+    value: "Value",
+    calldata: "Calldata",
+    copy: "Copy the calldata",
+    copied: "Copied",
+  },
+
+  countdown: {
+    label: "Declines on its own in {seconds} seconds",
+    note: "When time runs out, the request is declined and nothing is signed.",
+  },
+
+  /**
+   * The only way past Blocked or Can't reach Baret. A separate, deliberate
+   * step: press and hold, then written to the activity log.
+   */
+  override: {
+    blocked: {
+      title: "Sign against your rule",
+      body: "{rule} stays on. Only this request goes through, exactly as it is. Once it is sent, it can't be undone.",
+    },
+    unreachable: {
+      title: "Sign while Baret is unreachable",
+      body: "Nothing about this request was simulated or checked. If you sign, it goes out unchecked and can't be undone.",
+    },
+    hold: "Press and hold to sign",
+    holding: "Keep holding",
+    released: "You let go. Nothing was signed.",
+    back: "Back",
+    logged: "Every override goes into your activity log, with the rule it went past.",
+  },
+
+  /** Why the verdict is Can't reach Baret, and what the reader can do. */
+  offline: {
+    title: "Can't reach Baret",
+    body: "No check ran, so this request is treated as Blocked.",
+    reasons: {
+      server: "The Baret server did not answer.",
+      simulation: "The simulation could not run on Monad.",
+      data: "Data one of your rules needs was missing.",
+    },
+    retry: "Check again",
+    retrying: "Checking again",
+    stillDown: "Still no answer. Try again in a moment, or decline.",
+    note: "No rule changes this. A request that was not checked counts as Blocked.",
+  },
+
+  status: {
+    signing: "Signing",
+    sending: "Sending",
+    /** Standalone wallet only. The extension signs with its unlocked key. */
+    passkey: "Confirm with your passkey",
+  },
+
+  result: {
+    sent: {
+      title: "Sent",
+      body: "Confirmed in block {block}.",
+      action: { label: "View on the explorer" },
+    },
+    signed: {
+      title: "Signed",
+      body: "The site has your signature.",
+    },
+    overridden: {
+      title: "Sent with an override",
+      body: "Confirmed in block {block}. The override is in your activity log.",
+    },
+    declined: {
+      title: "Declined",
+      body: "Nothing was signed. The site was told you said no.",
+    },
+    expired: {
+      title: "Expired",
+      body: "Time ran out, so the request was declined. Nothing was signed.",
+    },
+    reverted: {
+      title: "It reverted",
+      body: "The network ran it and it failed. Nothing moved except the network fee.",
+    },
+    rejected: {
+      title: "Not sent",
+      body: "The network did not accept it. Nothing moved and no fee was paid.",
+    },
+  },
+} as const;
+
+export type SignContent = typeof sign;

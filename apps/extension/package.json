@@ -1,0 +1,40 @@
+{
+  "name": "@baret/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Baret wallet extension. Chrome MV3 and Firefox MV3.",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@baret/content": "workspace:*",
+    "@baret/routes": "workspace:*",
+    "@baret/ui": "workspace:*",
+    "@webext-core/messaging": "4.0.0",
+    "lucide-react": "1.46.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "8.3.1",
+    "viem": "2.56.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "@wxt-dev/module-react": "1.2.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "web-ext": "10.6.0",
+    "wxt": "0.21.4"
+  }
+}

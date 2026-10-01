@@ -1,0 +1,10 @@
+/*
+ * The only stylesheet the showcase loads. Tokens, the Tailwind build and the
+ * base layer all come from @baret/ui, which is consumed as source so a token
+ * change hot-reloads here immediately.
+ */
+@import "@baret/ui/tokens.css";
+
+/* Sources outside this app's own tree have to be declared for Tailwind to
+   scan them for class names. */
+@source "../../../packages/ui/src";
