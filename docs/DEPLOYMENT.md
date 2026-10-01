@@ -12,7 +12,7 @@ Last updated: 2026-10-01 · Status: **Pipeline files written and verified locall
 |---|---|---|---|
 | `apps/showcase` | Vercel project `baret-showcase` | `apps/showcase/vercel.json` | `https://baret-showcase.vercel.app` |
 | `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://baret-wallet.vercel.app` |
-| `apps/server` | Render web service `baret-api` | `render.yaml` (Blueprint) | `https://baret-api.onrender.com` |
+| `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` |
 | `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" / store later |
 | `contracts/` | Monad testnet, by hand | `contracts/script/Deploy.s.sol` | addresses in `docs/CONTRACTS.md` |
 
@@ -27,7 +27,7 @@ PR opened / pushed ──► GitHub Actions CI ───────────
                         build:  pnpm build + extension zip (artifact)
                         contracts: forge fmt/build/test
 
-merge to main ────────► CI on main ──── all checks green ──► Render deploys baret-api (autoDeployTrigger: checksPass)
+merge to main ────────► CI on main ──── all checks green ──► Render deploys baret-monad-api (autoDeployTrigger: checksPass)
                                                          └─► Vercel production deploy of each changed app
 ```
 
@@ -43,15 +43,16 @@ merge to main ────────► CI on main ──── all checks gre
 
 ### 3.2 Render (API)
 1. render.com → sign in with GitHub → grant access to `HackerFetch/Baret-Metropolis`.
-2. **New → Blueprint** → pick the repo → Render reads `render.yaml` and proposes `baret-api`.
+2. **New → Blueprint** → pick the repo. The service is named `baret-monad-api` because an older, unrelated `baret-api` service already exists on our Render account; do not reuse or overwrite it.
+   Then → Render reads `render.yaml` and proposes `baret-monad-api`.
 3. Fill the `sync: false` values when it asks:
    - `MONAD_TESTNET_RPC_URL` — Alchemy Monad testnet URL (required; the public `https://testnet-rpc.monad.xyz` works for a first run).
    - `MONAD_TESTNET_USDC_ADDRESS` — verified testnet USDC.
    - `BARET_CORS_ORIGINS` — leave empty for now (the extension calls the API from its own origin).
    - `BARET_API_KEYS` — **leave empty** while the showcase calls the API from the browser: a static site cannot keep a key secret. Rate limiting (120/min per IP) still applies. Keys come with agent-kit.
    - The rest (registry, Nansen, Cleanverse) — empty until those land; their rules fail closed.
-4. Apply. When it is live, open `https://baret-api.onrender.com/health/ready` → `{"status":"ready",...}`.
-5. If Render assigned another name (e.g. `baret-api-x1y2`), put that URL into both `vercel.json` rewrites.
+4. Apply. When it is live, open `https://baret-monad-api.onrender.com/health/ready` → `{"status":"ready",...}`.
+5. If Render assigned another name (e.g. `baret-monad-api-x1y2`), put that URL into both `vercel.json` rewrites.
 
 The free plan sleeps after 15 minutes idle and the first request then takes ~50 s. Fine for development; switch to Starter before the demo video and judging.
 
