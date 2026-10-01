@@ -2,7 +2,7 @@
 
 > This file is a **live checklist**. At the end of every week the boxes are ticked, and slips/delays are written into the "Notes" line. The status table in `README.md` is kept in sync with this file.
 
-Last updated: 2026-09-13 · Currently: **Week 0 (planning)**
+Last updated: 2026-10-01 · Currently: **Week 3** (backend caught up to the end of Week 2)
 
 ---
 
@@ -15,20 +15,20 @@ Last updated: 2026-09-13 · Currently: **Week 0 (planning)**
 ---
 
 ## Week 1 — Foundation + Decisions
-- [ ] New git repo created (clean history, commits starting today)
-- [ ] pnpm workspace skeleton (`apps/`, `packages/`, `contracts/`, `workflows/`, `indexer/`)
+- [x] New git repo created (clean history, commits starting today)
+- [x] pnpm workspace skeleton (`apps/`, `packages/`, `contracts/`; `workflows/` and `indexer/` come with their modules)
 - [ ] Monad testnet RPC (Alchemy) + sponsor perks claimed (Tenderly, QuickNode, Zerion) — see `RESOURCES.md` §1
-- [ ] `contracts/PaymentGuard.sol` written, tested, deployed to Monad testnet — `CONTRACTS.md` §2.6 filled in
+- [ ] `contracts/PaymentGuard.sol` written, tested, deployed to Monad testnet — `CONTRACTS.md` §2.6 filled in (written + tested; deploy waits for a funded deployer key)
 - [ ] **Milestone demo:** catch and block a single risky transaction end to end (CLI level is enough)
 
-**Notes:** _(to be filled in)_
+**Notes:** Backend started late (2026-10-01). Server answers `/health/ready` and traces a transaction against the public Monad testnet RPC. CLI milestone demo: `curl` against `/v1/analyze`.
 
 ---
 
 ## Week 2 — Core Analysis Engine
-- [ ] `apps/server`: decode → simulate (`debug_traceCall`) → basic detectors (approvals, programs, evm-danger, simulation)
-- [ ] Policy engine (first 8-10 rules) + `STRICT/BALANCED/PERMISSIVE` templates
-- [ ] `packages/guard` SDK (TransactionGuard.evaluate)
+- [x] `apps/server`: decode → simulate (`debug_traceCall`) → basic detectors (approvals, programs, evm-danger, simulation) — all 9 detector modules exist
+- [x] Policy engine (all 25 rules) + `STRICT/BALANCED/PERMISSIVE` templates
+- [x] `packages/guard` SDK (TransactionGuard.evaluate)
 - [ ] `apps/showcase`: at least 2 threat scenarios (with safe/danger variants, names settled by D-010)
 - [ ] **Milestone demo:** live analysis through the showcase, demonstrable in the browser
 

@@ -6,7 +6,17 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/.output", "!**/.wxt", "!**/*.tsbuildinfo", "!baret-repos"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.output",
+      "!**/.wxt",
+      "!**/*.tsbuildinfo",
+      "!baret-repos",
+      "!contracts/lib",
+      "!contracts/out",
+      "!contracts/cache"
+    ]
   },
   "formatter": {
     "enabled": true,

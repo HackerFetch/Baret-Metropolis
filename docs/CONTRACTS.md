@@ -2,7 +2,7 @@
 
 > Design of the contracts to be deployed to Monad testnet/mainnet with Foundry. Before code is written, this file is used as the spec; after deployment the address table is filled in and this file is kept up to date.
 
-Last updated: 2026-09-13 · Status: **Spec phase, no deployment**
+Last updated: 2026-10-01 · Status: **Both contracts written and tested (`forge test`: 26 passing, incl. fuzz + invariants). Not deployed yet**
 
 ---
 
@@ -27,32 +27,43 @@ Last updated: 2026-09-13 · Status: **Spec phase, no deployment**
 | **Agent (delegated signer)** | Can only call `pay()`; cannot deposit/withdraw/change caps |
 | **Merchant** | Recipient of the payment; must have been added to the allowlist by the owner |
 
-### 2.2 Functions (draft)
+### 2.2 Functions (as built — `contracts/src/PaymentGuard.sol`)
+
+One vault, one token (USDC, set at deploy), one owner (immutable), one agent signer.
 
 ```solidity
-function deposit(address token, uint256 amount) external;                     // owner, transferFrom
-function setMerchantCap(address merchant, uint256 perTxCap, uint256 dailyCap) external; // owner
-function revokeMerchant(address merchant) external;                            // owner
-function setAgentSigner(address agent) external;                               // owner — Mera PRF sub-key address
-function revokeAgentSigner() external;                                         // owner — immediate revocation
-function pay(address merchant, uint256 amount) external;                       // agent only, cap check
-function withdraw(address token, uint256 amount) external;                     // owner
+function deposit(uint256 amount) external;                                     // owner only
+function setMerchantCap(address merchant, uint256 perTxCap, uint256 hourlyCap, uint256 dailyCap) external; // owner; hourlyCap 0 = no hourly limit
+function setMerchantPaused(address merchant, bool paused) external;            // owner; keeps caps and history
+function revokeMerchant(address merchant) external;                            // owner; frees its reserve
+function setAgentSigner(address agent) external;                               // owner; replaces the previous agent
+function revokeAgentSigner() external;                                         // owner; immediate
+function pay(address merchant, uint256 amount, bytes32 ref) external;          // agent only; ref = invoice id / x402 memo hash
+function withdraw(uint256 amount) external;                                    // owner; never below totalReserved
+// views: merchant(addr), spent(addr) → (lastHour, lastDay), available(addr), unreserved(), totalReserved, agent
 ```
 
-### 2.3 Invariants (to be tested)
-- A `pay()` call reverts if it exceeds the merchant's per-tx or rolling-24h cap.
-- `withdraw()` cannot drain the vault without first deducting the total reserve of active (non-revoked) merchants.
-- After `revokeAgentSigner()`, a `pay()` call from the old agent address reverts under all conditions.
-- Owner only: `deposit` cannot be made on someone else's behalf (msg.sender = owner required, or an explicitly authorized depositor).
+Differences from the draft, and why (D-013): a single token instead of `deposit(token, amount)` because caps are in one unit; an on-chain hourly cap so the vault speaks the same rules as `maxHourlyCap`; a real pause; a `ref` on every payment so `requireMemo` has an on-chain counterpart. Token calls are SafeERC20-style (tokens that return nothing work, `false` reverts) without an OpenZeppelin dependency.
+
+**Rolling windows:** every payment is logged per merchant (timestamp + amount in one slot); each `pay` drops entries older than 1 h / 24 h from two running totals. A merchant can hold at most `MAX_LIVE_PAYMENTS` (128) payments inside 24 h, which bounds the gas of one `pay`.
+
+**Reserve:** `totalReserved` = sum of the daily caps of merchants that are not revoked. `withdraw` cannot go below it.
+
+### 2.3 Invariants (tested in `contracts/test/PaymentGuard.t.sol`)
+- [x] A `pay()` call reverts if it exceeds the merchant's per-tx, rolling-1h or rolling-24h cap (unit tests with `vm.warp`, fuzz `testFuzz_neverExceedsDailyCap`).
+- [x] `withdraw()` cannot take the vault below the reserve of active merchants; two merchants' reserves add up and are freed on revoke (`invariant_reserveMatchesActiveCaps`).
+- [x] After `revokeAgentSigner()` or `setAgentSigner(other)`, the old agent's `pay()` reverts.
+- [x] `deposit` is owner-only.
 
 ### 2.4 Events (the Envio indexer will listen to these)
 ```solidity
 event Deposited(address indexed token, uint256 amount);
-event MerchantCapSet(address indexed merchant, uint256 perTxCap, uint256 dailyCap);
+event MerchantCapSet(address indexed merchant, uint256 perTxCap, uint256 hourlyCap, uint256 dailyCap);
+event MerchantPausedSet(address indexed merchant, bool paused);
 event MerchantRevoked(address indexed merchant);
 event AgentSignerSet(address indexed agent);
 event AgentSignerRevoked(address indexed agent);
-event Paid(address indexed merchant, address indexed agent, uint256 amount, uint256 timestamp);
+event Paid(address indexed merchant, address indexed agent, uint256 amount, bytes32 indexed ref, uint256 timestamp);
 event Withdrawn(address indexed token, uint256 amount);
 ```
 
@@ -72,13 +83,17 @@ The address passed to `setAgentSigner` is the address of a **sub-key** derived f
 
 **Purpose:** Lets the Chainlink CRE workflow write the data it pulls from external threat-intelligence sources (scam-address feeds etc.) on-chain in a verified way, so that the `reputation.ts` detector in `apps/server` can read it.
 
-### 3.1 Functions (draft)
+### 3.1 Functions (as built — `contracts/src/ReputationRegistry.sol`)
 
 ```solidity
 function reportFlagged(address target, uint8 severity, string calldata reasonCode) external; // authorized CRE forwarder only
 function clearFlag(address target) external;                                                  // owner/forwarder only
 function isFlagged(address target) external view returns (bool, uint8 severity, string memory reasonCode);
+function onReport(bytes calldata metadata, bytes calldata report) external;                     // CRE receiver; report = abi.encode(address[], uint8[], string[]), severity 0 clears
+function setForwarder(address forwarder) external;                                           // owner
 ```
+
+Severity 1 low … 4 critical. The server treats 3+ (or any flagged EOA) as a blocklist entry (`KNOWN_MALICIOUS_ADDRESS`) and a flagged contract below 3 as reported (`RISKY_CONTRACT_INTERACTION`).
 
 ### 3.2 Access Control
 Only the verified callback address forwarded by the CRE workflow (`onlyForwarder` modifier) can write — see `notes (4).txt`: "forward-contract pattern separates a safe local simulation from production authority." In development a local forward address is used; at deployment the real address is set and the state-setting callback is restricted to that address.
@@ -87,6 +102,8 @@ Only the verified callback address forwarded by the CRE workflow (`onlyForwarder
 ```solidity
 event ReputationFlagged(address indexed target, uint8 severity, string reasonCode, uint256 timestamp);
 event ReputationCleared(address indexed target);
+event ForwarderSet(address indexed forwarder);
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 ```
 
 ### 3.4 Deployment Table
@@ -105,9 +122,9 @@ Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the s
 
 ## 5. Test Plan
 
-- [ ] `forge test -vv` — all unit + fuzz tests green.
-- [ ] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
-- [ ] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
+- [x] `forge test -vv` — all unit + fuzz tests green (26 tests, 2026-10-01).
+- [x] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
+- [x] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
 - [ ] With Tenderly: the trace of a real "unlimited approve" and "payment to a flagged address" scenario is recorded (for the demo video).
 - [ ] After deploying to testnet: live verification with `cast call`, the address tables (§2.6, §3.4) are filled in.
 
@@ -115,8 +132,8 @@ Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the s
 
 ## 6. Security Checklist (pre-deployment)
 
-- [ ] Reentrancy protection (`pay`/`withdraw` — checks-effects-interactions or `ReentrancyGuard`).
+- [x] Reentrancy protection (`pay`/`withdraw`/`deposit` — own lock + checks-effects-interactions).
 - [ ] Integer overflow/underflow — Solidity ≥0.8 native protection, but the cap math is still fuzz-tested.
-- [ ] `onlyOwner` / `onlyAgent` / `onlyForwarder` modifiers on every sensitive function.
-- [ ] The owner private key is never written to the repo/logs; the deploy script reads it from env.
-- [ ] Apply our own risk model to our own contract: check that PaymentGuard itself does not carry the "unlimited approval" pattern.
+- [x] `onlyOwner` / agent check / `onlyForwarder` on every sensitive function.
+- [x] The owner private key is never written to the repo/logs; the deploy script takes it on the command line.
+- [x] Apply our own risk model to our own contract: `deposit` pulls exactly the approved amount, so the owner never needs an unlimited approval to the vault.

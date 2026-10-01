@@ -24,7 +24,10 @@
     "lint:fix": "biome check --write .",
     "lint:copy": "pnpm --filter @baret/content lint:copy",
     "check": "pnpm lint && pnpm typecheck && pnpm lint:copy && pnpm test",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/dist packages/*/dist **/*.tsbuildinfo"
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/dist packages/*/dist **/*.tsbuildinfo",
+    "dev:server": "pnpm --filter @baret/server dev",
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.13",

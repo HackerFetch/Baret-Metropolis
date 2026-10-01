@@ -18,6 +18,12 @@
     },
     {
       "path": "./apps/extension"
+    },
+    {
+      "path": "./packages/guard"
+    },
+    {
+      "path": "./apps/server"
     }
   ]
 }
