@@ -6,19 +6,19 @@ This repository and this document set are meant for **live** tracking. They were
 
 ---
 
-## Status Summary (last updated: 2026-09-15)
+## Status Summary (last updated: 2026-10-01)
 
 | Area | Status |
 |---|---|
-| Phase | Frontend scaffolded. Copy, design system and routing done. No backend yet |
+| Phase | Frontend scaffolded. Backend core on the `backend` branch: `packages/guard` (schemas, templates, client), `apps/server` `/v1/analyze` with all 9 detectors and the policy engine, both contracts tested |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 44 files in `packages/content`, one per page, complete |
 | Design system | 37 components in `packages/ui` |
 | Apps | `showcase`, `wallet`, `extension` build. Pages render copy; most are not designed |
-| Server and contracts | Not started |
+| Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
 | Contract deploy | None |
-| Week | 1 / 6 |
+| Week | 3 / 6 (backend is a week behind: Week 2 core done, Week 3 integrations next) |
 
 Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
 

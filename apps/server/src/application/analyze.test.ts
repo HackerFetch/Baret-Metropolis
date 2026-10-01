@@ -1,0 +1,520 @@
+import { type AnalyzeRequest, type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
+import { afterAll, describe, expect, it } from "vitest";
+import { EIP1967_IMPLEMENTATION_SLOT, KNOWN_FUNCTIONS } from "../simulation/abi.js";
+import type { Sources } from "../sources/types.js";
+import {
+  approvalLog,
+  approveData,
+  calldata,
+  cleanSources,
+  DAPP,
+  DRAINER,
+  deps,
+  FAKE_USDC,
+  FakeRpc,
+  frame,
+  IMPL,
+  implSlotValue,
+  log,
+  maxUint256,
+  NFT,
+  NOW,
+  ONE_MON,
+  ONE_USDC,
+  PEER,
+  policy,
+  SHOP,
+  transferLog,
+  tx,
+  USDC,
+  USER,
+} from "../testing/fake.js";
+import { analyze } from "./analyze.js";
+
+const emitted = new Set<string>();
+
+async function run(
+  req: AnalyzeRequest,
+  rpc = new FakeRpc(),
+  sources: Sources = cleanSources(),
+): Promise<AnalyzeResponse> {
+  const res = await analyze(req, deps(rpc, sources));
+  for (const f of res.findings) emitted.add(f.code);
+  return res;
+}
+
+const codes = (r: AnalyzeResponse) => r.findings.map((f) => f.code);
+
+const sendMon = (to: string, value: bigint) => frame({ to, value: `0x${value.toString(16)}` });
+
+describe("simulation", () => {
+  it("passes a plain MON transfer to a known wallet", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(PEER, ONE_MON);
+    const r = await run(tx({ to: PEER, value: ONE_MON.toString() }), rpc);
+    expect(r.decision).toBe("safe");
+    expect(r.confidence).toBe("high");
+    const mon = r.estimatedChanges.find((c) => c.asset.kind === "native");
+    // One MON plus the fee for the whole gas limit (50k gas at 100 gwei).
+    expect(mon?.delta).toBe((-(ONE_MON + 50_000n * 100n * 10n ** 9n)).toString());
+  });
+
+  it("blocks a request that would revert", async () => {
+    const rpc = new FakeRpc();
+    rpc.outcome = { ok: false, revertReason: "insufficient balance", revertData: null };
+    const r = await run(tx({ to: PEER, value: "1" }), rpc);
+    expect(r.decision).toBe("blocked");
+    expect(r.firedRules).toContainEqual(
+      expect.objectContaining({ rule: "requireSuccessfulSimulation", code: "SIMULATION_FAILED" }),
+    );
+    expect(r.confidence).toBe("low");
+  });
+
+  it("says when there is no trace", async () => {
+    const r = await run(tx({ to: PEER, value: "1" }));
+    expect(codes(r)).toContain("LOW_CONFIDENCE_INCOMPLETE_DATA");
+    expect(r.decision).toBe("caution");
+    expect(r.meta.traced).toBe(false);
+  });
+
+  it("rejects a request for another chain", async () => {
+    await expect(analyze({ ...tx(), network: "mainnet" }, deps(new FakeRpc()))).rejects.toThrow(
+      /does not serve/,
+    );
+  });
+});
+
+describe("approvals", () => {
+  it("blocks an unlimited allowance under Balanced and suggests the amount needed", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.frame = frame({
+      to: USDC,
+      input: approveData(DAPP, maxUint256),
+      logs: [
+        approvalLog(USDC, USER, DAPP, maxUint256),
+        transferLog(USDC, USER, DAPP, 5n * ONE_USDC),
+      ],
+    });
+    const r = await run(tx({ to: USDC, data: approveData(DAPP, maxUint256) }), rpc);
+    expect(r.decision).toBe("blocked");
+    const f = r.findings.find((x) => x.code === "ERC20_APPROVAL_UNLIMITED");
+    expect(f?.values).toEqual({ spender: DAPP, asset: "USDC", amount: "5" });
+    expect(r.suggestions).toEqual([
+      { code: "ERC20_APPROVAL_UNLIMITED", values: { amount: "5", asset: "USDC" } },
+    ]);
+    expect(r.approvals[0]).toMatchObject({ unlimited: true, spender: DAPP, symbol: "USDC" });
+  });
+
+  it("shows an unlimited allowance as Caution under Permissive", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = frame({ to: USDC, logs: [approvalLog(USDC, USER, DAPP, maxUint256)] });
+    const r = await run(
+      {
+        ...tx({ to: USDC, data: approveData(DAPP, maxUint256) }),
+        policy: policy({ blockUnlimitedApprovals: false }),
+      },
+      rpc,
+    );
+    expect(r.decision).toBe("caution");
+    expect(r.findings.find((f) => f.code === "ERC20_APPROVAL_UNLIMITED")?.blocking).toBe(false);
+  });
+
+  it("reads a limited allowance, operator access and calldata-only approvals", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = frame({
+      to: DAPP,
+      logs: [
+        approvalLog(USDC, USER, DAPP, 10n * ONE_USDC),
+        log(
+          NFT,
+          "ApprovalForAll",
+          { owner: USER, operator: DRAINER },
+          {
+            types: [{ type: "bool" }],
+            values: [true],
+          },
+        ),
+      ],
+    });
+    const r = await run(tx({ to: DAPP }), rpc);
+    expect(codes(r)).toEqual(
+      expect.arrayContaining(["ERC20_APPROVAL_GRANTED", "NFT_OPERATOR_GRANTED"]),
+    );
+    expect(r.findings.find((f) => f.code === "ERC20_APPROVAL_GRANTED")?.values.amount).toBe("10");
+
+    const noTrace = await run(tx({ to: USDC, data: approveData(DAPP, 3n * ONE_USDC) }));
+    expect(codes(noTrace)).toContain("ERC20_APPROVAL_GRANTED");
+  });
+
+  it("catches a permit signature", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: {
+        signer: USER,
+        domain: { name: "USD Coin", verifyingContract: USDC, chainId: 10143 },
+        types: { Permit: [{ name: "owner", type: "address" }] },
+        primaryType: "Permit",
+        message: { owner: USER, spender: DRAINER, value: "1000000", nonce: 0, deadline: NOW + 60 },
+      },
+    });
+    expect(codes(r)).toContain("PERMIT_SIGNATURE_DETECTED");
+    expect(r.decision).toBe("blocked");
+  });
+});
+
+describe("contracts and dangerous calls", () => {
+  it("flags unknown, reported, self-destructing and borrowed-code contracts", async () => {
+    const rpc = new FakeRpc();
+    for (const a of [DAPP, NFT, IMPL, FAKE_USDC]) rpc.code.set(a, "0x60");
+    rpc.frame = frame({
+      to: DAPP,
+      calls: [
+        frame({ from: DAPP, to: NFT, type: "DELEGATECALL" }),
+        frame({ from: NFT, to: PEER, type: "SELFDESTRUCT" }),
+        frame({ from: DAPP, to: FAKE_USDC }),
+      ],
+      logs: [
+        log(
+          DAPP,
+          "OwnershipTransferred",
+          { previousOwner: USER, newOwner: DRAINER },
+          {
+            types: [],
+            values: [],
+          },
+        ),
+      ],
+    });
+    const r = await run(
+      tx({ to: DAPP }),
+      rpc,
+      cleanSources({
+        registry: { [FAKE_USDC]: { flagged: true, severity: 2, reasonCode: "SPOOF" } },
+      }),
+    );
+    expect(codes(r)).toEqual(
+      expect.arrayContaining([
+        "UNKNOWN_CONTRACT_EXPOSURE",
+        "RISKY_CONTRACT_INTERACTION",
+        "SELFDESTRUCT_CALL",
+        "DELEGATECALL_DETECTED",
+        "OWNERSHIP_TRANSFER",
+      ]),
+    );
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("does not report a standard proxy calling its own implementation", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.storage.set(`${USDC}:${EIP1967_IMPLEMENTATION_SLOT}`, implSlotValue(IMPL));
+    rpc.frame = frame({ to: USDC, calls: [frame({ from: USDC, to: IMPL, type: "DELEGATECALL" })] });
+    const r = await run(tx({ to: USDC }), rpc);
+    expect(codes(r)).not.toContain("DELEGATECALL_DETECTED");
+  });
+
+  it("flags deep nesting, many operations and a gas limit above the rule", async () => {
+    const rpc = new FakeRpc();
+    let leaf = frame({ from: DAPP, to: DAPP });
+    for (let i = 0; i < 5; i++) leaf = frame({ from: DAPP, to: DAPP, calls: [leaf] });
+    rpc.frame = frame({
+      to: DAPP,
+      calls: [leaf, ...Array.from({ length: 12 }, () => frame({ from: DAPP, to: PEER }))],
+    });
+    const r = await run(
+      { ...tx({ to: DAPP, gas: "3000000" }), policy: policy({ maxGas: 1_000_000 }) },
+      rpc,
+    );
+    expect(codes(r)).toEqual(
+      expect.arrayContaining(["DEEP_CALL_NESTING", "HIGH_OPERATION_COUNT", "EXCESSIVE_GAS"]),
+    );
+    expect(r.findings.find((f) => f.code === "EXCESSIVE_GAS")?.values).toEqual({
+      actual: "3000000",
+      limit: "1000000",
+    });
+  });
+});
+
+describe("reputation", () => {
+  it("blocks a listed address and labels the counterparty", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(DRAINER, 1n);
+    const r = await run(
+      { ...tx({ to: DRAINER, value: "1" }), policy: policy({ minNansenTrustLevel: "identified" }) },
+      rpc,
+      cleanSources({
+        registry: { [DRAINER]: { flagged: true, severity: 4, reasonCode: "DRAINER" } },
+      }),
+    );
+    expect(codes(r)).toContain("KNOWN_MALICIOUS_ADDRESS");
+    expect(r.decision).toBe("blocked");
+
+    const peer = await run(
+      { ...tx({ to: PEER, value: "1" }), policy: policy({ minNansenTrustLevel: "identified" }) },
+      rpc,
+      cleanSources({ nansen: { [PEER]: { trustLevel: "new", freshWallet: true, whale: true } } }),
+    );
+    expect(codes(peer)).toEqual(
+      expect.arrayContaining([
+        "NANSEN_FLAGGED_FRESH_WALLET",
+        "NANSEN_FLAGGED_WHALE_COUNTERPARTY",
+        "NANSEN_TRUST_BELOW_MINIMUM",
+      ]),
+    );
+    expect(peer.findings.find((f) => f.code === "NANSEN_TRUST_BELOW_MINIMUM")?.values).toEqual({
+      address: PEER,
+      actual: "new",
+      limit: "identified",
+    });
+  });
+
+  it("fails closed when a source the rules need does not answer", async () => {
+    const r = await run(
+      tx({ to: PEER, value: "1" }),
+      new FakeRpc(),
+      cleanSources({ nansen: null }),
+    );
+    expect(r.decision).toBe("blocked");
+    expect(r.firedRules[0]?.code).toBe("REPUTATION_DATA_UNAVAILABLE");
+    expect(r.sources.find((s) => s.name === "nansen")?.status).toBe("unavailable");
+  });
+
+  it("does not need reputation when no rule asks for it", async () => {
+    const r = await run(
+      {
+        ...tx({ to: PEER, value: "1" }),
+        policy: policy({ blockKnownMalicious: false, blockRiskyContracts: false }),
+      },
+      new FakeRpc(),
+      cleanSources({ nansen: null, registry: null }),
+    );
+    expect(codes(r)).not.toContain("REPUTATION_DATA_UNAVAILABLE");
+  });
+});
+
+describe("compliance", () => {
+  const usdcSend = (to: string) => {
+    const rpc = new FakeRpc();
+    rpc.frame = frame({ to: USDC, logs: [transferLog(USDC, USER, to as `0x${string}`, ONE_USDC)] });
+    return rpc;
+  };
+  const strictId = policy({
+    requireComplianceCheck: true,
+    allowedCountries: ["DE"],
+    minComplianceTier: 2,
+  });
+  const good = { expiresAt: NOW + 1000, country: "DE", tier: 3 };
+
+  it("checks both sides and names the side", async () => {
+    const r = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: null, [PEER]: good } }),
+    );
+    const f = r.findings.find((x) => x.code === "COMPLIANCE_NO_CREDENTIAL");
+    expect(f?.details?.side).toBe("self");
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("checks expiry, country and level of the recipient", async () => {
+    const expired = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: good, [PEER]: { ...good, expiresAt: NOW - 1 } } }),
+    );
+    expect(codes(expired)).toContain("COMPLIANCE_EXPIRED");
+
+    const elsewhere = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: good, [PEER]: { ...good, country: "FR", tier: 1 } } }),
+    );
+    expect(codes(elsewhere)).toEqual(
+      expect.arrayContaining(["COMPLIANCE_COUNTRY_DISALLOWED", "COMPLIANCE_TIER_INSUFFICIENT"]),
+    );
+  });
+
+  it("fails closed when Cleanverse does not answer", async () => {
+    const r = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: null }),
+    );
+    expect(codes(r)).toEqual(["COMPLIANCE_DATA_UNAVAILABLE"]);
+    expect(r.decision).toBe("blocked");
+  });
+});
+
+describe("loss limits", () => {
+  it("blocks a request that takes more than the loss limit", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(PEER, 60n * ONE_MON);
+    const r = await run(tx({ to: PEER, value: (60n * ONE_MON).toString() }), rpc);
+    expect(r.findings.find((f) => f.code === "ESTIMATED_LOSS_EXCEEDS_MAX")?.values.limit).toBe(
+      "50%",
+    );
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("fails closed when the balance cannot be read", async () => {
+    const rpc = new FakeRpc();
+    rpc.balanceFails = true;
+    rpc.frame = sendMon(PEER, ONE_MON);
+    const r = await run(tx({ to: PEER, value: ONE_MON.toString() }), rpc);
+    expect(codes(r)).toEqual(
+      expect.arrayContaining(["LOSS_PERCENT_UNAVAILABLE", "POST_BALANCE_UNAVAILABLE"]),
+    );
+  });
+
+  it("keeps the MON and USDC floors", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = frame({
+      to: USDC,
+      value: `0x${(99n * ONE_MON).toString(16)}`,
+      logs: [transferLog(USDC, USER, PEER, 999n * ONE_USDC)],
+    });
+    const r = await run(
+      {
+        ...tx({ to: USDC, value: (99n * ONE_MON).toString() }),
+        policy: policy({
+          maxLossPercent: null,
+          minPostNativeBalance: "5",
+          minPostUsdcBalance: "10",
+        }),
+      },
+      rpc,
+    );
+    const floors = r.findings.filter((f) => f.code === "POST_BALANCE_TOO_LOW");
+    expect(floors.map((f) => f.values.asset).sort()).toEqual(["MON", "USDC"]);
+    expect(floors.find((f) => f.values.asset === "USDC")?.values).toEqual({
+      actual: "1",
+      limit: "10",
+      asset: "USDC",
+    });
+  });
+});
+
+describe("x402 payments", () => {
+  const pay = (over: Partial<{ to: string; token: string; value: string }> = {}) => ({
+    signer: USER,
+    domain: { name: "USDC", verifyingContract: over.token ?? USDC, chainId: 10143 },
+    types: { TransferWithAuthorization: [{ name: "from", type: "address" }] },
+    primaryType: "TransferWithAuthorization",
+    message: { from: USER, to: over.to ?? SHOP, value: over.value ?? "1000000" },
+  });
+  const payment = (over: Record<string, unknown> = {}) => ({
+    origin: "https://shop.example",
+    payTo: SHOP,
+    asset: USDC,
+    amount: "1000000",
+    memo: "inv-1",
+    spendHistory: [],
+    ...over,
+  });
+
+  it("lets a payment within every rule through", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: pay(),
+      payment: payment(),
+    });
+    expect(r.findings).toEqual([]);
+    expect(r.decision).toBe("safe");
+  });
+
+  it("catches a tampered destination and asset", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy({ allowWarnings: false }),
+      typedData: pay({ to: DRAINER, token: FAKE_USDC }),
+      payment: payment(),
+    });
+    expect(codes(r)).toEqual(
+      expect.arrayContaining([
+        "X402_DESTINATION_MISMATCH",
+        "X402_ASSET_MISMATCH",
+        "X402_NON_CANONICAL_ASSET",
+      ]),
+    );
+    expect(r.findings.find((f) => f.code === "X402_ASSET_MISMATCH")?.values).toEqual({
+      expected: USDC,
+      actual: FAKE_USDC,
+    });
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("enforces the asset list, the reference and the merchant list", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy({
+        allowedAssets: [],
+        requireMemo: true,
+        allowedMerchantOrigins: ["https://other.example"],
+      }),
+      typedData: pay(),
+      payment: payment({ memo: null }),
+    });
+    expect(codes(r)).toEqual(
+      expect.arrayContaining([
+        "X402_ASSET_NOT_ALLOWED",
+        "X402_MEMO_MISSING",
+        "X402_MERCHANT_NOT_ALLOWED",
+      ]),
+    );
+  });
+
+  it("enforces caps over rolling windows", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy({ maxPerTxCap: "0.5", maxHourlyCap: "3", maxDailyCap: "4" }),
+      typedData: pay(),
+      payment: payment({
+        spendHistory: [
+          { amount: "2500000", timestamp: NOW - 600 },
+          { amount: "1000000", timestamp: NOW - 7200 },
+          { amount: "9000000", timestamp: NOW - 90_000 },
+        ],
+      }),
+    });
+    const byCode = Object.fromEntries(r.findings.map((f) => [f.code, f.values]));
+    expect(byCode.X402_PER_TX_CAP_EXCEEDED).toEqual({
+      origin: "https://shop.example",
+      actual: "1",
+      cap: "0.5",
+    });
+    expect(byCode.X402_HOURLY_CAP_EXCEEDED).toEqual({ amount: "1", actual: "3.5", cap: "3" });
+    expect(byCode.X402_DAILY_CAP_EXCEEDED).toEqual({ amount: "1", actual: "4.5", cap: "4" });
+  });
+
+  it("fails closed without spend history when a window cap is set", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: pay(),
+      payment: payment({ spendHistory: undefined }),
+    });
+    expect(codes(r)).toEqual(["X402_SPEND_HISTORY_UNAVAILABLE"]);
+    expect(r.decision).toBe("blocked");
+  });
+});
+
+describe("calldata fallback", () => {
+  it("still sees a transfer when there is no trace", async () => {
+    const data = calldata({
+      abi: KNOWN_FUNCTIONS,
+      functionName: "transfer",
+      args: [PEER, 900n * ONE_USDC],
+    });
+    const r = await run(tx({ to: USDC, data }));
+    expect(codes(r)).toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
+  });
+});
+
+afterAll(() => {
+  // Dead-code ban: every finding code is produced by at least one scenario above.
+  const missing = FINDING_CODES.filter((c) => !emitted.has(c));
+  expect(missing).toEqual([]);
+});

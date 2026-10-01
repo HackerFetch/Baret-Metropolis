@@ -73,6 +73,26 @@
 **Alternatives:** Rev 01 hard-hat-only system — rejected as too generic; Monad violet as accent — rejected (screens would read as foundation pages and fight the Blocked state).
 **Status:** ✅ Final
 
+### D-012 — RPC library: viem
+**Date:** 2026-10-01
+**Decision:** `apps/server` talks to Monad through viem (2.56.5, the version the frontend apps already pin). `packages/guard` imports neither viem nor ethers: it is Zod schemas plus a `fetch` client, so wallet UIs stay light.
+**Rationale:** One library across the monorepo; viem's typed ABI decoding (`decodeFunctionData`, `decodeEventLog`) replaces the hand-rolled selector table of the old EVM repo; the frontend already depends on it.
+**Alternative:** ethers 6 (used in the old EVM repo) — rejected, it would be a second library in the bundle.
+**Status:** ✅ Final
+
+### D-013 — PaymentGuard shape: one token, three caps, pause, payment reference
+**Date:** 2026-10-01
+**Decision:** The vault holds one token fixed at deploy; each merchant has a per-payment cap, an optional rolling 1-hour cap and a rolling 24-hour cap; merchants can be paused; `pay(merchant, amount, ref)` carries a reference; one agent signer; `withdraw` keeps `totalReserved` (sum of active daily caps). Windows are exact (per-merchant spend log, at most 128 live entries in 24 h).
+**Rationale:** Answers Meriç's three questions in `tasks/FOR_EZGIN.md`: a real pause instead of zero caps, the hourly cap enforced on-chain too so the vault and the extension speak the same rules, and the reference mirrors `requireMemo`. A single token keeps every cap in one unit.
+**Alternative:** multi-token vault per the first draft — rejected, caps would need a unit per token; bucketed (hourly) windows — rejected, inexact at the edges.
+**Status:** ✅ Final. Agent key source (Mera sub-key vs Dynamic) stays open until Week 4.
+
+### D-014 — How the policy engine decides a finding
+**Date:** 2026-10-01
+**Decision:** Every code has one of four kinds (`FINDING_SPECS`, `packages/guard/src/findings.ts`): toggle (its boolean field blocks it, otherwise it is a warning), threshold (emitted only when the rule is set and broken, so it blocks), failClosed (`*_UNAVAILABLE`, emitted only when a rule needed the data, always blocks), warning (blocks only when `allowWarnings` is off). Severity is display only. `X402_DESTINATION_MISMATCH` and `X402_ASSET_MISMATCH` stay warnings, as the copy says; under Strict they block.
+**Rationale:** Matches `policy.content.ts` field by field (a test asserts it), so no field is dead and no code is orphaned. The old repos let "critical always blocks" override the user's toggles, which made some toggles meaningless.
+**Status:** ✅ Final (revisit the two x402 mismatch codes if the demo shows they should always block)
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
@@ -81,10 +101,11 @@
 |---|---|---|---|
 | AK-1 | Will we write our own x402 facilitator or use a standard one? | `X402_FACILITATOR.md` §4.4 | To be settled in Week 4 |
 | AK-2 | Name of the x402 demo scenario (replacing the old "scrybe") | `X402_FACILITATOR.md` §6, `apps/showcase` | Week 2 |
-| AK-3 | RPC client: ethers.js or viem? | `ARCHITECTURE.md` §3 | Week 1 |
 | AK-4 | Is an additional "gated asset" demo contract needed on the Baret side for Cleanverse? | `CONTRACTS.md` §4 | Week 3 |
 | AK-6 | Whether a separate track submission is required to win the track-tagged bounties (Kuru/Agora/MetaMask plugin) | `BOUNTIES_AND_TRACKS.md` §1 | When the platform clarifies |
 | AK-7 | Best Community Team Project eligibility — confirmation of "community supporter" status | `BOUNTIES_AND_TRACKS.md` §2 row 9 | Week 4 |
+
+**Note (AK-3, resolved):** viem — see D-012.
 
 **Note (AK-8, resolved):** brand spec written as `BRAND.md` — see D-011.
 

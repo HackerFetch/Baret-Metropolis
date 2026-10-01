@@ -2,7 +2,7 @@
 
 > This document is the **target architecture** for the Baret implementation to be written from scratch for Monad Metropolis (no code yet). As code starts being written, this file must be kept in sync with the code — if a contradiction is found, the source code is treated as the authority and this file is updated.
 
-Last updated: 2026-09-13 · Status: **Design phase**
+Last updated: 2026-10-01 · Status: **`packages/guard`, the `apps/server` analysis core and both contracts are implemented and tested; Nansen/Cleanverse clients, Envio, CRE and agent-kit are not started**
 
 ---
 
@@ -95,7 +95,7 @@ baret/
 
 **Technology choices:**
 - **Fastify** — API server (TypeScript).
-- **ethers.js or viem** — Monad RPC interaction (decision: to be settled in `DECISIONS.md`).
+- **viem** — Monad RPC interaction (D-012). `packages/guard` does not import it.
 - **Zod** — env and request schema validation.
 - **Foundry** — contract development/test/deploy.
 - **React + Vite** — wallet/extension/showcase UIs.
@@ -135,27 +135,41 @@ export const CHAINS = {
 
 ## 5. Lifecycle of an Analysis Request
 
-`POST /v1/analyze` — input: `{ network, transaction, userWallet?, policy?, integratorRequestId? }`
+`POST /v1/analyze` — input (`analyzeRequestSchema` in `packages/guard/src/analyze.ts`):
+`{ network, transaction | typedData, userWallet?, policy?, payment?, integratorRequestId? }`
+
+- `transaction` is an unsigned call (`{ from, to, value, data, gas, ... }`) or a signed one (`{ raw }`).
+- `typedData` is an EIP-712 message (`eth_signTypedData_v4`): permits, Permit2, and EIP-3009 transfer authorisations (x402).
+- `policy` defaults to Balanced with the network's USDC as the only allowed payment asset.
+- `payment` is the x402 context: what the merchant's 402 asked for (`origin`, `payTo`, `asset`, `amount`, `memo`) and the `spendHistory` the hourly and daily caps need.
 
 ```
-[1] Rate limit (per IP)
-[2] Auth (API key or x402 payment — the BARET_* prefix will be used, not DELTAG_*)
-[3] Zod body validation
-     ↓  apps/server/src/application/analyze-transaction.ts
-[4]  decodeTransaction()          raw hex or {from,to,value,data} → normalized tx
-[5]  collectTouchedAddresses()    collect the touched contracts/addresses
-[6]  simulate()                   Monad RPC: call-trace via eth_call + debug_traceCall (if available)
-[7]  extractEstimatedChanges()    balance/allowance deltas (native MON + ERC-20)
-[8]  fetchReputationLabels()      Nansen API: address labels (whale/fresh/market-maker/flagged)
-[9]  readOnchainReputation()      CRE-fed reputation data from ReputationRegistry.sol
-[10] checkCompliance()            Cleanverse: CVI identity verification + CVA transfer rule
-[11] runRiskDetection()           all detectors (see §6) run in sequence, findings are merged
-[12] evaluatePolicy()             GuardPolicy is applied → Decision
-[13] generateSuggestions()        "this would be safer" suggestions
-[14] audit.record()               on-chain event to be read by the Envio indexer + (if any) local audit record
+[1] Rate limit (per IP) · [2] x-api-key when BARET_API_KEYS is set · [3] Zod body validation
+     ↓  apps/server/src/application/analyze.ts
+[4]  pin one block number; every read below is at that block
+[5]  decodeTransaction()       call request or signed raw tx → normalized tx (chain id checked)
+[6]  simulate                  eth_call + eth_estimateGas + debug_traceCall (callTracer, withLog)
+[7]  effects                   approvals, transfers, ownership changes from the trace logs;
+                               from the calldata when there is no trace or the call reverts;
+                               from the message for typed data
+[8]  addresses                 counterparties, recipients, touched contracts (eth_getCode),
+                               EIP-1967 slot of every delegatecall source, balances, token metadata
+[9]  sources                   Nansen + ReputationRegistry (reputation), Cleanverse (compliance)
+[10] detectors                 risk/detectors/*.ts, pure functions of the context (§6)
+[11] policy engine             policy/evaluate.ts: rule thresholds, then the decision (§7)
+[12] response                  validated against analyzeResponseSchema before it is sent
      ↓
-RESPONSE { safe, reasons, findingCodes, estimatedChanges, confidence, meta, suggestions }
+RESPONSE { decision, findings, firedRules, suggestions, confidence, estimatedChanges,
+           approvals, sources, expiresAt, meta }
 ```
+
+- `decision`: `safe` (no findings), `caution` (findings, none blocking), `blocked`.
+- `findings[]`: `{ code, severity, values, blocking, details? }`. Compliance findings carry `details.side` (`self` or `recipient`).
+- `firedRules[]`: `{ rule, code, limit, actual }` for every blocking finding.
+- `suggestions[]`: `{ code, values }`; today only `ERC20_APPROVAL_UNLIMITED` with the amount this same request spends.
+- `estimatedChanges[]`: the user's balance changes in base units (`before`, `after`, `delta`), MON includes the fee for the whole gas limit.
+- `sources[]`: `alchemy`, `nansen`, `reputation-registry`, `cleanverse`, each `ok`, `unavailable` or `skipped`.
+- RPC outage: HTTP 503 `rpc_unavailable`, never a verdict. The client shows "Can't reach Baret" (Blocked).
 
 ---
 
@@ -199,6 +213,17 @@ Every finding: `{ code, severity: low|medium|high|critical, values, details? }`.
 
 **The decision logic is fail-closed:** if the loss cannot be computed, if compliance data cannot be fetched, if the reputation API is unreachable → block.
 
+**How each code is decided** (`FINDING_SPECS` in `packages/guard/src/findings.ts`, tested against `policy.content.ts`):
+
+| Kind | Codes | Blocks when |
+|---|---|---|
+| toggle | `SIMULATION_FAILED`, approvals, contracts, dangerous calls, `KNOWN_MALICIOUS_ADDRESS` | its boolean field is on; otherwise it is a warning |
+| threshold | Nansen trust, compliance, gas, loss, floors, x402 assets/memo/merchant/caps | always (the emitter only fires when the rule is set and broken) |
+| failClosed | every `*_UNAVAILABLE` | always, and only emitted when a rule needed the missing data |
+| warning | `LOW_CONFIDENCE_INCOMPLETE_DATA`, `ERC20_APPROVAL_GRANTED`, fresh wallet, whale, nesting, operation count, `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH` | `allowWarnings` is off |
+
+Severity is display only; it never decides. A delegatecall from a standard EIP-1967 proxy to its own implementation is not reported (USDC is such a proxy).
+
 ---
 
 ## 8. Component Details
@@ -216,6 +241,8 @@ The entire analysis engine lives here. Endpoints:
 | GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-backed) |
 | GET/POST | `/mcp/tools`, `/mcp/call` | AI agent tools |
 | GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
+
+Implemented: `/health`, `/health/ready`, `/v1/analyze`. The other routes are not started.
 
 MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM-backed plain-language explanation — KIMI/Qwen).
 
@@ -246,24 +273,25 @@ A separate package that wraps Baret's guard/policy engine in the MetaMask Agent 
 
 ---
 
-## 9. Environment Variables (draft — `BARET_*` prefix, not `DELTAG_*`)
+## 9. Environment Variables
+
+The authoritative list is `apps/server/.env.example`, validated by `apps/server/src/config/env.ts` at start-up.
 
 | Variable | Required | Description |
 |---|---|---|
-| `MONAD_TESTNET_RPC_URL` | Yes | Alchemy Monad testnet RPC |
-| `MONAD_MAINNET_RPC_URL` | No | Alchemy Monad mainnet RPC |
-| `MONAD_TESTNET_USDC_ADDRESS` | Yes (for x402/compliance) | Real address verified during build |
-| `BARET_API_KEYS` | No | Comma-separated API keys |
-| `BARET_AUTH_MODE` | No | `api_key` / `x402` / `both` |
-| `NANSEN_API_KEY` | For the Nansen integration | |
-| `CLEANVERSE_API_KEY` / `CLEANVERSE_VALIDATOR_ADDRESS` | For the compliance detector | |
-| `X402_ENABLED` / `X402_PAY_TO` / `X402_NETWORK=eip155:10143` / `X402_FACILITATOR_URL` | For x402 | see `X402_FACILITATOR.md` |
-| `ENVIO_ENDPOINT` | For audit/dashboard | Envio HyperIndex GraphQL endpoint |
-| `DYNAMIC_ENVIRONMENT_ID` | For agent-kit | |
-| `MERA_*` | For apps/wallet | To be settled based on the Mera documentation set |
-| `QWEN_API_KEY` / `KIMI_API_KEY` | Stretch — LLM explanation/reviewer layer | |
+| `MONAD_TESTNET_RPC_URL` | Yes | Monad testnet RPC with `debug_traceCall` (Alchemy; the public RPC also traces) |
+| `MONAD_TESTNET_USDC_ADDRESS` | For USDC rules and x402 | Canonical USDC, verified on the explorer. Unset: USDC floor fails closed, default policy allows no payment asset |
+| `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` | For reputation rules | Deployed `ReputationRegistry`. Unset: rules that need it fail closed |
+| `MONAD_TESTNET_KNOWN_CONTRACTS` | No | Comma-separated contracts Baret vouches for (PaymentGuard, showcase contracts) |
+| `MONAD_MAINNET_*` | No | Same four for mainnet; mainnet is served only when its RPC URL is set |
+| `BARET_API_KEYS` | No | Comma-separated keys for `/v1` (`x-api-key`). Empty: open, development only |
+| `BARET_CORS_ORIGINS` | No | Comma-separated origins. Empty: any |
+| `BARET_RATE_LIMIT_PER_MINUTE` / `BARET_REQUEST_TIMEOUT_MS` / `BARET_VERDICT_TTL_SECONDS` | No | 120 / 8000 / 30 |
+| `NANSEN_API_KEY` | For reputation rules | Client not wired yet (Week 3) |
+| `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
+| `X402_*`, `ENVIO_ENDPOINT`, `DYNAMIC_ENVIRONMENT_ID`, `MERA_*`, `QWEN_API_KEY`, `KIMI_API_KEY` | Later | Added when their module is built |
 
-The full list will be kept in `apps/server/.env.example` as the code is written; this table must be updated as it changes.
+Contracts deploy (`contracts/script/Deploy.s.sol`): `BARET_OWNER`, `BARET_CRE_FORWARDER`, `MONAD_TESTNET_USDC_ADDRESS`, deployer key passed on the command line, never stored.
 
 ---
 
