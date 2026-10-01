@@ -1,0 +1,47 @@
+# Render Blueprint for the Baret analysis API (apps/server).
+# Render → New → Blueprint → this repo. Secrets marked `sync: false` are
+# entered in the Render dashboard, never here. See docs/DEPLOYMENT.md.
+services:
+  - type: web
+    name: baret-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    # Deploy only after the GitHub checks on the commit pass (CI is the gate).
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - apps/server/**
+        - packages/guard/**
+        - packages/content/**
+        - pnpm-lock.yaml
+        - render.yaml
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter @baret/server...
+    # Run tsx directly: `pnpm start` would re-check (and re-install) the whole
+    # workspace before every boot.
+    startCommand: cd apps/server && ./node_modules/.bin/tsx src/main.ts
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: LOG_LEVEL
+        value: info
+      - key: MONAD_TESTNET_RPC_URL
+        sync: false
+      - key: MONAD_TESTNET_USDC_ADDRESS
+        sync: false
+      - key: MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS
+        sync: false
+      - key: MONAD_TESTNET_KNOWN_CONTRACTS
+        sync: false
+      - key: BARET_API_KEYS
+        sync: false
+      - key: BARET_CORS_ORIGINS
+        sync: false
+      - key: NANSEN_API_KEY
+        sync: false
+      - key: CLEANVERSE_API_KEY
+        sync: false
+      - key: CLEANVERSE_API_URL
+        sync: false

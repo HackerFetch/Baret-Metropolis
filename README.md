@@ -18,6 +18,7 @@ This repository and this document set are meant for **live** tracking. They were
 | Apps | `showcase`, `wallet`, `extension` build. Pages render copy; most are not designed |
 | Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
 | Contract deploy | None |
+| Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |
 | Week | 3 / 6 (backend is a week behind: Week 2 core done, Week 3 integrations next) |
 
 Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
@@ -39,6 +40,7 @@ Update this table at every major phase transition (when the repo is created, on 
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6-week calendar, weekly checklist, progress | Update at the start/end of every week |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architecture/scope decisions taken and their rationale (ADR log) | Check here first before taking a new decision, then add it |
 | [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Comparative review of the 5 previous Baret versions (EVM, Stellar, Casper, Midnight, OKX): what gets reused, which mistakes are not repeated | Read the relevant section before starting to write a module |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel (showcase, wallet) + Render (API) setup, the CI/CD pipeline, running it locally | Before touching `ci.yml`, `render.yaml`, `vercel.json` or deploying |
 | [`docs/BRAND.md`](docs/BRAND.md) | Brand spec BK-001 Rev 02: lockout/tagout identity, mark, tag device, palette, type, imagery brief, voice | Before touching any UI, marketing page or generated asset |
 
 ---
