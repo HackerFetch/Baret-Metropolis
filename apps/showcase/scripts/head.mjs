@@ -9,9 +9,11 @@
  * nodes marked `data-static-head` before React mounts, which leaves the
  * per-route <title> and description in RootLayout as the only ones.
  *
- * The site URL is the `BARET_SITE_URL` env. No domain is chosen yet: without
- * it the canonical and og:url are left out, og:image stays relative (preview
- * bots then show no image) and the build prints one warning.
+ * The site URL is the `BARET_SITE_URL` env, or on Vercel the project's
+ * production domain (`VERCEL_PROJECT_PRODUCTION_URL`). Without either, the
+ * canonical and og:url are left out, og:image stays relative (preview bots
+ * then show no image) and the build prints one warning; only a Vercel
+ * production build or `BARET_REQUIRE_SITE_URL=1` turns that into an error.
  *
  * Wire it in vite.config.ts: `plugins: [baretHead(), ...]`.
  */
@@ -105,7 +107,11 @@ export function baretHead() {
     name: "baret-head",
     configResolved(config) {
       const env = loadEnv(config.mode, config.envDir ?? config.root, "BARET_");
-      site = (env.BARET_SITE_URL ?? process.env.BARET_SITE_URL ?? "").replace(/\/+$/, "");
+      // Vercel sets VERCEL_PROJECT_PRODUCTION_URL (a bare host) on every build,
+      // so a Vercel deploy gets its production domain without extra config.
+      const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+      const vercelSite = vercelHost ? `https://${vercelHost}` : "";
+      site = (env.BARET_SITE_URL || process.env.BARET_SITE_URL || vercelSite).replace(/\/+$/, "");
       outDir = resolve(config.root, config.build.outDir);
       routesFile = resolve(config.root, "src/routes.ts");
       isBuild = config.command === "build";
@@ -114,11 +120,15 @@ export function baretHead() {
       }
       if (isBuild && !site) {
         // A deploy without it ships no sitemap, no canonical and an og:image
-        // most unfurlers reject. CI (or BARET_REQUIRE_SITE_URL=1) fails the
-        // build; a local build gets a banner it cannot miss.
+        // most unfurlers reject. Only a build that is about to be deployed
+        // fails: a Vercel production build, or BARET_REQUIRE_SITE_URL=1. A CI
+        // build only proves the app compiles, so it gets the same banner a
+        // local build gets.
         const msg =
           "baret-head: BARET_SITE_URL is not set. This build has NO sitemap.xml, NO canonical/og:url and a RELATIVE og:image. Do not deploy it; set BARET_SITE_URL=https://<domain> and rebuild.";
-        if (process.env.CI || process.env.BARET_REQUIRE_SITE_URL) throw new Error(msg);
+        const deploying =
+          process.env.VERCEL_ENV === "production" || Boolean(process.env.BARET_REQUIRE_SITE_URL);
+        if (deploying) throw new Error(msg);
         const bar = "!".repeat(72);
         config.logger.warn(`\n${bar}\n${msg}\n${bar}\n`);
       }
