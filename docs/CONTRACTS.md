@@ -2,7 +2,7 @@
 
 > Design of the contracts to be deployed to Monad testnet/mainnet with Foundry. Before code is written, this file is used as the spec; after deployment the address table is filled in and this file is kept up to date.
 
-Last updated: 2026-10-01 · Status: **Both contracts written and tested (`forge test`: 26 passing, incl. fuzz + invariants). Not deployed yet**
+Last updated: 2026-10-01 · Status: **Both contracts deployed to Monad testnet on 2026-10-02 and source-verified (Sourcify exact match). 26 forge tests passing**
 
 ---
 
@@ -70,11 +70,14 @@ event Withdrawn(address indexed token, uint256 amount);
 ### 2.5 Mera Integration Note
 The address passed to `setAgentSigner` is the address of a **sub-key** derived from Mera's PRF-derived key material — the owner's main passkey never enters this flow. This is the exact match for Mera's "One Passkey, Many Keys" bounty ("most creative non-wallet use of Mera's PRF-derived key material"). The detailed design will be settled after reading the Mera guide in `docs/RESOURCES.md` — to be added to `DECISIONS.md`.
 
-### 2.6 Deployment Table (to be filled in after deployment)
+### 2.6 Deployment Table
+
+The testnet vault is Baret's own demo and test vault: its owner is the deploy key, which lives only on Ezgin's machine (`~/.baret/deployer.key`, never committed). Users get their own vaults from the wallet app later; `owner` is immutable, so this instance never changes hands. The deploy record is `contracts/broadcast/Deploy.s.sol/10143/run-latest.json` (start blocks for the Envio indexer).
+
 
 | Network | Address | Token (USDC) | Owner | Deploy date | Deployer |
 |---|---|---|---|---|---|
-| Monad testnet (10143) | _(empty)_ | _(empty)_ | _(empty)_ | — | — |
+| Monad testnet (10143) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) | USDC `0x534b2f3A21130d7a60830c2Df862319e593943A3` (6 decimals, checked on-chain) | `0x5aE13F1028144842f0384d09091067D6184F8197` (deployer) | 2026-10-02, block 67604750 | `0x5aE13F1028144842f0384d09091067D6184F8197` |
 | Monad mainnet (143) | _(empty)_ | _(empty)_ | _(empty)_ | — | — |
 
 ---
@@ -110,7 +113,7 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 | Network | Address | Forwarder (CRE) | Deploy date |
 |---|---|---|---|
-| Monad testnet (10143) | _(empty)_ | _(empty)_ | — |
+| Monad testnet (10143) | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) | `0x5aE13F1028144842f0384d09091067D6184F8197` (deployer, until the CRE forwarder exists) | 2026-10-02, block 67604757 |
 
 ---
 
@@ -126,7 +129,7 @@ Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the s
 - [x] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
 - [x] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
 - [ ] With Tenderly: the trace of a real "unlimited approve" and "payment to a flagged address" scenario is recorded (for the demo video).
-- [ ] After deploying to testnet: live verification with `cast call`, the address tables (§2.6, §3.4) are filled in.
+- [x] After deploying to testnet: live verification with `cast call`, the address tables (§2.6, §3.4) are filled in. Source verified on Monad's Sourcify (`forge verify-contract --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org`).
 
 ---
 
