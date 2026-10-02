@@ -40,13 +40,15 @@ The mark is a hard hat reduced to three cuts: **dome, visor, brim**. The visor s
 
 ## 03 · Tag (signature device)
 
-A safety tag: a card with a punched eyelet, a chamfered corner so it does not snag, and a colored edge that reads from across the site. Baret's verdicts, pills, buttons, section markers and callouts are all tags. The tag makes a Baret screen recognizable at thumbnail size before the logo is visible.
+A safety tag: a card with a chamfered corner so it does not snag and a colored edge that reads from across the site. Baret's verdicts, pills, buttons, section markers and callouts are all tags. The tag makes a Baret screen recognizable at thumbnail size before the logo is visible.
 
-**Anatomy:** edge 4 px carrying the state color · eyelet ring 10 px at 55% opacity (decorative but mandatory) · chamfer top-right 9–10 px · paper Manila `#F3EFE4` light / `#2A2620` dark · text Big Shoulders Display 800, uppercase, +6% tracking.
+**Anatomy:** edge 4 px carrying the state color · no eyelet ring (the `eyelet` prop exists but is off by default; the edge and the chamfer carry the tag) · chamfer top-right 9–10 px · paper Manila `#F3EFE4` light / `#2A2620` dark · text Big Shoulders Display 800, uppercase, +6% tracking.
 
 **States:** Safe (green) · Caution (amber) · Blocked (red) · Can't reach Baret (ink, neutral) · Watching (teal) · Monad (violet, network only) · Brand (orange paper, ink edge).
 
-**Where:** verdict block of every sign request · allowance status on merchant cards · section markers on showcase and docs · network pill · "Rev" stamp · buttons (primary and ghost buttons are tags without an eyelet).
+**Tag text in the light theme** uses a darker ink of the state colour (`--safe-ink`, `--caution-ink`, `--blocked-ink`, `--watching-ink`, `--network-ink`) so it passes AA on manila. The edge, dots and fills keep the state colour. The dark theme uses the state colour for both.
+
+**Where:** verdict block of every sign request · allowance status on merchant cards · section markers on showcase and docs · network pill · "Rev" stamp · buttons (primary and ghost buttons are tags too).
 
 ---
 
@@ -93,6 +95,8 @@ Google Fonts in dev, self-hosted woff2 in production, Latin Extended subset.
 
 **Rule:** one screen, one stencil. The most important number or word is set in Stencil at display-xl or larger; nothing else on that screen may use it.
 
+**Caps and protocol names:** headlines are set in caps, but a lowercase protocol name such as `x402` keeps its canonical lowercase in a heading too. `TextReveal` takes a `keepCase` list and wraps each listed token in a `normal-case` span (the landing Agents heading passes `["x402"]`). Body copy and the copy source always write the lowercase form.
+
 ---
 
 ## 06 · Grid, corners, layout
@@ -131,7 +135,30 @@ Google Fonts in dev, self-hosted woff2 in production, Latin Extended subset.
 | Live pulse | 1600 ms loop | opacity .4 → 1 → .4 |
 | Sheet slide | 260 ms | cubic-bezier(.32, .72, 0, 1) |
 
-No bounce, no overshoot, no loops except pulse and spinner, no marquee in the product; `prefers-reduced-motion` collapses everything to instant swaps.
+No bounce, no overshoot, no loops except pulse and spinner, no marquee in the product; `prefers-reduced-motion` collapses everything to instant swaps. The landing adds its own signature layer below; none of it reaches the product surfaces.
+
+**Landing (marketing only, `apps/showcase` `/`):**
+
+| Pattern | Duration | Curve |
+|---|---|---|
+| Surface enter (landing) | 460 ms, siblings 60 ms apart | cubic-bezier(.22, 1, .36, 1), 14 px rise, once; matches the heading reveal. A count-up inside a tile starts about 300 ms after its tile begins |
+| Rule draw | 600 ms | cubic-bezier(.22, 1, .36, 1), scale from the start edge, once |
+| Opener | 480 ms frame crossfade; line swap 160 / 240 ms | discrete frame swap on scroll steps, ease-out-soft |
+| Scroll-linked only | follows the scroll | marquee rows, track wipe, parallax at most 4 % each way, sticky photo window |
+
+The landing marquee moves with scroll, never on its own. The closing clip plays once and holds, with a pause control.
+
+**Landing signature layer (owner-approved 2026-10-01).** Six effects, on the landing only, each with a full reduced-motion fallback. Still no gradients, no glass, no glows, no self-running demos, one orange signal per viewport.
+
+| Effect | Values | Reduced motion / touch |
+|---|---|---|
+| Smooth scroll | Lenis, wheel and trackpad only, `lerp` 0.1 (about 0.5 s ease-out, no overshoot); same-page `#hash` links glide 1.1 s on expo-out and respect the 56 px header. Runs inside Motion's frame loop, native window scroll kept. No CSS `scroll-behavior: smooth`. | Off under reduced motion; touch keeps native scrolling. |
+| Parallax | Photo drifts at most 4 % of its box each way against the scroll (half on phones); hero 3.5 % plus a settle from 1.04x. Opener frames settle once from 1.035x over 2.4 s, then hold. Transform only. | Static. |
+| Text reveal | Section headings and the hero H1: each word rises out of its own mask, 560 ms on cubic-bezier(.22, 1, .36, 1), 45 ms apart, whole heading inside 760 ms, once on entering view. The real text is the element's accessible name; the pieces are `aria-hidden`. | Plain text, present from the start. |
+| Eyelet cursor | 6 px dot on the hotspot plus a 32 px ring (the tag's eyelet) on an over-damped spring; over copy a 2 x 20 caret, over a control the ring opens to 48 px in orange. Form fields keep the native caret. Never covers focus rings or selection. | Native cursor under reduced motion, on touch and on any coarse or non-hovering pointer. |
+| WebGL hero | WebGL2 layer that repeats the hero photo pixel for pixel: a static mono grain (0.035, fixed seed, it does not crawl), a pointer lean of at most 5 px (fine pointers only), and one 2 px scan rule in true orange, drawn above the hero's flat 35 % graphite veil, that crosses once in 1.4 s and never repeats. The pass starts right of the copy once the hero is 75 % in view and the scroll has been at rest for 250 ms. The WebGL code is a separate chunk loaded with `import()` only when the hero is within one viewport, after the image decodes and the browser is idle; DPR capped at 1.5; the render loop is idle at rest and paused off-screen and in a hidden tab. The `<img>` underneath stays the LCP and the fallback. | Not started; the static photo shows. |
+| Bento grid | The "Reads it. Caps it. Watches it." block: three feature tiles (Pre-sign tall, Ledger, Monitor in graphite) plus four stat tiles. Square, 1 px rule borders, no shadows. Hover: border to `--fg` 240 ms, image scale 1.025 over 600 ms. Stats count up once in 600 ms. | No hover scale, final numbers. |
+
 
 **Icons:** Lucide, stroke 1.5 px, sizes 12 / 16 / 20 / 24, `currentColor`. No filled icons except the mark and state dots. Recurring: HardHat, Tag, ShieldOff (blocked), Activity, Send, Download, Key, Lock, Globe, AlertTriangle, ChevronRight.
 
@@ -161,7 +188,8 @@ Say what happened. Say what you can do. Stop.
 - **Sign request:** origin chip + network tag, action verb in display, verdict tag block (Safe / Caution / Blocked / Can't reach Baret), "What changes" rows in mono, countdown, Decline + primary. On Blocked the primary is disabled; override is a separate, deliberate, logged step. Same component in the popup, the standalone wallet and the landing hero.
 - **Share image 1200 × 630:** concrete ground with 40 px grid, lockup centered, one orange bar on the bottom edge. Same for store listing and demo video end card.
 - **Extension icon 16 / 32 / 48 / 128:** ink mark on a square orange plate, no rounding.
-- **Section markers:** numbered tags replace icons; the active one is orange.
+- **Section markers:** none. A heading carries a section; no numbers, no eyebrow labels above headings.
+- **Site header:** an opaque plate that takes the colour of the band beneath it (graphite over a dark band, the ground elsewhere); never translucent.
 
 ---
 
@@ -173,6 +201,6 @@ Every text token meets WCAG AA on its surface; faint text only at ≤ 12 px · f
 
 ## 12 · Implementation home
 
-Tokens `packages/ui/src/tokens.css` · mark `packages/ui/src/brand/Mark.tsx` · tag `packages/ui/src/primitives/Tag.tsx` · primitives `packages/ui/src/primitives/` (Button, Tag, Card, Meter, Input, Dialog, Sheet) · showcase-only pieces `packages/showcase-ui` · generated imagery delivered as WebP, long edge capped at 1536 px, to `apps/showcase/public/assets/`, `apps/wallet/public/assets/` and `apps/extension/public/assets/`, one folder per prompt group (`brand/`, `landing/`, `showcase/`, `agents/`, `docs/`, `install/`, `social/`, `wallet/`, `extension/`) under the prompt ID as file name (`landing/l-01.webp`). The wallet and the extension carry their own copies of the marks they use (`brand/m-01.webp`, `brand/m-10.webp`). Motion clips live in `apps/showcase/public/assets/video/` as WebM (VP9, 1280 × 576, 24 fps, no audio).
+Tokens `packages/ui/src/tokens.css` · mark `packages/ui/src/brand/Mark.tsx` · tag `packages/ui/src/primitives/Tag.tsx` · primitives `packages/ui/src/primitives/` (Button, Tag, Card, Meter, Input, Dialog, Sheet) · showcase-only pieces `packages/showcase-ui` · generated imagery delivered as WebP, long edge capped at 1536 px, to `apps/showcase/public/assets/`, `apps/wallet/public/assets/` and `apps/extension/public/assets/`, one folder per prompt group (`brand/`, `landing/`, `showcase/`, `agents/`, `docs/`, `install/`, `social/`, `wallet/`, `extension/`) under the prompt ID as file name (`landing/l-01.webp`). The wallet and the extension carry their own copies of the marks they use (`brand/m-01.webp`, `brand/m-10.webp`). Motion clips live in `apps/showcase/public/assets/video/` as WebM (VP9 CRF 24 capped at 3 Mbps, 1280 × 576 (20:9), 24 fps, no audio, light film grain so the frame reads as grain rather than blur), each with an H.264 MP4 fallback (CRF 18, at least 2 Mbps) of the same name for browsers without VP9, plus a poster and a still (`v-01-cta.webm`, `v-01-cta.mp4`, `v-01-cta-poster.webp`, `v-01-cta-still.webp`).
 
 When in doubt, the sentence at the top outranks any rule below it: **Calm. Technical. Candid.**
