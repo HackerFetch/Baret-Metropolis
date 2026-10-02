@@ -17,7 +17,7 @@ This repository and this document set are meant for **live** tracking. They were
 | Design system | 37 components in `packages/ui` |
 | Apps | `showcase`, `wallet`, `extension` build. Pages render copy; most are not designed |
 | Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
-| Contract deploy | None |
+| Contract deploy | Monad testnet, 2026-10-02: PaymentGuard `0x0A82671420114E47c672D5e8e23017DdCE850A35`, ReputationRegistry `0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411` (source verified) — `docs/CONTRACTS.md` |
 | Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |
 | Week | 3 / 6 (backend is a week behind: Week 2 core done, Week 3 integrations next) |
 
