@@ -18,7 +18,7 @@ Last updated: 2026-10-01 · Currently: **Week 3** (backend caught up to the end 
 - [x] New git repo created (clean history, commits starting today)
 - [x] pnpm workspace skeleton (`apps/`, `packages/`, `contracts/`; `workflows/` and `indexer/` come with their modules)
 - [ ] Monad testnet RPC (Alchemy) + sponsor perks claimed (Tenderly, QuickNode, Zerion) — see `RESOURCES.md` §1
-- [ ] `contracts/PaymentGuard.sol` written, tested, deployed to Monad testnet — `CONTRACTS.md` §2.6 filled in (written + tested; deploy waits for a funded deployer key)
+- [x] `contracts/PaymentGuard.sol` written, tested, deployed to Monad testnet — `CONTRACTS.md` §2.6 filled in (2026-10-02, with ReputationRegistry)
 - [ ] **Milestone demo:** catch and block a single risky transaction end to end (CLI level is enough)
 
 **Notes:** Backend started late (2026-10-01). Server answers `/health/ready` and traces a transaction against the public Monad testnet RPC. CLI milestone demo: `curl` against `/v1/analyze`.
