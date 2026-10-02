@@ -63,7 +63,11 @@ export function Faq(): JSX.Element {
     <section className={`${FRAME} pb-16 lg:pb-24`}>
       <div className="max-w-[760px] border-t border-[color:var(--rule)]">
         {site.faq.map((item) => (
-          <details key={item.question} className="group border-b border-[color:var(--rule)]">
+          <details
+            key={item.question}
+            name="novaswap-faq"
+            className="group border-b border-[color:var(--rule)]"
+          >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-lg font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
               {item.question}
               <span
