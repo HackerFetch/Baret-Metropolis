@@ -2,7 +2,7 @@
 
 > **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
-Last updated: 2026-10-01 (landing simplified to 8 blocks) · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
+Last updated: 2026-10-02 (shared layer on every route, dApp palettes, NovaSwap) · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
 This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites**, **Agents**, **Docs**, **Install**.
 
@@ -72,6 +72,14 @@ The stats strip (`home.stats`), the comparison (`home.comparison`), the privacy 
 ## 2. Showcase Hub Page
 
 **Purpose:** "The proving ground." Six fake-but-real dApps, each wired to a different attack pattern.
+
+| Surface | Status | Where |
+|---|---|---|
+| Shared layer on every route | **Done** (2026-10-02): `RootLayout` mounts `LandingMotion`, Lenis and the eyelet cursor once for every page, so the demo sites get the landing's fonts, motion and cursor. The landing's shared modules moved from `landing/shared` to `src/shared`. | `apps/showcase/src/layouts/RootLayout.tsx`, `apps/showcase/src/shared/` |
+| Six dApp palettes | **Done** (2026-10-02): each site changes only its palette. `DappTheme` sets `data-dapp="<slug>"` on its wrapper and on `<html>`, and `dapp-themes.css` re-declares the ground, surface, text, rule and accent tokens for light, OS-dark and explicit dark. State colours (safe, caution, blocked) are never re-themed. Anything inside `data-scope="baret"` (the demo strip, Baret's panel, the "Demo site" ribbon) keeps Baret's palette, as the real extension would. `themes.test.ts` checks every block. | `apps/showcase/src/sites/theme/` |
+| Demo kit | **Done** (2026-10-02), frontend only: the Baret strip (honest/attack switch), the Baret panel (a right-hand sheet that walks the four analysis phases at 160 ms each, then shows the expected verdict, the ask, findings, what changes, the site's claims against Baret's checks, and "Nothing was signed") and the sample-check hook. Results are prepared samples in the `SampleResult` shape, modelled on `AnalyzeResponse` in `packages/guard`, so a live source can replace them later. Every panel label comes from `hub.frame`, `shared/findings`, `wallet/sign` and `common.verdicts`. | `apps/showcase/src/sites/kit/` |
+| `/novaswap` | **Built** (2026-10-02), frontend only: cobalt on steel. Header with a fake connect, hero with the swap form (amount input with Max, balance and "too much" errors, live quote at the fixed 3.2 test rate), stats, two feature blocks with s-04, FAQ, footer. "Review swap" opens Baret's panel: honest = Safe (s-05), attack = Blocked by the reported look-alike router that differs by one character (s-06). No wallet, contract or server call. Open: connect the live analysis once the demo routers are deployed. | `apps/showcase/src/sites/novaswap/`, `NovaSwapPage.tsx` |
+| The other five sites | Not started: they still render the older `DemoSite` shell; one PR each. | `apps/showcase/src/sites/DemoSite.tsx` |
 
 ### 2.1 Hero
 Headline: **"Six dApps. Six threats. One signature you never made."** Description: "Every site below looks production-ready and behaves like the real thing. Connect a wallet, press a button, and watch Baret catch the attack in plain language — before your keys ever sign." CTAs: "See the scenarios", "Install the wallet", "Read the Docs". A live "ticker" line rotates through different threat types in turn: "wallet drainers", "unlimited approvals", "rug-pull patterns", "silent agent drift", "look-alike assets", "hidden contract calls".

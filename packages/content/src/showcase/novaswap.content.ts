@@ -59,6 +59,9 @@ export const novaswap = {
     brand: "NovaSwap",
     hostname: "novaswap.example",
     nav: ["Swap", "Pools", "Stats", "Docs"],
+    /** The fake site's wallet control. The demo never asks a real wallet:
+     *  pressing it fills in a sample address. */
+    connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "No allowance needed for MON",
       title: "Swap MON for USDC in one step",
@@ -77,6 +80,12 @@ export const novaswap = {
       ],
       cta: "Review swap",
       note: "Quotes on Monad testnet use a fixed test rate, not a market price.",
+      balance: "Balance",
+      max: "Max",
+      errors: {
+        empty: "Enter an amount of MON.",
+        tooHigh: "That is more MON than this wallet holds.",
+      },
     },
     stats: [
       { value: "$4.2M", label: "24h volume" },

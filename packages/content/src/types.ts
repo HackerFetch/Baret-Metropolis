@@ -122,6 +122,8 @@ export interface ScenarioSite {
     /** A made-up hostname on the reserved .example domain. Never a real one. */
     hostname: string;
     nav: readonly string[];
+    /** The fake site's wallet control. Pressing it fills in a sample address. */
+    connect?: { label: string; connected: string };
     hero: { badge: string; title: string; body: string; cta: string };
     /** The main card: the swap form, the mint box, the question box. */
     panel: {
@@ -131,6 +133,12 @@ export interface ScenarioSite {
       rows: readonly { label: string; value: string }[];
       cta: string;
       note: string;
+      /** Label for the wallet balance shown next to the input. */
+      balance?: string;
+      /** The control that fills the whole balance. */
+      max?: string;
+      /** Validation messages for the card's one input. */
+      errors?: { empty: string; tooHigh: string };
     };
     stats: readonly { value: string; label: string }[];
     sections: readonly Block[];
