@@ -12,7 +12,11 @@ import type { Sources } from "./types.js";
 export function createSources(config: AppConfig, network: NetworkConfig): Sources {
   return {
     nansen: config.nansenApiKey
-      ? new NansenHttpSource({ apiKey: config.nansenApiKey, timeoutMs: config.requestTimeoutMs })
+      ? new NansenHttpSource({
+          apiKey: config.nansenApiKey,
+          mode: config.nansenMode,
+          timeoutMs: config.requestTimeoutMs,
+        })
       : null,
     registry: network.reputationRegistryAddress
       ? new OnchainRegistrySource(

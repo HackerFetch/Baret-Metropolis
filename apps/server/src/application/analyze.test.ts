@@ -270,15 +270,51 @@ describe("reputation", () => {
     });
   });
 
-  it("fails closed when a source the rules need does not answer", async () => {
+  it("fails closed when the registry, which the blocklist rules need, does not answer", async () => {
     const r = await run(
       tx({ to: PEER, value: "1" }),
       new FakeRpc(),
-      cleanSources({ nansen: null }),
+      cleanSources({ registry: null }),
     );
     expect(r.decision).toBe("blocked");
-    expect(r.firedRules[0]?.code).toBe("REPUTATION_DATA_UNAVAILABLE");
-    expect(r.sources.find((s) => s.name === "nansen")?.status).toBe("unavailable");
+    expect(r.firedRules[0]).toMatchObject({
+      code: "REPUTATION_DATA_UNAVAILABLE",
+      rule: "blockKnownMalicious",
+    });
+    expect(r.sources.find((s) => s.name === "reputation-registry")?.status).toBe("unavailable");
+  });
+
+  it("does not need Nansen for the blocklist rules, only for the trust level rule", async () => {
+    const noNansen = cleanSources({ nansen: null });
+    const balanced = await run(tx({ to: PEER, value: "1" }), new FakeRpc(), noNansen);
+    expect(codes(balanced)).not.toContain("REPUTATION_DATA_UNAVAILABLE");
+
+    const strictTrust = await run(
+      { ...tx({ to: PEER, value: "1" }), policy: policy({ minNansenTrustLevel: "established" }) },
+      new FakeRpc(),
+      noNansen,
+    );
+    expect(strictTrust.firedRules[0]).toMatchObject({
+      code: "REPUTATION_DATA_UNAVAILABLE",
+      rule: "minNansenTrustLevel",
+    });
+  });
+
+  it("asks Nansen about wallets, not contracts", async () => {
+    const asked: string[] = [];
+    const sources = cleanSources();
+    const nansen = sources.nansen;
+    sources.nansen = nansen && {
+      lookup: async (as) => {
+        asked.push(...as);
+        return nansen.lookup(as);
+      },
+    };
+    const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
+    rpc.frame = frame({ to: DAPP, logs: [transferLog(USDC, USER, PEER, ONE_USDC)] });
+    await run(tx({ to: DAPP }), rpc, sources);
+    expect(asked).toEqual([PEER]);
   });
 
   it("does not need reputation when no rule asks for it", async () => {

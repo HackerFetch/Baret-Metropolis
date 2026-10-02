@@ -57,6 +57,11 @@ const envSchema = z.object({
   BARET_VERDICT_TTL_SECONDS: z.coerce.number().int().positive().default(30),
 
   NANSEN_API_KEY: z.string().optional(),
+  /**
+   * funder: first-funder lookups, 1 credit each (fits the free plan).
+   * labels: Profiler labels, 100 credits each (needs a paid plan or granted credits).
+   */
+  NANSEN_MODE: z.enum(["funder", "labels"]).default("funder"),
   CLEANVERSE_API_KEY: z.string().optional(),
   CLEANVERSE_API_URL: z.string().url().optional(),
 });
@@ -83,6 +88,7 @@ export interface AppConfig {
   requestTimeoutMs: number;
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
+  nansenMode: "funder" | "labels";
   cleanverse: { apiKey: string; apiUrl: string } | null;
 }
 
@@ -126,6 +132,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     requestTimeoutMs: e.BARET_REQUEST_TIMEOUT_MS,
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,
+    nansenMode: e.NANSEN_MODE,
     cleanverse:
       e.CLEANVERSE_API_KEY && e.CLEANVERSE_API_URL
         ? { apiKey: e.CLEANVERSE_API_KEY, apiUrl: e.CLEANVERSE_API_URL }

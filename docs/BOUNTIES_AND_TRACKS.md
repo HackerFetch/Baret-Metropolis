@@ -25,7 +25,7 @@ Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulle
 | # | Bounty | Sponsor | Amount | Track | How to win | Responsible component | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | Main track prize | Monad Foundation | $30,000 | Trust/Identity/AI | Product completeness + demo quality | Whole project | ⬜ Not started |
-| 2 | Best use of Nansen | Nansen AI | $5,000 (pool) | All tracks | The `reputation.ts` detector performs address segmentation via the Nansen API/CLI/MCP (whale/fresh/market-maker/public figure) — the segment is shown, not a raw score | `apps/server/src/risk/detectors/reputation.ts` | 🔶 In progress — client + detector done (D-016), waiting for the API key on Render |
+| 2 | Best use of Nansen | Nansen AI | $5,000 (pool) | All tracks | The `reputation.ts` detector performs address segmentation via the Nansen API/CLI/MCP (whale/fresh/market-maker/public figure) — the segment is shown, not a raw score | `apps/server/src/risk/detectors/reputation.ts` | 🔶 In progress — client + detector done (D-016, D-017: free-plan first-funder mode), waiting for the API key on Render; credits requested from Nansen |
 | 3 | Best Use of Dynamic | Dynamic | $5,000 | All tracks | Autonomous/server wallet + delegated permission model inside `agent-kit` — NOT login-only | `packages/agent-kit` | ⬜ Not started |
 | 4 | Best Mera-Powered UX on Monad | Monad Foundation | $2,500 | All tracks | `apps/wallet` is entirely a Mera passkey account layer — no seed phrase | `apps/wallet` | ⬜ Not started |
 | 5 | Mera: One Passkey, Many Keys | Monad Foundation | $2,500 | All tracks | PaymentGuard's agent signer comes from a Mera PRF-derived sub-key (non-wallet, creative use) | `apps/wallet` + `contracts/PaymentGuard.sol` | ⬜ Not started |

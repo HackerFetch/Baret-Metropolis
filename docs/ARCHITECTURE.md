@@ -287,7 +287,7 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `BARET_API_KEYS` | No | Comma-separated keys for `/v1` (`x-api-key`). Empty: open, development only |
 | `BARET_CORS_ORIGINS` | No | Comma-separated origins. Empty: any |
 | `BARET_RATE_LIMIT_PER_MINUTE` / `BARET_REQUEST_TIMEOUT_MS` / `BARET_VERDICT_TTL_SECONDS` | No | 120 / 8000 / 30 |
-| `NANSEN_API_KEY` | For reputation rules | `sources/nansen.ts`: Profiler `POST /api/v1/profiler/address/labels`, `chain: "monad"`, header `apikey`. Unset: every rule that needs Nansen fails closed |
+| `NANSEN_API_KEY` / `NANSEN_MODE` | For the trust-level rule; adds to the blocklist | `sources/nansen.ts` (D-016, D-017). `funder` (default): `profiler/address/first-funder`, 1 credit per wallet. `labels`: `profiler/address/labels`, 100 credits. Unset: only `minNansenTrustLevel` above `new` fails closed |
 | `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
 | `X402_*`, `ENVIO_ENDPOINT`, `DYNAMIC_ENVIRONMENT_ID`, `MERA_*`, `QWEN_API_KEY`, `KIMI_API_KEY` | Later | Added when their module is built |
 
