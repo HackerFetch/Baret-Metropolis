@@ -23,7 +23,7 @@ export function Component() {
         </div>
       </header>
 
-      <Section id="scenarios" index="01" eyebrow="Scenarios" title="Pick one.">
+      <Section id="scenarios" title="Pick one.">
         <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
           {SCENARIOS.map((scenario) => (
             <Panel key={scenario.slug}>
@@ -67,13 +67,10 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="02" eyebrow="Method" title={hub.steps.title} deep>
+      <Section title={hub.steps.title} deep>
         <ol className="grid gap-3.5 md:grid-cols-4">
-          {hub.steps.items.map((step, i) => (
+          {hub.steps.items.map((step) => (
             <Panel key={step.title}>
-              <span className="font-display text-4xl leading-none text-[color:var(--accent)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
               <h3 className="text-display-m">{step.title}</h3>
               <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
             </Panel>
@@ -81,13 +78,7 @@ export function Component() {
         </ol>
       </Section>
 
-      <Section
-        index="03"
-        eyebrow={hub.detectors.eyebrow}
-        title={hub.detectors.title}
-        body={hub.detectors.body}
-        className="border-b-0"
-      >
+      <Section title={hub.detectors.title} body={hub.detectors.body} className="border-b-0">
         <Panel className="max-w-[70ch]">
           <h3 className="text-display-m">{hub.comparison.title}</h3>
           <p className="text-sm text-[color:var(--fg-muted)]">{hub.comparison.body}</p>
@@ -100,6 +91,6 @@ export function Component() {
 function verdictTone(verdict: string) {
   if (verdict === "blocked") return "blocked" as const;
   if (verdict === "caution") return "caution" as const;
-  if (verdict === "capped") return "watching" as const;
+  if (verdict === "capped") return "blocked" as const;
   return "safe" as const;
 }

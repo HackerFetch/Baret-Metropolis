@@ -34,8 +34,6 @@ import { Section } from "../components/Section.js";
 export function Component() {
   return (
     <>
-      <title>Baret kit</title>
-
       <header className="grid-paper border-b border-[color:var(--rule)]">
         <div className="mx-auto grid w-full max-w-[1180px] gap-4 px-5 py-12">
           <Tag tone="brand" size="sm">
@@ -49,7 +47,7 @@ export function Component() {
         </div>
       </header>
 
-      <Section index="01" eyebrow="Brand" title="Mark and tags">
+      <Section title="Mark and tags">
         <div className="grid gap-3.5 md:grid-cols-2">
           <Panel>
             <Label>Mark</Label>
@@ -87,7 +85,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="02" eyebrow="Actions" title="Buttons" deep>
+      <Section title="Buttons" deep>
         <Panel>
           <Label>Variants</Label>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -108,7 +106,7 @@ export function Component() {
         </Panel>
       </Section>
 
-      <Section index="03" eyebrow="The product" title="Verdicts and findings">
+      <Section title="Verdicts and findings">
         <div className="grid gap-3.5 lg:grid-cols-2">
           <div className="grid gap-3.5">
             <Verdict kind="safe" label="Safe to sign" body="Nothing here breaks a rule you set." />
@@ -147,7 +145,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="04" eyebrow="Data" title="Amounts, addresses, caps" deep>
+      <Section title="Amounts, addresses, caps" deep>
         <div className="grid gap-3.5 md:grid-cols-3">
           <Panel>
             <Label>What changes</Label>
@@ -190,7 +188,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="05" eyebrow="Controls" title="Forms and states">
+      <Section title="Forms and states">
         <div className="grid gap-3.5 md:grid-cols-2">
           <Panel>
             <Label>Rules</Label>
