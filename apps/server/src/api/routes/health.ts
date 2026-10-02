@@ -1,9 +1,25 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
 import { ANALYSIS_VERSION } from "../../application/analyze.js";
+import type { NetworkConfig } from "../../config/env.js";
+
+/**
+ * Which optional settings a network has. Booleans and counts only: never a
+ * URL, key or address, so this is safe on an open endpoint.
+ */
+function configured(n: NetworkConfig) {
+  return {
+    usdc: n.usdcAddress !== null,
+    reputationRegistry: n.reputationRegistryAddress !== null,
+    knownContracts: n.knownContracts.length,
+  };
+}
 
 export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
-  app.get("/health", async () => ({ status: "ok", analysisVersion: ANALYSIS_VERSION }));
+  /** The commit Render built, so a deploy can be confirmed from outside. */
+  const commit = process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? null;
+
+  app.get("/health", async () => ({ status: "ok", analysisVersion: ANALYSIS_VERSION, commit }));
 
   /** Ready when every configured network answers with the chain id it should have. */
   app.get("/health/ready", async (_req, reply) => {
@@ -11,9 +27,14 @@ export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) =
       Object.values(deps.config.networks).map(async (n) => {
         try {
           const chainId = await deps.rpcFor(n).getChainId();
-          return { network: n.network, ok: chainId === n.chainId, chainId };
+          return {
+            network: n.network,
+            ok: chainId === n.chainId,
+            chainId,
+            configured: configured(n),
+          };
         } catch {
-          return { network: n.network, ok: false, chainId: null };
+          return { network: n.network, ok: false, chainId: null, configured: configured(n) };
         }
       }),
     );

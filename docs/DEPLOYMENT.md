@@ -51,7 +51,8 @@ merge to main ────────► CI on main ──── all checks gre
    - `BARET_CORS_ORIGINS` — leave empty for now (the extension calls the API from its own origin).
    - `BARET_API_KEYS` — **leave empty** while the showcase calls the API from the browser: a static site cannot keep a key secret. Rate limiting (120/min per IP) still applies. Keys come with agent-kit.
    - The rest (registry, Nansen, Cleanverse) — empty until those land; their rules fail closed.
-4. Apply. When it is live, open `https://baret-monad-api.onrender.com/health/ready` → `{"status":"ready",...}`.
+4. Apply. `/health` shows the running commit (`commit`) and `/health/ready` shows which optional settings each network has (`configured`: USDC, registry, number of known contracts) — booleans and counts only, no values. Use them to confirm an env change actually reached the running service.
+   When it is live, open `https://baret-monad-api.onrender.com/health/ready` → `{"status":"ready",...}`.
 5. If Render assigned another name (e.g. `baret-monad-api-x1y2`), put that URL into both `vercel.json` rewrites.
 
 The free plan sleeps after 15 minutes idle and the first request then takes ~50 s. Fine for development; switch to Starter before the demo video and judging.
