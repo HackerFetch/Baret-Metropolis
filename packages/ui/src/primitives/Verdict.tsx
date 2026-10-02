@@ -34,15 +34,21 @@ export interface VerdictProps {
   body: string;
   /** Extra detail, such as the rule name with a link to edit it. */
   children?: ReactNode;
+  /**
+   * Announce the verdict to screen readers when it changes. On by default,
+   * because on a sign request the verdict arriving is the news. Turn it off
+   * for a static or illustrative use, which should not be a live region.
+   */
+  announce?: boolean;
   className?: string;
 }
 
-export function Verdict({ kind, label, body, children, className }: VerdictProps) {
+export function Verdict({ kind, label, body, children, announce = true, className }: VerdictProps) {
   const tone = TONE[kind];
 
   return (
     <section
-      aria-live="polite"
+      aria-live={announce ? "polite" : undefined}
       data-slot="verdict"
       data-kind={kind}
       className={cn(
