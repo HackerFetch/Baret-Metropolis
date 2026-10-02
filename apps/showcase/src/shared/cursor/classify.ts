@@ -50,12 +50,37 @@ function isOrange(color: string): boolean {
   return alpha > 0.5 && r > 220 && g > 50 && g < 130 && b < 60;
 }
 
+/** `#rrggbb` to `[r, g, b]`, or null for anything else. */
+function hexRgb(hex: string): [number, number, number] | null {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
+  if (!m) return null;
+  return [
+    Number.parseInt(m[1] ?? "", 16),
+    Number.parseInt(m[2] ?? "", 16),
+    Number.parseInt(m[3] ?? "", 16),
+  ];
+}
+
+/**
+ * True when a computed background is the accent of the element's own scope:
+ * Baret's orange on the landing, or a demo dApp's accent (sites/theme).
+ */
+function isAccentFill(style: CSSStyleDeclaration): boolean {
+  if (isOrange(style.backgroundColor)) return true;
+  const accent = hexRgb(style.getPropertyValue("--accent"));
+  const m = style.backgroundColor.match(/\d+(\.\d+)?/g);
+  if (!accent || !m || m.length < 3) return false;
+  const alpha = m[3] === undefined ? 1 : Number(m[3]);
+  if (alpha <= 0.5) return false;
+  return m.slice(0, 3).every((v, i) => Math.abs(Number(v) - (accent[i] ?? -99)) <= 2);
+}
+
 /**
  * The ring colour over a pressable control. Null (the ring stays --fg, see
- * cursor.css) everywhere except over a control that is itself filled orange
- * (the primary button), where the ring takes the control's own label colour
- * so it reads on the fill. The cursor never adds an orange of its own: the
- * viewport keeps one orange signal.
+ * cursor.css) everywhere except over a control that is itself filled with
+ * its scope's accent (the primary button), where the ring takes the
+ * control's own label colour so it reads on the fill. The cursor never adds
+ * an accent of its own: the viewport keeps one signal.
  */
 export function ringColor(target: EventTarget | null): string | null {
   if (!(target instanceof Element)) return null;
@@ -65,7 +90,7 @@ export function ringColor(target: EventTarget | null): string | null {
   // the element under the pointer to the control.
   for (let el: Element | null = target; el; el = el.parentElement) {
     const style = window.getComputedStyle(el);
-    if (isOrange(style.backgroundColor)) return style.color;
+    if (isAccentFill(style)) return style.color;
     if (el === control) break;
   }
   return null;

@@ -51,6 +51,7 @@ export function DemoShell({
 
       <aside
         aria-label="Demo controls"
+        data-scope="baret"
         className="sticky bottom-0 border-t border-[color:var(--rule)] bg-[color:var(--surface)]"
       >
         <div className="mx-auto flex w-full max-w-[1100px] flex-wrap items-center gap-4 px-5 py-3.5">

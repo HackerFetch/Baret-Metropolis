@@ -1,5 +1,5 @@
 import { findings, home } from "@baret/content";
-import { fill } from "../../shared/util.js";
+import { fill } from "../../../shared/util.js";
 
 /** The three sample requests the verdict check offers (IMPROVE H1). */
 export type SampleId = "send" | "swap" | "approve";

@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import type { JSX } from "react";
-import { FRAME } from "../../shared/layout.js";
-import { T } from "../../shared/type.js";
+import { FRAME } from "../../../shared/layout.js";
+import { T } from "../../../shared/type.js";
 
 /**
  * "See all 17 checks": a native, closed <details> under the moving rows.

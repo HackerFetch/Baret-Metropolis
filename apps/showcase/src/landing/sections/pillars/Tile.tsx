@@ -1,8 +1,8 @@
 import type { JSX, ReactNode } from "react";
-import type { ImgAsset } from "../../shared/assets.js";
-import { Img, type Responsive } from "../../shared/Img.js";
-import { T } from "../../shared/type.js";
-import { cx } from "../../shared/util.js";
+import type { ImgAsset } from "../../../shared/assets.js";
+import { Img, type Responsive } from "../../../shared/Img.js";
+import { T } from "../../../shared/type.js";
+import { cx } from "../../../shared/util.js";
 
 /**
  * One bento tile: a square box with a 1 px rule, no shadow, no radius.

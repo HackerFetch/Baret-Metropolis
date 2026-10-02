@@ -1,5 +1,5 @@
 import { routes } from "../../../routes.js";
-import { IMG, type ImgAsset } from "../../shared/assets.js";
+import { IMG, type ImgAsset } from "../../../shared/assets.js";
 
 /**
  * The illustration for each showcase card, keyed by the card's href.

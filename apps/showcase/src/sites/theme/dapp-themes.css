@@ -1,0 +1,416 @@
+/*
+ * The six demo dApps. Each one only swaps the palette: fonts, square corners,
+ * chamfers, grain and the layout grammar stay Baret's. A wrapper with
+ * data-dapp="<slug>" (and the same attribute on <html>, set by DappTheme)
+ * re-declares the token variables from packages/ui/src/tokens.css, so every
+ * shared component recolours without changes. Anything Baret-branded inside
+ * a dApp (the analysis panel, the ribbon) sits in data-scope="baret" and gets
+ * Baret's own palette back from tokens.css.
+ *
+ * State colours (--safe, --caution, --blocked, --watching), --network and
+ * --tag-paper are not re-themed: they are functional and family-wide.
+ * Values and their WCAG ratios: see the design note in docs/FRONTEND.md.
+*/
+
+/* scrybe: Highlighter: newsprint and a highlighter stroke (paid writing API) */
+:root[data-dapp="scrybe"],
+[data-dapp="scrybe"] {
+  --ground: #e8e5da;
+  --ground-deep: #dbd7c8;
+  --surface: #f8f6ef;
+  --fg: #17160f;
+  --fg-muted: rgb(23 22 15 / 0.72);
+  --fg-faint: rgb(23 22 15 / 0.52);
+  --fg-ghost: rgb(23 22 15 / 0.34);
+  --rule: rgb(23 22 15 / 0.14);
+  --rule-strong: rgb(23 22 15 / 0.28);
+  --control-edge: rgb(23 22 15 / 0.55);
+  --accent: #f0d417;
+  --accent-deep: #dcc000;
+  --accent-dim: rgb(240 212 23 / 0.1);
+  --on-accent: #17160f;
+  --accent-edge: var(--fg);
+  --focus: #6e6200;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="scrybe"],
+  :root:not([data-theme="light"]) [data-dapp="scrybe"] {
+    --ground: #191810;
+    --ground-deep: #13120b;
+    --surface: #23221a;
+    --fg: #eeece1;
+    --fg-muted: rgb(238 236 225 / 0.74);
+    --fg-faint: rgb(238 236 225 / 0.56);
+    --fg-ghost: rgb(238 236 225 / 0.38);
+    --rule: rgb(238 236 225 / 0.12);
+    --rule-strong: rgb(238 236 225 / 0.26);
+    --control-edge: rgb(238 236 225 / 0.55);
+    --accent: #f2d930;
+    --accent-deep: #ffe650;
+    --accent-dim: rgb(242 217 48 / 0.14);
+    --on-accent: #17160f;
+    --accent-edge: transparent;
+    --focus: #f2d930;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="scrybe"],
+:root[data-theme="dark"] [data-dapp="scrybe"] {
+  --ground: #191810;
+  --ground-deep: #13120b;
+  --surface: #23221a;
+  --fg: #eeece1;
+  --fg-muted: rgb(238 236 225 / 0.74);
+  --fg-faint: rgb(238 236 225 / 0.56);
+  --fg-ghost: rgb(238 236 225 / 0.38);
+  --rule: rgb(238 236 225 / 0.12);
+  --rule-strong: rgb(238 236 225 / 0.26);
+  --control-edge: rgb(238 236 225 / 0.55);
+  --accent: #f2d930;
+  --accent-deep: #ffe650;
+  --accent-dim: rgb(242 217 48 / 0.14);
+  --on-accent: #17160f;
+  --accent-edge: transparent;
+  --focus: #f2d930;
+  color-scheme: dark;
+}
+
+/* novaswap: Cobalt: cold-rolled steel and a transit-signal blue (swap venue) */
+:root[data-dapp="novaswap"],
+[data-dapp="novaswap"] {
+  --ground: #e1e4ea;
+  --ground-deep: #d3d8e1;
+  --surface: #f6f7fa;
+  --fg: #0f1320;
+  --fg-muted: rgb(15 19 32 / 0.72);
+  --fg-faint: rgb(15 19 32 / 0.52);
+  --fg-ghost: rgb(15 19 32 / 0.34);
+  --rule: rgb(15 19 32 / 0.14);
+  --rule-strong: rgb(15 19 32 / 0.28);
+  --control-edge: rgb(15 19 32 / 0.55);
+  --accent: #2443d6;
+  --accent-deep: #1a34b2;
+  --accent-dim: rgb(36 67 214 / 0.1);
+  --on-accent: #f6f7fa;
+  --accent-edge: transparent;
+  --focus: #2443d6;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="novaswap"],
+  :root:not([data-theme="light"]) [data-dapp="novaswap"] {
+    --ground: #121620;
+    --ground-deep: #0d1018;
+    --surface: #1a1f2c;
+    --fg: #e8ebf2;
+    --fg-muted: rgb(232 235 242 / 0.74);
+    --fg-faint: rgb(232 235 242 / 0.56);
+    --fg-ghost: rgb(232 235 242 / 0.38);
+    --rule: rgb(232 235 242 / 0.12);
+    --rule-strong: rgb(232 235 242 / 0.26);
+    --control-edge: rgb(232 235 242 / 0.55);
+    --accent: #7f95ff;
+    --accent-deep: #9cadff;
+    --accent-dim: rgb(127 149 255 / 0.14);
+    --on-accent: #0f1320;
+    --accent-edge: transparent;
+    --focus: #7f95ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="novaswap"],
+:root[data-theme="dark"] [data-dapp="novaswap"] {
+  --ground: #121620;
+  --ground-deep: #0d1018;
+  --surface: #1a1f2c;
+  --fg: #e8ebf2;
+  --fg-muted: rgb(232 235 242 / 0.74);
+  --fg-faint: rgb(232 235 242 / 0.56);
+  --fg-ghost: rgb(232 235 242 / 0.38);
+  --rule: rgb(232 235 242 / 0.12);
+  --rule-strong: rgb(232 235 242 / 0.26);
+  --control-edge: rgb(232 235 242 / 0.55);
+  --accent: #7f95ff;
+  --accent-deep: #9cadff;
+  --accent-dim: rgb(127 149 255 / 0.14);
+  --on-accent: #0f1320;
+  --accent-edge: transparent;
+  --focus: #7f95ff;
+  color-scheme: dark;
+}
+
+/* pixeldrop: Fuchsia: risograph card stock and fluorescent ink (NFT mint) */
+:root[data-dapp="pixeldrop"],
+[data-dapp="pixeldrop"] {
+  --ground: #e7e2e7;
+  --ground-deep: #dad3db;
+  --surface: #f8f5f8;
+  --fg: #1a1220;
+  --fg-muted: rgb(26 18 32 / 0.72);
+  --fg-faint: rgb(26 18 32 / 0.52);
+  --fg-ghost: rgb(26 18 32 / 0.34);
+  --rule: rgb(26 18 32 / 0.14);
+  --rule-strong: rgb(26 18 32 / 0.28);
+  --control-edge: rgb(26 18 32 / 0.55);
+  --accent: #bd1a8e;
+  --accent-deep: #9c1276;
+  --accent-dim: rgb(189 26 142 / 0.1);
+  --on-accent: #f8f5f8;
+  --accent-edge: transparent;
+  --focus: #bd1a8e;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="pixeldrop"],
+  :root:not([data-theme="light"]) [data-dapp="pixeldrop"] {
+    --ground: #1b151c;
+    --ground-deep: #140f15;
+    --surface: #241d26;
+    --fg: #f0eaf0;
+    --fg-muted: rgb(240 234 240 / 0.74);
+    --fg-faint: rgb(240 234 240 / 0.56);
+    --fg-ghost: rgb(240 234 240 / 0.38);
+    --rule: rgb(240 234 240 / 0.12);
+    --rule-strong: rgb(240 234 240 / 0.26);
+    --control-edge: rgb(240 234 240 / 0.55);
+    --accent: #f05bc4;
+    --accent-deep: #ff7ed4;
+    --accent-dim: rgb(240 91 196 / 0.14);
+    --on-accent: #1a1220;
+    --accent-edge: transparent;
+    --focus: #f05bc4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="pixeldrop"],
+:root[data-theme="dark"] [data-dapp="pixeldrop"] {
+  --ground: #1b151c;
+  --ground-deep: #140f15;
+  --surface: #241d26;
+  --fg: #f0eaf0;
+  --fg-muted: rgb(240 234 240 / 0.74);
+  --fg-faint: rgb(240 234 240 / 0.56);
+  --fg-ghost: rgb(240 234 240 / 0.38);
+  --rule: rgb(240 234 240 / 0.12);
+  --rule-strong: rgb(240 234 240 / 0.26);
+  --control-edge: rgb(240 234 240 / 0.55);
+  --accent: #f05bc4;
+  --accent-deep: #ff7ed4;
+  --accent-dim: rgb(240 91 196 / 0.14);
+  --on-accent: #1a1220;
+  --accent-edge: transparent;
+  --focus: #f05bc4;
+  color-scheme: dark;
+}
+
+/* orbityield: Lime: observatory sage and a long-exposure lime (staking) */
+:root[data-dapp="orbityield"],
+[data-dapp="orbityield"] {
+  --ground: #e0e3e0;
+  --ground-deep: #d2d6d2;
+  --surface: #f5f7f4;
+  --fg: #11150f;
+  --fg-muted: rgb(17 21 15 / 0.72);
+  --fg-faint: rgb(17 21 15 / 0.52);
+  --fg-ghost: rgb(17 21 15 / 0.34);
+  --rule: rgb(17 21 15 / 0.14);
+  --rule-strong: rgb(17 21 15 / 0.28);
+  --control-edge: rgb(17 21 15 / 0.55);
+  --accent: #a6c80c;
+  --accent-deep: #93b300;
+  --accent-dim: rgb(166 200 12 / 0.1);
+  --on-accent: #11150f;
+  --accent-edge: var(--fg);
+  --focus: #4b5c00;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="orbityield"],
+  :root:not([data-theme="light"]) [data-dapp="orbityield"] {
+    --ground: #131612;
+    --ground-deep: #0e100d;
+    --surface: #1b1f1a;
+    --fg: #e9ede7;
+    --fg-muted: rgb(233 237 231 / 0.74);
+    --fg-faint: rgb(233 237 231 / 0.56);
+    --fg-ghost: rgb(233 237 231 / 0.38);
+    --rule: rgb(233 237 231 / 0.12);
+    --rule-strong: rgb(233 237 231 / 0.26);
+    --control-edge: rgb(233 237 231 / 0.55);
+    --accent: #b8db1f;
+    --accent-deep: #caea3e;
+    --accent-dim: rgb(184 219 31 / 0.14);
+    --on-accent: #11150f;
+    --accent-edge: transparent;
+    --focus: #b8db1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="orbityield"],
+:root[data-theme="dark"] [data-dapp="orbityield"] {
+  --ground: #131612;
+  --ground-deep: #0e100d;
+  --surface: #1b1f1a;
+  --fg: #e9ede7;
+  --fg-muted: rgb(233 237 231 / 0.74);
+  --fg-faint: rgb(233 237 231 / 0.56);
+  --fg-ghost: rgb(233 237 231 / 0.38);
+  --rule: rgb(233 237 231 / 0.12);
+  --rule-strong: rgb(233 237 231 / 0.26);
+  --control-edge: rgb(233 237 231 / 0.55);
+  --accent: #b8db1f;
+  --accent-deep: #caea3e;
+  --accent-dim: rgb(184 219 31 / 0.14);
+  --on-accent: #11150f;
+  --accent-edge: transparent;
+  --focus: #b8db1f;
+  color-scheme: dark;
+}
+
+/* claimhub: Kraft: parcel kraft and an ink stamp (airdrop) */
+:root[data-dapp="claimhub"],
+[data-dapp="claimhub"] {
+  --ground: #dcd3c1;
+  --ground-deep: #cfc4ae;
+  --surface: #f5f1e8;
+  --fg: #1a1610;
+  --fg-muted: rgb(26 22 16 / 0.72);
+  --fg-faint: rgb(26 22 16 / 0.52);
+  --fg-ghost: rgb(26 22 16 / 0.34);
+  --rule: rgb(26 22 16 / 0.14);
+  --rule-strong: rgb(26 22 16 / 0.28);
+  --control-edge: rgb(26 22 16 / 0.55);
+  --accent: #1a1610;
+  --accent-deep: #3a3328;
+  --accent-dim: rgb(26 22 16 / 0.1);
+  --on-accent: #f5f1e8;
+  --accent-edge: transparent;
+  --focus: #1a1610;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="claimhub"],
+  :root:not([data-theme="light"]) [data-dapp="claimhub"] {
+    --ground: #1b1813;
+    --ground-deep: #14120e;
+    --surface: #25211a;
+    --fg: #efe8da;
+    --fg-muted: rgb(239 232 218 / 0.74);
+    --fg-faint: rgb(239 232 218 / 0.56);
+    --fg-ghost: rgb(239 232 218 / 0.38);
+    --rule: rgb(239 232 218 / 0.12);
+    --rule-strong: rgb(239 232 218 / 0.26);
+    --control-edge: rgb(239 232 218 / 0.55);
+    --accent: #e2d2ae;
+    --accent-deep: #efe2c4;
+    --accent-dim: rgb(226 210 174 / 0.14);
+    --on-accent: #1a1610;
+    --accent-edge: transparent;
+    --focus: #e2d2ae;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="claimhub"],
+:root[data-theme="dark"] [data-dapp="claimhub"] {
+  --ground: #1b1813;
+  --ground-deep: #14120e;
+  --surface: #25211a;
+  --fg: #efe8da;
+  --fg-muted: rgb(239 232 218 / 0.74);
+  --fg-faint: rgb(239 232 218 / 0.56);
+  --fg-ghost: rgb(239 232 218 / 0.38);
+  --rule: rgb(239 232 218 / 0.12);
+  --rule-strong: rgb(239 232 218 / 0.26);
+  --control-edge: rgb(239 232 218 / 0.55);
+  --accent: #e2d2ae;
+  --accent-deep: #efe2c4;
+  --accent-dim: rgb(226 210 174 / 0.14);
+  --on-accent: #1a1610;
+  --accent-edge: transparent;
+  --focus: #e2d2ae;
+  color-scheme: dark;
+}
+
+/* launchpad: Azure: clear-sky steel and a launch-day azure (token sale) */
+:root[data-dapp="launchpad"],
+[data-dapp="launchpad"] {
+  --ground: #dfe5e8;
+  --ground-deep: #d0d8dc;
+  --surface: #f4f7f8;
+  --fg: #0e161a;
+  --fg-muted: rgb(14 22 26 / 0.72);
+  --fg-faint: rgb(14 22 26 / 0.52);
+  --fg-ghost: rgb(14 22 26 / 0.34);
+  --rule: rgb(14 22 26 / 0.14);
+  --rule-strong: rgb(14 22 26 / 0.28);
+  --control-edge: rgb(14 22 26 / 0.55);
+  --accent: #3a92cf;
+  --accent-deep: #57a6db;
+  --accent-dim: rgb(58 146 207 / 0.1);
+  --on-accent: #0e161a;
+  --accent-edge: var(--fg);
+  --focus: #1e6a9c;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-dapp="launchpad"],
+  :root:not([data-theme="light"]) [data-dapp="launchpad"] {
+    --ground: #11181c;
+    --ground-deep: #0c1215;
+    --surface: #18222a;
+    --fg: #e6eef1;
+    --fg-muted: rgb(230 238 241 / 0.74);
+    --fg-faint: rgb(230 238 241 / 0.56);
+    --fg-ghost: rgb(230 238 241 / 0.38);
+    --rule: rgb(230 238 241 / 0.12);
+    --rule-strong: rgb(230 238 241 / 0.26);
+    --control-edge: rgb(230 238 241 / 0.55);
+    --accent: #5fb0e6;
+    --accent-deep: #7ec0ec;
+    --accent-dim: rgb(95 176 230 / 0.14);
+    --on-accent: #0e161a;
+    --accent-edge: transparent;
+    --focus: #5fb0e6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-dapp="launchpad"],
+:root[data-theme="dark"] [data-dapp="launchpad"] {
+  --ground: #11181c;
+  --ground-deep: #0c1215;
+  --surface: #18222a;
+  --fg: #e6eef1;
+  --fg-muted: rgb(230 238 241 / 0.74);
+  --fg-faint: rgb(230 238 241 / 0.56);
+  --fg-ghost: rgb(230 238 241 / 0.38);
+  --rule: rgb(230 238 241 / 0.12);
+  --rule-strong: rgb(230 238 241 / 0.26);
+  --control-edge: rgb(230 238 241 / 0.55);
+  --accent: #5fb0e6;
+  --accent-deep: #7ec0ec;
+  --accent-dim: rgb(95 176 230 / 0.14);
+  --on-accent: #0e161a;
+  --accent-edge: transparent;
+  --focus: #5fb0e6;
+  color-scheme: dark;
+}
+
+/* The focus ring follows the dApp's focus token (unlayered, so it wins over
+   the utility classes); Baret's own controls inside keep Baret's orange. */
+[data-dapp] :focus-visible {
+  outline-color: var(--focus);
+}
+[data-dapp] [data-scope="baret"] :focus-visible {
+  outline-color: var(--accent);
+}
+
+/* The page and the Baret scope paint their own ground and text, since both
+   inherit colour from whatever surrounds them. */
+[data-dapp] {
+  background-color: var(--ground);
+  color: var(--fg);
+}
+[data-dapp] [data-scope="baret"] {
+  color: var(--fg);
+}
