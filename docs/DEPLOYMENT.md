@@ -2,7 +2,7 @@
 
 > How Baret is built, checked and shipped. Frontend on Vercel, the analysis API on Render, contracts with Foundry. Keep this file in sync with `.github/workflows/ci.yml`, `render.yaml` and `apps/*/vercel.json`.
 
-Last updated: 2026-10-01 · Status: **Pipeline files written and verified locally; Vercel and Render projects not created yet**
+Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel are live; main domain `baret-metropolis.vercel.app` pending**
 
 ---
 
@@ -10,9 +10,9 @@ Last updated: 2026-10-01 · Status: **Pipeline files written and verified locall
 
 | Piece | Host | Config | URL (target) |
 |---|---|---|---|
-| `apps/showcase` | Vercel project `baret-showcase` | `apps/showcase/vercel.json` | `https://baret-showcase.vercel.app` |
+| `apps/showcase` | Vercel project `baret-showcase` | `apps/showcase/vercel.json` | **`https://baret-metropolis.vercel.app`** (main domain; `baret-showcase.vercel.app` stays as an alias) |
 | `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://baret-wallet.vercel.app` |
-| `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` |
+| `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` (live) |
 | `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" / store later |
 | `contracts/` | Monad testnet, by hand | `contracts/script/Deploy.s.sol` | addresses in `docs/CONTRACTS.md` |
 
@@ -63,6 +63,7 @@ Do this twice, once per app:
 3. **Environment variable**: `ENABLE_EXPERIMENTAL_COREPACK=1` (All environments). The repo pins pnpm 11 in `packageManager`; without this Vercel installs with an older pnpm.
 4. Settings → General → **Node.js Version**: 22.x.
 5. Project name: `baret-showcase` / `baret-wallet`. Deploy.
+6. Showcase only — the main domain: Settings → Domains → add `baret-metropolis.vercel.app` (Production). Settings → Environment Variables → `BARET_SITE_URL` = `https://baret-metropolis.vercel.app` (Production). Redeploy. The build writes the canonical URL, `og:url`, absolute `og:image` and `sitemap.xml` from this value; without it Vercel falls back to `VERCEL_PROJECT_PRODUCTION_URL`, which is `baret-showcase.vercel.app`.
 
 ### 3.4 Contracts (manual, once per network)
 ```
@@ -95,6 +96,6 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | `render.yaml` | ✅ Written, build + start commands verified locally |
 | `vercel.json` (showcase, wallet) | ✅ Written, `pnpm build` verified locally |
 | GitHub required checks | ⬜ After the first green run |
-| Render service | ⬜ Not created |
-| Vercel projects | ⬜ Not created |
+| Render service | ✅ `baret-monad-api` live, traced analysis verified 2026-10-02 |
+| Vercel projects | ✅ `baret-showcase`, `baret-wallet` live, `/api` rewrite verified; ⬜ main domain + `BARET_SITE_URL` |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |
