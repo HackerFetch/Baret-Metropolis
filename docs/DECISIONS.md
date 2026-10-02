@@ -100,6 +100,13 @@
 **Alternative:** API as Vercel functions — rejected (cold starts per request, 10 s limit on the free tier against a trace call); deploying contracts from CI — rejected (key exposure).
 **Status:** ✅ Final
 
+### D-016 — Nansen: Profiler labels, mapped to three trust levels
+**Date:** 2026-10-02
+**Decision:** The reputation detector reads Nansen's Profiler labels (`POST /api/v1/profiler/address/labels`, `chain: "monad"`, API key in the `apikey` header). Labels map to the profile in `sources/nansen.ts` (`profileFromLabels`): an entity or name label → `identified`; any other label → `established`, unless it is a fresh-wallet label; no labels → `new`. Exploit, hack, scam, phishing, drainer, sanction and similar labels set `flagged` (→ `KNOWN_MALICIOUS_ADDRESS`); fresh-wallet and whale labels drive the two Nansen warnings. Answers are cached for 6 hours per address and fetched four at a time. Every address gets an answer or the whole lookup throws, so a rate limit or an outage fails closed instead of letting an unchecked address through.
+**Rationale:** The labels endpoint is the cheapest call that carries the segment information the bounty asks for (entity, fresh wallet, whale, exploiter), and it supports Monad. Nansen indexes Monad mainnet only, so on testnet the labels describe the same address on mainnet: meaningful for wallets, mostly empty for testnet-only contracts.
+**Alternative:** premium labels (smart money) — more credits per call for a signal the rules do not use; Nansen over x402 instead of an API key (pay per call in USDC on Monad) — attractive for the story, kept as a follow-up because it needs a funded mainnet wallet on the server.
+**Status:** ✅ Final (x402 payment path open)
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
