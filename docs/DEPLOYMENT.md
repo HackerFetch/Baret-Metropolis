@@ -2,7 +2,7 @@
 
 > How Baret is built, checked and shipped. Frontend on Vercel, the analysis API on Render, contracts with Foundry. Keep this file in sync with `.github/workflows/ci.yml`, `render.yaml` and `apps/*/vercel.json`.
 
-Last updated: 2026-10-01 · Status: **Pipeline files written and verified locally; Vercel and Render projects not created yet**
+Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel are live; main domain `baret-metropolis.vercel.app` live**
 
 ---
 
@@ -10,9 +10,9 @@ Last updated: 2026-10-01 · Status: **Pipeline files written and verified locall
 
 | Piece | Host | Config | URL (target) |
 |---|---|---|---|
-| `apps/showcase` | Vercel project `baret-showcase` | `apps/showcase/vercel.json` | `https://baret-showcase.vercel.app` |
+| `apps/showcase` | Vercel project `baret-metropolis` | `apps/showcase/vercel.json` | **`https://baret-metropolis.vercel.app`** (main domain) |
 | `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://baret-wallet.vercel.app` |
-| `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` |
+| `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` (live) |
 | `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" / store later |
 | `contracts/` | Monad testnet, by hand | `contracts/script/Deploy.s.sol` | addresses in `docs/CONTRACTS.md` |
 
@@ -32,7 +32,7 @@ merge to main ────────► CI on main ──── all checks gre
 ```
 
 - **CI is the gate for the API:** `render.yaml` uses `autoDeployTrigger: checksPass`, so Render deploys a `main` commit only after its GitHub checks pass. `buildFilter` skips API deploys for commits that touch only the frontend.
-- **Vercel builds on its own** through the Git integration. `ignoreCommand` skips a build when neither the app nor `packages/` nor the lockfile changed. To make Vercel also wait for CI, turn on the required checks in GitHub (step 2.4 below).
+- **Vercel builds on its own** through the Git integration. `ignoreCommand` skips a build when neither the app nor `packages/` nor the lockfile changed since the last successful deploy of that branch (`VERCEL_GIT_PREVIOUS_SHA`); when that commit is unknown or not in the clone, it builds. To make Vercel also wait for CI, turn on the required checks in GitHub (step 2.4 below).
 - **Secrets never live in the repo.** Render env vars marked `sync: false` and Vercel env vars are entered in the dashboards.
 
 ## 3. One-time setup (Ezgin)
@@ -62,7 +62,10 @@ Do this twice, once per app:
 2. **Root Directory**: `apps/showcase` (second time: `apps/wallet`). Framework: Vite (detected). Leave build/install/output empty — `vercel.json` sets them.
 3. **Environment variable**: `ENABLE_EXPERIMENTAL_COREPACK=1` (All environments). The repo pins pnpm 11 in `packageManager`; without this Vercel installs with an older pnpm.
 4. Settings → General → **Node.js Version**: 22.x.
-5. Project name: `baret-showcase` / `baret-wallet`. Deploy.
+5. Project name: `baret-metropolis` (showcase) / `baret-wallet`. Deploy.
+6. Showcase only: Environment Variables → `BARET_SITE_URL` = `https://baret-metropolis.vercel.app`. The build writes the canonical URL, `og:url`, absolute `og:image` and `sitemap.xml` from it; without it Vercel falls back to `VERCEL_PROJECT_PRODUCTION_URL`.
+
+**Why the install command runs the extension's `postinstall`:** Vite's native tsconfig resolution in the web apps follows the workspace project references into `apps/extension/tsconfig.json`, which extends `.wxt/tsconfig.json`. `wxt prepare` generates that file in `postinstall`, but when Vercel restores `node_modules` from its build cache, `pnpm install` is a no-op and skips lifecycle scripts, so the file is missing and the build fails with `Tsconfig not found .../apps/extension/.wxt/tsconfig.json`. Running the script explicitly makes cached and fresh builds behave the same.
 
 ### 3.4 Contracts (manual, once per network)
 ```
@@ -95,6 +98,6 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | `render.yaml` | ✅ Written, build + start commands verified locally |
 | `vercel.json` (showcase, wallet) | ✅ Written, `pnpm build` verified locally |
 | GitHub required checks | ⬜ After the first green run |
-| Render service | ⬜ Not created |
-| Vercel projects | ⬜ Not created |
+| Render service | ✅ `baret-monad-api` live, traced analysis verified 2026-10-02 |
+| Vercel projects | ✅ `baret-metropolis` (showcase, main domain, canonical + sitemap verified) and `baret-wallet` live, `/api` rewrite verified 2026-10-02 |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |
