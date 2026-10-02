@@ -77,7 +77,7 @@ The full technical list is in `ARCHITECTURE.md` §9. This table only tracks **wh
 | Key | Sponsor | Where to get it | Status |
 |---|---|---|---|
 | `MONAD_TESTNET_RPC_URL` | Alchemy | Alchemy dashboard, create a Monad app | ⬜ |
-| `NANSEN_API_KEY` | Nansen | Sponsor access on the bounty page | ⬜ |
+| `NANSEN_API_KEY` | Nansen | Sponsor access on the bounty page, or app.nansen.ai → API. Goes on Render only | ⬜ (client ready, D-016) |
 | `CLEANVERSE_API_KEY` | Cleanverse | Sponsor channel | ⬜ |
 | `DYNAMIC_ENVIRONMENT_ID` | Dynamic | dashboard.dynamic.xyz | ⬜ |
 | `ENVIO_ENDPOINT` | Envio (our own deploy) | After the `indexer/` deploy | ⬜ |
