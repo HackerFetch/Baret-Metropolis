@@ -43,6 +43,27 @@
   }
 }
 
+/*
+ * Radix state, mapped once.
+ *
+ * The re-skinned shadcn components were written against bare state attributes
+ * (data-checked, data-active, data-open, data-horizontal). Radix 1.x emits
+ * data-state="checked|active|open|..." and data-orientation instead, so those
+ * classes matched nothing: a switch never looked on and a tab never looked
+ * current. Each variant below keeps the bare form and adds the Radix one, so
+ * every existing class starts working without touching a component.
+ * `state-on` / `state-off` are the names to reach for in new code.
+ */
+@custom-variant data-checked (&:is([data-checked]:not([data-checked="false"]), [data-state="checked"]));
+@custom-variant data-unchecked (&:is([data-unchecked]:not([data-unchecked="false"]), [data-state="unchecked"]));
+@custom-variant data-active (&:is([data-active]:not([data-active="false"]), [data-state="active"]));
+@custom-variant data-open (&:is([data-open]:not([data-open="false"]), [data-state="open"], [data-state="delayed-open"], [data-state="instant-open"]));
+@custom-variant data-closed (&:is([data-closed]:not([data-closed="false"]), [data-state="closed"]));
+@custom-variant data-horizontal (&:is([data-horizontal], [data-orientation="horizontal"]));
+@custom-variant data-vertical (&:is([data-vertical], [data-orientation="vertical"]));
+@custom-variant state-on (&:is([data-state="checked"], [data-state="on"], [data-state="active"]));
+@custom-variant state-off (&:is([data-state="unchecked"], [data-state="off"], [data-state="inactive"]));
+
 @theme {
   /* ── Materials ─────────────────────────────────────────────────────── */
   --color-concrete: #e6e6e1;
@@ -161,6 +182,8 @@
 
   --rule: rgb(18 19 22 / 0.14);
   --rule-strong: rgb(18 19 22 / 0.28);
+  /* Rest border of a control (segmented choices, selects): about 3:1 on ground. */
+  --control-edge: rgb(18 19 22 / 0.55);
 
   --accent: #ff4f00;
   --accent-deep: #e44600;
@@ -180,6 +203,14 @@
   --blocked-dim: rgb(211 33 10 / 0.08);
   --watching: #0b7a8c;
   --watching-dim: rgb(11 122 140 / 0.1);
+
+  /* Tag ink. Text on the tag paper needs 4.5:1; the bright hues above stay
+     for edges, dots and fills. Light only: the dark hues already pass. */
+  --safe-ink: #0b6e4c;
+  --caution-ink: #8a5300;
+  --blocked-ink: #b21b07;
+  --watching-ink: #08606e;
+  --network-ink: #5b47d6;
 
   --chamfer: 10px;
   --chamfer-sm: 8px;
@@ -204,6 +235,7 @@
 
     --rule: rgb(237 237 232 / 0.12);
     --rule-strong: rgb(237 237 232 / 0.26);
+    --control-edge: rgb(237 237 232 / 0.55);
 
     --accent: #ff5a0f;
     --accent-deep: #ff6d2b;
@@ -223,6 +255,11 @@
     --blocked-dim: rgb(255 90 61 / 0.12);
     --watching: #3bc0d4;
     --watching-dim: rgb(59 192 212 / 0.12);
+    --safe-ink: var(--safe);
+    --caution-ink: var(--caution);
+    --blocked-ink: var(--blocked);
+    --watching-ink: var(--watching);
+    --network-ink: var(--network);
 
     --grain-blend: screen;
     --grain-opacity: 0.35;
@@ -244,6 +281,7 @@
 
   --rule: rgb(237 237 232 / 0.12);
   --rule-strong: rgb(237 237 232 / 0.26);
+  --control-edge: rgb(237 237 232 / 0.55);
 
   --accent: #ff5a0f;
   --accent-deep: #ff6d2b;
@@ -263,6 +301,11 @@
   --blocked-dim: rgb(255 90 61 / 0.12);
   --watching: #3bc0d4;
   --watching-dim: rgb(59 192 212 / 0.12);
+  --safe-ink: var(--safe);
+  --caution-ink: var(--caution);
+  --blocked-ink: var(--blocked);
+  --watching-ink: var(--watching);
+  --network-ink: var(--network);
 
   --grain-blend: screen;
   --grain-opacity: 0.35;
@@ -320,6 +363,27 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    /* The sticky header is 56px. Anything scrolled or tabbed to lands 16px
+       below it, never underneath it (WCAG 2.4.11). An app without that
+       header sets --scroll-offset on :root. */
+    scroll-padding-top: var(--scroll-offset, calc(56px + 16px));
+  }
+
+  /* The grey rounded flash iOS and Android paint on tap sits on top of the
+     press state and breaks the square-corner rule. */
+  a,
+  button,
+  summary,
+  label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* No paragraph ends on a one-word line. Browsers without it wrap as before. */
+  p,
+  li,
+  figcaption,
+  dd {
+    text-wrap: pretty;
   }
 
   body {
@@ -432,5 +496,156 @@
   to {
     transform: rotate(0deg);
     opacity: 1;
+  }
+}
+
+/* Cap-height trim for caps text: the label sits on its hairline instead of a
+   pixel low. Progressive: browsers without text-box keep today's box. */
+@utility trim-caps {
+  @supports (text-box: trim-both cap alphabetic) {
+    text-box: trim-both cap alphabetic;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Route handover. A 160ms root crossfade between in-app pages, opted into
+ * per link (react-router `viewTransition`). Browsers without View
+ * Transitions just swap.
+ * ════════════════════════════════════════════════════════════════════════ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Reveal. The hidden state exists only once script has marked the element
+ * with data-reveal and an observer is watching it, so failed JS, print,
+ * reader mode and preview renderers always see the full page.
+ * ════════════════════════════════════════════════════════════════════════ */
+[data-reveal] {
+  transition:
+    opacity 160ms ease-out,
+    translate 160ms ease-out;
+}
+
+[data-reveal]:not([data-in]) {
+  opacity: 0;
+  translate: 0 6px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Disclosure. A native <details> opens with a short height ease where the
+ * browser can animate to auto (Chromium) and instantly everywhere else.
+ * interpolate-size is scoped to details, never :root, so no other height
+ * transition in the product changes behaviour.
+ * ════════════════════════════════════════════════════════════════════════ */
+details::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 160ms ease-out,
+    content-visibility 160ms allow-discrete;
+}
+
+details[open]::details-content {
+  block-size: auto;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  details {
+    interpolate-size: allow-keywords;
+  }
+}
+
+/* Every motion above settles instantly for a viewer who asked for less, and
+   nothing is ever hidden on paper. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  details::details-content {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  [data-reveal] {
+    opacity: 1 !important;
+    translate: none !important;
+    transition: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Forced colours (Windows High Contrast). The system repaints every colour,
+ * so whatever carried meaning by colour alone has to carry it by shape.
+ * ════════════════════════════════════════════════════════════════════════ */
+@media (forced-colors: active) {
+  /* Only the current page is underlined; the rest stop looking current. */
+  [data-nav-item] {
+    border-bottom-color: Canvas;
+  }
+
+  [data-nav-item][aria-current="page"] {
+    border-bottom-color: Highlight;
+  }
+
+  :focus-visible {
+    outline-color: Highlight;
+  }
+
+  /* The three verdicts differ by edge shape, not just hue. */
+  [data-tone="safe"],
+  [data-kind="safe"] {
+    border-left-style: solid;
+  }
+
+  [data-tone="caution"],
+  [data-kind="caution"] {
+    border-left-style: double;
+    border-left-width: 6px;
+  }
+
+  [data-tone="blocked"],
+  [data-kind="blocked"] {
+    border-left-style: solid;
+    border-left-width: 8px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * More contrast, on request. Muted text and rules are alpha tokens, so this
+ * is one place. Light first, then both dark entry points, in the same order
+ * and specificity as the theme blocks above.
+ * ════════════════════════════════════════════════════════════════════════ */
+@media (prefers-contrast: more) {
+  :root {
+    --fg-muted: rgb(18 19 22 / 0.86);
+    --fg-faint: rgb(18 19 22 / 0.72);
+    --rule: rgb(18 19 22 / 0.32);
+    --rule-strong: rgb(18 19 22 / 0.56);
+    --control-edge: rgb(18 19 22 / 0.72);
+  }
+
+  :root[data-theme="dark"] {
+    --fg-muted: rgb(237 237 232 / 0.88);
+    --fg-faint: rgb(237 237 232 / 0.74);
+    --rule: rgb(237 237 232 / 0.3);
+    --rule-strong: rgb(237 237 232 / 0.54);
+    --control-edge: rgb(237 237 232 / 0.72);
+  }
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fg-muted: rgb(237 237 232 / 0.88);
+    --fg-faint: rgb(237 237 232 / 0.74);
+    --rule: rgb(237 237 232 / 0.3);
+    --rule-strong: rgb(237 237 232 / 0.54);
+    --control-edge: rgb(237 237 232 / 0.72);
   }
 }

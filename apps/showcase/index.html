@@ -3,18 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Baret</title>
-    <meta
-      name="description"
-      content="Baret reads every Monad transaction before you sign it. It simulates what will happen, checks it against rules you set, and tells you what it found."
-    />
+    <!--
+      The ground before the first CSS byte, so no white frame flashes:
+      graphite, or concrete when the theme resolves to light. Only <html> is
+      painted: body is transparent until the token rule gives it the ground.
+      It sits in the `base` layer (same order Tailwind declares) so the token
+      rules that load later still win; an unlayered rule would beat them.
+    -->
+    <style>
+      @layer theme, base, components, utilities;
+      @layer base {
+        html {
+          background: #17181b;
+        }
+        @media (prefers-color-scheme: light) {
+          :root:not([data-theme="dark"]) {
+            background: #e6e6e1;
+          }
+        }
+        :root[data-theme="light"] {
+          background: #e6e6e1;
+        }
+      }
+    </style>
+    <!--
+      The static head for link-preview bots (title, description, og:*,
+      twitter:card) and the LCP image preload. scripts/head.mjs writes it from
+      @baret/content and assets.ts; main.tsx removes the static title,
+      description, og:* and twitter:* tags before React mounts, so RootLayout's
+      per-route ones stay the only ones.
+    -->
+    <!-- baret:head -->
+    <meta name="theme-color" content="#17181b" />
     <link rel="icon" type="image/svg+xml" href="/mark.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!--
+      Self-hosted faces (src/fonts.css). Only the display face is preloaded:
+      the opener plate is set in its 800 weight with display=optional, and a
+      late swap would re-wrap the plate and shift the first screen.
+    -->
     <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Big+Shoulders+Stencil+Display:wght@900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/big-shoulders-display-800.woff2"
     />
+    <link rel="stylesheet" href="/src/fonts.css" />
     <script>
       // Resolve the theme before first paint so the page never flashes the
       // wrong ground. Absent attribute means follow the operating system.
@@ -24,6 +60,17 @@
           document.documentElement.dataset.theme = stored;
         }
       } catch {}
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Baret",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Chrome",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "license": "https://opensource.org/licenses/MIT"
+      }
     </script>
   </head>
   <body>

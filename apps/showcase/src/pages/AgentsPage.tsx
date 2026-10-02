@@ -21,12 +21,7 @@ export function Component() {
         </div>
       </header>
 
-      <Section
-        index="01"
-        eyebrow={agents.problem.eyebrow}
-        title={agents.problem.title}
-        body={agents.problem.body}
-      >
+      <Section title={agents.problem.title} body={agents.problem.body}>
         <ul className="grid gap-3.5 md:grid-cols-3">
           {agents.problem.points.map((point) => (
             <Panel key={point}>
@@ -36,7 +31,7 @@ export function Component() {
         </ul>
       </Section>
 
-      <Section index="02" eyebrow={agents.layers.eyebrow} title={agents.layers.title} deep>
+      <Section title={agents.layers.title} deep>
         <div className="grid gap-3.5 md:grid-cols-3">
           {agents.layers.items.map((layer) => (
             <Panel key={layer.title}>
@@ -54,7 +49,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="03" eyebrow={agents.control.eyebrow} title={agents.control.title}>
+      <Section title={agents.control.title}>
         <div className="overflow-x-auto border border-[color:var(--rule)] bg-[color:var(--surface)]">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
@@ -88,13 +83,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section
-        id="quickstart"
-        index="04"
-        eyebrow={agents.quickstart.eyebrow}
-        title={agents.quickstart.title}
-        deep
-      >
+      <Section id="quickstart" title={agents.quickstart.title} deep>
         <div className="grid gap-3.5 md:grid-cols-2">
           <Panel>
             <h3 className="text-display-m">{agents.quickstart.sdk.title}</h3>
@@ -121,7 +110,7 @@ export function Component() {
         </Panel>
       </Section>
 
-      <Section index="05" eyebrow={agents.failClosed.eyebrow} title={agents.failClosed.title}>
+      <Section title={agents.failClosed.title}>
         <div className="grid gap-3.5 md:grid-cols-2">
           <Panel>
             <p className="text-[color:var(--fg-muted)]">{agents.failClosed.body}</p>
@@ -149,7 +138,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="06" eyebrow="FAQ" title={agents.faq.title} deep className="border-b-0">
+      <Section title={agents.faq.title} deep className="border-b-0">
         <div className="max-w-[80ch]">
           {agents.faq.items.map((item) => (
             <details

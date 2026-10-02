@@ -40,7 +40,7 @@ export function DemoShell({
           </nav>
           <button
             type="button"
-            className="chamfer-sm h-9 border border-[color:var(--rule-strong)] px-3 font-display text-sm uppercase tracking-[0.06em]"
+            className="chamfer-sm h-9 border border-[color:var(--control-edge)] px-3 font-display text-sm uppercase tracking-[0.06em]"
           >
             Connect
           </button>
@@ -60,7 +60,7 @@ export function DemoShell({
             </Tag>
           </Link>
 
-          <fieldset className="chamfer-sm flex shrink-0 border border-[color:var(--rule-strong)]">
+          <fieldset className="chamfer-sm flex shrink-0 border border-[color:var(--control-edge)]">
             <legend className="sr-only">Demo mode</legend>
             {([false, true] as const).map((value) => (
               <button

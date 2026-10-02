@@ -19,13 +19,10 @@ export function Component() {
         </div>
       </header>
 
-      <Section index="01" eyebrow="Pipeline" title={docs.summary.title}>
+      <Section title={docs.summary.title}>
         <ol className="grid gap-3.5 md:grid-cols-4">
-          {docs.summary.steps.map((step, i) => (
+          {docs.summary.steps.map((step) => (
             <Panel key={step.title}>
-              <span className="font-display text-4xl leading-none text-[color:var(--accent)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
               <h2 className="text-display-m">{step.title}</h2>
               <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
             </Panel>
@@ -37,8 +34,6 @@ export function Component() {
         <Section
           key={group.title}
           id={group.title.toLowerCase().replace(/\W+/g, "-")}
-          index={String(i + 2).padStart(2, "0")}
-          eyebrow="Documents"
           title={group.title}
           body={group.body}
           deep={i % 2 === 1}

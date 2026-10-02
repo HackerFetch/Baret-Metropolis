@@ -4,6 +4,9 @@
   "private": true,
   "description": "Baret design tokens and brand primitives. Consumed as TypeScript source, never built.",
   "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",

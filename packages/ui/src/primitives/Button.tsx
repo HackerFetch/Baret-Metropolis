@@ -17,13 +17,15 @@ import { cn } from "../cn.js";
 
 const VARIANT = {
   /** The one action the screen exists for. */
+  /* The transparent border is invisible until forced colours paint it, so
+     the primary keeps its box in high contrast and matches ghost's height. */
   primary:
-    "bg-[color:var(--accent)] text-[color:var(--on-accent)] hover:bg-[color:var(--accent-deep)]",
+    "border border-transparent bg-[color:var(--accent)] text-[color:var(--on-accent)] hover:bg-[color:var(--accent-deep)]",
   /** Everything else. A rule, not a fill. */
   ghost:
     "border border-[color:var(--fg)] text-[color:var(--fg)] hover:bg-[color:var(--ground-deep)]",
   /** Quieter than ghost, for a third action in a row. */
-  soft: "bg-[color:var(--ground-deep)] text-[color:var(--fg)] hover:bg-[color:var(--rule)]",
+  soft: "border border-transparent bg-[color:var(--ground-deep)] text-[color:var(--fg)] hover:bg-[color:var(--rule)]",
   /**
    * Revoke, reset, sign anyway. Red is reserved for an action that cannot be
    * undone, so that red always means the same thing.
@@ -69,7 +71,11 @@ export function Button({
       type={asChild ? undefined : (type ?? "button")}
       data-slot="button"
       className={cn(
-        "chamfer-sm inline-flex shrink-0 items-center justify-center gap-2 font-display font-extrabold uppercase tracking-[0.08em] transition-colors",
+        "chamfer-sm inline-flex shrink-0 items-center justify-center gap-2 font-display font-extrabold uppercase tracking-[0.08em]",
+        // Listed properties only: outline-color stays out so the focus ring
+        // appears instantly. The face gives under a press (0.97), 100ms in,
+        // 150ms out, and holds still for a viewer who asked for less motion.
+        "transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.97] active:duration-100 motion-reduce:active:scale-100",
         "focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[color:var(--accent)]",
         "disabled:pointer-events-none disabled:opacity-40",
         "[&_svg]:size-4 [&_svg]:shrink-0",

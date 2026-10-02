@@ -1,3 +1,4 @@
+import { home } from "@baret/content";
 import { defineRoutes } from "@baret/routes";
 
 /**
@@ -14,7 +15,11 @@ import { defineRoutes } from "@baret/routes";
 export const routes = defineRoutes({
   home: {
     path: "/",
-    title: "Baret",
+    title: home.meta.title,
+    // Not used by the router: router.tsx imports the landing statically (E2).
+    // Kept for the RouteDef contract, `warm` and the route test; a static
+    // import here would close a cycle through cardMedia.ts. The build's
+    // INEFFECTIVE_DYNAMIC_IMPORT notice for it is filtered in vite.config.ts.
     load: () => import("./pages/HomePage.js"),
   },
   showcase: {
@@ -115,3 +120,23 @@ export const DEMO_PATHS: ReadonlySet<string> = new Set(
     .filter((route) => route.group === "demo")
     .map((route) => route.path),
 );
+
+const warmed = new Set<ShowcaseRoute>();
+
+/**
+ * Starts loading a route's chunk on intent (pointerenter or focus of a link to
+ * it), so the click renders at once (IMPROVE E8). Each route is fetched at
+ * most once; a failed fetch is forgotten so the real navigation retries it.
+ * Speculation Rules are deliberately not used: Chromium-only and built for
+ * multi-page sites.
+ */
+export function warm(key: ShowcaseRoute): void {
+  if (warmed.has(key)) return;
+  warmed.add(key);
+  routes[key].load().catch(() => warmed.delete(key));
+}
+
+/** The registry key whose path is `path`, for warming a link by its href. */
+export function routeKeyFor(path: string): ShowcaseRoute | undefined {
+  return (Object.keys(routes) as ShowcaseRoute[]).find((key) => routes[key].path === path);
+}

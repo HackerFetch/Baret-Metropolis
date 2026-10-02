@@ -2,7 +2,7 @@
 
 > **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
-Last updated: 2026-09-14 · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
+Last updated: 2026-10-01 (landing simplified to 8 blocks) · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
 This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites**, **Agents**, **Docs**, **Install**.
 
@@ -12,85 +12,60 @@ This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites*
 
 **Purpose:** Answer "what does this do and why does it matter" in 60 seconds for someone who has never heard of the product. A professional, unpretentious tone that speaks in numbers.
 
-### 1.1 Cinematic opener (optional, scroll-triggered)
-A short video/animation sequence that advances as the page scrolls, showing the following lines in order (one per scroll step):
-1. "Every wallet signs whatever the dApp shows it."
-2. "One Confirm button. Then the chain decides."
-3. "Baret reads first."
-4. "Simulated. Decoded. Nine detectors."
-5. "Rolling caps. Per-site policy. On-chain guard."
-6. "Safe / Caution / Blocked. Before your keys move."
-7. Brand moment: "Baret. A firewall for your signature."
+| Surface | Status | Where |
+|---|---|---|
+| Landing `/` | **Simplified + signature layer** (2026-10-01): owner-approved smooth scroll (Lenis), parallax, word-mask text reveals, an eyelet cursor, a WebGL2 hero layer and a bento grid for the pillars block, each off under reduced motion (BRAND §08). 8 blocks in scroll order (opener in 3 frames, hero, checks, how it works, six dApps, verdicts, agents, closing), down from 12. Every block uses one grammar: a heading, at most one short paragraph, one row or grid of equal items, no boxes around copy, no numbered tags. Every string comes from `home.content.ts`; keys that no longer render stay in that file under a `Not rendered on the landing since 2026-10-01.` comment. | `apps/showcase/src/pages/HomePage.tsx`, `apps/showcase/src/landing/` |
 
-This section is optional/stretch — if there are no assets it is not rendered at all, and the page starts directly at the Hero.
+Landing improvement pass (2026-10-01, IMPROVE A-H on top of the signature layer, which is kept as it was):
+- Done, interactive components (all sample data, keyboard and touch, complete static view under reduced motion): H1 verdict check in the Verdicts block with the H2 rule switch folded in (a real checkbox with `role="switch"`), H3 daily-cap presets in the Agents block, H4 "all 17 checks" `<details>` under the marquee (motion mode only; its open animation comes from `details::details-content` in `tokens.css`). Illustrative `<Verdict>`s pass `announce={false}`; one persistent `role="status"` region owns announcements (F8). C2: the Agents H2 breaks only between sentences (`keepBeats`). C3: Verdicts uses a subgrid. C4 partial (the row/card switch stays at `lg`), C5 skipped.
+- Done, shell and type: B2 `text-wrap: pretty` is global (per-element classes removed), B3, B4 hero body via `splitLead` capped at 44ch, B7, H1 sized in `cqi` inside an `@container` copy column. F1 `scroll-padding-top: 72px` on `html` (per-section `scroll-mt` removed). A1/F2 press scale and listed-property transitions on LinkButton and ShowcaseCard. A3 160 ms view-transition crossfade on every internal `<Link>`. A5 `Reveal` sets `data-reveal` only once its IntersectionObserver is attached and `data-in` on entry; CSS hides only `[data-reveal]:not([data-in])`, reset under reduced motion and print. The landing surface enter follows BRAND §08 (460 ms / 14 px in `shared/reveal.css`), not IMPROVE A5's 160 ms / 6 px. D2 header action (`common.actions.openShowcase` from 768 px, the nav "Showcase" label on phones, `size="sm"` ghost LinkButton); no horizontal scroll at 320 px. D3 the closing note became linked `home.cta.facts` (`cta.note` is kept in content, not rendered). D4 phone labels via `labelPhone` keys. F3, F4 (`data-nav-item`, `aria-current="page"` from NavLink, forced-colors rules), F5.
+- Done, SEO head (G1-G6): `index.html` gets title, description, canonical, `og:*`/`twitter:*`, `og:image:alt` from `home.meta` through the `baretHead` Vite plugin; `dist/<route>/index.html` is generated per route with its own head (`data-static-head` nodes are removed by `main.tsx` on boot); `og.png`, `robots.txt`, `llms.txt`, `site.webmanifest`, apple-touch icon. The canonical and sitemap appear, and `og:image` becomes absolute (it is a relative `/og.png` without it, which most link previews ignore), only when `BARET_SITE_URL` is set at build time; the domain is an owner decision. `envPrefix` was deliberately left unwidened (a `BARET_` prefix would expose every `BARET_*` variable to the client).
+- Done, performance: E1 the hero image preload (AVIF set for l-06 with `type=image/avif`), E2 route registry with `warm(key)` on pointerenter/focus (E8, nav and showcase cards), E4, E5 metric fallback faces in `src/fonts.css`, E6 AVIF for l-01, l-06 (+w768, w1024), l-07, l-09, E7 leaf imports from `@baret/ui/primitives/*` on the home path. Measured on the production build after integration (`measure.mjs`, 4x CPU, 150 ms RTT, 1.6 Mbps): LCP 3.11 s at 1440 and 3.07 s at 390 (was 3.3 s; earlier pass 3.69 s), FCP about 0.79 s, CLS 0 / 0.0002, about 520-545 KB transferred; LCP is the l-06 AVIF, which waits on the JS and render path (target 1.6 s). Critical JS on `/` is the entry (86.6 kB gz) plus the React vendor chunk (98.7 kB gz), about 185 kB gz against the 150 kB target; no sonner, tailwind-merge or Radix code is in either. Build: HomePage is now in the entry chunk (`index-*.js` 262.1 / 86.6 kB gzip, was HomePage 136.8 / 45.8 kB gzip plus the entry) because `router.tsx` imports it statically; Vite warns `INEFFECTIVE_DYNAMIC_IMPORT`.
+- Open: E5 needs `"Instrument Sans Fallback"` and `"JetBrains Mono Fallback"` added right after their families in `--font-sans` / `--font-mono` in `packages/ui/src/tokens.css`. The canonical and `og:*` tags in the live SPA are not marked `data-static-head`, so on a route with no generated file (for example `/kit`) a JS-rendering crawler sees canonical `/` once `BARET_SITE_URL` is set. `RootLayout` still imports `Mark` from the `@baret/ui` barrel (no `./brand/*` export yet). D3 "Not audited yet" waits on Ezgin (FOR_EZGIN).
+- Site URL: the build takes `BARET_SITE_URL=https://<domain>`, and on Vercel falls back to the project's production domain (`VERCEL_PROJECT_PRODUCTION_URL`). Without either there is no `sitemap.xml`, no canonical or `og:url`, and `og:image` stays relative. Only a Vercel production build or `BARET_REQUIRE_SITE_URL=1` fails on it; the GitHub Actions build, which only proves the apps compile, warns.
+- SEO/head routing: trailing-slash URLs (`/agents/`) are normalised in `RootLayout.headFor`. Unknown URLs render `robots noindex` (a soft 404 on a static host). The static `og:*` / `twitter:*` tags exist for bots only and are removed from the live DOM in `main.tsx`; per-route og tags are not rendered client-side.
+- Hosting (for deploy): serve `dist/<route>/index.html` before the SPA fallback, give `/fonts` and `/assets` `Cache-Control: immutable`, set `BARET_SITE_URL` at build time.
+
+Follow-ups for the landing:
+- Superseded by the pass above (2026-10-01), landing bundle: the HomePage chunk is 182.7 / 59.1 kB gzip (was 152.9 / 49.3 before the signature layer); about 45 kB of it is Motion's layout-projection and drag code the page never uses. `LandingMotion` now wraps the page in `LazyMotion features={domAnimation}`, and `Reveal` and the marquee `Row` render `m.*`. The saving lands only when no landing file renders `motion.*`: Hero, FrameLayer, Parallax, LinePlate and TextReveal still do. A build with all of them on `m.*` measured 136.5 / 45.7 kB gzip. Track the rest against the perf plan (AVIF, font preload, CSS-only H1 reveal) toward the 1.6 s throttled-mobile LCP target. Done: after "Skip the intro" the hero H1 takes focus without the orange ring (it is a scripted landing point, not a control).
+- Open (2026-10-01), signature layer: Done (2026-10-02): l-14 (night watchtower) now has `-w480` / `-w768` copies and `IMG.l14` carries a `srcSet`; `IMG.l12` adds a `-w1024` width. `node apps/showcase/scripts/encode-avif.mjs webp` regenerates the pillar WebP widths. The pillars block is 1067 px tall at 1440 (target under ~1000); `pad="compact"` would fix it. The bento tile images could take the shared `Parallax` (the hover scale would move to its wrapper). Done (2026-10-01): the hero's left scrim gradient is gone; one flat 35 % graphite veil sits over the photo from 1024 px. The hero H1 reveal triggers when its top passes 65 % of the viewport, and the WebGL chunk loads only within one viewport of the hero. Open: `l-01` exists only at 1536x768, so the 1920 hero is soft; regenerate or upscale it to 2560-3072 px and add w-variants plus a `srcSet` on `IMG.l01` (the WebGL layer uploads the img's `currentSrc`, so it improves with it).
+- Open, copy owner: `home.content.ts` still marks `pillars.items[].label`, `items[].points` and `stats` as "Not rendered on the landing since 2026-10-01"; the bento renders all of them again, so those comments are stale.
+- Superseded (2026-10-01) by G1 in the improvement pass above: `index.html` carries no `<title>` and no meta description. `RootLayout` renders exactly one of each per route: the title from the route registry, the description from `home.meta.description` on `/` and `common.brand.description` elsewhere. This removes the old duplicate tags with stale copy, but link previews and crawlers that do not run JS now see neither. Restoring a static fallback, plus `og:` and `twitter:` tags, is an SEO call.
+- Open, copy owner: the hero H1 ("Check it first. Then sign.") and the footer tagline in `common.content.ts` ("Read first. Then sign.") are two versions of one line on the same page and read like a slip. Align the footer tagline with the hero line in a copy pass; nothing was changed in the simplification (owner decision: no headline or body copy changes).
+- Fonts (2026-10-01): Big Shoulders Display is preloaded (one variable woff2 for 700 to 900) and loads with `display=optional`, so the opener lines never re-wrap on a late swap. The other families stay on `display=swap`. Open: a metric-matched `Big Shoulders Fallback` face in `packages/ui/src/tokens.css` for the first visit when the font misses the optional window.
+- Library defects worked around locally, still open in `packages/ui`: the Button chamfer focus ring, the Tabs and Accordion default classes, the Separator, and the brand Tag's left edge on dark grounds.
+- Tag text in the light theme uses the `--safe-ink`, `--caution-ink`, `--blocked-ink`, `--watching-ink` and `--network-ink` tokens (AA on the manila paper). The dark theme is unchanged.
+
+**Motion.** Nothing on the landing runs on its own. Wheel scrolling is smoothed by Lenis (`landing/shared/SmoothScroll.tsx`, `lerp` 0.1, native window scroll kept, touch untouched); the signature layer (parallax, text reveal, eyelet cursor, WebGL hero, bento) is specified in BRAND §08. `LandingMotion` gives every motion element the BRAND ease-out and honours `prefers-reduced-motion`. With reduced motion on: the opener is one finished screen (the first frame with its three lines as one paragraph), the checks are a static list (one per line on phone, wrapped from 768 px), every reveal is static, Lenis and the custom cursor are not mounted, headings are plain text, photos do not drift and the WebGL hero never starts (the photo shows).
+
+The sections below describe what each block says and does. Where they differ from the shipped copy, `home.content.ts` wins.
+
+### 1.1 Opener (3 frames, scroll-stepped)
+A pinned graphite stage that tells the product in three lines, one per scroll step of about 30svh: the problem, the act, the result (`home.opener.lines`, three entries). Frames and lines swap on the step and crossfade on time; nothing is scrubbed. Frames: the Confirm button (`l-06`), the inspector's desk (`l-07`), the three verdict tags (`l-09`, contained so all three tags stay in view). The last frame hands straight to the hero photo with no spacer. `home.opener.skip` lets the reader jump past it.
 
 ### 1.2 Hero
-- Live-status badge: "Live on Monad testnet"
-- Headline: **"Read first. Then sign."**
-- Subheadline: "Baret reads every Monad transaction before you sign it. It decodes the transaction, simulates what it will do, and gives you a plain-language verdict before your keys move: Safe / Caution / Blocked."
-- Two CTAs: **"Open the Showcase"** (primary), **"Read the Docs"** (secondary)
-- Trust badges (four short labels): "Simulated before signing" · "Plain-language verdict" · "Rolling spend caps" · "Alerts on drift"
-- On the right: a pixel-for-pixel miniature of the real Sign Request popup (the marketing mockup and the real wallet screen share the same component) — showing an example of a blocked transaction (e.g. an unlimited approval request from the origin "evil-drainer.xyz" + the verdict "Blocked by your policy").
+One photo, one copy column, one action row. No plate, no card, no badges. The night skyline (`l-01`) fills the section from 1024 px and the copy sits on its empty sky in columns 1 to 6; below 1024 px the photo is a band on top and the copy follows on graphite. Copy: `hero.status`, the H1 `hero.title` (one line per sentence), `hero.body`, and two actions (`hero.actions.primary`, `hero.actions.secondary`). `hero.badges`, `hero.previewLabel` and `hero.mockCaption` are kept in content but not rendered.
 
-### 1.3 Detector marquee
-A scrolling/static strip listing the detector names (example labels — the real list must stay in sync with `ARCHITECTURE.md` §6):
-"Wallet drainer" · "Unlimited approval" · "Hidden contract call" · "Admin key handoff" · "Fee abuse vs simulated baseline" · "Look-alike asset" · "Memo omission" · "Rug-pull pattern" · "Agent drift" · "Allowance overflow" · "Facilitator impostor" · "Unknown contract" · "LP unlock" · "Compliance gate" · "Phishing payload" · "Silent re-sign"
+### 1.3 Checks (marquee)
+`marquee.label` as a plain H2, then rows of the check names (`marquee.items`, each mapped to a finding code from `ARCHITECTURE.md` §6). The rows are scroll-linked, never self-running: every row drifts sideways at one constant ratio of the scroll, **0.1** sideways px per scrolled px (`RATIO` in `landing/sections/marquee/Row.tsx`), the same at every width, so the checks stay readable while they move. A single pass no longer shows every check; the screen-reader list and the reduced-motion list carry all of them. In motion mode a `<details>` under the rows (`marquee.allChecks` as its summary, `marquee.allChecksList` as the list's label) opens the full list (H4); a test keeps the number in the summary equal to `items.length`.
 
-### 1.4 Three Columns (The Product)
-Headline: "Three layers, one signature." Description: "Baret runs three checks before your keys move. Each one stands on its own. Together, they close the gap that drainers, stale approvals and silent agents walk through today."
+### 1.4 How it works
+`pillars.title` (H2) and `pillars.body` in a split header, then one row of three equal columns, one per product layer: Pre-sign Guard, Authorization Ledger, Post-sign Monitor (`pillars.items[i].title` and `.body`). The bodies carry the sponsor names (Alchemy, Nansen, Chainlink CRE, Envio). No labels, points, icons, numbers or links; `pillars.eyebrow`, `items[].label` and `items[].points` are not rendered.
 
-1. **Pre-sign Guard** — "Baret decodes and simulates every transaction on the server, then runs nine risk detectors. The popup explains every finding in a single sentence." Sub-points: Server simulation · 9 risk detectors · Policy engine gate.
-2. **Authorization Ledger** — "Every approval becomes a row with a cap, a clock and a live progress bar. No more unlimited approvals you forgot about." Sub-points: Rolling caps · One-click revoke · Pause/resume. (Live demo value: "acme-dapp.xyz daily cap: 62/100 USDC")
-3. **Post-sign Monitor** — "Baret watches your account and your smart wallet over a WebSocket. If something you never signed moves, you get an instant browser notification." Sub-points: WebSocket subscribe · Drift detection · Cold-start backfill.
+### 1.5 Six dApps
+`showcase.title` and `showcase.body` in a split header, then the six fake sites as one list: rows split by 1 px rules on phone, a 2-column grid from 768 px and 3 columns from 1024 px. Each site is one whole-card link with its expected verdict tag (`showcase.labels.verdict` is the screen-reader label). `showcase.notice` follows. There is one responsive list in the DOM (no duplicate phone list). Since the improvement pass (C1/C4) each card in the card layout (from 1024 px) ends in a visible `showcase.labels.open` cue ("Open the site" with an arrow), and each phone row ends in the arrow alone, and `showcase.action` is rendered again as one ghost button beside the notice. Measured block height: about 990 px at 1440 and 1210 px at 390.
 
-### 1.5 The "x402 Gap" Section (The Wedge)
-Headline: "x402 is stateless. Baret isn't." Description: "x402 is the agentic-payment protocol now live on Monad. By design it is a **stateless** challenge-pay-settle handshake. Every payment is a freshly signed transfer. The protocol itself has no allowance object, no revoke endpoint, no spend cap. Baret is not the protocol — it is a **stateful control layer** that sits on top and adds the caps x402 deliberately left out."
+### 1.6 Verdicts
+`caution.title` and `caution.body`, then Safe, Caution and Blocked as three equal columns, each a Tag (in an h3) and its body (`caution.examples[].body`) under the same single top rule as the Pillars items. The "If signed" impact lines (`caution.labels.impact`, `caution.examples[].impact`) are not rendered. Fail-closed shows as one small caption under the columns (`caution.honesty.title`, "The fourth verdict: Can't reach Baret"). The block uses the frame's compact padding (`pad="compact"`) to stay near 520 px tall at 1440. Between the header and the columns sits one sample verdict check (H1, `verdicts/VerdictCheck.tsx`): pick a sample transaction with a segmented control and turn the sample rule on or off (H2, a checkbox with `role="switch"`); the matching column is marked and one persistent `role="status"` region announces the result. Everything is labelled sample data, has no timers, and all three verdict bodies stay in the DOM. `caution.eyebrow`, `caution.honesty.body` and `common.verdicts.unreachable` are not rendered.
 
-A comparison (x402 alone vs x402 + Baret) along a four-step track (402 Challenge → Sign → Pay → Settle): in plain x402, every step forgets the one before it; with Baret, the ledger underneath is the one thing that remembers across every call.
+### 1.7 Agents
+The x402 claim on the left (`agents.title`, `agents.body`), the three controls Baret adds (the budget, the leash, the kill switch: `agents.gaps[i].control` and `.answer`) as plain rows on the right, and under the heading one action (`agents.action`) with the Dynamic and PaymentGuard line (`agents.note`). The H2 breaks only between sentences (`keepBeats`, C2). Under the budget control, four daily-cap presets (H3, `agents/CapPresets.tsx`) show which sample payments a cap lets through, announced through one status region. `agents.eyebrow`, `agents.labels`, the gap titles and gap lines, `agents.track` and `agents.kicker` are not rendered.
 
-Three concrete gap/answer pairs:
-1. **Silent agent drift** — An agent re-signs a micro-payment every minute; with no allowance object in the protocol, nothing shows the running total. → Baret's answer: hourly/daily rolling per-merchant caps; every signature decrements a real number, and once the cap is hit the next one is blocked.
-2. **Look-alike asset swap** — A merchant offers a token labeled "USDC" from the wrong issuer; the spec only checks that the asset field matches, not which issuer is the real one. → Baret's answer: a wallet-side asset allowlist seeded with the network's canonical USDC; unknown contracts require an explicit override before signing.
-3. **Authorization key compromise** — If the signing key leaks, x402 has no per-merchant scope to limit the damage. → Baret's answer: a per-merchant scoped sub-key revoked on-chain with a single click; spend caps are enforced by the extension today, a bounded on-chain allowance is on the roadmap.
+### 1.8 Closing
+One centred column on graphite in both themes, mirroring the hero: `cta.title` (the page's second and last stencil title), `cta.body`, the two actions (`cta.actions.primary` is the page's last filled button, phone labels from `labelPhone`) and the facts row `cta.facts` (each fact links only when it has an `href`; `cta.note` is kept in content but no longer rendered, D3). Then the footer.
 
-### 1.6 Stats Strip
-Four figures: "9" detectors · "25" rules · "6" fake sites · "800 ms" Monad finality. No contract count until the contracts are deployed. The exact wording lives in `packages/content/src/showcase/home.content.ts`.
-
-### 1.7 Showcase Strip
-Headline: "Six fake-but-real dApps." Description: "Connect a wallet and click a button. Baret catches the threat live. No slides, no mockups." Six site cards (name, category tag, "Catches: X" line) + "Open the Showcase" link. The cards are the condensed version of §2 on the Showcase hub.
-
-### 1.8 Comparison Section
-Headline: "Same signature, two wallets." Description: "No wallet is being bashed here. This is what changes when a pre-sign check sits between the app and your keys." A four-row side-by-side comparison:
-
-| | A standard Monad wallet | Baret |
-|---|---|---|
-| Before signing | A contract address and a Confirm button. The chain decides the rest. | A decoded transaction, a simulation, and a verdict: Safe/Caution/Blocked. |
-| Unlimited approvals | Granted once, lives until you remember to revoke it. | Every approval is a row with a cap and a clock. Pausing/revoking is one click. |
-| Agent payments | An agent can re-sign micro-payments all day with no ceiling. | Hourly and daily per-site caps, checked at signing time and again on-chain. |
-| After signing | You find out what happened from a block explorer. | Baret watches your account and alerts you if something you never signed moves. |
-
-### 1.9 Security and Privacy Section
-Headline: "What runs where." Description: "You are trusting Baret with the moment right before your keys move, so here is exactly what we do with it."
-
-Four cards:
-1. **Analysis runs on a server** — "The wallet sends the unsigned transaction to the analysis server for decoding and simulation. The server sees that unsigned transaction. It never sees your keys."
-2. **Nothing is signed without you** — "The verdict comes back before the popup asks you anything. Nothing is signed until you approve it. When Baret says Blocked, it refuses to sign."
-3. **Keys stay on your device** — "Your keys are stored encrypted on your device. They are never sent to the analysis server or anywhere else."
-4. **Simulation is a preflight** — "Verdicts reflect simulated state, not a guarantee. Gas, expiry and network conditions can make real execution deviate from the simulation."
-
-Footnote: "No audit yet. The code is open. Read it." + "View source" link (GitHub).
-
-### 1.10 FAQ
-The fair questions people ask before trusting a wallet with the sign button:
-- "What happens if the analysis server goes down?" → "Baret tells you the transaction was not checked and leaves the decision to you. It never fabricates a verdict, and it never signs on your behalf."
-- "Does it work alongside other wallets?" → "Yes. Baret registers as a standard EIP-6963 provider and shows up in the same wallet picker next to the ones you already use. You can install it without removing anything."
-- "Is it free?" → "Yes. Baret is free and open source under the MIT license."
-- "When mainnet?" → "Testnet today. Mainnet comes after store listings and more real-world testing. We would rather ship the firewall late than wrong."
-- "What does Blocked actually do?" → "Baret refuses to sign. You can override it, but that is a separate, deliberate step, and it is logged so you can see it afterwards."
-- "Where are my keys?" → "Encrypted on your device. They are never sent anywhere — not to the analysis server, not to us."
-
-### 1.11 Final CTA
-Headline: "Sign with your eyes open." Description: "Open the Showcase, connect a wallet, and watch Baret refuse a wallet drainer in real time." Two CTAs: "Open the Showcase", "Install the wallet". Footnote: "Free and open source, MIT licensed. On Monad testnet today. Store review pending."
+### No longer on the landing
+The stats strip (`home.stats`), the comparison (`home.comparison`), the privacy section (`home.privacy`) and the FAQ (`home.faq`) were removed from `/` on 2026-10-01. Their copy stays in `home.content.ts`, marked as not rendered, for reuse on other pages.
 
 ---
 

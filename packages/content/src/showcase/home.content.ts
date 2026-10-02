@@ -1,9 +1,11 @@
 /**
  * / on apps/showcase. The landing page.
  *
- * Keys follow the scroll order of the page plan: opener, hero, marquee,
- * pillars, caution, agents, stats, showcase, comparison, privacy, faq, cta.
- * `meta` is the document head.
+ * Landing order since 2026-10-01: opener, hero, checks (`marquee`), how it
+ * works (`pillars`), six dApps (`showcase`), verdicts (`caution`), agents,
+ * closing (`cta`). `meta` is the document head. The keys below keep their
+ * older file order; blocks marked "Not rendered on the landing since
+ * 2026-10-01." stay in the file on purpose and are not shown on `/`.
  *
  * Positioning decisions, from the competitor research:
  *
@@ -32,23 +34,22 @@ export const home = {
     title: "Check every Monad transaction before you sign · Baret",
     description:
       "Baret simulates every Monad transaction before you or your AI agent signs it, checks it against your rules, and explains the verdict in plain words.",
+    /** og:image:alt for the static share card in index.html (G1/G3). */
+    imageAlt: "Baret: check every Monad transaction before you sign",
   },
 
-  /** The scroll-driven opener, one line per frame, written against the seven
-   *  opener frames in order: the site at night, the button, the inspector's
-   *  desk, the marked-up plan, the three tags, the skyline, the line. Each
+  /** The scroll-driven opener, one line per frame, written against the
+   *  three frames: the button, the inspector's desk, the three tags. Each
    *  line is one full sentence. The page works without the opener. */
   opener: {
     lines: [
-      "On Monad, a transaction is final in 800 milliseconds.",
       "Your wallet shows you a long address and a Confirm button.",
       "Baret reads the transaction before you press it.",
-      "It runs the transaction without sending it, and marks what would move.",
       "Then it hangs one tag on it: Safe, Caution or Blocked.",
-      "Your rules decide what gets blocked.",
-      "Baret. The firewall for your signature on Monad.",
     ],
     skip: "Skip the intro",
+    /** Accessible name of the opener region (F8). */
+    regionLabel: "Intro",
   },
 
   hero: {
@@ -57,16 +58,27 @@ export const home = {
     body: "Baret runs every Monad transaction without sending it, before you sign. It checks the result against your rules. Then it tells you what it found, in plain words. The same check covers your AI agents.",
     actions: {
       primary: { label: "Open the showcase", href: "/showcase" },
-      secondary: { label: "Install the extension", href: "/install" },
+      secondary: {
+        label: "Install the extension",
+        /** Below 768 px, same link: the install steps need a desktop (D4). */
+        labelPhone: "Install on desktop",
+        href: "/install",
+      },
     },
+    // Not rendered on the landing since 2026-10-01.
     badges: [
       "Simulated before you sign",
       "Verdicts in plain words",
       "Your rules, not ours",
       "Spend caps for AI agents",
     ],
+    /** Caption for the composed preview card. Replaces mockCaption until the
+     *  real Sign Request component exists. Rendered again since 2026-10-01
+     *  next to every sample widget on the landing (H1-H3). */
+    previewLabel: "An example request with sample data, not a\u00a0live check.",
     /** Sits beside the real Sign Request component. The caption is what
      *  makes the picture honest, so it stays only while that is true. */
+    // Not rendered on the landing since 2026-10-01.
     mockCaption: "The real sign request screen from the extension, not a drawing of one.",
   },
 
@@ -75,6 +87,11 @@ export const home = {
    *  nine modules appear. Add nothing here that no detector emits. */
   marquee: {
     label: "Checks Baret runs before you sign",
+    /** Summary of the closed <details> under the strip (H4). The number must
+     *  match `items.length`; a test in apps/showcase guards it. */
+    allChecks: "See all 17 checks",
+    /** Accessible name of the static list inside that disclosure. */
+    allChecksList: "All 17 checks Baret runs before you sign",
     items: [
       "A transaction that would fail", // simulation: SIMULATION_FAILED
       "A simulation with gaps", // simulation: LOW_CONFIDENCE_INCOMPLETE_DATA
@@ -98,14 +115,17 @@ export const home = {
 
   /** Three layers, one verb each. `label` is the verb, `title` the layer. */
   pillars: {
+    // Not rendered on the landing since 2026-10-01.
     eyebrow: "How it works",
     title: "Reads it. Caps it. Watches it.",
     body: "Three layers around one signature: before you sign, while a permission stays open, and after it is used. Each layer works on its own.",
     items: [
       {
+        // Rendered in the landing bento tile (since 2026-10-01).
         label: "Reads it",
         title: "Pre-sign Guard",
         body: "Before your wallet signs, Baret simulates the transaction over Alchemy RPC. Nine detectors read the result. Reputation comes from Nansen and from threat feeds that Chainlink CRE writes on-chain.",
+        // Rendered in the landing bento tile (since 2026-10-01).
         points: [
           "Runs without sending",
           "Nine detectors, one verdict",
@@ -113,9 +133,11 @@ export const home = {
         ],
       },
       {
+        // Rendered in the landing bento tile (since 2026-10-01).
         label: "Caps it",
         title: "Authorization Ledger",
         body: "Some signatures leave a permission behind, like a site allowed to spend your tokens next year. Baret keeps every one in a single list: who can spend, how much, and a Revoke button.",
+        // Rendered in the landing bento tile (since 2026-10-01).
         points: [
           "Allowances, operator grants and connected sites",
           "Revoke in one step",
@@ -123,9 +145,11 @@ export const home = {
         ],
       },
       {
+        // Rendered in the landing bento tile (since 2026-10-01).
         label: "Watches it",
         title: "Post-sign Monitor",
         body: "Baret keeps watching after you sign. You get an alert when an allowance is used or funds leave without your signature.",
+        // All three points are rendered in the landing bento tile.
         points: [
           "Alerts when an allowance is used",
           "Alerts on transfers you did not sign",
@@ -139,33 +163,83 @@ export const home = {
    *  section, which is exactly why it is here. `impact` is one sentence on
    *  what actually moves if the request is signed. */
   caution: {
+    // Not rendered on the landing since 2026-10-01.
     eyebrow: "The middle verdict",
     title: "Between Safe and Blocked, there is Caution.",
     body: "A check with two answers has to round. Round down, and a contract nobody verified passes as fine. Round up, and every swap looks alarming until you stop reading. Baret has a third answer. You can sign, and the reason comes first.",
+    // Not rendered on the landing since 2026-10-01.
     labels: { impact: "If signed" },
+    /** The verdict check row between the header and the columns (H1, with the
+     *  rule switch from H2). Sample data, never a live check. The verdict per
+     *  sample comes from `verdictOf`; the "If signed" sentence is the matching
+     *  `examples[].impact`. Each sample links to the showcase site that runs
+     *  the same check for real. */
+    demo: {
+      legend: "Try a sample request",
+      samples: [
+        {
+          id: "send",
+          label: "Send 25 MON to the address you typed",
+          tryLabel: "Try it on NovaSwap",
+          href: "/novaswap",
+        },
+        {
+          id: "swap",
+          label: "Swap 100 USDC via an unverified contract",
+          tryLabel: "Try it on OrbitYield",
+          href: "/orbityield",
+        },
+        {
+          id: "approve",
+          label: "Approve unlimited USDC",
+          tryLabel: "Try it on ClaimHub",
+          href: "/claimhub",
+        },
+      ],
+      checked: "Checked: simulation · approvals · recipient",
+      /** The switch label is `policy.fields.blockUnlimitedApprovals.label`
+       *  and never changes; only the state word beside it does. */
+      rule: { on: "On", off: "Off", stopped: "A rule you set stopped it." },
+      /** The finding that still shows when the rule is off. Values fill the
+       *  `findings` template. */
+      finding: {
+        code: "ERC20_APPROVAL_UNLIMITED",
+        values: { spender: "this site's contract", asset: "USDC", amount: "100" },
+      },
+      /** What the status region announces. `{verdict}` is the verdict label. */
+      announce: {
+        sample: "{verdict}. {impact}",
+        ruleOn: "Rule on. Blocked.",
+        ruleOff: "Rule off. Caution.",
+      },
+    },
     examples: [
       {
         verdict: "safe",
         title: "Safe",
         body: "No rule was broken and no check found a problem. You still see exactly what changes before you sign.",
+        // Rendered once, in the verdict check result (H1), never in the columns.
         impact: "25 MON goes to the address you typed. Nothing else moves.",
       },
       {
         verdict: "caution",
         title: "Caution",
         body: "No rule was broken, but a check found something worth a look. For example, a contract nobody verified, a brand-new wallet, or a fee far above the need.",
+        // Rendered once, in the verdict check result (H1), never in the columns.
         impact: "You swap 100 USDC through a contract nobody has verified.",
       },
       {
         verdict: "blocked",
         title: "Blocked",
-        body: "A rule you set stopped it. Baret names the rule, not a score. Signing anyway takes a separate press-and-hold, and it is logged.",
+        body: "A rule you set stopped it. Baret names the rule, not a score. Signing anyway takes a separate press\u2011and\u2011hold, and it is logged.",
+        // Rendered once, in the verdict check result (H1), never in the columns.
         impact: "A site could spend all of your USDC, today or next year.",
       },
     ],
     honesty: {
       title: "The fourth verdict: Can't reach Baret",
-      body: "If the server is down or the simulation fails, Baret does not guess. The verdict is Can't reach Baret, and it counts as Blocked. Signing without a check takes the same press-and-hold, and it is logged.",
+      // Not rendered on the landing since 2026-10-01.
+      body: 'If the server is down or the simulation fails, Baret does not guess. The verdict is "Can\'t reach Baret", and it counts as Blocked. Signing without a check takes the same press-and-hold, and it is logged.',
     },
   },
 
@@ -173,34 +247,69 @@ export const home = {
    *  explains what the agent should check before it pays. The three stories
    *  map to the leash, the budget and the kill switch in the body. */
   agents: {
+    // Not rendered on the landing since 2026-10-01.
     eyebrow: "For AI agents",
     title: "x402 forgets every payment. Baret keeps count.",
     body: "x402 lets an AI agent pay for an API by itself, in small payments. It is stateless on purpose: no running total, no cap, no way to revoke a key. Baret keeps the memory the protocol leaves out. Your agent gets a leash, a budget and a kill switch.",
+    // Not rendered on the landing since 2026-10-01.
     labels: { gap: "Protocol gap", answer: "Baret's answer" },
+    /** Daily-cap presets inside "The budget" row (H3). A deterministic sample
+     *  run, no timers. `{amount}`, `{actual}` and `{cap}` are formatted with
+     *  the asset, for example "2 USDC". The capped sentence is the filled
+     *  `X402_DAILY_CAP_EXCEEDED` finding. */
+    demo: {
+      legend: "Daily cap",
+      sample: "A sample run: an agent asks Scrybe {count} questions at {amount} each.",
+      asset: "USDC",
+      price: 2,
+      run: 20,
+      presets: [10, 20, 30, 50],
+      initial: 20,
+      /** Segment label, for example "20 USDC". A no-break space keeps the
+       *  number and its unit on one line in every sentence it fills. */
+      preset: "{cap}\u00a0{asset}",
+      fits: "All {count} payments fit under this cap.",
+      /** Same label the Scrybe card uses (`hub.verdicts.capped`). */
+      capped: "Blocked at the cap",
+      findingCode: "X402_DAILY_CAP_EXCEEDED",
+      /** What the status region announces when the run is capped. */
+      announceCapped: "{tag}. {finding}",
+      /** How far a capped run got, before the finding. */
+      progress: "{paid} of {count} paid.",
+      /** The honesty line under the result: a run, not a single request. */
+      previewLabel: "A sample run with sample data, not a\u00a0live payment.",
+    },
     gaps: [
       {
         control: "The budget",
+        // Not rendered on the landing since 2026-10-01.
         title: "An agent that keeps paying",
+        // Not rendered on the landing since 2026-10-01.
         gap: "The protocol keeps no running total. A slow leak looks exactly like normal traffic.",
         answer:
           "Caps for each merchant, per payment, per hour and per day. Every payment counts against a real number. The one that crosses it does not go out.",
       },
       {
         control: "The leash",
+        // Not rendered on the landing since 2026-10-01.
         title: "A token that only looks like USDC",
+        // Not rendered on the landing since 2026-10-01.
         gap: "The handshake checks that the asset field matches. It never asks whether that contract is the real USDC.",
         answer:
           "Baret checks the token contract against your list of allowed assets. A look-alike fails, even with a perfect name.",
       },
       {
         control: "The kill switch",
+        // Not rendered on the landing since 2026-10-01.
         title: "A leaked agent key",
+        // Not rendered on the landing since 2026-10-01.
         gap: "One key, no scope. Whoever holds it can pay anyone, any amount, until someone notices.",
         answer:
           "The agent's key can only pay from your PaymentGuard vault, inside your caps. Revoke it in one transaction and every later payment from it fails on-chain.",
       },
     ],
     /** The four-step track under the stories. */
+    // Not rendered on the landing since 2026-10-01.
     track: {
       title: "One payment, four steps",
       steps: [
@@ -212,12 +321,14 @@ export const home = {
       without: "Plain x402: each step forgets the one before it.",
       with: "With Baret: one ledger remembers every payment, across every call.",
     },
+    // Not rendered on the landing since 2026-10-01.
     kicker: "The caps are the firewall. Nothing over a cap goes out on its own.",
-    note: "Agent wallets come from Dynamic. Per-payment and daily caps live on-chain in your PaymentGuard vault.",
+    note: "Agent wallets come from Dynamic. Per-payment and daily caps live on\u2011chain in your PaymentGuard vault.",
     action: { label: "Set up your agent", href: "/agents" },
   },
 
   /** Only numbers that come from the docs. No usage stats, ever. */
+  // Not rendered on the landing since 2026-10-01.
   stats: {
     title: "Counted, not claimed.",
     items: [
@@ -233,6 +344,7 @@ export const home = {
    *  the live analysis on each site says what it found. `verdict` matches
    *  the expected verdict in that site's own content file. */
   showcase: {
+    // Not rendered on the landing since 2026-10-01.
     eyebrow: "Showcase",
     title: "Six fake sites. Six real attacks.",
     body: "Each site looks like a real product and builds a real transaction on Monad testnet. Connect any wallet, press the main button, and read the verdict before anything is signed.",
@@ -287,6 +399,7 @@ export const home = {
   },
 
   /** Same signature, two wallets. Matched rows, nobody named. */
+  // Not rendered on the landing since 2026-10-01.
   comparison: {
     eyebrow: "The difference",
     title: "A standard wallet trusts the site. Baret doesn't.",
@@ -318,6 +431,7 @@ export const home = {
 
   /** Nobody in this category says where analysis runs. We do, including the
    *  half that happens on a server, and we name every party that sees data. */
+  // Not rendered on the landing since 2026-10-01.
   privacy: {
     eyebrow: "Where the analysis runs",
     title: "What runs where, and who sees what.",
@@ -347,13 +461,15 @@ export const home = {
     },
   },
 
+  // Not rendered on the landing since 2026-10-01.
   faq: {
+    eyebrow: "Before you trust it",
     title: "Fair questions",
     items: [
       {
         question: "What happens if Baret is down?",
         answer:
-          "The request stops. The verdict reads Can't reach Baret and counts as Blocked. The sign button stays off. Signing without a check takes a separate press-and-hold, and it is logged.",
+          'The request stops. The verdict reads "Can\'t reach Baret" and counts as Blocked. The sign button stays off. Signing without a check takes a separate press-and-hold, and it is logged.',
       },
       {
         question: "What data leaves my device?",
@@ -408,9 +524,23 @@ export const home = {
     body: "Open the showcase and press Claim on a fake airdrop. Read what Baret finds before anything is signed.",
     actions: {
       primary: { label: "Open the showcase", href: "/showcase" },
-      secondary: { label: "Install the extension", href: "/install" },
+      secondary: {
+        label: "Install the extension",
+        /** Below 768 px, same link (D4). */
+        labelPhone: "Install on desktop",
+        href: "/install",
+      },
     },
     note: "Free to use. Open source. On Monad testnet.",
+    /** The trust line as linked facts (D3), rendered in place of `note`. A
+     *  fact links only where it has a real destination. "Not audited yet"
+     *  waits for Ezgin to confirm (tasks/FOR_EZGIN.md). */
+    facts: [
+      { label: "MIT licence" },
+      { label: "Source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
+      { label: "Monad testnet only" },
+      { label: "Fails closed" },
+    ],
   },
 } as const;
 

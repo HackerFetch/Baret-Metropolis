@@ -33,13 +33,10 @@ export function Component() {
         </div>
       </header>
 
-      <Section index="01" eyebrow="Steps" title={install.steps.chrome.title}>
+      <Section title={install.steps.chrome.title}>
         <ol className="grid gap-3.5 md:grid-cols-3">
-          {install.steps.chrome.items.map((step, i) => (
+          {install.steps.chrome.items.map((step) => (
             <Panel key={step.title}>
-              <span className="font-display text-4xl leading-none text-[color:var(--accent)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
               <h3 className="text-display-m">{step.title}</h3>
               <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
             </Panel>
@@ -51,13 +48,10 @@ export function Component() {
         </Panel>
       </Section>
 
-      <Section index="02" eyebrow="Steps" title={install.steps.firefox.title} deep>
+      <Section title={install.steps.firefox.title} deep>
         <ol className="grid gap-3.5 md:grid-cols-3">
-          {install.steps.firefox.items.map((step, i) => (
+          {install.steps.firefox.items.map((step) => (
             <Panel key={step.title}>
-              <span className="font-display text-4xl leading-none text-[color:var(--accent)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
               <h3 className="text-display-m">{step.title}</h3>
               <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
             </Panel>
@@ -65,7 +59,7 @@ export function Component() {
         </ol>
       </Section>
 
-      <Section index="03" eyebrow="Trust" title={install.trust.title}>
+      <Section title={install.trust.title}>
         <div className="grid gap-3.5 md:grid-cols-2">
           <Panel>
             <h3 className="text-display-m text-[color:var(--safe)]">{install.trust.can.title}</h3>
@@ -104,7 +98,7 @@ export function Component() {
         </div>
       </Section>
 
-      <Section index="04" eyebrow="After" title={install.afterInstall.title} deep>
+      <Section title={install.afterInstall.title} deep>
         <ol className="grid gap-3.5 md:grid-cols-4">
           {install.afterInstall.items.map((step) => (
             <Panel key={step.title}>
@@ -115,12 +109,7 @@ export function Component() {
         </ol>
       </Section>
 
-      <Section
-        index="05"
-        eyebrow="Help"
-        title={install.troubleshooting.title}
-        className="border-b-0"
-      >
+      <Section title={install.troubleshooting.title} className="border-b-0">
         <div className="max-w-[80ch]">
           {install.troubleshooting.items.map((item) => (
             <details

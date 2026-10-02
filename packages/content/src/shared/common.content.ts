@@ -44,8 +44,10 @@ export const common = {
       aria: "Verdict: Blocked",
     },
     unreachable: {
+      // Not rendered on the landing since 2026-10-01.
       label: "Can't reach Baret",
       short: "Can't reach Baret",
+      // Not rendered on the landing since 2026-10-01.
       line: "Baret could not finish its checks, so this request counts as Blocked.",
       aria: "Verdict: Can't reach Baret, treated as Blocked",
     },
@@ -207,6 +209,10 @@ export const common = {
       title: "Something went wrong",
       body: "The action did not finish and nothing was signed. If this keeps happening, copy the error from your activity log.",
       action: { label: "Try again" },
+      /** The route error screen: tag, heading and the way back. */
+      tag: "Error",
+      heading: "This page did not load.",
+      back: "Back to the start",
     },
   },
 
@@ -224,6 +230,10 @@ export const common = {
 
   /** Showcase navigation and footer. */
   nav: {
+    /** Accessible name of the primary navigation landmark. */
+    label: "Main",
+    /** Label of the skip link that jumps past the header to the main content. */
+    skip: "Skip to main content",
     links: [
       { label: "Showcase", href: "/showcase" },
       { label: "Agents", href: "/agents" },
@@ -263,6 +273,11 @@ export const common = {
         ],
       },
     ],
+  },
+
+  /** The corner ribbon on a fake showcase site. */
+  demo: {
+    ribbon: "Demo site",
   },
 
   /** One line repeated wherever a showcase site could be taken for a real one. */

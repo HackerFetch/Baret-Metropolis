@@ -11,6 +11,7 @@
     "./types": "./src/types.ts",
     "./shared": "./src/shared/index.ts",
     "./showcase": "./src/showcase/index.ts",
+    "./showcase/*.content": "./src/showcase/*.content.ts",
     "./wallet": "./src/wallet/index.ts",
     "./extension": "./src/extension/index.ts"
   },
