@@ -119,6 +119,74 @@ export const novaswap = {
       body: "Your USDC is on its way to your wallet.",
     },
     footer: "NovaSwap runs on Monad. Rates are shown before you confirm.",
+    pages: {
+      sampleNote: "Sample figures. This demo site has no live market data.",
+      pools: {
+        title: "Pools",
+        body: "Every pool NovaSwap routes through on Monad testnet. Pick one to swap through it.",
+        columns: { pair: "Pool", tvl: "Liquidity", volume: "24h volume", fee: "Fee" },
+        action: "Swap",
+        items: [
+          { pair: "MON / USDC", tvl: "$1.84M", volume: "$2.31M", fee: "0.05%" },
+          { pair: "MON / WETH", tvl: "$962K", volume: "$648K", fee: "0.30%" },
+          { pair: "USDC / USDT", tvl: "$1.12M", volume: "$540K", fee: "0.01%" },
+          { pair: "MON / WBTC", tvl: "$488K", volume: "$312K", fee: "0.30%" },
+          { pair: "WETH / USDC", tvl: "$406K", volume: "$221K", fee: "0.05%" },
+          { pair: "MON / shMON", tvl: "$274K", volume: "$96K", fee: "0.01%" },
+        ],
+      },
+      stats: {
+        title: "Stats",
+        body: "Volume and liquidity across every NovaSwap pool, updated each block.",
+        chart: {
+          title: "Daily volume",
+          caption: "Last 14 days, in millions of dollars.",
+          unit: "$M",
+          days: ["19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "1", "2"],
+          values: [2.1, 2.6, 2.3, 3.0, 2.8, 3.4, 3.1, 2.9, 3.6, 3.9, 3.5, 4.0, 3.8, 4.2],
+        },
+        top: {
+          title: "Totals",
+          items: [
+            { label: "Total liquidity", value: "$5.09M" },
+            { label: "Swaps in 24h", value: "18,420" },
+            { label: "Wallets in 24h", value: "3,912" },
+            { label: "Average swap", value: "$228" },
+          ],
+        },
+      },
+      docs: {
+        title: "Docs",
+        body: "How a NovaSwap swap works, which contract it calls, and what it costs.",
+        toc: "On this page",
+        contract: {
+          label: "Router contract",
+          note: "Every NovaSwap swap calls this address. Compare it with the one your wallet shows before you sign.",
+        },
+        sections: [
+          {
+            id: "how-it-works",
+            title: "How a swap works",
+            body: "You send MON to the router with the smallest amount of USDC you accept. The router trades it through the best pool and sends the USDC to the wallet named in the call, all in one transaction.",
+          },
+          {
+            id: "slippage",
+            title: "Slippage",
+            body: "If the price moves past your limit before the swap lands, the transaction reverts and your MON stays in your wallet. The default limit is 0.5%.",
+          },
+          {
+            id: "fees",
+            title: "Fees",
+            body: "Each pool charges its own fee, shown on the Pools page. NovaSwap adds a 0.05% protocol fee. Both are already in the rate you see.",
+          },
+          {
+            id: "approvals",
+            title: "Approvals",
+            body: "Swapping native MON needs no allowance. Swapping a token asks for an allowance on that token only, for the amount you swap.",
+          },
+        ],
+      },
+    },
   },
 
   analysis: {

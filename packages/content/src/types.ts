@@ -114,6 +114,38 @@ export interface Scenario {
  * Copy that is identical on all six pages (the frame, the panel labels, the
  * empty and error states) lives in `hub.frame`.
  */
+/** A demo dApp's secondary pages. Every figure on them is sample data. */
+export interface SitePages {
+  /** Shown above every secondary page: the figures are not live. */
+  sampleNote: string;
+  pools: {
+    title: string;
+    body: string;
+    columns: { pair: string; tvl: string; volume: string; fee: string };
+    action: string;
+    items: readonly { pair: string; tvl: string; volume: string; fee: string }[];
+  };
+  stats: {
+    title: string;
+    body: string;
+    chart: {
+      title: string;
+      caption: string;
+      unit: string;
+      days: readonly string[];
+      values: readonly number[];
+    };
+    top: { title: string; items: readonly { label: string; value: string }[] };
+  };
+  docs: {
+    title: string;
+    body: string;
+    toc: string;
+    contract: { label: string; note: string };
+    sections: readonly { id: string; title: string; body: string }[];
+  };
+}
+
 export interface ScenarioSite {
   meta: Meta;
   scenario: Scenario & { threatClass: "drainer" | "trap" | "agent" };
@@ -148,6 +180,8 @@ export interface ScenarioSite {
     /** What the site says once you sign. The same in both versions. */
     done: Block;
     footer: string;
+    /** The fake site's other pages, one per nav item after the first. */
+    pages?: SitePages;
   };
   analysis: {
     /** The two versions. Same page, same button, a different transaction. */

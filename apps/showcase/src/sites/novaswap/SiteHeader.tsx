@@ -5,9 +5,10 @@ import { FRAME } from "../../shared/layout.js";
 import { SAMPLE } from "./sample.js";
 
 /**
- * NovaSwap's own header, in its cobalt palette. The nav is the fake site's
- * dressing, not working links, so it is hidden from assistive tech. The
- * wallet control never asks a real wallet: it fills in the sample address.
+ * NovaSwap's own header, in its cobalt palette. The nav switches between the
+ * site's four pages (Swap, Pools, Stats, Docs); on phones it drops to a row
+ * under the brand. The wallet control never asks a real wallet: it fills in
+ * the sample address.
  */
 
 const { site } = novaswap;
@@ -21,37 +22,55 @@ function NovaGlyph(): JSX.Element {
   );
 }
 
+export const VIEWS = ["swap", "pools", "stats", "docs"] as const;
+export type View = (typeof VIEWS)[number];
+
+function NavItems({ view, onView }: { view: View; onView: (view: View) => void }): JSX.Element {
+  return (
+    <>
+      {site.nav.map((item, i) => {
+        const key = VIEWS[i] ?? "swap";
+        const active = key === view;
+        return (
+          <button
+            key={item}
+            type="button"
+            aria-current={active ? "page" : undefined}
+            onClick={() => onView(key)}
+            className={`shrink-0 border-b-2 py-1 text-sm transition-colors ${active ? "border-[color:var(--accent)] font-medium text-[color:var(--fg)]" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`}
+          >
+            {item}
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 export function SiteHeader({
   connected,
   onConnect,
+  view,
+  onView,
 }: {
   connected: boolean;
   onConnect: () => void;
+  view: View;
+  onView: (view: View) => void;
 }): JSX.Element {
   return (
     <header className="border-b border-[color:var(--rule)]">
       <div className={`${FRAME} flex h-16 items-center justify-between gap-6`}>
-        <span className="flex items-center gap-3">
+        <button type="button" onClick={() => onView("swap")} className="flex items-center gap-3">
           <NovaGlyph />
           <span className="font-display text-xl font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg)]">
             {site.brand}
           </span>
-        </span>
+        </button>
 
-        <div aria-hidden="true" className="hidden items-center gap-8 md:flex">
-          {site.nav.map((item, i) => (
-            <span
-              key={item}
-              className={
-                i === 0
-                  ? "border-b-2 border-[color:var(--accent)] py-1 text-sm font-medium text-[color:var(--fg)]"
-                  : "border-b-2 border-transparent py-1 text-sm text-[color:var(--fg-muted)]"
-              }
-            >
-              {item}
-            </span>
-          ))}
-        </div>
+        <nav aria-label={site.brand} className="hidden items-center gap-8 md:flex">
+          <NavItems view={view} onView={onView} />
+        </nav>
 
         {connected ? (
           <span className="flex items-center gap-2 border border-[color:var(--rule-strong)] px-3 py-2">
@@ -67,6 +86,12 @@ export function SiteHeader({
           </Button>
         )}
       </div>
+      <nav
+        aria-label={site.brand}
+        className={`${FRAME} flex gap-6 overflow-x-auto border-t border-[color:var(--rule)] py-2 md:hidden`}
+      >
+        <NavItems view={view} onView={onView} />
+      </nav>
     </header>
   );
 }
