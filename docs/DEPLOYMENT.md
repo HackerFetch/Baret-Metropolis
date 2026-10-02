@@ -32,7 +32,7 @@ merge to main ────────► CI on main ──── all checks gre
 ```
 
 - **CI is the gate for the API:** `render.yaml` uses `autoDeployTrigger: checksPass`, so Render deploys a `main` commit only after its GitHub checks pass. `buildFilter` skips API deploys for commits that touch only the frontend.
-- **Vercel builds on its own** through the Git integration. `ignoreCommand` skips a build when neither the app nor `packages/` nor the lockfile changed. To make Vercel also wait for CI, turn on the required checks in GitHub (step 2.4 below).
+- **Vercel builds on its own** through the Git integration. `ignoreCommand` skips a build when neither the app nor `packages/` nor the lockfile changed since the last successful deploy of that branch (`VERCEL_GIT_PREVIOUS_SHA`); when that commit is unknown or not in the clone, it builds. To make Vercel also wait for CI, turn on the required checks in GitHub (step 2.4 below).
 - **Secrets never live in the repo.** Render env vars marked `sync: false` and Vercel env vars are entered in the dashboards.
 
 ## 3. One-time setup (Ezgin)
