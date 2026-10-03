@@ -31,7 +31,7 @@ export function SamplePicker<V extends string>({
   return (
     <fieldset className="grid gap-3">
       <legend className={T.label}>{walletFrame.samples.legend}</legend>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
         {options.map((option) => (
           <Segment
             key={option.value}
@@ -68,7 +68,7 @@ export function RequestFrame({
           </Tag>
         </div>
       </header>
-      <main className="mx-auto grid w-full max-w-[640px] gap-8 px-4 pt-6 pb-16 md:px-6 md:pt-8">
+      <main className="mx-auto grid w-full max-w-[640px] grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 pb-16 md:px-6 md:pt-8">
         <SampleNotice />
         {picker}
         {children}

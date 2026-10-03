@@ -130,7 +130,7 @@ export function Component() {
           </Tag>
         </div>
       </header>
-      <main className="mx-auto grid w-full max-w-[1120px] gap-10 px-4 pt-6 pb-20 md:px-8 md:pt-8 lg:px-12">
+      <main className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] gap-10 px-4 pt-6 pb-20 md:px-8 md:pt-8 lg:px-12">
         <SampleNotice />
         <Steps current={step} />
 
