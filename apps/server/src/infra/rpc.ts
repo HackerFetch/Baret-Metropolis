@@ -93,9 +93,24 @@ export class ViemMonadRpc implements MonadRpc {
   private readonly client: PublicClient;
   private traceSupported: boolean | null = null;
 
+  private readonly traceClient: PublicClient | null;
+
+  /**
+   * Reads go to `rpcUrl` (Alchemy in production) as JSON-RPC batches, so one
+   * analysis is a handful of HTTP requests instead of dozens. Traces go to
+   * `traceRpcUrl`, which may be another node when the main plan has no
+   * debug_traceCall.
+   */
   constructor(config: NetworkConfig, timeoutMs: number) {
+    this.traceClient =
+      config.traceRpcUrl === config.rpcUrl
+        ? null
+        : createPublicClient({
+            transport: http(config.traceRpcUrl, { timeout: timeoutMs, retryCount: 1 }),
+          });
     this.client = createPublicClient({
-      transport: http(config.rpcUrl, { timeout: timeoutMs, retryCount: 1 }),
+      batch: { multicall: false },
+      transport: http(config.rpcUrl, { timeout: timeoutMs, retryCount: 2, batch: { wait: 10 } }),
     });
   }
 
@@ -192,7 +207,7 @@ export class ViemMonadRpc implements MonadRpc {
     if (params.gas != null) callObject.gas = toHex(params.gas);
     try {
       // debug_ methods are not in viem's typed RPC schema.
-      const request = this.client.request as unknown as (args: {
+      const request = (this.traceClient ?? this.client).request as unknown as (args: {
         method: string;
         params: unknown[];
       }) => Promise<unknown>;

@@ -11,6 +11,7 @@ function configured(n: NetworkConfig, config: AnalyzeDeps["config"]) {
   return {
     nansen: config.nansenApiKey !== null,
     cleanverse: config.cleanverse !== null,
+    separateTraceRpc: n.traceRpcUrl !== n.rpcUrl,
     usdc: n.usdcAddress !== null,
     reputationRegistry: n.reputationRegistryAddress !== null,
     knownContracts: n.knownContracts.length,

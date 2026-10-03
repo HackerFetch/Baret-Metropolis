@@ -164,6 +164,20 @@ describe("approvals", () => {
   });
 });
 
+describe("token metadata", () => {
+  it("counts a token it cannot read in base units, named by its address", async () => {
+    const rpc = new FakeRpc();
+    const MYSTERY = "0xabcdef0000000000000000000000000000001234" as const;
+    rpc.frame = frame({ to: MYSTERY, logs: [approvalLog(MYSTERY, USER, DAPP, 5_000n)] });
+    const r = await run(tx({ to: MYSTERY, data: approveData(DAPP, 5_000n) }), rpc);
+    expect(r.findings.find((f) => f.code === "ERC20_APPROVAL_GRANTED")?.values).toEqual({
+      spender: DAPP,
+      amount: "5000",
+      asset: "0xABcD…1234", // checksummed, like every address the server returns
+    });
+  });
+});
+
 describe("contracts and dangerous calls", () => {
   it("flags unknown, reported, self-destructing and borrowed-code contracts", async () => {
     const rpc = new FakeRpc();

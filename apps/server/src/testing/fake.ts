@@ -37,6 +37,7 @@ export const network: NetworkConfig = {
   network: "testnet",
   chainId: 10143,
   rpcUrl: "http://fake",
+  traceRpcUrl: "http://fake",
   usdcAddress: USDC,
   reputationRegistryAddress: null,
   knownContracts: [],

@@ -41,11 +41,14 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
   MONAD_TESTNET_RPC_URL: z.string().url(),
+  /** Optional: a node for debug_traceCall when the main RPC does not offer it. */
+  MONAD_TESTNET_TRACE_RPC_URL: z.string().url().optional(),
   MONAD_TESTNET_USDC_ADDRESS: optionalAddress,
   MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_TESTNET_KNOWN_CONTRACTS: addressList,
 
   MONAD_MAINNET_RPC_URL: z.string().url().optional(),
+  MONAD_MAINNET_TRACE_RPC_URL: z.string().url().optional(),
   MONAD_MAINNET_USDC_ADDRESS: optionalAddress,
   MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_MAINNET_KNOWN_CONTRACTS: addressList,
@@ -70,6 +73,8 @@ export interface NetworkConfig {
   network: MonadNetwork;
   chainId: number;
   rpcUrl: string;
+  /** Where debug_traceCall goes; the main RPC when unset. */
+  traceRpcUrl: string;
   /** Canonical USDC. Null until verified for this network: USDC rules then fail closed. */
   usdcAddress: `0x${string}` | null;
   reputationRegistryAddress: `0x${string}` | null;
@@ -105,6 +110,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       network: "testnet",
       chainId: MONAD_NETWORKS.testnet.chainId,
       rpcUrl: e.MONAD_TESTNET_RPC_URL,
+      traceRpcUrl: e.MONAD_TESTNET_TRACE_RPC_URL ?? e.MONAD_TESTNET_RPC_URL,
       usdcAddress: e.MONAD_TESTNET_USDC_ADDRESS,
       reputationRegistryAddress: e.MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_TESTNET_KNOWN_CONTRACTS,
@@ -115,6 +121,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       network: "mainnet",
       chainId: MONAD_NETWORKS.mainnet.chainId,
       rpcUrl: e.MONAD_MAINNET_RPC_URL,
+      traceRpcUrl: e.MONAD_MAINNET_TRACE_RPC_URL ?? e.MONAD_MAINNET_RPC_URL,
       usdcAddress: e.MONAD_MAINNET_USDC_ADDRESS,
       reputationRegistryAddress: e.MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_MAINNET_KNOWN_CONTRACTS,

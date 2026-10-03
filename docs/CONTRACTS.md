@@ -140,3 +140,28 @@ Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the s
 - [x] `onlyOwner` / agent check / `onlyForwarder` on every sensitive function.
 - [x] The owner private key is never written to the repo/logs; the deploy script takes it on the command line.
 - [x] Apply our own risk model to our own contract: `deposit` pulls exactly the approved amount, so the owner never needs an unlimited approval to the vault.
+
+---
+
+## 7. Showcase demo contracts (Monad testnet only)
+
+Contracts the showcase dApps call so every scenario is a real transaction Baret analyses, not a prepared sample. Test value only. Source in `contracts/src/demo/`, tests in `contracts/test/demo/`, addresses and transaction builders for the frontend in `packages/demo` (`@baret/demo`). Design: D-018.
+
+### 7.1 NovaSwap
+
+| Contract | Address | Role |
+|---|---|---|
+| `DemoUSDC` (`dUSDC`, 6 decimals) | [`0x5BB6fF1FCbE31ED8FBce6805852Ce279475522fc`](https://testnet.monadexplorer.com/address/0x5BB6fF1FCbE31ED8FBce6805852Ce279475522fc) | Test dollars. `faucet()` gives 100; the router is the only minter |
+| `NovaSwapRouter` | [`0xEB9EA352613D8545d70a586C112C30D23D5C1888`](https://testnet.monadexplorer.com/address/0xEB9EA352613D8545d70a586C112C30D23D5C1888) | Honest router, 3.2 dUSDC per MON both ways, holds 0.5 MON of liquidity. In `MONAD_TESTNET_KNOWN_CONTRACTS` |
+| `NovaSwapDrainer` | [`0xeB9EBB97BcD146FF1a4424490cbE8e19b7983888`](https://testnet.monadexplorer.com/address/0xeB9EBB97BcD146FF1a4424490cbE8e19b7983888) | Attack router. CREATE2 address ground to look like the router (`0xEB9E…1888` vs `0xeB9E…3888`). Its `swapUsdcForMon` takes the whole allowed balance and pays nothing; `drain(victim)` keeps taking. Reported in the ReputationRegistry at severity 4, reason `NOVASWAP_LOOKALIKE_DRAINER` |
+| Sink | `0xac9517a70c88480c9fA7E9a280DA485F7f552C29` | Where the drainer sends what it takes. A fresh address; nobody kept its key |
+
+All three contracts are source-verified (Sourcify exact match). Deployed 2026-10-03 by the testnet deploy key with `script/DeployNovaSwap.s.sol` and `script/DeployNovaSwapDrainer.s.sol` (records in `contracts/broadcast/`).
+
+What Baret answers, checked live against testnet with the Balanced rules (2026-10-03):
+
+| Request | Verdict | Findings |
+|---|---|---|
+| `swapMonForUsdc` on the router, 1 MON | Safe | none; changes: MON out (amount + fee for the whole gas limit), 3.2 dUSDC in |
+| `approve(lookalike, max)` on dUSDC | Blocked | `ERC20_APPROVAL_UNLIMITED`, `KNOWN_MALICIOUS_ADDRESS` |
+| `approve(router, 9.6 dUSDC)` | Caution | `ERC20_APPROVAL_GRANTED` |
