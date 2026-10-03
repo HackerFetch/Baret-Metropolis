@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
+import { asVerdict } from "./components/CheckBlocks.js";
 import { CopyButton } from "./components/CopyButton.js";
 import { Disclosures } from "./components/Disclosures.js";
 import { LinkButton } from "./components/LinkButton.js";
@@ -116,5 +117,12 @@ describe("CopyButton", () => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     expect(doc.querySelector("button")?.textContent).toBe("Copy");
     expect(doc.querySelector('[role="status"]')?.textContent).toBe("");
+  });
+});
+
+describe("expected verdicts", () => {
+  it("checks a capped expectation against Blocked", () => {
+    expect(asVerdict("capped")).toBe("blocked");
+    expect(asVerdict("caution")).toBe("caution");
   });
 });

@@ -60,6 +60,8 @@ export const scrybe = {
     brand: "Scrybe",
     hostname: "scrybe.example",
     nav: ["Ask", "Pricing", "API", "Usage"],
+    /** The fake site's wallet control. Pressing it fills in a sample address. */
+    connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "Paid per answer",
       title: "Ask a question. Pay for the answer.",
@@ -76,6 +78,8 @@ export const scrybe = {
       ],
       cta: "Pay and ask",
       note: "The price comes with every payment request, so you see it before anything is paid.",
+      start: "How do x402 payments settle on Monad?",
+      errors: { empty: "Type a question first." },
     },
     stats: [
       { value: "402", label: "the status code that asks for payment" },
@@ -109,6 +113,121 @@ export const scrybe = {
       body: "Paid {amount} USDC to {merchant}. The payment settled on Monad testnet.",
     },
     footer: "Scrybe charges per answer over x402. The price is set in each payment request.",
+    /** The agent loop: the card's switch, the cap the visitor picks, the button that starts it. */
+    attack: {
+      switch: {
+        label: "Agent loop",
+        off: "Off. You ask once and pay once.",
+        on: "On. An agent asks one question after another and pays for each, until a payment would cross your hourly cap.",
+      },
+      cap: "Your hourly cap",
+      cta: "Start the agent",
+      note: "Each payment goes to Baret before it is signed.",
+    },
+    pages: {
+      sampleNote: "Sample figures. This demo site has no live usage data.",
+      views: [
+        {
+          id: "pricing",
+          kind: "list",
+          title: "Pricing",
+          body: "One price per answer, sent with every payment request. No plans, no minimum, nothing to cancel.",
+          items: [
+            {
+              label: "Per answer",
+              title: "Priced in the request",
+              body: "Every 402 reply names the price, the asset and the address. Your client reads all three before it pays.",
+            },
+            {
+              label: "Asset",
+              title: "USDC on Monad testnet",
+              body: "Payments settle in USDC. Each request names the token contract to pay with.",
+            },
+            {
+              label: "Plans",
+              title: "None",
+              body: "There is nothing to subscribe to and nothing to cancel. You pay for the answers you get.",
+            },
+            {
+              label: "Failed payments",
+              title: "Cost nothing",
+              body: "A payment that does not settle sends no answer and takes nothing from you.",
+            },
+          ],
+        },
+        {
+          id: "api",
+          kind: "docs",
+          title: "API",
+          body: "One endpoint. Ask, read the price, pay, then ask again with the payment attached.",
+          toc: "On this page",
+          sections: [
+            {
+              id: "ask",
+              title: "Ask",
+              body: "Send the question as a GET request. Without a payment, the reply is 402 Payment Required.",
+              code: "GET https://scrybe.example/ask?q=How+do+x402+payments+settle\n\nHTTP/1.1 402 Payment Required",
+            },
+            {
+              id: "price",
+              title: "Read the price",
+              body: "The 402 reply says what to pay: the amount in base units, the token and the address.",
+              code: '{\n  "scheme": "exact",\n  "network": "monad-testnet",\n  "maxAmountRequired": "50000",\n  "asset": "0x...",\n  "payTo": "0x..."\n}',
+            },
+            {
+              id: "pay",
+              title: "Pay and ask again",
+              body: "Sign the payment, then send the same request with it in the X-PAYMENT header. The answer comes back with a receipt.",
+              code: "GET https://scrybe.example/ask?q=How+do+x402+payments+settle\nX-PAYMENT: <signed payment>\n\nHTTP/1.1 200 OK\nX-PAYMENT-RESPONSE: <receipt>",
+            },
+            {
+              id: "agents",
+              title: "From an agent",
+              body: "An agent runs the same loop on its own. Give it a wallet with caps, so the running total stops where you decide.",
+            },
+          ],
+        },
+        {
+          id: "usage",
+          kind: "chart",
+          title: "Usage",
+          body: "Answers and payments across every Scrybe client, by day.",
+          chart: {
+            title: "Answers per day",
+            caption: "Last 14 days, in thousands.",
+            unit: "k",
+            days: [
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "24",
+              "25",
+              "26",
+              "27",
+              "28",
+              "29",
+              "30",
+              "1",
+              "2",
+            ],
+            values: [
+              18.2, 21.5, 20.1, 24.8, 26, 25.1, 29.4, 31.2, 30.5, 34.8, 36.1, 35.4, 39, 41.3,
+            ],
+          },
+          top: {
+            title: "Totals",
+            items: [
+              { label: "Answers in 24h", value: "41,280" },
+              { label: "Paying clients", value: "1,906" },
+              { label: "Agents among them", value: "71%" },
+              { label: "USDC paid in 24h", value: "2,064" },
+            ],
+          },
+        },
+      ],
+    },
   },
 
   analysis: {
@@ -159,6 +278,12 @@ export const scrybe = {
     lesson: {
       title: "Set the cap first",
       body: "x402 keeps no running total, on purpose. Your wallet has to, and the cap has to exist before the agent starts.",
+    },
+    run: {
+      title: "The agent's payments",
+      payment: "Payment {n}",
+      paid: "Paid",
+      total: "Last hour {total}",
     },
   },
 

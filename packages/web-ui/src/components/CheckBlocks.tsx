@@ -29,18 +29,32 @@ export function PanelBlock({
   );
 }
 
+/**
+ * An expected verdict as the panel shows it. "capped" (Scrybe's agent loop:
+ * the payment that would cross a cap is stopped) is Blocked, with its own
+ * word from the hub cards ("Blocked at the cap").
+ */
+export type ExpectedKind = Verdict | "capped";
+
+/** The verdict a "capped" expectation is checked against. */
+export function asVerdict(expected: ExpectedKind): Verdict {
+  return expected === "capped" ? "blocked" : expected;
+}
+
 /** The expected verdict, always framed as expected (never as live). */
 export function ExpectedVerdict({
   verdict,
   body,
 }: {
-  verdict: Verdict;
+  verdict: ExpectedKind;
   body: string;
 }): JSX.Element {
+  const label =
+    verdict === "capped" ? hub.cardLabels.verdicts.capped : common.verdicts[verdict].label;
   return (
     <PanelBlock title={panel.expected}>
       <div className="flex">
-        <VerdictTag kind={verdict} label={common.verdicts[verdict].label} />
+        <VerdictTag kind={asVerdict(verdict)} label={label} />
       </div>
       <p className={T.body}>{body}</p>
       <p className={T.small}>{panel.expectedNote}</p>
@@ -57,7 +71,7 @@ export function LiveVerdict({
   expected,
 }: {
   verdict: Verdict;
-  expected?: Verdict;
+  expected?: ExpectedKind;
 }): JSX.Element {
   return (
     <PanelBlock title={panel.live}>
@@ -65,7 +79,7 @@ export function LiveVerdict({
         <VerdictTag kind={verdict} label={common.verdicts[verdict].label} />
       </div>
       {expected ? (
-        <p className={T.small}>{verdict === expected ? panel.match : panel.mismatch}</p>
+        <p className={T.small}>{verdict === asVerdict(expected) ? panel.match : panel.mismatch}</p>
       ) : null}
     </PanelBlock>
   );

@@ -58,6 +58,8 @@ export const orbityield = {
     brand: "OrbitYield",
     hostname: "orbityield.example",
     nav: ["Stake", "Rewards", "Stats", "Security"],
+    /** The fake site's wallet control. Pressing it fills in a sample address. */
+    connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "Rewards every block",
       title: "Stake MON. Keep it liquid.",
@@ -75,6 +77,13 @@ export const orbityield = {
       ],
       cta: "Stake",
       note: "oMON arrives in your wallet in the same transaction.",
+      balance: "Balance",
+      max: "Max",
+      start: "5",
+      errors: {
+        empty: "Enter an amount of MON.",
+        tooHigh: "That is more MON than this wallet holds.",
+      },
     },
     stats: [
       { value: "$18.7M", label: "total staked" },
@@ -108,6 +117,100 @@ export const orbityield = {
       body: "Your MON is earning. Your oMON will show in your wallet shortly.",
     },
     footer: "OrbitYield is a liquid staking pool on Monad.",
+    attack: {
+      switch: {
+        label: "Suspicious pool",
+        off: "Off. Stake sends your MON to the OrbitYield pool Baret knows.",
+        on: "On. The same button sends your MON to a second pool that is on no list. This is the attack version.",
+      },
+    },
+    pages: {
+      sampleNote: "Sample figures. This demo site has no live staking data.",
+      views: [
+        {
+          id: "rewards",
+          kind: "table",
+          title: "Rewards",
+          body: "Rewards are paid every block and added to the value of your oMON. Here are the last five epochs.",
+          columns: ["Epoch", "APY", "Paid out", "Stakers"],
+          rows: [
+            ["41", "14.2%", "21,840 MON", "2,104"],
+            ["40", "13.9%", "20,970 MON", "2,051"],
+            ["39", "14.6%", "20,310 MON", "1,987"],
+            ["38", "15.1%", "19,450 MON", "1,902"],
+            ["37", "14.8%", "18,120 MON", "1,844"],
+          ],
+        },
+        {
+          id: "stats",
+          kind: "chart",
+          title: "Stats",
+          body: "Total staked in the pool, by day.",
+          chart: {
+            title: "Total staked",
+            caption: "Last 14 days, in millions of dollars.",
+            unit: "$M",
+            days: [
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "24",
+              "25",
+              "26",
+              "27",
+              "28",
+              "29",
+              "30",
+              "1",
+              "2",
+            ],
+            values: [
+              14.1, 14.6, 15, 15.2, 15.9, 16.1, 16.4, 16.8, 17, 17.3, 17.9, 18.2, 18.4, 18.7,
+            ],
+          },
+          top: {
+            title: "Totals",
+            items: [
+              { label: "Total staked", value: "$18.7M" },
+              { label: "Stakers", value: "2,104" },
+              { label: "oMON in circulation", value: "6.24M" },
+              { label: "Rewards paid in 30 days", value: "$212K" },
+            ],
+          },
+        },
+        {
+          id: "security",
+          kind: "docs",
+          title: "Security",
+          body: "How OrbitYield keeps your stake safe, in our own words.",
+          toc: "On this page",
+          sections: [
+            {
+              id: "audits",
+              title: "Audits",
+              body: "OrbitYield forks a staking design that two firms audited. We kept the core logic and changed the fee settings.",
+            },
+            {
+              id: "unstaking",
+              title: "Unstaking",
+              body: "Return oMON to the pool at any time and your MON comes back in the same transaction. There is no queue.",
+            },
+            {
+              id: "admin-keys",
+              title: "Admin keys",
+              body: "A three of five multisig can pause new deposits. It cannot move staked MON.",
+            },
+            {
+              id: "bug-bounty",
+              title: "Bug bounty",
+              body: "Report a bug in the pool contract and we pay up to 50,000 MON from the treasury.",
+            },
+          ],
+        },
+      ],
+    },
   },
 
   analysis: {

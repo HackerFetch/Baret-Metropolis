@@ -1,87 +1,73 @@
-import { hub, novaswap } from "@baret/content";
+import { hub, launchpad } from "@baret/content";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
+import { parseAmount } from "../kit/amount.js";
 import { DemoBar } from "../kit/DemoBar.js";
 import { SiteHero } from "../kit/site/Page.js";
 import { Faq, Features, SiteFooter, Stats } from "../kit/site/Sections.js";
 import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
+import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
-import { DocsPage, PoolsPage, StatsPage } from "./Pages.js";
-import { NovaGlyph, VIEWS } from "./SiteHeader.js";
-import { SwapCard } from "./SwapCard.js";
-import { ART, balanceOf, parseAmount, SAMPLE } from "./sample.js";
-import { contractOf, DEMO_FROM, sourceFor } from "./source.js";
+import { ContributeCard } from "./ContributeCard.js";
+import { LaunchGlyph, VIEWS } from "./Glyph.js";
+import { ART, limitOf, SAMPLE, saleOf } from "./sample.js";
+import { SOURCE } from "./source.js";
 
 /**
- * NovaSwap: a believable swap venue in its own cobalt palette, with Baret's
- * strip on top and Baret's panel waiting behind the main button.
+ * LaunchPad: a token sale page in its own plum palette, with Baret's strip
+ * on top and Baret's panel behind the main button.
  *
- * The story (novaswap.content.ts, D-018): the honest version buys dUSDC
- * with MON on the NovaSwap router. The attack version sells dUSDC and first
- * asks to "enable trading", an unlimited allowance to a look-alike router.
- * Baret's strip and the switch in the card flip between the two. The main
- * button opens the panel with Baret's answer for the version switched on:
- * the prepared sample, or the live answer once there is a wallet to
- * simulate from (source.ts). Nothing is ever signed.
+ * The story (launchpad.content.ts): the tokens really arrive in both
+ * versions. Honest, the contribution pays a plain sale with fixed code. In
+ * the attack the same button pays a proxy whose code its deployer can
+ * replace after the sale: Caution under Balanced. Prepared samples only, so
+ * nothing is sent (source.ts).
  */
 
-const { site, analysis } = novaswap;
+const { site, analysis } = launchpad;
 
-/** The amount each version starts with: under half the sample MON, and a dUSDC sale. */
-const START: Record<DemoMode, string> = { safe: "2.5", danger: "20" };
-
-/** Chosen once: the page either always asks Baret or always shows the sample. */
-const SOURCE = sourceFor(DEMO_FROM);
-const FROM = DEMO_FROM ?? SAMPLE.wallet;
-
-export function NovaSwapSite(): JSX.Element {
-  const [mode, setModeState] = useState<DemoMode>("safe");
+export function LaunchPadSite(): JSX.Element {
+  const [mode, setMode] = useState<DemoMode>("safe");
   const [checked, setChecked] = useState<DemoMode>("safe");
-  const [amount, setAmount] = useState(START.safe);
+  const [amount, setAmount] = useState<string>(site.panel.start);
+  const [paid, setPaid] = useState(Number(site.panel.start));
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
-  // The page lives in ?view= so Back works and a page can be linked.
   const { view, go } = useSiteView(VIEWS);
+  const page = site.pages.views.find((v) => v.id === view);
 
-  /** The two versions spend different tokens, so each starts from its own amount. */
-  function setMode(next: DemoMode): void {
-    if (next === mode) return;
-    setModeState(next);
-    setAmount(START[next]);
-    setError(null);
-  }
-
-  function runCheck(version: DemoMode, value: string): void {
+  function runCheck(version: DemoMode, value: number): void {
     setChecked(version);
+    setPaid(value);
     setConnected(true);
     setOpen(true);
-    check.start({ mode: version, amount: value, from: FROM });
+    check.start({ mode: version, amount: value });
   }
 
-  function review(): void {
-    const errors = mode === "safe" ? site.panel.errors : site.attack.errors;
+  function contribute(): void {
     const value = parseAmount(amount);
     if (value === null) {
-      setError(errors?.empty ?? null);
+      setError(site.panel.errors.empty);
       return;
     }
-    if (value > balanceOf(mode)) {
-      setError(errors?.tooHigh ?? null);
+    const broken = limitOf(value);
+    if (broken) {
+      setError(site.panel.errors[broken]);
       return;
     }
     setError(null);
-    runCheck(mode, amount);
+    runCheck(mode, value);
   }
 
   function tryOther(): void {
     const next: DemoMode = checked === "safe" ? "danger" : "safe";
     setMode(next);
-    runCheck(next, START[next]);
+    runCheck(next, paid);
   }
 
   const copy = analysis.modes[checked];
@@ -96,29 +82,28 @@ export function NovaSwapSite(): JSX.Element {
       />
       <SiteHeader
         brand={site.brand}
-        glyph={<NovaGlyph />}
+        glyph={<LaunchGlyph />}
         nav={site.nav}
         views={VIEWS}
         view={view}
         onView={go}
         connect={site.connect}
         connected={connected}
-        wallet={FROM}
+        wallet={SAMPLE.wallet}
         onConnect={() => setConnected(true)}
       />
 
       <main key={view}>
-        {view === "pools" ? <PoolsPage onSwap={() => go("swap")} /> : null}
-        {view === "stats" ? <StatsPage /> : null}
-        {view === "docs" ? <DocsPage /> : null}
-        {view === "swap" ? (
+        {page ? (
+          <SiteViewPage view={page} note={site.pages.sampleNote} faqName="launchpad-page-faq" />
+        ) : (
           <>
             <SiteHero
               badge={site.hero.badge}
               title={site.hero.title}
               body={site.hero.body}
               card={
-                <SwapCard
+                <ContributeCard
                   mode={mode}
                   onMode={setMode}
                   amount={amount}
@@ -127,16 +112,15 @@ export function NovaSwapSite(): JSX.Element {
                     if (error) setError(null);
                   }}
                   error={error}
-                  onReview={review}
+                  onContribute={contribute}
                 />
               }
             />
-
             <Stats items={site.stats} />
-            <Features image={ART.routes} blocks={site.sections} />
-            <Faq items={site.faq} name="novaswap-faq" />
+            <Features image={ART.hero} blocks={site.sections} portrait />
+            <Faq items={site.faq} name="launchpad-faq" />
           </>
-        ) : null}
+        )}
       </main>
 
       <SiteFooter note={site.footer} hostname={site.hostname} />
@@ -145,11 +129,11 @@ export function NovaSwapSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={DEMO_FROM !== null}
+        live={false}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{
-          asks: fill(copy.asks, { contract: contractOf(checked) }),
+          asks: fill(copy.asks, { contract: saleOf(checked) }),
           call: copy.call,
           expected: copy.expected,
           expectedBody: copy.expectedBody,

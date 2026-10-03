@@ -1,9 +1,15 @@
-import { claimhub } from "@baret/content";
-import { useState } from "react";
-import { DemoSite } from "./DemoSite.js";
+import { ClaimHubSite } from "./claimhub/ClaimHubSite.js";
+import { DappTheme } from "./theme/DappTheme.js";
 
-/** /claimhub. Threat demo. Copy lives in packages/content. */
+/**
+ * /claimhub. The airdrop scenario in ClaimHub's own palette (parcel kraft
+ * and an ink stamp). Copy lives in packages/content; the page is in
+ * sites/claimhub and Baret's shared demo pieces in sites/kit.
+ */
 export function Component() {
-  const [danger, setDanger] = useState(false);
-  return <DemoSite content={claimhub} danger={danger} onToggle={setDanger} />;
+  return (
+    <DappTheme name="claimhub">
+      <ClaimHubSite />
+    </DappTheme>
+  );
 }
