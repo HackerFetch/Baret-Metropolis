@@ -203,7 +203,9 @@ export interface SiteViews {
 
 /** What a demo card says when its one input cannot be used. */
 export interface SiteInputErrors {
-  empty: string;
+  empty?: string;
+  /** Text that is not what the input takes (an address that is not one). */
+  invalid?: string;
   /** Above the balance, or above the most the site takes. */
   tooHigh?: string;
   /** Below the least the site takes. */
@@ -235,6 +237,9 @@ export interface ScenarioSite {
       max?: string;
       /** The card's input as the page opens, so the demo works in one press. */
       start?: string;
+      /** The input's visible label and a line under it, when the placeholder alone would not say. */
+      label?: string;
+      hint?: string;
       /** Validation messages for the card's one input. */
       errors?: SiteInputErrors;
     };
