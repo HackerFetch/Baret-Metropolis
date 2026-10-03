@@ -113,6 +113,13 @@
 **Rationale:** The free plan gives 100 credits once, then tops up to 10 a day; the labels endpoint costs 100, so one call would spend the whole plan. First-funder fits 10 checks a day, which the cache stretches over a demo. Under D-016 every request failed closed while no key was set, which made Balanced useless without Nansen; the registry is our own source and always answers.
 **Status:** ✅ Final. Updates D-016 (labels mode kept). A request to Nansen for hackathon credits is out; on approval set `NANSEN_MODE=labels`.
 
+### D-018 — Showcase scenarios run on real testnet contracts; NovaSwap's attack is an unlimited approval to a look-alike router
+**Date:** 2026-10-03
+**Decision:** Each showcase dApp gets small contracts on Monad testnet so the demo sends real transactions through `/v1/analyze`. NovaSwap: a test token `dUSDC` (symbol chosen so it is never taken for real USDC), an honest router (fixed 3.2 dUSDC per MON), and a drainer that copies the router's interface at a CREATE2 address ground to start and end like the router's (address poisoning). The attack site asks for an unlimited dUSDC allowance "to enable trading"; with an ordinary wallet the following "swap" takes the whole balance, with Baret the approval itself is blocked twice (unlimited allowance, reported address). The drainer is reported in our ReputationRegistry; its sink is a fresh address nobody holds the key for. Addresses, ABIs and builders ship in `packages/demo` (`@baret/demo`) so the frontend never writes calldata by hand.
+**Rationale:** A prepared sample proves nothing to a judge; a real transaction that drains a real (test) balance with one wallet and is stopped by Baret is the magic moment the demo needs. Two independent rules catching the same attack also shows the policy engine is not a single check.
+**Alternative:** the earlier "rerouted output" NovaSwap idea in FRONTEND.md §2.3 — kept for later, the approval drain is the more common real-world attack and needs no output-token liquidity.
+**Status:** ✅ Final for NovaSwap; the other five sites follow the same pattern.
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

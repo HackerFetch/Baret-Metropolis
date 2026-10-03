@@ -279,7 +279,8 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 
 | Variable | Required | Description |
 |---|---|---|
-| `MONAD_TESTNET_RPC_URL` | Yes | Monad testnet RPC with `debug_traceCall` (Alchemy; the public RPC also traces) |
+| `MONAD_TESTNET_RPC_URL` | Yes | Monad testnet RPC for every read, sent as JSON-RPC batches (Alchemy) |
+| `MONAD_TESTNET_TRACE_RPC_URL` | No | Node for `debug_traceCall` when the main RPC lacks it (Alchemy's free tier does): the public `https://testnet-rpc.monad.xyz`. Unset: the main RPC traces |
 | `MONAD_TESTNET_USDC_ADDRESS` | For USDC rules and x402 | Canonical USDC, verified on the explorer. Unset: USDC floor fails closed, default policy allows no payment asset |
 | `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` | For reputation rules | Deployed `ReputationRegistry`. Unset: rules that need it fail closed |
 | `MONAD_TESTNET_KNOWN_CONTRACTS` | No | Comma-separated contracts Baret vouches for (PaymentGuard, showcase contracts) |

@@ -31,7 +31,7 @@ Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulle
 | 5 | Mera: One Passkey, Many Keys | Monad Foundation | $2,500 | All tracks | PaymentGuard's agent signer comes from a Mera PRF-derived sub-key (non-wallet, creative use) | `apps/wallet` + `contracts/PaymentGuard.sol` | ⬜ Not started |
 | 6 | Best Integration of Cleanverse | Cleanverse | $2,000 | Trust/Identity/AI | Compliance detector: a transfer that fails CVI verification never goes through (the "remove it and the product breaks" test) | `risk/detectors/compliance.ts` | ⬜ Not started |
 | 7 | Best Use of Envio | Envio | $1,000 | All tracks | PaymentGuard + ReputationRegistry events are indexed with HyperIndex and feed the audit dashboard | `indexer/` | ⬜ Not started |
-| 8 | Best Projects using Alchemy | Alchemy | $1,000 credits | All tracks | RPC + `debug_traceCall` + Smart Wallets SDK (gas sponsorship) + webhook monitoring + Alchemy CLI in the dev workflow | `apps/server/src/infra/`, agent gas sponsorship | ⬜ Not started |
+| 8 | Best Projects using Alchemy | Alchemy | $1,000 credits | All tracks | RPC + `debug_traceCall` + Smart Wallets SDK (gas sponsorship) + webhook monitoring + Alchemy CLI in the dev workflow | `apps/server/src/infra/`, agent gas sponsorship | 🔶 In progress — every read goes through the Alchemy Monad RPC (batched); traces through the public RPC because Alchemy's free tier has no `debug_traceCall` |
 | 9 | Best Community Team Project | Monad Foundation | $5,000 | All tracks | No extra work — verify "community supporter" status on the platform | — | ⬜ Not verified |
 
 **Tier S total potential (excluding the main track): ~$24,000**

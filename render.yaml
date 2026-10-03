@@ -29,6 +29,8 @@ services:
         value: info
       - key: MONAD_TESTNET_RPC_URL
         sync: false
+      - key: MONAD_TESTNET_TRACE_RPC_URL
+        value: https://testnet-rpc.monad.xyz
       - key: MONAD_TESTNET_USDC_ADDRESS
         sync: false
       - key: MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS
