@@ -32,6 +32,7 @@ export function rowText(item: ActivityItem): string {
 export type FilterId = (typeof history.filters)[number]["id"];
 
 const SITE_KINDS = new Set<ActivityItem["kind"]>([
+  "signed",
   "allowance",
   "revoke",
   "blocked",

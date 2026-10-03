@@ -67,6 +67,7 @@ export type WalletAction =
   | { type: "log"; item: ActivityItem }
   | { type: "send"; asset: string; amount: string; fee: string; item: ActivityItem }
   | { type: "revoke"; id: string; item: ActivityItem }
+  | { type: "connect"; origin: string; item: ActivityItem }
   | { type: "saveRules"; policy: GuardPolicy; template: PolicyTemplateName; at: string }
   | { type: "deposit"; amount: string }
   | { type: "withdraw"; amount: string }
@@ -150,6 +151,19 @@ export function reduce(
         ),
         activity: [action.item, ...state.activity],
       };
+    case "connect": {
+      const site = {
+        id: `site-${action.origin}`,
+        kind: "site" as const,
+        values: { origin: action.origin },
+      };
+      const others = state.permissions.filter((p) => p.id !== site.id);
+      return {
+        ...state,
+        permissions: [...others, site],
+        activity: [action.item, ...state.activity],
+      };
+    }
     case "saveRules": {
       const changes = diffFields(state.policy, action.policy).map((field) => ({
         field,

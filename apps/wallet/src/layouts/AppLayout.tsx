@@ -7,6 +7,8 @@ import { T } from "@baret/web-ui/lib/type";
 import { Menu, X } from "lucide-react";
 import { type JSX, useEffect, useId, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
+import { Brand } from "../components/Brand.js";
+import { SampleNotice } from "../components/SampleNotice.js";
 import { useWallet } from "../data/store.js";
 import { routes } from "../routes.js";
 
@@ -22,17 +24,6 @@ const NAV = navRoutes(routes, "app");
  * The active screen is marked in ink, not orange: orange is kept for each
  * screen's own main action. The popup and setup routes render outside this.
  */
-
-function Brand(): JSX.Element {
-  return (
-    <div className="flex items-center gap-3">
-      <Mark size={28} slit="var(--ground-deep)" />
-      <span className="font-stencil text-2xl uppercase tracking-[0.04em] text-[color:var(--fg)]">
-        {common.brand.wordmark}
-      </span>
-    </div>
-  );
-}
 
 function Nav(): JSX.Element {
   return (
@@ -78,20 +69,6 @@ function Account(): JSX.Element {
         {walletFrame.lock.label}
       </Button>
     </div>
-  );
-}
-
-function SampleNotice(): JSX.Element {
-  return (
-    <aside
-      aria-label={walletFrame.sample.tag}
-      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[color:var(--rule)] pb-4"
-    >
-      <Tag tone="neutral" size="sm">
-        {walletFrame.sample.tag}
-      </Tag>
-      <p className={`${T.small} min-w-[24ch] flex-1`}>{walletFrame.sample.body}</p>
-    </aside>
   );
 }
 

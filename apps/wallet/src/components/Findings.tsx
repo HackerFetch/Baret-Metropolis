@@ -54,7 +54,9 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
                   </span>
                   {sign.findings.why}
                 </summary>
-                <p className={`${T.small} mt-2 max-w-[60ch]`}>{words.why}</p>
+                <p className={`${T.small} mt-2 max-w-[60ch] [overflow-wrap:anywhere]`}>
+                  {fill(words.why, item.values)}
+                </p>
               </details>
             ) : null}
           </li>

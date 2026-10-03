@@ -31,6 +31,7 @@ export interface ActivityItem {
   readonly id: string;
   readonly kind:
     | "sent"
+    | "signed"
     | "received"
     | "allowance"
     | "revoke"

@@ -271,10 +271,11 @@ export const SIGN_REQUESTS: readonly SignRequest[] = [
     id: "caution",
     origin: "orbityield.example",
     action: "contractCall",
-    values: { contract: ADDRESS.pool },
+    // The stake's MON goes to the pool: the impact names it as a transfer.
+    values: { contract: ADDRESS.pool, amount: "5.00", asset: "MON", recipient: ADDRESS.pool },
     claim: orbityield.analysis.claims[0].claim,
     verdict: "caution",
-    impact: "unknown",
+    impact: "transfer",
     findings: [{ code: "UNKNOWN_CONTRACT_EXPOSURE", values: { contract: ADDRESS.pool } }],
     changes: [{ direction: "out", value: "5.00", unit: "MON" }],
     approvals: [],
