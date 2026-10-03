@@ -1,71 +1,67 @@
 import { docs } from "@baret/content";
-import { Tag } from "@baret/ui";
-import { Link } from "react-router";
-import { Panel, Section } from "../components/Section.js";
+import { ImgWell } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { T } from "@baret/web-ui/lib/type";
+import { DocsIndex } from "../docs/DocsIndex.js";
+import { Limitations } from "../docs/Limitations.js";
+import { Timeline } from "../docs/Timeline.js";
+import { DOCS_ART } from "../shared/assets.js";
+import { ClosingBand } from "../shared/ClosingBand.js";
+import { PageHero } from "../shared/PageHero.js";
 
-const REPO = "https://github.com/HackerFetch/Baret-Metropolis/blob/main/";
-
-/** /docs. An index, not a document. */
+/**
+ * /docs, an index, not a doc. Four blocks (owner's order, 2026-10-03): where
+ * the check happens (with the two timelines), the eleven files in four
+ * groups, the known limitations, and the way to see it work. Every card
+ * opens its file on GitHub.
+ */
 export function Component() {
+  const { hero, cta } = docs;
   return (
-    <>
-      <header className="grid-paper border-b border-[color:var(--rule)]">
-        <div className="mx-auto grid w-full max-w-[1180px] gap-5 px-5 py-14 sm:py-20">
-          <Tag size="sm">{docs.hero.eyebrow}</Tag>
-          <h1 className="max-w-[20ch] font-stencil text-[clamp(2.5rem,7vw,5rem)] uppercase leading-[0.9]">
-            {docs.hero.title}
-          </h1>
-          <p className="max-w-[60ch] text-xl text-[color:var(--fg-muted)]">{docs.hero.body}</p>
-        </div>
-      </header>
-
-      <Section title={docs.summary.title}>
-        <ol className="grid gap-3.5 md:grid-cols-4">
-          {docs.summary.steps.map((step) => (
-            <Panel key={step.title}>
-              <h2 className="text-display-m">{step.title}</h2>
-              <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
-            </Panel>
-          ))}
-        </ol>
-      </Section>
-
-      {docs.groups.map((group, i) => (
-        <Section
-          key={group.title}
-          id={group.title.toLowerCase().replace(/\W+/g, "-")}
-          title={group.title}
-          body={group.body}
-          deep={i % 2 === 1}
-        >
-          <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
-            {group.cards.map((card) => (
-              <a
-                key={card.file}
-                href={`${REPO}${card.file}`}
-                className="grid content-start gap-2 border border-[color:var(--rule)] bg-[color:var(--surface)] p-5 transition-colors hover:border-[color:var(--accent)]"
-              >
-                <h3 className="text-display-m">{card.title}</h3>
-                <p className="text-sm text-[color:var(--fg-muted)]">{card.body}</p>
-                <code className="font-mono text-xs text-[color:var(--fg-faint)]">{card.file}</code>
-              </a>
-            ))}
-          </div>
-        </Section>
-      ))}
-
-      <Section className="border-b-0">
-        <div className="grid max-w-[60ch] gap-4">
-          <h2 className="text-display-l">{docs.cta.title}</h2>
-          <p className="text-lg text-[color:var(--fg-muted)]">{docs.cta.body}</p>
-          <Link
-            to={docs.cta.actions.primary.href}
-            className="chamfer-sm inline-flex h-11 w-max items-center bg-[color:var(--accent)] px-5 font-display text-base uppercase tracking-[0.08em] text-[color:var(--on-accent)]"
-          >
-            {docs.cta.actions.primary.label}
-          </Link>
-        </div>
-      </Section>
-    </>
+    <div className="overflow-x-clip">
+      <PageHero
+        title={hero.title}
+        body={hero.body}
+        actions={
+          <>
+            <LinkButton
+              href={hero.actions.primary.href}
+              label={hero.actions.primary.label}
+              variant="primary"
+              size="lg"
+              icon="arrow-down"
+              fullOnPhone
+            />
+            <LinkButton
+              href={hero.actions.secondary.href}
+              label={hero.actions.secondary.label}
+              size="lg"
+              icon="arrow-up-right"
+              fullOnPhone
+            />
+          </>
+        }
+        after={<p className={`${T.small} max-w-[56ch]`}>{hero.note}</p>}
+        picture={
+          <ImgWell
+            asset={DOCS_ART.hero}
+            ratio="1/1"
+            dim
+            sizes="(min-width: 1024px) 480px, 100vw"
+            className="border border-[color:var(--rule)]"
+          />
+        }
+        below={<Timeline />}
+      />
+      <DocsIndex />
+      <Limitations />
+      <ClosingBand
+        title={cta.title}
+        body={cta.body}
+        primary={cta.actions.primary}
+        secondary={cta.actions.secondary}
+        picture={{ asset: DOCS_ART.cta, position: "60% 50%" }}
+      />
+    </div>
   );
 }
