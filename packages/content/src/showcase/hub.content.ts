@@ -41,9 +41,16 @@ export const hub = {
     { value: "25", label: "rules you can change" },
   ],
 
+  /** The heading over the six cards and their filter. */
+  scenarios: {
+    title: "Six sites, one trap each.",
+  },
+
   /** The ids match `scenario.threatClass` in each scenario file. */
   filters: {
     label: "Show",
+    /** Announced when the filter changes. */
+    status: "{count} of 6 sites shown.",
     items: [
       { id: "all", label: "All six", body: "Every scenario on this page." },
       { id: "drainer", label: "Drainers", body: "Funds taken without consent." },
@@ -70,6 +77,8 @@ export const hub = {
   steps: {
     eyebrow: "How it works",
     title: "Four steps, one sign request",
+    /** Accessible name of the step picker. */
+    legend: "Pick a step",
     items: [
       {
         short: "Connect",

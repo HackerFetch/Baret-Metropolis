@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
+import { CopyButton } from "./components/CopyButton.js";
+import { Disclosures } from "./components/Disclosures.js";
 import { LinkButton } from "./components/LinkButton.js";
 import { Reveal } from "./components/Reveal.js";
 import { titleIdOf } from "./components/Section.js";
@@ -87,5 +89,32 @@ describe("LinkButton size sm", () => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     expect(doc.querySelector("a")?.className).toContain("min-h-11");
     expect(doc.querySelector("a > span")?.className).toContain("h-9");
+  });
+});
+
+describe("Disclosures", () => {
+  it("gives every item one name, so opening one closes the others", () => {
+    const html = renderToStaticMarkup(
+      <Disclosures
+        name="faq"
+        items={[
+          { summary: "One?", body: "Yes." },
+          { summary: "Two?", body: "No." },
+        ]}
+      />,
+    );
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const names = [...doc.querySelectorAll("details")].map((d) => d.getAttribute("name"));
+    expect(names).toEqual(["faq", "faq"]);
+    expect(doc.querySelectorAll("details[open]")).toHaveLength(0);
+  });
+});
+
+describe("CopyButton", () => {
+  it("is a real button with its label and an empty status region", () => {
+    const html = renderToStaticMarkup(<CopyButton text="0xabc" label="Copy" done="Copied" />);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    expect(doc.querySelector("button")?.textContent).toBe("Copy");
+    expect(doc.querySelector('[role="status"]')?.textContent).toBe("");
   });
 });

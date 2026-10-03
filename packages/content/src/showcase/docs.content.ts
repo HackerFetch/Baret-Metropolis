@@ -57,6 +57,9 @@ export const docs = {
     note: "The specs came first. When the code and a spec disagree, the code wins and the spec gets fixed.",
   },
 
+  /** The cue at the foot of every card; the card links to the file on GitHub. */
+  open: "Read it on GitHub",
+
   groups: [
     {
       title: "Start here",

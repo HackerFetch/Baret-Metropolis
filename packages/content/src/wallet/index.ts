@@ -2,6 +2,8 @@ export type { ConnectContent } from "./connect.content.js";
 export { connect } from "./connect.content.js";
 export type { DelegationContent } from "./delegation.content.js";
 export { delegation } from "./delegation.content.js";
+export type { WalletFrameContent } from "./frame.content.js";
+export { walletFrame } from "./frame.content.js";
 export type { HistoryContent } from "./history.content.js";
 export { history } from "./history.content.js";
 export type { WalletHomeContent } from "./home.content.js";

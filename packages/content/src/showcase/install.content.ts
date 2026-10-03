@@ -51,10 +51,21 @@ export const install = {
     other: "Also available for",
     status:
       "Not in the Chrome Web Store or Firefox Add-ons yet. Until it is, download it here or build it from source.",
+    /** Shown in place of the download until a build is published. */
+    pending: {
+      body: "No downloadable build is published yet. Build it from source in a few minutes, then load the folder the same way.",
+      action: {
+        label: "Build it from source",
+        href: "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/DEPLOYMENT.md",
+      },
+    },
   },
 
   steps: {
     eyebrow: "Steps",
+    title: "Load it in three steps.",
+    /** Legend of the browser picker above the steps. */
+    browser: "Show the steps for",
     /** A page cannot link to a browser's internal pages, so each address
      *  gets a copy button instead. */
     copy: { label: "Copy the address", done: "Copied" },
