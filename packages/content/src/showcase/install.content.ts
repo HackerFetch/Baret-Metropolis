@@ -25,6 +25,7 @@ export const install = {
   },
 
   hero: {
+    /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Install",
     title: "Add the check to your browser.",
     body: "Baret is a Monad wallet that simulates each sign request and checks it against your rules before you sign. It is not in the browser stores yet, so it loads as a developer build. No account, no email.",
@@ -41,6 +42,7 @@ export const install = {
   },
 
   download: {
+    /** Not rendered on /install since 2026-10-03. */
     title: "Download the build",
     body: "A zip archive with the extension inside. Nothing installs on its own, and nothing runs until you load it.",
     builds: {
@@ -62,6 +64,7 @@ export const install = {
   },
 
   steps: {
+    /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Steps",
     title: "Load it in three steps.",
     /** Legend of the browser picker above the steps. */
@@ -126,9 +129,11 @@ export const install = {
   /** The section that does the most work on this page. Honest about the
    *  broad site access, the server, and who else sees what. */
   trust: {
+    /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Trust",
     title: "What Baret can and cannot do",
     siteAccess: {
+      /** Not rendered on /install since 2026-10-03. */
       title: "Why it asks for every site",
       body: "Any site can send a sign request, so Baret runs on every page to catch it. Chrome words this as 'Read and change all your data on all websites'.",
     },
@@ -168,6 +173,7 @@ export const install = {
     },
   },
 
+  /** Not rendered on /install since 2026-10-03 (cut for simplicity). */
   afterInstall: {
     eyebrow: "After",
     title: "What happens next",
@@ -192,6 +198,7 @@ export const install = {
     ],
   },
 
+  /** Not rendered on /install since 2026-10-03 (cut for simplicity). */
   features: {
     title: "What you get",
     items: [
@@ -213,6 +220,7 @@ export const install = {
   /** Symptom, then fix. Symptoms use the browser's own words where it has
    *  them. */
   troubleshooting: {
+    /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Help",
     title: "If something goes wrong",
     items: [
