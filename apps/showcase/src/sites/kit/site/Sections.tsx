@@ -66,30 +66,37 @@ export function Features({
   );
 }
 
-/** The site's FAQ: one exclusive group (`name`), so opening one closes the others. */
+/** The questions themselves: one exclusive group (`name`), so opening one closes the others. */
+export function FaqList({ items, name }: { items: readonly Faq[]; name: string }): JSX.Element {
+  return (
+    <div className="max-w-[760px] border-t border-[color:var(--rule)]">
+      {items.map((item) => (
+        <details
+          key={item.question}
+          name={name}
+          className="group border-b border-[color:var(--rule)]"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-lg font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
+            {item.question}
+            <span
+              aria-hidden="true"
+              className="font-mono text-xl text-[color:var(--accent)] transition-transform duration-150 group-open:rotate-45"
+            >
+              +
+            </span>
+          </summary>
+          <p className={`${T.body} pb-5`}>{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  );
+}
+
+/** The site's FAQ on its home page. */
 export function Faq({ items, name }: { items: readonly Faq[]; name: string }): JSX.Element {
   return (
     <section className={`${FRAME} pb-16 lg:pb-24`}>
-      <div className="max-w-[760px] border-t border-[color:var(--rule)]">
-        {items.map((item) => (
-          <details
-            key={item.question}
-            name={name}
-            className="group border-b border-[color:var(--rule)]"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-lg font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
-              {item.question}
-              <span
-                aria-hidden="true"
-                className="font-mono text-xl text-[color:var(--accent)] transition-transform duration-150 group-open:rotate-45"
-              >
-                +
-              </span>
-            </summary>
-            <p className={`${T.body} pb-5`}>{item.answer}</p>
-          </details>
-        ))}
-      </div>
+      <FaqList items={items} name={name} />
     </section>
   );
 }

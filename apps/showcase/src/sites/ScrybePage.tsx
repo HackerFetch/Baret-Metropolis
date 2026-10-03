@@ -1,9 +1,15 @@
-import { scrybe } from "@baret/content";
-import { useState } from "react";
-import { DemoSite } from "./DemoSite.js";
+import { ScrybeSite } from "./scrybe/ScrybeSite.js";
+import { DappTheme } from "./theme/DappTheme.js";
 
-/** /scrybe. Threat demo. Copy lives in packages/content. */
+/**
+ * /scrybe. The x402 scenario in Scrybe's own palette (newsprint and a
+ * highlighter stroke). Copy lives in packages/content; the page is in
+ * sites/scrybe and Baret's shared demo pieces in sites/kit.
+ */
 export function Component() {
-  const [danger, setDanger] = useState(false);
-  return <DemoSite content={scrybe} danger={danger} onToggle={setDanger} />;
+  return (
+    <DappTheme name="scrybe">
+      <ScrybeSite />
+    </DappTheme>
+  );
 }

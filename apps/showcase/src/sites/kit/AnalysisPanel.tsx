@@ -53,6 +53,7 @@ export function AnalysisPanel({
   copy,
   image,
   extra,
+  after,
   onTryOther,
 }: {
   open: boolean;
@@ -69,6 +70,8 @@ export function AnalysisPanel({
    * blocks cannot show (Scrybe's run of payments against the cap).
    */
   extra?: ReactNode;
+  /** A site's own block after the lesson (Scrybe's way to the agents page). */
+  after?: ReactNode;
   onTryOther: () => void;
 }): JSX.Element {
   const result = state.phase === "done" ? state.result : null;
@@ -147,6 +150,7 @@ export function AnalysisPanel({
                 <NoteBlock title={copy.without.title} body={copy.without.body} />
               ) : null}
               <NoteBlock title={panel.lesson} body={copy.lesson.body} />
+              {after}
             </>
           ) : null}
 

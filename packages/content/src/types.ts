@@ -146,14 +146,68 @@ export interface SitePages {
   };
 }
 
+/** A row of a secondary page's list: a short label, a title and one sentence. */
+export interface SiteListItem {
+  label: string;
+  title: string;
+  body: string;
+}
+
 /**
- * Another demo site's secondary pages. Each site shapes them to its own nav
- * (one key per nav item after the first). Every figure on them is sample
- * data, and `sampleNote` says so above each page.
+ * One secondary page of a demo site, by kind. One renderer draws every kind
+ * in the landing's grammar (a title, one paragraph, rows on hairlines), so a
+ * site only writes its copy.
+ */
+export type SiteView = { id: string; title: string; body: string } & (
+  | {
+      kind: "table";
+      columns: readonly string[];
+      /** One string per column. The first cell is the row's heading. */
+      rows: readonly (readonly string[])[];
+    }
+  | {
+      kind: "chart";
+      chart: {
+        title: string;
+        caption: string;
+        unit: string;
+        days: readonly string[];
+        values: readonly number[];
+      };
+      top: { title: string; items: readonly { label: string; value: string }[] };
+    }
+  | {
+      kind: "docs";
+      toc: string;
+      /** A section may carry a short code sample, shown as written. */
+      sections: readonly { id: string; title: string; body: string; code?: string }[];
+    }
+  | { kind: "list"; items: readonly SiteListItem[] }
+  | { kind: "faq"; items: readonly Faq[] }
+  | {
+      kind: "shares";
+      /** Percentages that add up to 100, drawn as one bar and listed below it. */
+      items: readonly { label: string; value: number; body: string }[];
+    }
+);
+
+/**
+ * Another demo site's secondary pages: one view per nav item after the
+ * first, in nav order. Every figure on them is sample data, and `sampleNote`
+ * says so above each page.
  */
 export interface SiteViews {
   sampleNote: string;
-  readonly [view: string]: unknown;
+  views: readonly SiteView[];
+}
+
+/** What a demo card says when its one input cannot be used. */
+export interface SiteInputErrors {
+  empty: string;
+  /** Above the balance, or above the most the site takes. */
+  tooHigh?: string;
+  /** Below the least the site takes. */
+  tooLow?: string;
 }
 
 export interface ScenarioSite {
@@ -179,8 +233,10 @@ export interface ScenarioSite {
       balance?: string;
       /** The control that fills the whole balance. */
       max?: string;
+      /** The card's input as the page opens, so the demo works in one press. */
+      start?: string;
       /** Validation messages for the card's one input. */
-      errors?: { empty: string; tooHigh: string };
+      errors?: SiteInputErrors;
     };
     stats: readonly { value: string; label: string }[];
     sections: readonly Block[];
@@ -203,7 +259,7 @@ export interface ScenarioSite {
       rows?: readonly { label: string; value: string }[];
       cta?: string;
       note?: string;
-      errors?: { empty: string; tooHigh: string };
+      errors?: SiteInputErrors;
       /** Anything else the site's attack card needs (an agent loop, a counter). */
       readonly [key: string]: unknown;
     };
@@ -221,6 +277,8 @@ export interface ScenarioSite {
         asks: string;
         /** The function the site calls, shown in mono. */
         call: string;
+        /** `asks` and `call` for more than one item, when the card takes a quantity ({count}). */
+        many?: { asks: string; call: string };
         /** The verdict this version should get under the Balanced rules. */
         expected: VerdictKind | "capped";
         /** Why that verdict is expected. Framed as expected, never as found. */
@@ -235,6 +293,8 @@ export interface ScenarioSite {
     without: Block;
     /** One takeaway the reader can use on any site. */
     lesson: Block;
+    /** Only SCRYBE has this: the agent's run of payments against the cap, in the panel. */
+    run?: { title: string; payment: string; paid: string; total: string };
   };
   /** Only SCRYBE has this: the bridge to the agents page. */
   cta?: Block & { action: Action };
