@@ -1,40 +1,38 @@
 import type { ScenarioSite } from "../types.js";
 
 /**
- * /novaswap on apps/showcase. Drainer.
+ * /novaswap on apps/showcase. Drainer. Story per DECISIONS D-018.
  *
- * Story: a swap that succeeds and pays someone else. Nothing fails, so the
- * page shows success either way. Pays in MON, so neither version needs an
- * allowance and the two differ only in the contract called.
+ * Runs on real Monad testnet contracts (`@baret/demo`, CONTRACTS.md section
+ * 7): a test token dUSDC (never taken for real USDC), the NovaSwap router at
+ * a fixed 3.2 dUSDC per MON, and a look-alike router whose address starts
+ * and ends like the real one.
  *
- * Honest version: swap(minOut, to = you), payable, on the demo NovaSwap router
- * at a fixed test rate. MON out, USDC in, both in your wallet. Expected Safe,
- * no findings. Needs: the router on a list Baret reads and funded with test
- * USDC; the page's "fixed test rate" note stays true only while the router
- * uses one.
+ * Honest version: swapMonForUsdc(minOut), payable, on the router. MON out,
+ * dUSDC in, both in your wallet. Expected Safe, no findings. Needs no
+ * allowance.
  *
- * Attack version: the same button calls a look-alike router that swaps and
- * pays the USDC to another wallet. Expected Blocked. Codes:
- *   RISKY_CONTRACT_INTERACTION   the look-alike router is written to the
- *                                registry's risky list for the demo;
- *                                blockRiskyContracts
- *   KNOWN_MALICIOUS_ADDRESS      only if the payout wallet is on the blocklist
- *   ESTIMATED_LOSS_EXCEEDS_MAX   only when the amount typed crosses the
- *                                visitor's loss limit
- * Not promised: NANSEN_FLAGGED_FRESH_WALLET (depends on Nansen covering
- * testnet addresses).
+ * Attack version: the card turns into a dUSDC sale that first asks to
+ * "enable dUSDC trading": approve(look-alike, unlimited). With an ordinary
+ * wallet the following "swap" takes the whole dUSDC balance to a sink.
+ * Expected Blocked, twice:
+ *   ERC20_APPROVAL_UNLIMITED   the allowance has no limit
+ *   KNOWN_MALICIOUS_ADDRESS    the look-alike is on the registry's list
  *
  * Watch for -> source:
- *   1 reported router             RISKY_CONTRACT_INTERACTION (seeded)
- *   2 USDC paid to another wallet What changes (estimatedChanges) + blocklist
- *   3 loss above your limit       ESTIMATED_LOSS_EXCEEDS_MAX (amount-dependent)
+ *   1 unlimited allowance        ERC20_APPROVAL_UNLIMITED (approvals)
+ *   2 spender one character off  the router address on the Docs page
+ *   3 reported spender           KNOWN_MALICIOUS_ADDRESS (registry)
+ *
+ * Keep demo swaps under half the wallet's MON: Baret does not price MON
+ * against dUSDC, so the Balanced 50 % loss limit would block a bigger swap.
  */
 
 export const novaswap = {
   meta: {
     title: "NovaSwap swap scenario · Baret",
     description:
-      "A simulated swap on Monad testnet that succeeds and pays your USDC to another wallet. See what Baret checks before you sign.",
+      'A swap page on Monad testnet whose "enable trading" step hands a look-alike router your whole dUSDC balance. See what Baret checks before you sign.',
   },
 
   scenario: {
@@ -43,15 +41,15 @@ export const novaswap = {
     category: "Exchange",
     tagline: "Swap MON for USDC in one step",
     summary:
-      "A clean swap page. In the attack version, the swap runs through a look-alike router. The USDC you bought lands in someone else's wallet.",
+      'A clean swap page. In the attack version, "enable trading" is an unlimited dUSDC allowance to a look-alike router that can empty your balance.',
     watchFor: [
-      "A router on the reported list",
-      "Your USDC paid to a wallet that is not yours",
-      "A loss above the limit in your rules",
+      "An unlimited allowance the swap does not need",
+      "A spender one character off the real router",
+      "A spender on the reported list",
     ],
     threatClass: "drainer",
     whyItMatters:
-      "The swap succeeds and the page shows success. Only the balance change shows where the output went.",
+      "The approval moves nothing, so the page looks fine. The drain comes later, through the allowance.",
     verdict: "blocked",
   },
 
@@ -65,7 +63,7 @@ export const novaswap = {
     hero: {
       badge: "No allowance needed for MON",
       title: "Swap MON for USDC in one step",
-      body: "Pay in MON, receive USDC, settle in a single transaction. No account, and no allowance to manage.",
+      body: "Pay in MON, receive dUSDC, settle in a single transaction. No account, and no allowance to manage.",
       cta: "Swap",
     },
     panel: {
@@ -73,7 +71,7 @@ export const novaswap = {
       input: "Amount of MON",
       rows: [
         { label: "You pay", value: "MON" },
-        { label: "You receive", value: "USDC" },
+        { label: "You receive", value: "dUSDC" },
         { label: "Rate", value: "Fixed test rate" },
         { label: "Route", value: "NovaSwap router" },
         { label: "Max slippage", value: "0.5%" },
@@ -95,7 +93,7 @@ export const novaswap = {
     sections: [
       {
         title: "Settles in one transaction",
-        body: "Your MON goes in and your USDC comes out in the same transaction. Nothing waits in a queue.",
+        body: "Your MON goes in and your dUSDC comes out in the same transaction. Nothing waits in a queue.",
       },
       {
         title: "Routed for you",
@@ -107,7 +105,7 @@ export const novaswap = {
         question: "Do I need to approve anything?",
         answer: "Not to swap MON. Native MON needs no allowance.",
       },
-      { question: "Where does my USDC go?", answer: "Straight to the wallet you connected." },
+      { question: "Where does my dUSDC go?", answer: "Straight to the wallet you connected." },
       {
         question: "Is there a protocol fee?",
         answer: "0.05% of each swap, already included in the rate.",
@@ -116,9 +114,30 @@ export const novaswap = {
     progress: ["Getting a quote", "Confirm in your wallet", "Swapping", "Swap complete"],
     done: {
       title: "Swap complete",
-      body: "Your USDC is on its way to your wallet.",
+      body: "Your dUSDC is on its way to your wallet.",
     },
     footer: "NovaSwap runs on Monad. Rates are shown before you confirm.",
+    attack: {
+      switch: {
+        label: "Suspicious swap",
+        off: "Off. Review swap calls the NovaSwap router.",
+        on: "On. The card sells dUSDC, and its button asks for an unlimited allowance to a look-alike router. This is the attack version.",
+      },
+      input: "Amount of dUSDC",
+      rows: [
+        { label: "You pay", value: "dUSDC" },
+        { label: "You receive", value: "MON" },
+        { label: "Rate", value: "Fixed test rate" },
+        { label: "Route", value: "NovaSwap router" },
+        { label: "Max slippage", value: "0.5%" },
+      ],
+      cta: "Enable dUSDC trading",
+      note: "Selling dUSDC needs trading enabled once for this token.",
+      errors: {
+        empty: "Enter an amount of dUSDC.",
+        tooHigh: "That is more dUSDC than this wallet holds.",
+      },
+    },
     pages: {
       sampleNote: "Sample figures. This demo site has no live market data.",
       pools: {
@@ -167,7 +186,7 @@ export const novaswap = {
           {
             id: "how-it-works",
             title: "How a swap works",
-            body: "You send MON to the router with the smallest amount of USDC you accept. The router trades it through the best pool and sends the USDC to the wallet named in the call, all in one transaction.",
+            body: "You send MON to the router with the smallest amount of dUSDC you accept. The router trades it through the best pool and sends the dUSDC to your wallet, all in one transaction.",
           },
           {
             id: "slippage",
@@ -193,27 +212,31 @@ export const novaswap = {
     modes: {
       safe: {
         label: "Honest version",
-        body: "The swap calls the NovaSwap router. Your MON goes in, and the USDC comes back to your wallet.",
-        asks: "NovaSwap wants you to swap MON for USDC on {contract}.",
-        call: "swap(minOut, to: your wallet)",
+        body: "The swap calls the NovaSwap router. Your MON goes in, and the dUSDC comes back to your wallet.",
+        asks: "NovaSwap wants you to swap MON for dUSDC on {contract}.",
+        call: "swapMonForUsdc(minOut)",
         expected: "safe",
         expectedBody:
-          "No rule should fire. The simulation should show MON out and USDC in, both in your own wallet.",
+          "No rule should fire. The simulation should show MON out and dUSDC in, both in your own wallet.",
       },
       danger: {
         label: "Attack version",
-        body: "The same button sends your MON to a look-alike router. It swaps, then pays the USDC to another wallet.",
-        asks: "NovaSwap wants you to swap MON for USDC on {contract}.",
-        call: "swap(minOut, to: another wallet)",
+        body: "The card asks you to enable dUSDC trading. That is an unlimited dUSDC allowance to a look-alike router, which can take your whole balance.",
+        asks: "NovaSwap wants you to let {contract} spend all of your dUSDC.",
+        call: "approve(spender, unlimited)",
         expected: "blocked",
         expectedBody:
-          "For this demo, the look-alike router is on the reported list. Balanced rules block reported contracts, so that rule should fire.",
+          "Two rules should fire. The allowance has no limit, and the spender is on the reported list. Balanced rules block both.",
       },
     },
     claims: [
       {
-        claim: "Your USDC goes straight to the wallet you connected.",
-        check: "Baret simulates the swap and shows which wallet receives the USDC.",
+        claim: "Your dUSDC goes straight to the wallet you connected.",
+        check: "Baret simulates the swap and shows which wallet receives the dUSDC.",
+      },
+      {
+        claim: "Enable trading once, then swap freely.",
+        check: "Baret reads the allowance: who can spend your dUSDC, and how much.",
       },
       {
         claim: "Routed through the NovaSwap router.",
@@ -226,15 +249,15 @@ export const novaswap = {
     ],
     watch: {
       title: "Before you press Swap",
-      body: "Notice that both versions ask the same thing. Only the contract differs. Read the What changes rows: in an honest swap, the USDC lands in your wallet.",
+      body: "The honest swap asks for MON. The attack asks for permission over all of your dUSDC. Read who gets the allowance, and how much.",
     },
     without: {
       title: "If this were signed",
-      body: "The swap would succeed and the page would say so. Your MON would be gone, and the USDC would sit in another wallet.",
+      body: 'Nothing would move at first. The next "swap" would let the look-alike take your whole dUSDC balance, and it would not come back.',
     },
     lesson: {
-      title: "Success is not the same as yours",
-      body: "A swap that succeeds can still pay someone else. Check where the output lands, not whether it worked.",
+      title: "Permission is the payment",
+      body: "An unlimited allowance lets the spender take everything, later, without asking again. Approve the amount you sell, to the contract you meant.",
     },
   },
 } as const satisfies ScenarioSite;

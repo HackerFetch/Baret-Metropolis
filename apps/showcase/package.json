@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@baret/content": "workspace:*",
+    "@baret/demo": "workspace:*",
+    "@baret/guard": "workspace:*",
     "@baret/routes": "workspace:*",
     "@baret/ui": "workspace:*",
     "lenis": "1.3.26",

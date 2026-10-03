@@ -3,25 +3,32 @@ import type { FindingCode } from "@baret/content";
 /**
  * What the Baret panel shows for one request on a demo dApp.
  *
- * Frontend only for now: every result is a prepared sample from the site's
- * own `sample.ts`, labelled as such in the panel. The shape follows
- * AnalyzeResponse in packages/guard/src/analyze.ts (decision, findings with
- * values, estimated changes), so the live adapter can map onto it later
- * without touching the panel.
+ * A result comes from one of two sources: a prepared sample from the site's
+ * own `sample.ts`, or Baret's `/v1/analyze` answer mapped by `kit/live.ts`.
+ * The shape follows AnalyzeResponse in packages/guard/src/analyze.ts
+ * (decision, findings with values, balance changes, approvals), already in
+ * display units, so the panel never knows which source it is reading.
  */
 
 export type DemoMode = "safe" | "danger";
 
-export type SampleVerdict = "safe" | "caution" | "blocked";
+export type Verdict = "safe" | "caution" | "blocked";
+
+/**
+ * sample: prepared on the page. live: Baret's server answered. failed: the
+ * check did not finish (network error, bad answer, timeout); the verdict is
+ * then Blocked, because with no answer nothing should be signed.
+ */
+export type ResultSource = "sample" | "live" | "failed";
 
 /** A finding the client renders from shared/findings: the code plus its values. */
-export interface SampleFinding {
+export interface CheckFinding {
   readonly code: FindingCode;
   readonly values: Readonly<Record<string, string>>;
 }
 
 /** One "What changes" row, already in display units. */
-export interface SampleChange {
+export interface CheckChange {
   readonly direction: "in" | "out";
   readonly value: string;
   readonly unit: string;
@@ -29,16 +36,26 @@ export interface SampleChange {
   readonly note?: string;
 }
 
-export interface SampleResult {
-  readonly verdict: SampleVerdict;
-  readonly findings: readonly SampleFinding[];
-  readonly changes: readonly SampleChange[];
-  /** The contract the request calls, shown in "What the site asks for". */
-  readonly contract: string;
+/** An allowance the request grants: who may spend which token, and how much. */
+export interface CheckApproval {
+  readonly unit: string;
+  readonly spender: string;
+  readonly unlimited: boolean;
+  /** Display units; null when unlimited or unknown. */
+  readonly amount: string | null;
+}
+
+export interface CheckResult {
+  readonly source: ResultSource;
+  readonly verdict: Verdict;
+  readonly findings: readonly CheckFinding[];
+  readonly changes: readonly CheckChange[];
+  readonly approvals: readonly CheckApproval[];
 }
 
 /**
- * The seam for the live check. Today every site passes a function that
- * returns its prepared sample; later the same signature can call Baret.
+ * The seam between a site and Baret. A site passes one function: today it
+ * resolves the prepared sample, with a wallet connected it calls Baret.
+ * It may reject or hang; `runCheck` turns both into a failed result.
  */
-export type CheckSource = (mode: DemoMode) => SampleResult;
+export type CheckSource<I> = (input: I, signal: AbortSignal) => Promise<CheckResult>;

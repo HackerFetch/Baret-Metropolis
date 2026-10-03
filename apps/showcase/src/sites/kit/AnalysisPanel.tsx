@@ -9,11 +9,12 @@ import {
   ClaimsList,
   ExpectedVerdict,
   FindingList,
+  LiveVerdict,
   NoteBlock,
   TheAsk,
 } from "./panel/Blocks.js";
-import type { DemoMode, SampleResult } from "./types.js";
-import type { CheckState } from "./useSampleCheck.js";
+import type { DemoMode, Verdict } from "./types.js";
+import type { CheckState } from "./useCheck.js";
 
 /**
  * Baret's panel on top of a demo dApp. It opens when the site's main button
@@ -21,7 +22,13 @@ import type { CheckState } from "./useSampleCheck.js";
  * anything is signed. It always sits in data-scope="baret", so it keeps
  * Baret's palette on any dApp theme, like the real extension would.
  *
- * Shared by all six demo sites: each one passes its own copy and sample.
+ * Three kinds of result, one layout:
+ * - sample: the expected verdict and the prepared findings;
+ * - live: Baret's verdict first, a line saying whether it matches the
+ *   expected one, then the same blocks from the server's answer;
+ * - failed: Blocked, and a note that the check did not finish.
+ *
+ * Shared by all six demo sites: each one passes its own copy.
  */
 
 const { panel, outcome } = hub.frame;
@@ -29,6 +36,7 @@ const { panel, outcome } = hub.frame;
 export interface PanelCopy {
   readonly asks: string;
   readonly call: string;
+  readonly expected: Verdict;
   readonly expectedBody: string;
   readonly claims: readonly { claim: string; check: string }[];
   readonly without: { title: string; body: string };
@@ -39,8 +47,8 @@ export function AnalysisPanel({
   open,
   onOpenChange,
   state,
+  live,
   mode,
-  result,
   copy,
   image,
   onTryOther,
@@ -48,13 +56,15 @@ export function AnalysisPanel({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   state: CheckState;
+  /** True when the check goes to Baret's server, so the header can say so from the start. */
+  live: boolean;
+  /** The version that was checked, which may differ from the one switched on now. */
   mode: DemoMode;
-  result: SampleResult;
   copy: PanelCopy;
   image?: ImgAsset;
   onTryOther: () => void;
 }): JSX.Element {
-  const done = state.phase === "done";
+  const result = state.phase === "done" ? state.result : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -69,12 +79,14 @@ export function AnalysisPanel({
             </Tag>
           </div>
           <SheetTitle className={`${T.h3} text-[color:var(--fg)]`}>{panel.title}</SheetTitle>
-          <SheetDescription className={T.small}>{panel.sample}</SheetDescription>
+          <SheetDescription className={T.small}>
+            {live ? panel.liveNote : panel.sample}
+          </SheetDescription>
         </header>
 
         {/* The verdict is announced once it is ready; focus stays put. */}
         <p role="status" className="sr-only">
-          {done ? common.verdicts[result.verdict].aria : ""}
+          {result ? common.verdicts[result.verdict].aria : ""}
         </p>
 
         {/* Addresses are one long word: let them wrap so the panel never
@@ -97,9 +109,20 @@ export function AnalysisPanel({
             </ol>
           ) : null}
 
-          {done ? (
+          {result?.source === "failed" ? (
             <>
-              <ExpectedVerdict verdict={result.verdict} body={copy.expectedBody} />
+              <LiveVerdict verdict={result.verdict} />
+              <NoteBlock title={panel.failed.title} body={panel.failed.body} />
+              <TheAsk asks={copy.asks} call={copy.call} />
+            </>
+          ) : null}
+
+          {result && result.source !== "failed" ? (
+            <>
+              {result.source === "live" ? (
+                <LiveVerdict verdict={result.verdict} expected={copy.expected} />
+              ) : null}
+              <ExpectedVerdict verdict={copy.expected} body={copy.expectedBody} />
               {image ? (
                 <ImgWell
                   asset={image}
@@ -110,23 +133,25 @@ export function AnalysisPanel({
               ) : null}
               <TheAsk asks={copy.asks} call={copy.call} />
               <FindingList items={result.findings} />
-              <ChangeList rows={result.changes} />
+              <ChangeList rows={result.changes} approvals={result.approvals} />
               <ClaimsList claims={copy.claims} />
               {mode === "danger" ? (
                 <NoteBlock title={copy.without.title} body={copy.without.body} />
               ) : null}
               <NoteBlock title={panel.lesson} body={copy.lesson.body} />
-
-              <section className="grid gap-3 border-t border-[color:var(--rule-strong)] pt-5">
-                <p className={`${T.h3} text-[color:var(--fg)]`}>{outcome.stopped.title}</p>
-                <p className={T.body}>{outcome.stopped.body}</p>
-                <div className="flex">
-                  <Button type="button" variant="ghost" onClick={onTryOther}>
-                    {outcome.again.label}
-                  </Button>
-                </div>
-              </section>
             </>
+          ) : null}
+
+          {result ? (
+            <section className="grid gap-3 border-t border-[color:var(--rule-strong)] pt-5">
+              <p className={`${T.h3} text-[color:var(--fg)]`}>{outcome.stopped.title}</p>
+              <p className={T.body}>{outcome.stopped.body}</p>
+              <div className="flex">
+                <Button type="button" variant="ghost" onClick={onTryOther}>
+                  {outcome.again.label}
+                </Button>
+              </div>
+            </section>
           ) : null}
         </div>
       </SheetContent>

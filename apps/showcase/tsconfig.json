@@ -16,6 +16,12 @@
     },
     {
       "path": "../../packages/routes"
+    },
+    {
+      "path": "../../packages/guard"
+    },
+    {
+      "path": "../../packages/demo"
     }
   ]
 }

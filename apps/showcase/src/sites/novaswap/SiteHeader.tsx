@@ -2,7 +2,6 @@ import { novaswap } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import type { JSX } from "react";
 import { FRAME } from "../../shared/layout.js";
-import { SAMPLE } from "./sample.js";
 
 /**
  * NovaSwap's own header, in its cobalt palette. The nav switches between the
@@ -49,11 +48,14 @@ function NavItems({ view, onView }: { view: View; onView: (view: View) => void }
 
 export function SiteHeader({
   connected,
+  wallet,
   onConnect,
   view,
   onView,
 }: {
   connected: boolean;
+  /** The address shown once connected: the sample, or the live demo address. */
+  wallet: string;
   onConnect: () => void;
   view: View;
   onView: (view: View) => void;
@@ -77,7 +79,7 @@ export function SiteHeader({
             <span aria-hidden="true" className="size-2 rounded-full bg-[color:var(--safe)]" />
             <span className="text-sm text-[color:var(--fg-muted)]">{site.connect?.connected}</span>
             <span className="font-mono text-sm text-[color:var(--fg)]">
-              {truncateAddress(SAMPLE.wallet)}
+              {truncateAddress(wallet)}
             </span>
           </span>
         ) : (
