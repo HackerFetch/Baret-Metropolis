@@ -49,6 +49,15 @@ describe("http", () => {
     expect(res.json().error).toBe("rpc_unavailable");
   });
 
+  it("refuses to analyse when the RPC is on another chain", async () => {
+    const rpc = new FakeRpc();
+    rpc.chainId = 1;
+    const app = await buildApp(deps(rpc));
+    const res = await app.inject({ method: "POST", url: "/v1/analyze", payload: tx({ to: PEER }) });
+    expect(res.statusCode).toBe(503);
+    expect((await app.inject({ method: "GET", url: "/health/ready" })).statusCode).toBe(503);
+  });
+
   it("requires an API key when keys are configured", async () => {
     const app = await buildApp({ ...deps(new FakeRpc()), config: { ...config, apiKeys: ["k1"] } });
     const payload = tx({ to: PEER, value: "1" });
