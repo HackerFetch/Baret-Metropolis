@@ -30,7 +30,13 @@ export const walletFrame = {
     body: "This wallet shows sample data. It is not connected to Monad yet, and nothing you do here is sent.",
   },
   /** Where the wallet's outside links go. */
-  links: { faucet: "https://faucet.monad.xyz" },
+  links: {
+    faucet: "https://faucet.monad.xyz",
+    showcase: "https://baret-metropolis.vercel.app/showcase",
+    source: "https://github.com/HackerFetch/Baret-Metropolis",
+    limits:
+      "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/WALLET.md#7-out-of-scope-for-v1-scope-guard",
+  },
   /** Values the sample account starts with. */
   sampleData: { accountName: "Main account" },
   /** The picker that loads each sample request on the request screens. */
