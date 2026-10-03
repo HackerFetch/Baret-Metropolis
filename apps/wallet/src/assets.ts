@@ -49,25 +49,3 @@ export const WALLET_ART = {
   /** A lockbox with a master key, a small tagged key outside it: the vault. Agents. */
   vault: art("w-14", 1536, 1024, "#33302C"),
 } as const satisfies Record<string, ImgAsset>;
-
-/**
- * The mark as the wallet carries it (BRAND section 12): orange on chalk for
- * the light theme, orange on graphite for the dark one. A plate, never the
- * logo itself (the logo is the vector Mark).
- */
-export const MARK_ART = {
-  light: {
-    src: "/assets/brand/m-01.webp",
-    width: 1536,
-    height: 1024,
-    ground: "#E5E5DE",
-    srcSet: widths("/assets/brand/m-01.webp", 1536, [480, 768]),
-  },
-  dark: {
-    src: "/assets/brand/m-10.webp",
-    width: 1254,
-    height: 1254,
-    ground: "#151517",
-    srcSet: widths("/assets/brand/m-10.webp", 1254, [480, 768]),
-  },
-} as const satisfies Record<string, ImgAsset>;

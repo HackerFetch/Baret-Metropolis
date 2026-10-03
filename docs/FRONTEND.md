@@ -2,7 +2,7 @@
 
 > **This file is about CONTENT only: what each page says, which sections it has, which text/messages/data are shown, and what the user can do.** Color, typography, spacing, animation, palette — none of that lives in this file and never will; those belong to `BRAND.md` and to the frontend team's own design decisions. A designer/developer reading this file should learn "what belongs on this page", not "how it should look".
 
-Last updated: 2026-10-03 (NovaSwap ready for the live API) · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
+Last updated: 2026-10-03 (hub, docs, install and both 404s rebuilt in the landing's grammar; NovaSwap ready for the live API) · Status: **Content specification, no design/implementation** · The final words live in `packages/content`; where this file and the content disagree, the content wins · Source: Baret-Stellar's `apps/showcase` codebase — content adapted to Monad/EVM. Per user instruction, the site names are **preserved verbatim**: SCRYBE, NOVASWAP, PIXELDROP, ORBITYIELD, CLAIMHUB, LAUNCHPAD (see `DECISIONS.md` D-010).
 
 This covers every page `apps/showcase` owns: **Home**, **Showcase hub + 6 sites**, **Agents**, **Docs**, **Install**.
 
@@ -80,12 +80,15 @@ The stats strip (`home.stats`), the comparison (`home.comparison`), the privacy 
 | Six dApp palettes | **Done** (2026-10-02): each site changes only its palette. `DappTheme` sets `data-dapp="<slug>"` on its wrapper and on `<html>`, and `dapp-themes.css` re-declares the ground, surface, text, rule and accent tokens for light, OS-dark and explicit dark. State colours (safe, caution, blocked) are never re-themed. Anything inside `data-scope="baret"` (the demo strip, Baret's panel, the "Demo site" ribbon) keeps Baret's palette, as the real extension would. `themes.test.ts` checks every block. | `apps/showcase/src/sites/theme/` |
 | Demo kit | **Done** (2026-10-03), frontend only, ready for the live API: the Baret strip (honest/attack switch), the "suspicious swap" switch (`AttackSwitch`, a native `role="switch"` in the dApp's card, bound to the same state as the strip), and the Baret panel (a right-hand sheet that walks the four analysis phases at 160 ms each, then shows the result). One seam per site: a `CheckSource` resolves a `CheckResult` (sample, live or failed). `runCheck` is fail-closed: a rejection, an answer off the `/v1/analyze` contract, a non-2xx status or no answer within 15 s all become Blocked with "The check did not finish". `kit/live.ts` posts to `/api/v1/analyze` (Vite proxy in dev, Vercel rewrite in prod), validates with `analyzeResponseSchema` (loaded only for live checks) and keeps the visitor's own balance changes and allowances. Live results show Baret's verdict, a match/mismatch line against the expected one, then the same blocks. A finding's fix line is left out when one of its values is empty. | `apps/showcase/src/sites/kit/` |
 | `/novaswap` | **Built** (2026-10-03), frontend ready, wallet connect open: cobalt on steel, on the real testnet contracts from `@baret/demo` (D-018). Honest: the card buys dUSDC with MON (`swapMonForUsdc` on the router), expected Safe. Attack (the strip or the switch at the bottom of the card): the card sells dUSDC and its button "Enable dUSDC trading" asks for `approve(look-alike, unlimited)`, expected Blocked by `ERC20_APPROVAL_UNLIMITED` + `KNOWN_MALICIOUS_ADDRESS`. Each version starts from its own amount (2.5 MON, under half the sample balance; 20 dUSDC). Header with a fake connect and a working nav (Swap, Pools, Stats, Docs in `?view=`; Docs shows the real router address), stats, two feature blocks with s-04, FAQ, footer. Answers: the prepared sample by default (never calls the API); live from `/v1/analyze` when `VITE_BARET_DEMO_FROM` holds a funded testnet address (`apps/showcase/.env.example`). Open: wallet connect replaces that variable with the connected address. Headline and tagline keep "USDC" because display type is uppercase and would print "DUSDC". | `apps/showcase/src/sites/novaswap/`, `NovaSwapPage.tsx` |
+| Hub `/showcase` | **Built** (2026-10-03), five blocks in the landing's grammar (owner-approved cut of seven): (1) split hero: `T.h1Page` stencil title, the lead, "See the six sites" (the page's orange) and "Install the extension", the four `hub.stats` as one hairline row, the simulation notice, and h-01 (six tags on a wire); (2) "Six sites, one trap each.": a radio filter (All six / Drainers / Trust traps / Silent agents) with its own picture per class (h-06, h-02, h-03, h-04) and sentence, a status line for the count (`hub.filters.status`), and the six scenario cards (the landing's picture per site, category, name, expected verdict, summary, "Watch for" rows, whole-card link that warms the site's chunk); (3) "Four steps, one sign request": a step picker that slides the four-panel strip h-05 one drawing at a time (460 ms, none under reduced motion), title and body per step, one status region; (4) "Same site, same button, two wallets.": a real table beside l-17 (two blank tags); (5) the closing band. Cut: the detector grid (the landing's checks marquee carries the nine detectors) and the ticker; the stats strip folds into the hero. Pure parts (`hub/hub.ts`: filter, status, strip crop) are tested. | `apps/showcase/src/pages/HubPage.tsx`, `apps/showcase/src/hub/` |
 | The other five sites | Not started: they still render the older `DemoSite` shell; one PR each. | `apps/showcase/src/sites/DemoSite.tsx` |
 
 ### 2.1 Hero
 Headline: **"Six dApps. Six threats. One signature you never made."** Description: "Every site below looks production-ready and behaves like the real thing. Connect a wallet, press a button, and watch Baret catch the attack in plain language — before your keys ever sign." CTAs: "See the scenarios", "Install the wallet", "Read the Docs". A live "ticker" line rotates through different threat types in turn: "wallet drainers", "unlimited approvals", "rug-pull patterns", "silent agent drift", "look-alike assets", "hidden contract calls".
 
 ### 2.2 Stats Strip
+_Since 2026-10-03 one hairline row inside the hero, not a strip of its own._
+
 "6" simulated sites · "3" kinds of threat · "9" detectors · "25" rules. The exact wording lives in `packages/content/src/showcase/hub.content.ts`.
 
 ### 2.3 Scenario Cards (filterable: All / Drainers / Trust traps / Silent agents)
@@ -147,9 +150,13 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 4. **Verdict** — Safe / Caution / Blocked, every finding in plain language. You sign with your eyes open, or you reject.
 
 ### 2.5 Detector Grid ("Under the hood")
+_Cut from the page on 2026-10-03 (owner-approved simplification); the copy stays in `hub.content.ts`, marked not rendered. The landing's checks marquee names every check._
+
 Headline: "Nine detectors run on every signature." Description: "Every scenario trips a different subset. The popup only shows you the findings that matter. Each one explains in a single sentence why the transaction is suspicious." Three featured cards: Pre-sign Guard (server simulation + detectors), Authorization Ledger (every grant is a row with cap+expiry+progress bar), Post-sign Monitor (WebSocket subscribe, alert on anything you never signed). Alongside, a list/grid of detector labels (see the §1.3 marquee list).
 
-### 2.6 Final CTA
+### 2.6 Comparison and final CTA
+Before the CTA, "Same site, same button, two wallets." (`hub.comparison`) as a table: what a wallet with no pre-sign check shows against what Baret shows, four rows.
+
 Headline: "Pick a card. Watch the firewall fire." Description: "No slides, no mockups. Every scenario above runs a real transaction against a real analysis server and shows the verdict before signing."
 
 ---
@@ -214,6 +221,10 @@ Footnote: "A per-agent audit monitor requires authenticated server-side access, 
 
 ## 4. Docs Page
 
+| Surface | Status | Where |
+|---|---|---|
+| Docs `/docs` | **Built** (2026-10-03), four blocks (owner-approved cut of five): (1) split hero with l-33 (a tower model on a drafting table) and, under it, the two timelines (a standard wallet against Baret, Baret's two added steps in ink); (2) the eleven files in four anchored groups (`#start-here`, `#what-you-see`, `#contracts-and-payments`, `#plan-and-decisions`), each card a whole-card link to its file on GitHub with its d-02 line drawing (`DOCS_CARD_ART`, keyed by file); (3) known limitations beside l-18 (one tag fallen from the wire); (4) the closing band with d-04 (the site office at night). Cut: "The short version" pipeline (`docs.summary`, kept in content, marked not rendered). The URL builder and the group slugs are tested. | `apps/showcase/src/pages/DocsPage.tsx`, `apps/showcase/src/docs/` |
+
 **Purpose:** Access to every document describing how Baret works from a single index. Each card points to a real file in this project's `docs/` tree (GitHub link).
 
 ### 4.1 Hero
@@ -237,12 +248,18 @@ The real files the Docs page points to for this project (must stay in sync with 
 | Decisions | Architecture/scope decisions taken and their rationale | `DECISIONS.md` |
 | Brand | Brand identity, tone, design tokens | `BRAND.md` |
 
-### 4.3 Bottom CTA
+### 4.3 Known limitations and bottom CTA
+The six `docs.limitations.items` sit in their own block before the CTA.
+
 Headline: "Would you rather see it in action?" Description: "The Showcase exercises every layer of the wallet in your browser." CTA: "Open the Showcase".
 
 ---
 
 ## 5. Install Page
+
+| Surface | Status | Where |
+|---|---|---|
+| Install `/install` | **Built** (2026-10-03), five blocks (owner-approved cut of nine): (1) the hero carries the download, so the main action is in the first viewport: the detected browser (`detectBrowser`, read on the client after the first render) picks the lead build; while no build is published, the hero says so and the primary action is "Build it from source" (`install.download.pending`), with the version, Manifest V3 and the minimum browser in mono; (2) "Load it in three steps.": a browser picker, then three steps with i-03, i-04, i-05 and the address to copy, the developer-mode note folded in (Firefox: the temporary add-on warning); (3) what Baret can and cannot do, three equal lists and the audit fact; (4) troubleshooting as one exclusive group beside i-06; (5) the closing band with i-02. Download URLs come from `VITE_BARET_EXTENSION_CHROMIUM_URL` / `VITE_BARET_EXTENSION_FIREFOX_URL` (https only; empty by default). Cut: "What happens next" and "What you get" (kept in content, marked not rendered). | `apps/showcase/src/pages/InstallPage.tsx`, `apps/showcase/src/install/` |
 
 **Purpose:** Get the user to download the Baret wallet extension and install it in a few minutes.
 
@@ -265,15 +282,27 @@ Primary download: "Baret for Chrome/Brave/Edge" or "Baret for Firefox" depending
 3. **"Load Temporary Add-on…"** — Select the `manifest.json` in the folder you extracted. Note: Firefox clears temporary add-ons when the browser restarts; reload Baret after every restart.
 
 ### 5.4 Feature Grid ("Why this wallet")
+_Cut from the page on 2026-10-03 (owner-approved simplification); kept in `install.content.ts`, marked not rendered._
+
 - **Pre-sign simulation** — "Baret decodes and simulates every transaction before the popup asks you to sign."
 - **x402 firewall** — "Baret caps HTTP 402 payments per hour/day and checks them against your allowlist."
 - **On-chain revoke** — "Every site gets its own sub-key. Revoke it on-chain with a single tap."
 
 ### 5.5 Post-install CTA
+_"What happens next" (`install.afterInstall`) is cut on 2026-10-03; the closing band keeps this CTA._
+
 Headline: "Take a lap through the Showcase." Description: "Six fake-but-real dApps trigger six different attack patterns. Baret catches every one of them live. You see the analysis before you sign." CTAs: "Open the Showcase", "Read the Docs".
 
 ---
 
-## 6. Page–Doc Sync Rule
+## 6. Utility pages
+
+| Surface | Status | Where |
+|---|---|---|
+| Showcase 404 `/*` | **Built** (2026-10-03): split hero, "Nothing here.", one sentence, "Back to the start" and "Open the showcase", beside l-29 (a site door tagged out). Words in `common.notFound`. Marked noindex by `RootLayout`. | `apps/showcase/src/pages/NotFoundPage.tsx` |
+| Wallet 404 `/*` | **Built** (2026-10-03): the vector mark on a plate, one stencil line, one sentence, "Back to your wallet". The raster marks m-01 and m-10 are not used here: BRAND section 02 keeps the mark vector, and m-10's helmet departs from the mark's geometry. | `apps/wallet/src/pages/NotFoundPage.tsx` |
+| Design kit `/kit` | **Updated** (2026-10-03), internal, out of the nav: adds the shared `@baret/web-ui` controls (Segment, RuleSwitch, CopyButton, Disclosures, LinkButton) and the brand and social pictures (m-01 to m-12, x-01 to x-10) with their ids, plus the brand clip v-01 with controls, never autoplaying. | `apps/showcase/src/pages/KitPage.tsx`, `apps/showcase/src/kit/` |
+
+## 7. Page–Doc Sync Rule
 
 The content in this file must stay in sync with the real code: whenever a section is added to, removed from, or has its copy changed on a page, this file is updated first. The Docs page card list (§4.2) in particular must match the existing files of this doc set (`docs/*.md`) one to one — whenever a new document is added, both places (the card list + the real Docs page implementation) must be updated.
