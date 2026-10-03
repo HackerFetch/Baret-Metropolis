@@ -2,8 +2,8 @@ import { home, policy } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { type JSX, useId, useState } from "react";
 import { Link } from "react-router";
-import { VERDICT_TONE } from "../../shared/tone.js";
-import { T } from "../../shared/type.js";
+import { VERDICT_TONE } from "../../../shared/tone.js";
+import { T } from "../../../shared/type.js";
 import { RuleSwitch } from "./RuleSwitch.js";
 import { Segment } from "./Segment.js";
 import {

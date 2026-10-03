@@ -1,12 +1,12 @@
 import { home } from "@baret/content";
 import type { JSX } from "react";
-import { titleId } from "../shared/ids.js";
-import { LinkButton } from "../shared/LinkButton.js";
-import { GRID } from "../shared/layout.js";
-import { Reveal } from "../shared/Reveal.js";
-import { SectionFrame } from "../shared/SectionFrame.js";
-import { TextReveal } from "../shared/TextReveal.js";
-import { T } from "../shared/type.js";
+import { titleId } from "../../shared/ids.js";
+import { LinkButton } from "../../shared/LinkButton.js";
+import { GRID } from "../../shared/layout.js";
+import { Reveal } from "../../shared/Reveal.js";
+import { SectionFrame } from "../../shared/SectionFrame.js";
+import { TextReveal } from "../../shared/TextReveal.js";
+import { T } from "../../shared/type.js";
 import { CapPresets } from "./agents/CapPresets.js";
 
 /** Protocol tokens that keep their lowercase in the uppercase heading. */

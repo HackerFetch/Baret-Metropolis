@@ -1,9 +1,9 @@
 import { home } from "@baret/content";
 import type { JSX } from "react";
-import { FRAME } from "../shared/layout.js";
-import { SectionFrame } from "../shared/SectionFrame.js";
-import { SectionHeader } from "../shared/SectionHeader.js";
-import { useReduce } from "../shared/useReduce.js";
+import { FRAME } from "../../shared/layout.js";
+import { SectionFrame } from "../../shared/SectionFrame.js";
+import { SectionHeader } from "../../shared/SectionHeader.js";
+import { useReduce } from "../../shared/useReduce.js";
 import { AllChecks } from "./marquee/AllChecks.js";
 import { MarqueeItem, Rows } from "./marquee/Row.js";
 

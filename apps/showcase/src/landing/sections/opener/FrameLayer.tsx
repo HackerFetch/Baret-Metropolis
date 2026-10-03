@@ -1,7 +1,7 @@
 import { m, type Transition } from "motion/react";
 import type { JSX } from "react";
-import { Img } from "../../shared/Img.js";
-import { DUR, EASE_OUT_SOFT } from "../../shared/motion.js";
+import { Img } from "../../../shared/Img.js";
+import { DUR, EASE_OUT_SOFT } from "../../../shared/motion.js";
 import type { PictureFrame } from "./frames.js";
 
 /**

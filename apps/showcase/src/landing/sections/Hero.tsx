@@ -1,17 +1,17 @@
 import { home } from "@baret/content";
 import { useInView } from "motion/react";
 import { type JSX, useRef } from "react";
-import { IMG } from "../shared/assets.js";
-import { Img } from "../shared/Img.js";
-import { IDS, titleId } from "../shared/ids.js";
-import { LinkButton } from "../shared/LinkButton.js";
-import { FRAME, GRID } from "../shared/layout.js";
-import { Parallax } from "../shared/Parallax.js";
-import { splitLead } from "../shared/SectionHeader.js";
-import { TextReveal } from "../shared/TextReveal.js";
-import { T } from "../shared/type.js";
-import { ScanLine } from "../shared/webgl/ScanLine.js";
-import { SkylineCanvas } from "../shared/webgl/SkylineCanvas.js";
+import { IMG } from "../../shared/assets.js";
+import { Img } from "../../shared/Img.js";
+import { IDS, titleId } from "../../shared/ids.js";
+import { LinkButton } from "../../shared/LinkButton.js";
+import { FRAME, GRID } from "../../shared/layout.js";
+import { Parallax } from "../../shared/Parallax.js";
+import { splitLead } from "../../shared/SectionHeader.js";
+import { TextReveal } from "../../shared/TextReveal.js";
+import { T } from "../../shared/type.js";
+import { ScanLine } from "../../shared/webgl/ScanLine.js";
+import { SkylineCanvas } from "../../shared/webgl/SkylineCanvas.js";
 import { SecondaryAction } from "./hero/SecondaryAction.js";
 
 /** Splits copy after each full stop, so every sentence of the H1 is its own line. */

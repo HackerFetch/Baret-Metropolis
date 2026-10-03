@@ -139,3 +139,15 @@ export const IMG = {
     srcSet: widths("/assets/landing/l-27.webp", 1024, [480, 768]),
   },
 } as const satisfies Record<string, ImgAsset>;
+
+/**
+ * The demo dApps' pictures, by site, under their canonical file names
+ * (public/assets/showcase). Each site has a hero and the two versions.
+ */
+export const SITE_ART = {
+  novaswap: {
+    routes: { src: "/assets/showcase/s-04.webp", width: 1536, height: 864 },
+    safe: { src: "/assets/showcase/s-05.webp", width: 1536, height: 1024, ground: "#cfd0cb" },
+    danger: { src: "/assets/showcase/s-06.webp", width: 1536, height: 953, ground: "#f4f1e7" },
+  },
+} as const satisfies Record<string, Record<string, ImgAsset>>;

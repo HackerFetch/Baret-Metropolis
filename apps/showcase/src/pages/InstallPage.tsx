@@ -114,6 +114,7 @@ export function Component() {
           {install.troubleshooting.items.map((item) => (
             <details
               key={item.symptom}
+              name="install-troubleshooting"
               className="border-t border-[color:var(--rule)] last:border-b"
             >
               <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-display text-xl uppercase tracking-[0.03em]">

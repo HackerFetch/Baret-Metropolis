@@ -13,8 +13,10 @@ import {
   useMatches,
   useRouteError,
 } from "react-router";
-import { LinkButton } from "../landing/shared/LinkButton.js";
 import { DEMO_PATHS, routes, warm } from "../routes.js";
+import { Signature } from "../shared/cursor/Signature.js";
+import { LandingMotion } from "../shared/LandingMotion.js";
+import { LinkButton } from "../shared/LinkButton.js";
 
 /**
  * The marketing chrome: a sticky header and a three-column footer.
@@ -73,13 +75,19 @@ function darkBandUnderHeader(): boolean {
 }
 
 export function Component() {
-  // One instance for every route, so a hop between a demo site and the
-  // marketing chrome never remounts it and loses the saved positions.
+  const { pathname } = useLocation();
+  // One ScrollRestoration for every route, so a hop between a demo site and
+  // the marketing chrome never remounts it and loses the saved positions.
+  // The signature layer (Lenis wheel smoothing and the eyelet cursor) runs on
+  // every page; keyed by path so each route starts it fresh at the top.
+  // LandingMotion gives every page the motion features (m.* elements, the
+  // BRAND ease-out default and the reduced-motion switch).
   return (
-    <>
+    <LandingMotion>
       <ScrollRestoration />
+      <Signature key={pathname} />
       <Chrome />
-    </>
+    </LandingMotion>
   );
 }
 
@@ -364,7 +372,12 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 /** Pinned to every demo site so nobody mistakes one for a real product. */
 function DemoRibbon() {
   return (
-    <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+    // data-scope="baret": the ribbon is Baret's, so it keeps Baret's palette
+    // on top of a dApp theme (sites/theme).
+    <div
+      data-scope="baret"
+      className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+    >
       <Link to={routes.showcase.path} viewTransition className="pointer-events-auto">
         <Tag tone="brand" size="sm">
           {common.demo.ribbon}

@@ -1,9 +1,15 @@
-import { novaswap } from "@baret/content";
-import { useState } from "react";
-import { DemoSite } from "./DemoSite.js";
+import { NovaSwapSite } from "./novaswap/NovaSwapSite.js";
+import { DappTheme } from "./theme/DappTheme.js";
 
-/** /novaswap. Threat demo. Copy lives in packages/content. */
+/**
+ * /novaswap. Threat demo in NovaSwap's own palette (cobalt on steel). Copy
+ * lives in packages/content; the page is in sites/novaswap and Baret's
+ * shared demo pieces (the strip and the panel) in sites/kit.
+ */
 export function Component() {
-  const [danger, setDanger] = useState(false);
-  return <DemoSite content={novaswap} danger={danger} onToggle={setDanger} />;
+  return (
+    <DappTheme name="novaswap">
+      <NovaSwapSite />
+    </DappTheme>
+  );
 }

@@ -200,6 +200,9 @@ export const hub = {
 
     panel: {
       title: "Baret analysis",
+      /** Shown on every panel until the demo is wired to Baret's server. */
+      sample:
+        "A prepared sample of what Baret returns for this request. This demo is not connected to Baret's server yet.",
       asks: "What the site asks for",
       call: "The call",
       expected: "Expected verdict",

@@ -1,12 +1,12 @@
 import { home } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { type JSX, useState } from "react";
-import { GRID } from "../shared/layout.js";
-import { Reveal } from "../shared/Reveal.js";
-import { SectionFrame } from "../shared/SectionFrame.js";
-import { SectionHeader } from "../shared/SectionHeader.js";
-import { VERDICT_TONE } from "../shared/tone.js";
-import { T } from "../shared/type.js";
+import { GRID } from "../../shared/layout.js";
+import { Reveal } from "../../shared/Reveal.js";
+import { SectionFrame } from "../../shared/SectionFrame.js";
+import { SectionHeader } from "../../shared/SectionHeader.js";
+import { VERDICT_TONE } from "../../shared/tone.js";
+import { T } from "../../shared/type.js";
 import { VerdictCheck } from "./verdicts/VerdictCheck.js";
 import { type SampleId, verdictOf } from "./verdicts/verdictOf.js";
 

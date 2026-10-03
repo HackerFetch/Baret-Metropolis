@@ -1,10 +1,10 @@
 import { home } from "@baret/content";
 import { ArrowDown } from "lucide-react";
 import type { JSX, MouseEvent } from "react";
-import { Img } from "../../shared/Img.js";
-import { IDS, titleId } from "../../shared/ids.js";
-import { FRAME } from "../../shared/layout.js";
-import { T } from "../../shared/type.js";
+import { Img } from "../../../shared/Img.js";
+import { IDS, titleId } from "../../../shared/ids.js";
+import { FRAME } from "../../../shared/layout.js";
+import { T } from "../../../shared/type.js";
 import { FRAMES } from "./frames.js";
 
 /**

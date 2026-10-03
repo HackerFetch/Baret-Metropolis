@@ -28,7 +28,7 @@ import { docs } from "../../../packages/content/src/showcase/docs.content.ts";
 import { home } from "../../../packages/content/src/showcase/home.content.ts";
 import { hub } from "../../../packages/content/src/showcase/hub.content.ts";
 import { install } from "../../../packages/content/src/showcase/install.content.ts";
-import { IMG } from "../src/landing/shared/assets.ts";
+import { IMG } from "../src/shared/assets.ts";
 import { writeRouteHeads } from "./route-heads.mjs";
 
 export const HEAD_MARK = "<!-- baret:head -->";

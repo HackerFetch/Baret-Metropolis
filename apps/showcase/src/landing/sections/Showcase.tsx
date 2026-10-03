@@ -1,10 +1,10 @@
 import { home } from "@baret/content";
 import type { JSX } from "react";
-import { LinkButton } from "../shared/LinkButton.js";
-import { Reveal } from "../shared/Reveal.js";
-import { SectionFrame } from "../shared/SectionFrame.js";
-import { SectionHeader } from "../shared/SectionHeader.js";
-import { T } from "../shared/type.js";
+import { LinkButton } from "../../shared/LinkButton.js";
+import { Reveal } from "../../shared/Reveal.js";
+import { SectionFrame } from "../../shared/SectionFrame.js";
+import { SectionHeader } from "../../shared/SectionHeader.js";
+import { T } from "../../shared/type.js";
 import { ShowcaseCard } from "./showcase/ShowcaseCard.js";
 
 /**

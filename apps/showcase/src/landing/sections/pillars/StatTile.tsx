@@ -1,8 +1,8 @@
 import { animate, useInView } from "motion/react";
 import { type JSX, useEffect, useLayoutEffect, useRef } from "react";
-import { EASE_BRAND, staggerDelay } from "../../shared/motion.js";
-import { T } from "../../shared/type.js";
-import { useReduce } from "../../shared/useReduce.js";
+import { EASE_BRAND, staggerDelay } from "../../../shared/motion.js";
+import { T } from "../../../shared/type.js";
+import { useReduce } from "../../../shared/useReduce.js";
 
 /**
  * A compact stat tile: the number in display type, its line under it.

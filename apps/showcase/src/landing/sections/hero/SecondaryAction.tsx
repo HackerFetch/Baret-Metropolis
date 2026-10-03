@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import { LinkButton } from "../../shared/LinkButton.js";
+import { LinkButton } from "../../../shared/LinkButton.js";
 
 /**
  * The secondary action, "Install the extension". Below 768 px it reads

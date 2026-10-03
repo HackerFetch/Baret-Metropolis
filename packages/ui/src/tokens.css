@@ -168,7 +168,8 @@
  * Light is the default. Every role is defined here first, so a value that
  * only exists inside a dark block can never leak an undefined colour.
  * ════════════════════════════════════════════════════════════════════════ */
-:root {
+:root,
+[data-scope="baret"] {
   color-scheme: light;
 
   --ground: #e6e6e1;
@@ -221,7 +222,8 @@
 
 /* The unstamped document. Most viewers are here, so only tokens change. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]),
+  :root:not([data-theme="light"]) [data-scope="baret"] {
     color-scheme: dark;
 
     --ground: #17181b;
@@ -267,7 +269,8 @@
 }
 
 /* The explicit choice wins in both directions. */
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root[data-theme="dark"] [data-scope="baret"] {
   color-scheme: dark;
 
   --ground: #17181b;
@@ -623,7 +626,8 @@ details[open]::details-content {
  * and specificity as the theme blocks above.
  * ════════════════════════════════════════════════════════════════════════ */
 @media (prefers-contrast: more) {
-  :root {
+  :root,
+  [data-scope="baret"] {
     --fg-muted: rgb(18 19 22 / 0.86);
     --fg-faint: rgb(18 19 22 / 0.72);
     --rule: rgb(18 19 22 / 0.32);
@@ -631,7 +635,8 @@ details[open]::details-content {
     --control-edge: rgb(18 19 22 / 0.72);
   }
 
-  :root[data-theme="dark"] {
+  :root[data-theme="dark"],
+  :root[data-theme="dark"] [data-scope="baret"] {
     --fg-muted: rgb(237 237 232 / 0.88);
     --fg-faint: rgb(237 237 232 / 0.74);
     --rule: rgb(237 237 232 / 0.3);
@@ -641,7 +646,8 @@ details[open]::details-content {
 }
 
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]),
+  :root:not([data-theme="light"]) [data-scope="baret"] {
     --fg-muted: rgb(237 237 232 / 0.88);
     --fg-faint: rgb(237 237 232 / 0.74);
     --rule: rgb(237 237 232 / 0.3);
