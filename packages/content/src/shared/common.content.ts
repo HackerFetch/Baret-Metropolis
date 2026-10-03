@@ -279,10 +279,10 @@ export const common = {
    * The not-found page on both web apps (showcase /*, wallet /*). The words
    * were written inline in the two components before 2026-10-03; they moved
    * here unchanged, except the wallet title, which now has the full stop the
-   * showcase title had.
+   * showcase title had, and the "Not found" tag, which is dropped (BRAND
+   * section 10: no labels above headings).
    */
   notFound: {
-    tag: "Not found",
     title: "Nothing here.",
     body: "That page does not exist. It may have moved, or the link may be wrong.",
     back: { label: "Back to the start", href: "/" },

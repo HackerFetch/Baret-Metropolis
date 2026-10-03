@@ -1,21 +1,52 @@
-import { Tag } from "@baret/ui";
-import { Link } from "react-router";
+import { common } from "@baret/content";
+import { ImgWell } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { routes } from "../routes.js";
+import { NOT_FOUND_ART } from "../shared/assets.js";
+import { PageHero } from "../shared/PageHero.js";
 
-/** The 404. Short, and it names the next move. */
+/**
+ * The 404, in the landing's grammar: what happened in one stencil line, one
+ * sentence, and the two ways back (the start, and the showcase most people
+ * came for). A site door tagged out stands beside it. Reassuring, never
+ * apologetic (BRAND section 09). RootLayout marks the page noindex.
+ */
 export function Component() {
+  const { notFound, actions } = common;
   return (
-    <div className="mx-auto grid min-h-[60dvh] max-w-[640px] content-center gap-4 px-5 py-24">
-      <Tag tone="neutral">Not found</Tag>
-      <h1 className="font-stencil text-6xl uppercase leading-[0.9]">Nothing here.</h1>
-      <p className="text-lg text-[color:var(--fg-muted)]">
-        That page does not exist. It may have moved, or the link may be wrong.
-      </p>
-      <Link
-        to="/"
-        className="chamfer-sm inline-flex h-11 w-max items-center border border-[color:var(--fg)] px-5 font-display text-base uppercase tracking-[0.08em]"
-      >
-        Back to the start
-      </Link>
+    <div className="overflow-x-clip">
+      <PageHero
+        id="not-found"
+        title={notFound.title}
+        body={notFound.body}
+        actions={
+          <>
+            <LinkButton
+              href={notFound.back.href}
+              label={notFound.back.label}
+              variant="primary"
+              size="lg"
+              icon="arrow-right"
+              fullOnPhone
+            />
+            <LinkButton
+              href={routes.showcase.path}
+              label={actions.openShowcase}
+              size="lg"
+              fullOnPhone
+            />
+          </>
+        }
+        picture={
+          <ImgWell
+            asset={NOT_FOUND_ART.door}
+            ratio="4/5"
+            dim
+            sizes="(min-width: 1024px) 480px, 100vw"
+            className="mx-auto max-w-[420px] border border-[color:var(--rule)] lg:max-w-none"
+          />
+        }
+      />
     </div>
   );
 }

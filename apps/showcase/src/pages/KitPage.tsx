@@ -23,6 +23,7 @@ import {
   VerdictTag,
 } from "@baret/ui";
 import { Section } from "../components/Section.js";
+import { KitWebLayer } from "../kit/KitWebLayer.js";
 
 /**
  * /kit. Every component on one page.
@@ -237,6 +238,7 @@ export function Component() {
           </Panel>
         </div>
       </Section>
+      <KitWebLayer />
     </>
   );
 }

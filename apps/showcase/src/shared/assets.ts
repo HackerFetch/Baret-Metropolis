@@ -538,3 +538,190 @@ export const NOT_FOUND_ART = {
     srcSet: widths("/assets/landing/l-29.webp", 1024, [480, 768]),
   },
 } as const satisfies Record<string, ImgAsset>;
+
+/** The brand pictures (FILE m-01 to m-12), shown on /kit. Marketing renders, not the logo: the logo is the vector Mark. */
+export const BRAND_ART = {
+  /** The mark in orange on chalk. */
+  m01: {
+    src: "/assets/brand/m-01.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#E5E5DE",
+    srcSet: widths("/assets/brand/m-01.webp", 1536, [480]),
+  },
+  /** The mark in ink on orange. */
+  m02: {
+    src: "/assets/brand/m-02.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#FD5702",
+    srcSet: widths("/assets/brand/m-02.webp", 1254, [480]),
+  },
+  /** The mark cut out of a steel plate. */
+  m03: {
+    src: "/assets/brand/m-03.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#31302E",
+    srcSet: widths("/assets/brand/m-03.webp", 1254, [480]),
+  },
+  /** The mark as an enamel pin on a kraft tag. */
+  m04: {
+    src: "/assets/brand/m-04.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#4F4F4E",
+    srcSet: widths("/assets/brand/m-04.webp", 1536, [480]),
+  },
+  /** The mark blind-embossed on a tag, on black. */
+  m05: {
+    src: "/assets/brand/m-05.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#181818",
+    srcSet: widths("/assets/brand/m-05.webp", 1024, [480]),
+  },
+  /** The mark stencilled on concrete, barrier tape below. */
+  m06: {
+    src: "/assets/brand/m-06.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#A59F9A",
+    srcSet: widths("/assets/brand/m-06.webp", 1024, [480]),
+  },
+  /** A crane lifting a crate with the mark, at night. */
+  m07: {
+    src: "/assets/brand/m-07.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#282357",
+    srcSet: widths("/assets/brand/m-07.webp", 1024, [480]),
+  },
+  /** The mark as a cast object on concrete. */
+  m08: {
+    src: "/assets/brand/m-08.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#504D4C",
+    srcSet: widths("/assets/brand/m-08.webp", 1536, [480]),
+  },
+  /** A real hard hat on a kraft tag. */
+  m09: {
+    src: "/assets/brand/m-09.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#9A9896",
+    srcSet: widths("/assets/brand/m-09.webp", 1536, [480]),
+  },
+  /** The mark in orange on graphite. */
+  m10: {
+    src: "/assets/brand/m-10.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#151517",
+    srcSet: widths("/assets/brand/m-10.webp", 1254, [480]),
+  },
+  /** The mark in ink on chalk. */
+  m11: {
+    src: "/assets/brand/m-11.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#F6F6F2",
+    srcSet: widths("/assets/brand/m-11.webp", 1254, [480]),
+  },
+  /** The mark's construction, step by step. */
+  m12: {
+    src: "/assets/brand/m-12.webp",
+    width: 1536,
+    height: 512,
+    ground: "#F1EFEA",
+    srcSet: widths("/assets/brand/m-12.webp", 1536, [480]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/** The social pictures (FILE x-01 to x-10), kept for posts and shown on /kit. Not the og:image: that is og.png, built to BRAND section 10. */
+export const SOCIAL_ART = {
+  /** A hard hat with a tag on a concrete block, day. */
+  x01: {
+    src: "/assets/social/x-01.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#C5C0BB",
+    srcSet: widths("/assets/social/x-01.webp", 1536, [480]),
+  },
+  /** A blank tag on dark concrete. */
+  x02: {
+    src: "/assets/social/x-02.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#242322",
+    srcSet: widths("/assets/social/x-02.webp", 1024, [480]),
+  },
+  /** Concrete slab, close. */
+  x03: {
+    src: "/assets/social/x-03.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#A89F94",
+    srcSet: widths("/assets/social/x-03.webp", 1536, [480]),
+  },
+  /** Concrete wall with an orange bar at the foot: a share-card ground. */
+  x04: {
+    src: "/assets/social/x-04.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#AFA89F",
+    srcSet: widths("/assets/social/x-04.webp", 1536, [480]),
+  },
+  /** A night skyline with a crane. */
+  x05: {
+    src: "/assets/social/x-05.webp",
+    width: 1536,
+    height: 865,
+    ground: "#0F0C18",
+    srcSet: widths("/assets/social/x-05.webp", 1536, [480]),
+  },
+  /** A hard-hat icon on orange (not the Baret mark's geometry). */
+  x06: {
+    src: "/assets/social/x-06.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#FD5002",
+    srcSet: widths("/assets/social/x-06.webp", 1254, [480]),
+  },
+  /** The city at night from above. */
+  x07: {
+    src: "/assets/social/x-07.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#130F29",
+    srcSet: widths("/assets/social/x-07.webp", 1536, [480]),
+  },
+  /** A hard hat with a tag on a roof edge, day. */
+  x08: {
+    src: "/assets/social/x-08.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#CAC7C6",
+    srcSet: widths("/assets/social/x-08.webp", 1536, [480]),
+  },
+  /** A blueprint grid, one orange dash. */
+  x09: {
+    src: "/assets/social/x-09.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#F3F1EC",
+    srcSet: widths("/assets/social/x-09.webp", 1536, [480]),
+  },
+  /** A sticker sheet: marks and tags. */
+  x10: {
+    src: "/assets/social/x-10.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#302C29",
+    srcSet: widths("/assets/social/x-10.webp", 1536, [480]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/** The brand clip: a blank tag drops in front of a site gate (10 s, no text in frame). On /kit, with controls, never autoplaying. */
+export const BRAND_CLIP = { src: "/assets/video/v-01.webm", width: 1280, height: 576 } as const;
