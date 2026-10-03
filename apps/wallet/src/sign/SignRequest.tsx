@@ -301,6 +301,13 @@ export function SignRequest({
               <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
             </p>
             <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
+            <ul className="grid gap-0.5">
+              {Object.values(sign.verdict.checkedBy.sources).map((source) => (
+                <li key={source} className={T.small}>
+                  {source}
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </div>
