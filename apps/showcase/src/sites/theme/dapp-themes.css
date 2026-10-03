@@ -332,67 +332,75 @@
   color-scheme: dark;
 }
 
-/* launchpad: Azure: clear-sky steel and a launch-day azure (token sale) */
+/*
+ * launchpad: Plum: dusk-grey steel and a launch-night plum (token sale).
+ * Moved off azure on 2026-10-03 (Meric): azure sat too close to NovaSwap's
+ * cobalt. The plum sits on the red side of Monad's network violet (about
+ * 274 deg against 249 deg, and darker in light theme), so it never reads as
+ * a network fact.
+ * WCAG: fg on ground 14.5 light / 15.3 dark, muted text 6.1 or more, text on
+ * the accent 7.6 / 7.3, the accent on the ground 6.4 / 7.3.
+ */
 :root[data-dapp="launchpad"],
 [data-dapp="launchpad"] {
-  --ground: #dfe5e8;
-  --ground-deep: #d0d8dc;
-  --surface: #f4f7f8;
-  --fg: #0e161a;
-  --fg-muted: rgb(14 22 26 / 0.72);
-  --fg-faint: rgb(14 22 26 / 0.52);
-  --fg-ghost: rgb(14 22 26 / 0.34);
-  --rule: rgb(14 22 26 / 0.14);
-  --rule-strong: rgb(14 22 26 / 0.28);
-  --control-edge: rgb(14 22 26 / 0.55);
-  --accent: #3a92cf;
-  --accent-deep: #57a6db;
-  --accent-dim: rgb(58 146 207 / 0.1);
-  --on-accent: #0e161a;
-  --accent-edge: var(--fg);
-  --focus: #1e6a9c;
+  --ground: #e6e3ea;
+  --ground-deep: #d9d5df;
+  --surface: #f7f6f9;
+  --fg: #16121c;
+  --fg-muted: rgb(22 18 28 / 0.72);
+  --fg-faint: rgb(22 18 28 / 0.52);
+  --fg-ghost: rgb(22 18 28 / 0.34);
+  --rule: rgb(22 18 28 / 0.14);
+  --rule-strong: rgb(22 18 28 / 0.28);
+  --control-edge: rgb(22 18 28 / 0.55);
+  --accent: #6e2ba8;
+  --accent-deep: #5a2190;
+  --accent-dim: rgb(110 43 168 / 0.1);
+  --on-accent: #f7f6f9;
+  --accent-edge: transparent;
+  --focus: #6e2ba8;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-dapp="launchpad"],
   :root:not([data-theme="light"]) [data-dapp="launchpad"] {
-    --ground: #11181c;
-    --ground-deep: #0c1215;
-    --surface: #18222a;
-    --fg: #e6eef1;
-    --fg-muted: rgb(230 238 241 / 0.74);
-    --fg-faint: rgb(230 238 241 / 0.56);
-    --fg-ghost: rgb(230 238 241 / 0.38);
-    --rule: rgb(230 238 241 / 0.12);
-    --rule-strong: rgb(230 238 241 / 0.26);
-    --control-edge: rgb(230 238 241 / 0.55);
-    --accent: #5fb0e6;
-    --accent-deep: #7ec0ec;
-    --accent-dim: rgb(95 176 230 / 0.14);
-    --on-accent: #0e161a;
+    --ground: #15121b;
+    --ground-deep: #100d15;
+    --surface: #1e1926;
+    --fg: #ece8f2;
+    --fg-muted: rgb(236 232 242 / 0.74);
+    --fg-faint: rgb(236 232 242 / 0.56);
+    --fg-ghost: rgb(236 232 242 / 0.38);
+    --rule: rgb(236 232 242 / 0.12);
+    --rule-strong: rgb(236 232 242 / 0.26);
+    --control-edge: rgb(236 232 242 / 0.55);
+    --accent: #c58af0;
+    --accent-deep: #d3a4f4;
+    --accent-dim: rgb(197 138 240 / 0.14);
+    --on-accent: #15121b;
     --accent-edge: transparent;
-    --focus: #5fb0e6;
+    --focus: #c58af0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"][data-dapp="launchpad"],
 :root[data-theme="dark"] [data-dapp="launchpad"] {
-  --ground: #11181c;
-  --ground-deep: #0c1215;
-  --surface: #18222a;
-  --fg: #e6eef1;
-  --fg-muted: rgb(230 238 241 / 0.74);
-  --fg-faint: rgb(230 238 241 / 0.56);
-  --fg-ghost: rgb(230 238 241 / 0.38);
-  --rule: rgb(230 238 241 / 0.12);
-  --rule-strong: rgb(230 238 241 / 0.26);
-  --control-edge: rgb(230 238 241 / 0.55);
-  --accent: #5fb0e6;
-  --accent-deep: #7ec0ec;
-  --accent-dim: rgb(95 176 230 / 0.14);
-  --on-accent: #0e161a;
+  --ground: #15121b;
+  --ground-deep: #100d15;
+  --surface: #1e1926;
+  --fg: #ece8f2;
+  --fg-muted: rgb(236 232 242 / 0.74);
+  --fg-faint: rgb(236 232 242 / 0.56);
+  --fg-ghost: rgb(236 232 242 / 0.38);
+  --rule: rgb(236 232 242 / 0.12);
+  --rule-strong: rgb(236 232 242 / 0.26);
+  --control-edge: rgb(236 232 242 / 0.55);
+  --accent: #c58af0;
+  --accent-deep: #d3a4f4;
+  --accent-dim: rgb(197 138 240 / 0.14);
+  --on-accent: #15121b;
   --accent-edge: transparent;
-  --focus: #5fb0e6;
+  --focus: #c58af0;
   color-scheme: dark;
 }
 

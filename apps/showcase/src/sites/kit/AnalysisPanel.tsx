@@ -3,6 +3,7 @@ import { Button, Sheet, SheetContent, SheetDescription, SheetTitle, Tag } from "
 import {
   ChangeList,
   ClaimsList,
+  type ExpectedKind,
   ExpectedVerdict,
   FindingList,
   LiveVerdict,
@@ -10,9 +11,9 @@ import {
   TheAsk,
 } from "@baret/web-ui/components/CheckBlocks";
 import { ImgWell } from "@baret/web-ui/components/Img";
-import type { DemoMode, Verdict } from "@baret/web-ui/lib/check-types";
+import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import type { ImgAsset } from "../../shared/assets.js";
 import type { CheckState } from "./useCheck.js";
 
@@ -36,7 +37,7 @@ const { panel, outcome } = hub.frame;
 export interface PanelCopy {
   readonly asks: string;
   readonly call: string;
-  readonly expected: Verdict;
+  readonly expected: ExpectedKind;
   readonly expectedBody: string;
   readonly claims: readonly { claim: string; check: string }[];
   readonly without: { title: string; body: string };
@@ -51,6 +52,8 @@ export function AnalysisPanel({
   mode,
   copy,
   image,
+  extra,
+  after,
   onTryOther,
 }: {
   open: boolean;
@@ -62,6 +65,13 @@ export function AnalysisPanel({
   mode: DemoMode;
   copy: PanelCopy;
   image?: ImgAsset;
+  /**
+   * A site's own block after "What the site asks for", for what the shared
+   * blocks cannot show (Scrybe's run of payments against the cap).
+   */
+  extra?: ReactNode;
+  /** A site's own block after the lesson (Scrybe's way to the agents page). */
+  after?: ReactNode;
   onTryOther: () => void;
 }): JSX.Element {
   const result = state.phase === "done" ? state.result : null;
@@ -132,6 +142,7 @@ export function AnalysisPanel({
                 />
               ) : null}
               <TheAsk asks={copy.asks} call={copy.call} />
+              {extra}
               <FindingList items={result.findings} />
               <ChangeList rows={result.changes} approvals={result.approvals} />
               <ClaimsList claims={copy.claims} />
@@ -139,6 +150,7 @@ export function AnalysisPanel({
                 <NoteBlock title={copy.without.title} body={copy.without.body} />
               ) : null}
               <NoteBlock title={panel.lesson} body={copy.lesson.body} />
+              {after}
             </>
           ) : null}
 

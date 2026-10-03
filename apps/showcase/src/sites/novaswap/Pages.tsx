@@ -2,10 +2,10 @@ import { novaswap } from "@baret/content";
 import { NOVASWAP } from "@baret/demo";
 import { Button } from "@baret/ui";
 import { Reveal } from "@baret/web-ui/components/Reveal";
-import { TextReveal } from "@baret/web-ui/components/TextReveal";
-import { FRAME, GRID } from "@baret/web-ui/lib/layout";
+import { GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
+import { BarChart, PageFrame, PageHead as SitePageHead, Totals } from "../kit/site/Page.js";
 
 /**
  * NovaSwap's Pools, Stats and Docs pages. Same grammar as the swap page: a
@@ -16,18 +16,7 @@ import type { JSX } from "react";
 const pages = novaswap.site.pages;
 
 function PageHead({ title, body }: { title: string; body: string }): JSX.Element {
-  return (
-    <div className="grid max-w-[760px] gap-4">
-      <TextReveal
-        as="h1"
-        text={title}
-        immediate
-        className="font-display text-[clamp(2.75rem,1.5rem+4vw,5rem)] font-extrabold uppercase leading-[0.92] text-[color:var(--fg)]"
-      />
-      <p className={T.lead}>{body}</p>
-      <p className={T.label}>{pages.sampleNote}</p>
-    </div>
-  );
+  return <SitePageHead title={title} body={body} note={pages.sampleNote} />;
 }
 
 export function PoolsPage({ onSwap }: { onSwap: () => void }): JSX.Element {
@@ -35,7 +24,7 @@ export function PoolsPage({ onSwap }: { onSwap: () => void }): JSX.Element {
   const th = `${T.label} py-3 pr-4 text-left font-normal`;
   const wide = "hidden md:table-cell";
   return (
-    <section className={`${FRAME} grid gap-12 py-12 md:py-16 lg:py-24`}>
+    <PageFrame>
       <PageHead title={pools.title} body={pools.body} />
       <Reveal>
         <table className="w-full border-collapse border-t border-[color:var(--rule-strong)]">
@@ -88,76 +77,32 @@ export function PoolsPage({ onSwap }: { onSwap: () => void }): JSX.Element {
           </tbody>
         </table>
       </Reveal>
-    </section>
+    </PageFrame>
   );
 }
 
 export function StatsPage(): JSX.Element {
   const { stats } = pages;
   const { chart } = stats;
-  const max = Math.max(...chart.values);
   return (
-    <section className={`${FRAME} grid gap-12 py-12 md:py-16 lg:py-24`}>
+    <PageFrame>
       <PageHead title={stats.title} body={stats.body} />
-
-      <Reveal className="grid gap-6 border-t border-[color:var(--rule-strong)] pt-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-4">
-          <h2 className={`${T.h3} text-[color:var(--fg)]`}>{chart.title}</h2>
-          <p className={T.small}>{chart.caption}</p>
-        </div>
-        <figure className="grid gap-2">
-          <div className="flex h-56 items-end gap-1 border-b border-[color:var(--rule-strong)] md:h-72 md:gap-2">
-            {chart.values.map((value, i) => (
-              <div
-                key={chart.days[i]}
-                className="group relative flex h-full flex-1 items-end"
-                title={`${chart.days[i]}: ${value} ${chart.unit}`}
-              >
-                <div
-                  className={`w-full ${i === chart.values.length - 1 ? "bg-[color:var(--accent)]" : "bg-[color:var(--rule-strong)] group-hover:bg-[color:var(--accent)]"} transition-colors`}
-                  style={{ height: `${(value / max) * 100}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div aria-hidden="true" className="flex gap-1 md:gap-2">
-            {chart.days.map((day) => (
-              <span
-                key={day}
-                className={`flex-1 text-center font-mono text-label text-[color:var(--fg-muted)] ${T.num}`}
-              >
-                {day}
-              </span>
-            ))}
-          </div>
-          <figcaption className="sr-only">
-            {chart.caption} {chart.values.map((v, i) => `${chart.days[i]}: ${v}`).join(", ")}
-          </figcaption>
-        </figure>
-      </Reveal>
-
-      <Reveal className="grid gap-6">
-        <h2 className={`${T.h3} text-[color:var(--fg)]`}>{stats.top.title}</h2>
-        <dl className="grid grid-cols-2 border-t border-[color:var(--rule)] lg:grid-cols-4">
-          {stats.top.items.map((item, i) => (
-            <div
-              key={item.label}
-              className={`grid gap-1 border-b border-[color:var(--rule)] py-6 ${i % 2 === 1 ? "border-l pl-6" : ""} ${i > 0 ? "lg:border-l lg:pl-6" : ""}`}
-            >
-              <dd className={`${T.stat} text-[color:var(--fg)]`}>{item.value}</dd>
-              <dt className={T.small}>{item.label}</dt>
-            </div>
-          ))}
-        </dl>
-      </Reveal>
-    </section>
+      <BarChart
+        title={chart.title}
+        caption={chart.caption}
+        unit={chart.unit}
+        labels={chart.days}
+        values={chart.values}
+      />
+      <Totals title={stats.top.title} items={stats.top.items} />
+    </PageFrame>
   );
 }
 
 export function DocsPage(): JSX.Element {
   const { docs } = pages;
   return (
-    <section className={`${FRAME} grid gap-12 py-12 md:py-16 lg:py-24`}>
+    <PageFrame>
       <PageHead title={docs.title} body={docs.body} />
       <div className={`${GRID} gap-y-10`}>
         <nav aria-label={docs.toc} className="col-span-4 md:col-span-8 lg:col-span-3">
@@ -199,6 +144,6 @@ export function DocsPage(): JSX.Element {
           ))}
         </div>
       </div>
-    </section>
+    </PageFrame>
   );
 }

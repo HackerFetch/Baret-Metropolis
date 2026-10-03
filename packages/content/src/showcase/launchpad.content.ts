@@ -63,6 +63,8 @@ export const launchpad = {
     brand: "LaunchPad",
     hostname: "launchpad.example",
     nav: ["Sale", "Tokenomics", "Vesting", "Team"],
+    /** The fake site's wallet control. Pressing it fills in a sample address. */
+    connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "Reviewed launch",
       title: "Lintel public sale",
@@ -80,6 +82,13 @@ export const launchpad = {
       ],
       cta: "Contribute",
       note: "LNTL is sent to you in the same transaction.",
+      receive: "You receive",
+      start: "0.5",
+      errors: {
+        empty: "Enter an amount of MON.",
+        tooLow: "The minimum is 0.01 MON.",
+        tooHigh: "The maximum is 1 MON per wallet.",
+      },
     },
     stats: [
       { value: "8,420 MON", label: "raised" },
@@ -117,6 +126,82 @@ export const launchpad = {
       body: "Your LNTL is in your wallet. Trading opens when the sale closes.",
     },
     footer: "LaunchPad lists reviewed token sales on Monad.",
+    attack: {
+      switch: {
+        label: "Suspicious sale",
+        off: "Off. Contribute pays a plain sale contract with fixed code.",
+        on: "On. The same button pays a sale contract that runs code its deployer can replace. This is the attack version.",
+      },
+    },
+    pages: {
+      sampleNote: "Sample figures. This demo site has no live sale data.",
+      views: [
+        {
+          id: "tokenomics",
+          kind: "shares",
+          title: "Tokenomics",
+          body: "Lintel has a fixed supply of 25,000,000 LNTL. Here is where it goes.",
+          items: [
+            {
+              label: "Public sale",
+              value: 40,
+              body: "10,000,000 LNTL at 0.001 MON each, sold on this page.",
+            },
+            {
+              label: "Liquidity",
+              value: 25,
+              body: "Paired with MON when trading opens, so there is a market on day one.",
+            },
+            {
+              label: "Team",
+              value: 20,
+              body: "Locked for six months, then released monthly over 18 months.",
+            },
+            {
+              label: "Treasury",
+              value: 15,
+              body: "Held for grants and listings, and spent by a holder vote.",
+            },
+          ],
+        },
+        {
+          id: "vesting",
+          kind: "table",
+          title: "Vesting",
+          body: "When each allocation unlocks. Month zero is the day trading opens.",
+          columns: ["Allocation", "At launch", "Cliff", "Release"],
+          rows: [
+            ["Public sale", "100%", "None", "All at launch"],
+            ["Liquidity", "100%", "None", "Added to the pool"],
+            ["Team", "0%", "6 months", "Monthly over 18 months"],
+            ["Treasury", "10%", "None", "By holder vote"],
+          ],
+        },
+        {
+          id: "team",
+          kind: "list",
+          title: "Team",
+          body: "The people behind Lintel. Every launch on LaunchPad names its team.",
+          items: [
+            {
+              label: "Founder",
+              title: "Ada Morel",
+              body: "Built payment tools for small shops before Lintel.",
+            },
+            {
+              label: "Contracts",
+              title: "Jonas Vik",
+              body: "Wrote the sale contract and the vesting contract.",
+            },
+            {
+              label: "Growth",
+              title: "Noor Haddad",
+              body: "Runs the listings and the treasury votes.",
+            },
+          ],
+        },
+      ],
+    },
   },
 
   analysis: {

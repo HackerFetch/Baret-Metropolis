@@ -20,12 +20,15 @@ export function CopyButton({
   label,
   done,
   onError,
+  inverse = false,
   className,
 }: {
   text: string;
   label: string;
   done: string;
   onError?: () => void;
+  /** On a graphite band: chalk instead of the theme's ink. */
+  inverse?: boolean;
   className?: string;
 }): JSX.Element {
   const [copied, setCopied] = useState(false);
@@ -53,7 +56,10 @@ export function CopyButton({
         type="button"
         onClick={() => void copy()}
         className={cx(
-          "inline-flex min-h-11 shrink-0 items-center gap-2 px-2 font-mono text-label uppercase text-[color:var(--fg-muted)] transition-colors duration-150 hover:text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]",
+          "inline-flex min-h-11 shrink-0 items-center gap-2 px-2 font-mono text-label uppercase transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]",
+          inverse
+            ? "text-chalk/80 hover:text-chalk"
+            : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
           className,
         )}
       >

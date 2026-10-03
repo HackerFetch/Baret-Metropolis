@@ -55,6 +55,8 @@ export const claimhub = {
     brand: "ClaimHub",
     hostname: "claimhub.example",
     nav: ["Claim", "Eligibility", "Distribution", "FAQ"],
+    /** The fake site's wallet control. Pressing it fills in a sample address. */
+    connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "Season 2 is live",
       title: "Your HUB rewards are ready",
@@ -72,6 +74,11 @@ export const claimhub = {
       ],
       cta: "Claim 2,410 HUB",
       note: "One signature. Your HUB arrives in the same transaction.",
+      label: "Wallet address",
+      hint: "Leave it empty to check the wallet you connected.",
+      errors: {
+        invalid: "That is not a wallet address. It starts with 0x and has 42 characters.",
+      },
     },
     stats: [
       { value: "48,213", label: "wallets eligible" },
@@ -105,6 +112,73 @@ export const claimhub = {
       body: "Your 2,410 HUB are on the way. They can take a few minutes to show in your wallet.",
     },
     footer: "ClaimHub distributes season rewards to early users. Allocations are final.",
+    attack: {
+      switch: {
+        label: "Suspicious claim",
+        off: "Off. Claim calls claim on the ClaimHub distributor.",
+        on: "On. The same button asks for an unlimited allowance on your USDC and sends no HUB. This is the attack version.",
+      },
+    },
+    pages: {
+      sampleNote: "Sample figures. This demo site has no live distribution data.",
+      views: [
+        {
+          id: "eligibility",
+          kind: "list",
+          title: "Eligibility",
+          body: "Season 2 rewards early ClaimHub users. Meet any one of these before the snapshot and you are in.",
+          items: [
+            {
+              label: "Bridged",
+              title: "Moved funds to Monad",
+              body: "Any bridge transfer of 10 MON or more before the snapshot on September 1.",
+            },
+            {
+              label: "Active",
+              title: "Five or more transactions",
+              body: "Five transactions on Monad testnet in the three months before the snapshot.",
+            },
+            {
+              label: "Held",
+              title: "A position for 30 days",
+              body: "A token or NFT position held for 30 days in a row, in any app on Monad.",
+            },
+          ],
+        },
+        {
+          id: "distribution",
+          kind: "table",
+          title: "Distribution",
+          body: "How the 12,000,000 HUB in season 2 are split. Your tier depends on how many criteria you meet.",
+          columns: ["Tier", "Criteria met", "Wallets", "HUB each"],
+          rows: [
+            ["Gold", "3", "1,245", "2,410"],
+            ["Silver", "2", "3,983", "1,205"],
+            ["Bronze", "1", "42,985", "97"],
+          ],
+        },
+        {
+          id: "faq",
+          kind: "faq",
+          title: "FAQ",
+          body: "More about season 2, the snapshot and claiming.",
+          items: [
+            {
+              question: "When was the snapshot?",
+              answer: "On September 1. Activity after that date counts toward season 3.",
+            },
+            {
+              question: "Can I claim to a different wallet?",
+              answer: "No. HUB goes to the wallet that met the criteria.",
+            },
+            {
+              question: "Can I move HUB right away?",
+              answer: "Yes. HUB is transferable as soon as it is in your wallet.",
+            },
+          ],
+        },
+      ],
+    },
   },
 
   analysis: {
