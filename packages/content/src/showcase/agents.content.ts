@@ -30,6 +30,7 @@ export const agents = {
   },
 
   hero: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "SDK · CLI · MCP tools",
     title: "Your agent signs. Baret checks first.",
     body: "Baret simulates every transaction your agent builds and checks it against your policy before the key signs. When a rule says no, your agent stops instead of signing blind. A vault on Monad caps what it can spend.",
@@ -41,6 +42,7 @@ export const agents = {
   },
 
   /** The argument. Concrete over scary. */
+  /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
   problem: {
     eyebrow: "The problem",
     title: "An agent key signs whatever it is handed.",
@@ -56,9 +58,11 @@ export const agents = {
    *  meets the next. `flow` is the path one transaction takes, for the
    *  diagram itself. */
   layers: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "How it fits",
     title: "Three layers between your agent and your money.",
     body: "Each layer works on its own. Stack them and a gap in one still meets the next.",
+    /** Not rendered on /agents since 2026-10-03. */
     flow: [
       "Your agent builds a transaction",
       "The signer asks Baret",
@@ -104,6 +108,7 @@ export const agents = {
 
   /** Who decides what. A control table earns more trust than a page of
    *  security prose. */
+  /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
   control: {
     eyebrow: "Control model",
     title: "A leash, a budget and a kill switch.",
@@ -156,7 +161,9 @@ export const agents = {
   },
 
   steps: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "How it works",
+    /** Not rendered on /agents since 2026-10-03. */
     title: "Three steps.",
     items: [
       {
@@ -178,6 +185,7 @@ export const agents = {
   },
 
   quickstart: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Quickstart",
     title: "From install to your first blocked transaction.",
     /** Accessible name of the TypeScript / any language / agent frameworks picker. */
@@ -226,6 +234,7 @@ export const agents = {
       after: "Tell the agent in its instructions: a Blocked answer is final. Do not retry it.",
     },
     /** Three levels of involvement, smallest first. */
+    /** Not rendered on /agents since 2026-10-03. */
     levels: {
       title: "Pick how much Baret does",
       items: [
@@ -244,6 +253,7 @@ export const agents = {
       ],
     },
     /** For a wallet or dApp that only wants the decision. */
+    /** Not rendered on /agents since 2026-10-03. */
     guard: {
       title: "Only want the decision?",
       before: "The guard SDK never signs and never sends. It returns a decision.",
@@ -260,6 +270,7 @@ export const agents = {
       ],
     },
     /** Plain first, raw on demand. Collapsed by default. */
+    /** Not rendered on /agents since 2026-10-03. */
     raw: {
       toggle: "Show the raw request and response",
       request: {
@@ -298,6 +309,7 @@ export const agents = {
   },
 
   /** SDK, CLI or MCP, in two sentences each. */
+  /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
   chooser: {
     title: "Which one do I want?",
     items: [
@@ -316,6 +328,7 @@ export const agents = {
     ],
   },
 
+  /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
   failClosed: {
     eyebrow: "When Baret is down",
     title: "No answer means no signature.",
@@ -324,6 +337,7 @@ export const agents = {
   },
 
   /** The revoke flow, in the order an owner reaches for it. */
+  /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
   revoke: {
     eyebrow: "Revoke",
     title: "One call ends it.",
@@ -340,8 +354,10 @@ export const agents = {
   /** Template descriptions stay inside what the rule fields express. No
    *  numbers: there is no template file with values yet. */
   policySelector: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Policy",
     title: "Pick a starting policy.",
+    /** Not rendered on /agents since 2026-10-03. */
     body: "The code samples and the playground use the one you pick. You can change any rule afterwards.",
     options: {
       strict: {
@@ -366,6 +382,7 @@ export const agents = {
    * the agent tries; they never say what Baret will find.
    */
   playground: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Playground",
     title: "Watch an agent ask first.",
     body: "Pick something an agent might try and a starting policy. The playground sends it to the same analysis the SDK calls and shows what your agent would get back.",
@@ -408,6 +425,7 @@ export const agents = {
         hint: "Any Monad address. Use the button for a random one.",
       },
       network: { label: "Network", hint: "The playground runs on testnet." },
+      /** Not rendered on /agents since 2026-10-03 (the picker sits right above the form). */
       policy: { label: "Policy", hint: "Comes from the picker above." },
       transaction: {
         label: "Transaction",
@@ -445,6 +463,7 @@ export const agents = {
       findings: "Findings",
       noFindings: "No findings. Every check ran and found nothing to report.",
       changes: "What would change",
+      /** Not rendered on /agents since 2026-10-03. */
       rawToggle: "Show the raw response",
     },
     empty: {
@@ -456,10 +475,16 @@ export const agents = {
         title: "That transaction could not be read",
         body: "Paste raw hex, or JSON with from, to, value and data.",
       },
+      address: {
+        title: "That address could not be read",
+        body: "Use 0x and 40 hex digits, or the button for a random one.",
+      },
+      /** Not rendered on /agents since 2026-10-03 (a failed live check shows `result.unreachable`). */
       rateLimited: {
         title: "Too many checks at once",
         body: "The playground server is rate limited. Wait a moment, then run it again.",
       },
+      /** Not rendered on /agents since 2026-10-03 (a failed live check shows `result.unreachable`). */
       unreachable: {
         title: "Can't reach Baret",
         body: "The check did not run, so your agent would sign nothing. Try again in a moment.",
@@ -471,10 +496,12 @@ export const agents = {
       "Prepared sample answers. Until the playground is connected to Baret's server, nothing is sent.",
     footnote:
       "Per-agent activity needs an authenticated server, so it is not part of this public playground.",
+    /** Not rendered on /agents since 2026-10-03. */
     more: { label: "Wire this into your own agent", href: "#quickstart" },
   },
 
   faq: {
+    /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "FAQ",
     title: "Fair questions",
     items: [

@@ -1,162 +1,55 @@
 import { agents } from "@baret/content";
-import { Tag } from "@baret/ui";
-import { Panel, Section } from "../components/Section.js";
+import { Disclosures } from "@baret/web-ui/components/Disclosures";
+import { Reveal } from "@baret/web-ui/components/Reveal";
+import { Section, titleIdOf } from "@baret/web-ui/components/Section";
+import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
+import { GRID } from "@baret/web-ui/lib/layout";
+import { useState } from "react";
+import { AgentsHero } from "../agents/AgentsHero.js";
+import { Layers } from "../agents/Layers.js";
+import { Playground } from "../agents/playground/Playground.js";
+import type { PolicyName } from "../agents/playground/sample.js";
+import { Quickstart } from "../agents/Quickstart.js";
+import { AGENTS_ART } from "../shared/assets.js";
+import { ClosingBand } from "../shared/ClosingBand.js";
 
-/** /agents. The SDK and CLI page. */
+/**
+ * /agents, for a developer about to give an agent access to money. Six
+ * blocks (owner's order, 2026-10-03): the claim at night, the three layers,
+ * the quickstart, the playground, fair questions, and the way in. The
+ * problem, the control model, the chooser, fail-closed and revoke are folded
+ * into those or cut. One policy choice drives the quickstart's code and the
+ * playground's answers. The questions sit beside their title from 1024 px.
+ */
+
+const FAQ = agents.faq.items.map((item) => ({ summary: item.question, body: item.answer }));
+
 export function Component() {
+  const [policy, setPolicy] = useState<PolicyName>("balanced");
+  const { cta, faq } = agents;
   return (
-    <>
-      <header className="grid-paper border-b border-[color:var(--rule)]">
-        <div className="mx-auto grid w-full max-w-[1180px] gap-5 px-5 py-14 sm:py-20">
-          <Tag tone="brand" size="sm">
-            {agents.hero.eyebrow}
-          </Tag>
-          <h1 className="max-w-[18ch] font-stencil text-[clamp(2.5rem,7vw,5rem)] uppercase leading-[0.9]">
-            {agents.hero.title}
-          </h1>
-          <p className="max-w-[62ch] text-xl text-[color:var(--fg-muted)]">{agents.hero.body}</p>
-          <code className="chamfer-sm w-max bg-[color:var(--surface)] px-4 py-2.5 font-mono text-sm">
-            {agents.hero.install}
-          </code>
-        </div>
-      </header>
-
-      <Section title={agents.problem.title} body={agents.problem.body}>
-        <ul className="grid gap-3.5 md:grid-cols-3">
-          {agents.problem.points.map((point) => (
-            <Panel key={point}>
-              <p className="text-sm text-[color:var(--fg-muted)]">{point}</p>
-            </Panel>
-          ))}
-        </ul>
-      </Section>
-
-      <Section title={agents.layers.title} deep>
-        <div className="grid gap-3.5 md:grid-cols-3">
-          {agents.layers.items.map((layer) => (
-            <Panel key={layer.title}>
-              <h3 className="text-display-m">{layer.title}</h3>
-              <p className="text-sm text-[color:var(--fg-muted)]">{layer.body}</p>
-              <ul className="mt-1.5 grid gap-1">
-                {layer.points.map((point) => (
-                  <li key={point} className="font-mono text-xs text-[color:var(--fg-faint)]">
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          ))}
+    <div className="overflow-x-clip">
+      <AgentsHero />
+      <Layers />
+      <Quickstart policy={policy} />
+      <Playground policy={policy} onPolicy={setPolicy} />
+      <Section id="faq" ground="deep">
+        <div className={`${GRID} gap-y-10 lg:items-start`}>
+          <div className="col-span-4 md:col-span-8 lg:sticky lg:top-24 lg:col-span-4">
+            <SectionHeader titleId={titleIdOf("faq")} title={faq.title} layout="stack" />
+          </div>
+          <Reveal className="col-span-4 md:col-span-8 lg:col-span-8">
+            <Disclosures name="agents-faq" items={FAQ} />
+          </Reveal>
         </div>
       </Section>
-
-      <Section title={agents.control.title}>
-        <div className="overflow-x-auto border border-[color:var(--rule)] bg-[color:var(--surface)]">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
-            <thead>
-              <tr>
-                {Object.values(agents.control.columns).map((col) => (
-                  <th
-                    key={col}
-                    className="border-b border-[color:var(--rule)] p-3 text-left font-mono text-label uppercase text-[color:var(--fg-faint)]"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {agents.control.rows.map((row) => (
-                <tr key={row.subject}>
-                  <th className="border-b border-[color:var(--rule)] p-3 text-left font-display text-base uppercase">
-                    {row.subject}
-                  </th>
-                  <td className="border-b border-[color:var(--rule)] p-3 text-[color:var(--fg-muted)]">
-                    {row.who}
-                  </td>
-                  <td className="border-b border-[color:var(--rule)] p-3 font-mono text-xs text-[color:var(--fg-faint)]">
-                    {row.note}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Section>
-
-      <Section id="quickstart" title={agents.quickstart.title} deep>
-        <div className="grid gap-3.5 md:grid-cols-2">
-          <Panel>
-            <h3 className="text-display-m">{agents.quickstart.sdk.title}</h3>
-            <p className="text-sm text-[color:var(--fg-muted)]">{agents.quickstart.sdk.before}</p>
-            <pre className="overflow-x-auto bg-[color:var(--ground-deep)] p-3.5 font-mono text-xs leading-relaxed">
-              {agents.quickstart.sdk.code.join("\n")}
-            </pre>
-            <p className="text-sm text-[color:var(--fg-faint)]">{agents.quickstart.sdk.after}</p>
-          </Panel>
-          <Panel>
-            <h3 className="text-display-m">{agents.quickstart.cli.title}</h3>
-            <p className="text-sm text-[color:var(--fg-muted)]">{agents.quickstart.cli.before}</p>
-            <pre className="overflow-x-auto bg-[color:var(--ground-deep)] p-3.5 font-mono text-xs leading-relaxed">
-              {agents.quickstart.cli.code.join("\n")}
-            </pre>
-            <p className="text-sm text-[color:var(--fg-faint)]">{agents.quickstart.cli.after}</p>
-          </Panel>
-        </div>
-        <Panel className="mt-3.5">
-          <h3 className="text-display-m">{agents.quickstart.secrets.title}</h3>
-          <p className="max-w-[70ch] text-sm text-[color:var(--fg-muted)]">
-            {agents.quickstart.secrets.body}
-          </p>
-        </Panel>
-      </Section>
-
-      <Section title={agents.failClosed.title}>
-        <div className="grid gap-3.5 md:grid-cols-2">
-          <Panel>
-            <p className="text-[color:var(--fg-muted)]">{agents.failClosed.body}</p>
-            <p className="font-mono text-xs text-[color:var(--fg-faint)]">
-              {agents.failClosed.note}
-            </p>
-          </Panel>
-          <Panel>
-            <h3 className="text-display-m">{agents.revoke.title}</h3>
-            <p className="text-sm text-[color:var(--fg-muted)]">{agents.revoke.body}</p>
-            <ul className="mt-1.5 grid gap-1">
-              {agents.revoke.points.map((point) => (
-                <li
-                  key={point}
-                  className="grid grid-cols-[14px_1fr] gap-2 text-sm text-[color:var(--fg-muted)]"
-                >
-                  <span aria-hidden="true" className="font-mono text-[color:var(--accent)]">
-                    /
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </div>
-      </Section>
-
-      <Section title={agents.faq.title} deep className="border-b-0">
-        <div className="max-w-[80ch]">
-          {agents.faq.items.map((item) => (
-            <details
-              key={item.question}
-              name="agents-faq"
-              className="border-t border-[color:var(--rule)] last:border-b"
-            >
-              <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-display text-xl uppercase tracking-[0.03em]">
-                {item.question}
-                <span aria-hidden="true" className="font-mono text-[color:var(--accent)]">
-                  +
-                </span>
-              </summary>
-              <p className="max-w-[70ch] pb-5 text-[color:var(--fg-muted)]">{item.answer}</p>
-            </details>
-          ))}
-        </div>
-      </Section>
-    </>
+      <ClosingBand
+        title={cta.title}
+        body={cta.body}
+        primary={cta.actions.primary}
+        secondary={cta.actions.secondary}
+        picture={{ asset: AGENTS_ART.cta, position: "50% 40%" }}
+      />
+    </div>
   );
 }
