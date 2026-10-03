@@ -78,9 +78,14 @@ export class FakeRpc implements MonadRpc {
   private check() {
     if (this.down) throw new RpcUnavailableError("rpc down");
   }
+  chainId = 10143;
   async getChainId() {
     this.check();
-    return 10143;
+    return this.chainId;
+  }
+  async verifyChain() {
+    this.check();
+    if (this.chainId !== 10143) throw new RpcUnavailableError(`RPC is on chain ${this.chainId}`);
   }
   async getBlockNumber() {
     this.check();
