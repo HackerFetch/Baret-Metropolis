@@ -112,12 +112,13 @@ export interface AgentPayment {
 /** A sign request a site sent, with Baret's answer (or none: unreachable). */
 export interface SignRequest {
   readonly id: "safe" | "caution" | "blocked" | "unreachable";
-  readonly origin: string;
+  /** The site that asks; null for a transfer the account starts itself. */
+  readonly origin: string | null;
   /** A key of content sign.actions, and the values for its sentence. */
   readonly action: "transfer" | "contractCall" | "approvalUnlimited" | "payment";
   readonly values: Readonly<Record<string, string>>;
-  /** What the site says about the request, shown and never trusted. */
-  readonly claim: string;
+  /** What the site says about the request, shown and never trusted; null without a site. */
+  readonly claim: string | null;
   readonly verdict: LoggedVerdict;
   /** The impact sentence's key (content sign.impact). */
   readonly impact: "transfer" | "approvalUnlimited" | "payment" | "unknown";

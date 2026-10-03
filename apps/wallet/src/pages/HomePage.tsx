@@ -228,7 +228,7 @@ export function Component() {
                   ) : (
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant={permission.kind === "site" ? "ghost" : "danger"}
                       size="sm"
                       onClick={() => revoke(permission)}
                     >

@@ -13,7 +13,10 @@ import { fillParts, type Part } from "../lib/parts.js";
 
 /** Values as a sentence prints them: amounts grouped, addresses kept whole. */
 function values(request: SignRequest): Record<string, string> {
-  const out: Record<string, string> = { origin: request.origin, ...request.values };
+  const out: Record<string, string> = {
+    ...(request.origin ? { origin: request.origin } : {}),
+    ...request.values,
+  };
   if (out.amount) out.amount = amount(out.amount);
   return out;
 }
@@ -120,13 +123,24 @@ export function logFor(
           fee: request.fee,
           block,
         }
-      : { ...base, kind: "signed", values: { origin: request.origin }, fee: request.fee, block };
+      : {
+          ...base,
+          kind: "signed",
+          values: { origin: request.origin ?? "" },
+          fee: request.fee,
+          block,
+        };
   }
   if (outcome === "expired")
-    return { ...base, kind: "expired", values: { origin: request.origin } };
+    return { ...base, kind: "expired", values: { origin: request.origin ?? "" } };
   // Decline: Blocked when a rule stopped it, Declined when it was the reader's call.
   const rule = request.rules[0]?.rule;
   return request.verdict === "blocked"
-    ? { ...base, kind: "blocked", values: { origin: request.origin }, ...(rule ? { rule } : {}) }
-    : { ...base, kind: "declined", values: { origin: request.origin } };
+    ? {
+        ...base,
+        kind: "blocked",
+        values: { origin: request.origin ?? "" },
+        ...(rule ? { rule } : {}),
+      }
+    : { ...base, kind: "declined", values: { origin: request.origin ?? "" } };
 }

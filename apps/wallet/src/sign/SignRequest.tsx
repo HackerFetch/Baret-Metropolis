@@ -11,7 +11,7 @@ import { Findings } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
 import { useWallet } from "../data/store.js";
-import type { SignRequest as Request } from "../data/types.js";
+import type { ActivityItem, SignRequest as Request } from "../data/types.js";
 import { routes } from "../routes.js";
 import { HoldButton } from "./HoldButton.js";
 import {
@@ -134,12 +134,18 @@ export function SignRequest({
   request,
   onDone,
   onAgain,
+  onDecline,
+  onLog,
 }: {
   request: Request;
-  /** Called once with the outcome, after it is logged (Send updates the balances). */
+  /** Called once with the outcome, after it is logged. */
   onDone?: (outcome: Outcome) => void;
   /** Shown on the result: back to the form or the sample picker. */
   onAgain?: () => void;
+  /** Decline without a result: the account's own transfer goes back to its form. */
+  onDecline?: () => void;
+  /** Writes the outcome somewhere else than the plain log (Send also moves the balances). */
+  onLog?: (item: ActivityItem) => void;
 }): JSX.Element {
   const reduce = useReduce();
   const { state, dispatch } = useWallet();
@@ -150,10 +156,13 @@ export function SignRequest({
   const [said, setSaid] = useState("");
 
   function finish(outcome: Outcome): void {
-    dispatch({
-      type: "log",
-      item: logFor(request, outcome, new Date().toISOString(), SAMPLE_BLOCK),
-    });
+    if (outcome === "declined" && onDecline) {
+      onDecline();
+      return;
+    }
+    const item = logFor(request, outcome, new Date().toISOString(), SAMPLE_BLOCK);
+    if (onLog) onLog(item);
+    else dispatch({ type: "log", item });
     setPhase({ kind: "result", outcome });
     setSaid(sign.result[outcome].title);
     onDone?.(outcome);
@@ -261,23 +270,27 @@ export function SignRequest({
         >
           <Parts parts={actionParts(request)} />
         </h1>
-        <p className="text-sm text-[color:var(--fg)]">
-          <span className="font-mono">
-            {fill(sign.header.fromSite, { origin: request.origin })}
-          </span>
-          <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
-        </p>
+        {request.origin ? (
+          <p className="text-sm text-[color:var(--fg)]">
+            <span className="font-mono">
+              {fill(sign.header.fromSite, { origin: request.origin })}
+            </span>
+            <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
+          </p>
+        ) : null}
       </header>
 
-      <Section title={fill(sign.claim.label, { origin: request.origin })}>
-        <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
-          {request.claim}
-        </blockquote>
-        <p className={T.small}>
-          <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
-          {sign.claim.note}
-        </p>
-      </Section>
+      {request.origin && request.claim ? (
+        <Section title={fill(sign.claim.label, { origin: request.origin })}>
+          <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
+            {request.claim}
+          </blockquote>
+          <p className={T.small}>
+            <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
+            {sign.claim.note}
+          </p>
+        </Section>
+      ) : null}
 
       <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
         <Verdict request={request} checking={checking} />
