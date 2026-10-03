@@ -36,21 +36,39 @@ export function Stats({ items }: { items: readonly Stat[] }): JSX.Element {
   );
 }
 
-/** One picture beside the site's feature blocks, each under a 2 px accent rule. */
+/**
+ * One picture beside the site's feature blocks, each under a 2 px accent
+ * rule. A portrait picture (OrbitYield's silo, ClaimHub's gate, LaunchPad's
+ * rocket) keeps its own 2:3 frame in a narrower column, so nothing is cut.
+ */
 export function Features({
   image,
   blocks,
+  portrait = false,
 }: {
   image: ImgAsset;
   blocks: readonly Block[];
+  portrait?: boolean;
 }): JSX.Element {
   return (
     <section className={`${FRAME} py-16 lg:py-24`}>
-      <div className={`${GRID} gap-y-10 lg:items-center`}>
-        <Reveal className="col-span-4 md:col-span-8 lg:col-span-7">
-          <ImgWell asset={image} ratio="16/10" className="border border-[color:var(--rule)]" />
+      <div className={`${GRID} gap-y-10 ${portrait ? "md:items-center" : "lg:items-center"}`}>
+        <Reveal
+          className={
+            portrait
+              ? "col-span-4 md:col-span-3 lg:col-span-4"
+              : "col-span-4 md:col-span-8 lg:col-span-7"
+          }
+        >
+          <ImgWell
+            asset={image}
+            ratio={portrait ? "2/3" : "16/10"}
+            className="border border-[color:var(--rule)]"
+          />
         </Reveal>
-        <div className="col-span-4 grid gap-8 md:col-span-8 lg:col-span-5">
+        <div
+          className={`col-span-4 grid gap-8 ${portrait ? "md:col-span-5 lg:col-span-6 lg:col-start-6" : "md:col-span-8 lg:col-span-5"}`}
+        >
           {blocks.map((block) => (
             <Reveal
               key={block.title}

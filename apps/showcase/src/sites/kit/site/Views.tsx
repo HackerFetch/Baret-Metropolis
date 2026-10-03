@@ -64,10 +64,12 @@ function TableView({ view }: { view: Of<"table"> }): JSX.Element {
           const [head, ...cells] = row;
           return (
             <li key={head} className="grid gap-3 border-b border-[color:var(--rule)] py-5">
-              <p className="font-display text-xl font-bold uppercase text-[color:var(--fg)]">
-                <span className="sr-only">{first}: </span>
-                {head}
-              </p>
+              <div className="grid gap-0.5">
+                <p className={T.label}>{first}</p>
+                <p className="font-display text-xl font-bold uppercase text-[color:var(--fg)]">
+                  {head}
+                </p>
+              </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {cells.map((cell, i) => (
                   <div key={`${head}-${rest[i] ?? i}`} className="grid gap-0.5">
