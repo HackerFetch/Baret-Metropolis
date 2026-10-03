@@ -39,14 +39,56 @@ export function profileFromLabels(labels: readonly NansenLabel[]): NansenProfile
   return { trustLevel, flagged, freshWallet, whale };
 }
 
+/** One record from `/profiler/address/first-funder`. */
+export interface FirstFunder {
+  first_funder_address?: string;
+  first_funder_name?: string | null;
+  block_timestamp?: string;
+}
+
+/** A wallet first funded this recently counts as fresh. */
+export const FRESH_WALLET_DAYS = 7;
+
+/**
+ * The cheap profile: who first sent this wallet gas, and when (1 credit).
+ *
+ *   never funded, or funded in the last FRESH_WALLET_DAYS → new, fresh wallet
+ *   older                                                   → established
+ *   funder labelled as an exploiter, scammer, drainer…      → flagged
+ *
+ * It cannot tell who owns the wallet, so it never says `identified`, and it
+ * does not see balances, so it never says whale.
+ */
+export function profileFromFirstFunder(
+  records: readonly FirstFunder[],
+  nowMs: number,
+): NansenProfile {
+  const first = records[0];
+  const fundedAt = first?.block_timestamp ? Date.parse(first.block_timestamp) : Number.NaN;
+  const freshWallet =
+    Number.isNaN(fundedAt) || nowMs - fundedAt < FRESH_WALLET_DAYS * 24 * 60 * 60 * 1000;
+  const flagged = FLAGGED.test(first?.first_funder_name ?? "");
+  return { trustLevel: freshWallet ? "new" : "established", flagged, freshWallet, whale: false };
+}
+
+export type NansenMode = "funder" | "labels";
+
 export interface NansenHttpOptions {
   apiKey: string;
   timeoutMs: number;
+  /** funder: 1 credit per address (free plan). labels: 100 credits per address. */
+  mode?: NansenMode;
   baseUrl?: string;
-  /** Labels change slowly; one answer is reused this long. */
+  /** Answers change slowly; one answer is reused this long. */
   cacheTtlMs?: number;
   /** Requests in flight at once, to stay inside Nansen's rate limit. */
   concurrency?: number;
+  /**
+   * Most uncached addresses one lookup may ask about. Above it the lookup
+   * throws rather than check some and skip the rest, and the rules that need
+   * Nansen fail closed.
+   */
+  maxAddresses?: number;
   fetch?: typeof globalThis.fetch;
   now?: () => number;
 }
@@ -62,40 +104,47 @@ export class NansenError extends Error {
 }
 
 /**
- * Nansen Profiler labels for Monad.
+ * Nansen for Monad, in one of two modes (D-017): first-funder lookups, which
+ * fit the free plan, or Profiler labels, which need credits.
  *
- * Nansen indexes Monad mainnet only, so on testnet the labels describe the
+ * Nansen indexes Monad mainnet only, so on testnet the answers describe the
  * same address on mainnet. Every requested address gets an answer or the
  * whole lookup throws: a partial answer would let an unchecked address pass.
  */
 export class NansenHttpSource implements NansenSource {
   private readonly baseUrl: string;
+  private readonly mode: NansenMode;
   private readonly fetchImpl: typeof globalThis.fetch;
   private readonly now: () => number;
   private readonly cache = new Map<Address, { at: number; profile: NansenProfile }>();
 
   constructor(private readonly options: NansenHttpOptions) {
     this.baseUrl = (options.baseUrl ?? "https://api.nansen.ai").replace(/\/+$/, "");
+    this.mode = options.mode ?? "funder";
     this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
     this.now = options.now ?? Date.now;
   }
 
   async lookup(addresses: readonly Address[]): Promise<Map<Address, NansenProfile>> {
     const out = new Map<Address, NansenProfile>();
-    const ttl = this.options.cacheTtlMs ?? 6 * 60 * 60 * 1000;
+    const ttl = this.options.cacheTtlMs ?? 24 * 60 * 60 * 1000;
     const todo: Address[] = [];
     for (const a of new Set(addresses)) {
       const hit = this.cache.get(a);
       if (hit && this.now() - hit.at < ttl) out.set(a, hit.profile);
       else todo.push(a);
     }
+    const max = this.options.maxAddresses ?? 3;
+    if (todo.length > max) {
+      throw new NansenError(`${todo.length} addresses to check, the limit is ${max}`, null);
+    }
 
     const limit = Math.max(1, this.options.concurrency ?? 4);
     for (let i = 0; i < todo.length; i += limit) {
       const batch = todo.slice(i, i + limit);
-      const profiles = await Promise.all(batch.map((a) => this.labels(a)));
+      const profiles = await Promise.all(batch.map((a) => this.profile(a)));
       batch.forEach((a, j) => {
-        const profile = profileFromLabels(profiles[j] ?? []);
+        const profile = profiles[j] as NansenProfile;
         this.cache.set(a, { at: this.now(), profile });
         out.set(a, profile);
       });
@@ -103,27 +152,46 @@ export class NansenHttpSource implements NansenSource {
     return out;
   }
 
-  private async labels(address: Address): Promise<NansenLabel[]> {
+  private async profile(address: Address): Promise<NansenProfile> {
+    if (this.mode === "labels") {
+      const data = await this.post("/api/v1/profiler/address/labels", {
+        address,
+        chain: "monad",
+        pagination: { page: 1, per_page: 100 },
+      });
+      return profileFromLabels(
+        data.filter(
+          (l): l is NansenLabel =>
+            typeof l === "object" && l !== null && typeof (l as NansenLabel).label === "string",
+        ),
+      );
+    }
+    const data = await this.post("/api/v1/profiler/address/first-funder", {
+      address,
+      chain: "all",
+    });
+    return profileFromFirstFunder(data as FirstFunder[], this.now());
+  }
+
+  /** POSTs and returns `data`. 404 means Nansen has nothing on the address: an empty answer. */
+  private async post(path: string, body: unknown): Promise<unknown[]> {
     let res: Response;
     try {
-      res = await this.fetchImpl(`${this.baseUrl}/api/v1/profiler/address/labels`, {
+      res = await this.fetchImpl(`${this.baseUrl}${path}`, {
         method: "POST",
         headers: { "content-type": "application/json", apikey: this.options.apiKey },
-        body: JSON.stringify({ address, chain: "monad", pagination: { page: 1, per_page: 100 } }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(this.options.timeoutMs),
       });
     } catch (cause) {
       throw new NansenError(`Nansen did not answer: ${String(cause)}`, null);
     }
-    // An address Nansen has never seen has no labels; that is an answer.
     if (res.status === 404) return [];
     if (!res.ok) throw new NansenError(`Nansen answered ${res.status}`, res.status);
-    const body = (await res.json().catch(() => null)) as { data?: unknown } | null;
-    if (!body || !Array.isArray(body.data)) {
+    const json = (await res.json().catch(() => null)) as { data?: unknown } | null;
+    if (!json || !Array.isArray(json.data)) {
       throw new NansenError("Nansen answered with an unexpected body", res.status);
     }
-    return body.data.filter(
-      (l): l is NansenLabel => typeof l === "object" && l !== null && typeof l.label === "string",
-    );
+    return json.data;
   }
 }

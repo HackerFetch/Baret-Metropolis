@@ -41,6 +41,8 @@ services:
         sync: false
       - key: NANSEN_API_KEY
         sync: false
+      - key: NANSEN_MODE
+        value: funder
       - key: CLEANVERSE_API_KEY
         sync: false
       - key: CLEANVERSE_API_URL

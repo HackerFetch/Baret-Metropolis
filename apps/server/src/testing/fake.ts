@@ -53,6 +53,7 @@ export const config: AppConfig = {
   requestTimeoutMs: 1000,
   verdictTtlSeconds: 30,
   nansenApiKey: null,
+  nansenMode: "funder",
   cleanverse: null,
 };
 

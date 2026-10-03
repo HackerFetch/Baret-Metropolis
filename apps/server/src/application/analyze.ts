@@ -191,12 +191,16 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
 
   // 3. Reputation and identity.
   const reputationTargets = uniq([...counterparties, ...contracts]).slice(0, MAX_ADDRESSES);
+  // Nansen is asked about wallets only: contracts are deployed, not funded or
+  // labelled like people, and every call costs credits.
+  const contractSet = new Set(contracts);
+  const nansenTargets = counterparties.filter((a) => !contractSet.has(a));
   const complianceActive =
     policy.requireComplianceCheck ||
     policy.allowedCountries.length > 0 ||
     policy.minComplianceTier !== null;
   const [nansen, registry, compliance] = await Promise.all([
-    lookup(sources.nansen, reputationTargets),
+    lookup(sources.nansen, nansenTargets),
     lookup(sources.registry, reputationTargets),
     complianceActive && recipients.length > 0
       ? lookup(sources.compliance, uniq([user, ...recipients]))
