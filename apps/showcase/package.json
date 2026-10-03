@@ -17,6 +17,7 @@
     "@baret/guard": "workspace:*",
     "@baret/routes": "workspace:*",
     "@baret/ui": "workspace:*",
+    "@baret/web-ui": "workspace:*",
     "lenis": "1.3.26",
     "lucide-react": "1.46.0",
     "motion": "13.3.0",

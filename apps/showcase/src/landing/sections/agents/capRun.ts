@@ -1,5 +1,5 @@
 import { findings, home } from "@baret/content";
-import { fill } from "../../../shared/util.js";
+import { fill } from "@baret/web-ui/lib/util";
 
 const { demo } = home.agents;
 

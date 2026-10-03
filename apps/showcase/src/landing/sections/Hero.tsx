@@ -1,15 +1,15 @@
 import { home } from "@baret/content";
+import { Img } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { Parallax } from "@baret/web-ui/components/Parallax";
+import { TextReveal } from "@baret/web-ui/components/TextReveal";
+import { FRAME, GRID } from "@baret/web-ui/lib/layout";
+import { T } from "@baret/web-ui/lib/type";
 import { useInView } from "motion/react";
 import { type JSX, useRef } from "react";
 import { IMG } from "../../shared/assets.js";
-import { Img } from "../../shared/Img.js";
 import { IDS, titleId } from "../../shared/ids.js";
-import { LinkButton } from "../../shared/LinkButton.js";
-import { FRAME, GRID } from "../../shared/layout.js";
-import { Parallax } from "../../shared/Parallax.js";
 import { splitLead } from "../../shared/SectionHeader.js";
-import { TextReveal } from "../../shared/TextReveal.js";
-import { T } from "../../shared/type.js";
 import { ScanLine } from "../../shared/webgl/ScanLine.js";
 import { SkylineCanvas } from "../../shared/webgl/SkylineCanvas.js";
 import { SecondaryAction } from "./hero/SecondaryAction.js";
@@ -56,7 +56,7 @@ const HERO_VIEWPORT = { once: true, margin: "0px 0px -35% 0px" } as const;
  *
  * Motion (none under reduced motion): from 768 px the photo drifts 3.5 %
  * each way against the scroll and settles from 1.04x (2.5 % and 1.02x from
- * 1440 px; the phone band stays still, shared/Parallax), and a WebGL2 layer
+ * 1440 px; the phone band stays still, web-ui Parallax), and a WebGL2 layer
  * repeats it pixel for pixel with a static paper grain and a few pixels of
  * lean toward the pointer (shared/webgl). On phones and coarse pointers the
  * canvas only carries the scan pass, then fades back to the native img. One orange scan pass runs once the hero is three quarters
@@ -67,7 +67,7 @@ const HERO_VIEWPORT = { once: true, margin: "0px 0px -35% 0px" } as const;
  * The <img> stays underneath as the LCP and the fallback.
  *
  * The H1 reveals word by word once its top passes 65 % of the viewport
- * (HERO_VIEWPORT; shared/TextReveal in controlled mode, one sentence per
+ * (HERO_VIEWPORT; web-ui TextReveal in controlled mode, one sentence per
  * line). Not on mount: the hero sits under the 166svh sticky opener, so a
  * mount-time reveal would play unseen. The body and actions never wait for
  * an animation: they are plain text from the first paint. The body's first
@@ -76,7 +76,7 @@ const HERO_VIEWPORT = { once: true, margin: "0px 0px -35% 0px" } as const;
  * Reduced motion: plain text.
  *
  * The 56px in min-h is the header height, owned by
- * HEADER_OFFSET in shared/layout.ts.
+ * HEADER_OFFSET in @baret/web-ui lib/layout.ts.
  */
 export function HeroSection(): JSX.Element {
   const { actions } = home.hero;

@@ -1,9 +1,9 @@
-import "./cursor.css";
+import "../styles/cursor.css";
 import { m, useMotionValue, useSpring } from "motion/react";
 import { type JSX, useEffect, useState } from "react";
-import { useReduce } from "../useReduce.js";
-import { classify, ringColor } from "./classify.js";
-import { useFinePointer } from "./useFinePointer.js";
+import { classify, ringColor } from "../lib/classify.js";
+import { useFinePointer } from "../lib/useFinePointer.js";
+import { useReduce } from "../lib/useReduce.js";
 
 /**
  * Baret's eyelet cursor: a 6 px dot on the exact hotspot and a 32 px ring
@@ -15,7 +15,7 @@ import { useFinePointer } from "./useFinePointer.js";
  * nothing. Position lives in motion values (no React render per move); the
  * hover, press and visibility states are data attributes on <html>, styled in
  * cursor.css. The native cursor is hidden only while this is mounted, by the
- * `baret-cursor` class on <html>. Mounted by HomePage only.
+ * `baret-cursor` class on <html>. Mounted once per route by Signature.
  */
 
 /** stiffness 520, mass 0.5: critical damping is about 32; 44 stays above it. */

@@ -1,8 +1,8 @@
+import { Img, type Responsive } from "@baret/web-ui/components/Img";
+import { T } from "@baret/web-ui/lib/type";
+import { cx } from "@baret/web-ui/lib/util";
 import type { JSX, ReactNode } from "react";
 import type { ImgAsset } from "../../../shared/assets.js";
-import { Img, type Responsive } from "../../../shared/Img.js";
-import { T } from "../../../shared/type.js";
-import { cx } from "../../../shared/util.js";
 
 /**
  * One bento tile: a square box with a 1 px rule, no shadow, no radius.

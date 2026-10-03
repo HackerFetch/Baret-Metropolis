@@ -1,9 +1,9 @@
 import { common, findings, hub, sign } from "@baret/content";
 import { ChangeRow, VerdictTag } from "@baret/ui";
 import type { JSX, ReactNode } from "react";
-import { T } from "../../../shared/type.js";
-import { fill } from "../../../shared/util.js";
-import type { CheckApproval, CheckChange, CheckFinding, Verdict } from "../types.js";
+import type { CheckApproval, CheckChange, CheckFinding, Verdict } from "../lib/check-types.js";
+import { T } from "../lib/type.js";
+import { fill } from "../lib/util.js";
 
 /**
  * The building blocks of the Baret panel. Every label comes from

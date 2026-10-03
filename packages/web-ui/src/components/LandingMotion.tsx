@@ -1,6 +1,6 @@
 import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
 import type { JSX, ReactNode } from "react";
-import { ENTER } from "./motion.js";
+import { ENTER } from "../lib/motion.js";
 
 /**
  * The page-level motion default [SB 1.4]. Motion's built-in default for

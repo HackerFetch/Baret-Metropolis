@@ -1,9 +1,9 @@
 import { novaswap } from "@baret/content";
+import { ImgWell } from "@baret/web-ui/components/Img";
+import { Reveal } from "@baret/web-ui/components/Reveal";
+import { FRAME, GRID } from "@baret/web-ui/lib/layout";
+import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { ImgWell } from "../../shared/Img.js";
-import { FRAME, GRID } from "../../shared/layout.js";
-import { Reveal } from "../../shared/Reveal.js";
-import { T } from "../../shared/type.js";
 import { ART } from "./sample.js";
 
 /**

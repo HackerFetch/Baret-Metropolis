@@ -5,10 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Baret Wallet</title>
     <meta name="description" content="A Monad wallet that reads every transaction before you sign it. No recovery phrase, just a passkey." />
+    <!--
+      The ground before the first CSS byte, so no white frame flashes:
+      graphite, or concrete when the theme resolves to light. Same rule as the
+      showcase (apps/showcase/index.html).
+    -->
+    <style>
+      @layer theme, base, components, utilities;
+      @layer base {
+        html {
+          background: #17181b;
+        }
+        @media (prefers-color-scheme: light) {
+          :root:not([data-theme="dark"]) {
+            background: #e6e6e1;
+          }
+        }
+        :root[data-theme="light"] {
+          background: #e6e6e1;
+        }
+      }
+    </style>
+    <meta name="theme-color" content="#17181b" />
     <link rel="icon" type="image/svg+xml" href="/mark.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Big+Shoulders+Stencil+Display:wght@900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <!--
+      Self-hosted faces, shared with the showcase (packages/web-ui, served at
+      /fonts by its webUiFonts() plugin). The display face is preloaded: it
+      loads with display=optional, so a late file would leave the fallback.
+    -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/big-shoulders-display-800.woff2"
+    />
+    <link rel="stylesheet" href="/src/fonts.css" />
     <script>
       try {
         const stored = localStorage.getItem("baret.theme");

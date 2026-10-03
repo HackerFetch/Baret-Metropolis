@@ -1,53 +1,17 @@
-import type { JSX, ReactNode } from "react";
-import { IDS, type SectionKey, titleId } from "./ids.js";
-import { FRAME, GROUND, type Ground, SECTION_PAD, SECTION_PAD_COMPACT } from "./layout.js";
-import { cx } from "./util.js";
+import { Section, type SectionProps } from "@baret/web-ui/components/Section";
+import type { JSX } from "react";
+import { IDS, type SectionKey } from "./ids.js";
 
-export interface SectionFrameProps {
+export interface SectionFrameProps extends Omit<SectionProps, "id"> {
   /** id = IDS[key], aria-labelledby = titleId(key). */
   sectionKey: SectionKey;
-  /** Default "ground". */
-  ground?: Ground;
-  /** Adds data-band="dark", which the header reads to switch to graphite. */
-  band?: "dark";
-  /** Default true: SECTION_PAD. "compact": SECTION_PAD_COMPACT. false: none. */
-  pad?: boolean | "compact";
-  /** Default true: children inside the FRAME container. */
-  contained?: boolean;
-  /** Appended after the frame's own classes. */
-  className?: string;
-  children: ReactNode;
 }
 
-const PAD: Record<string, string | undefined> = {
-  true: SECTION_PAD,
-  compact: SECTION_PAD_COMPACT,
-};
-
 /**
- * One landing section: the `<section>` landmark, its anchor, its ground and
- * padding, and the container. No motion of its own.
- *
- * The section takes no ref. A section that needs a scroll target or a
- * measurement box puts its own ref on an inner element.
+ * One landing section: the shared Section with its anchor taken from the
+ * landing anchors (ids.ts). titleId(key) and the Section's titleIdOf(id)
+ * build the same heading id, so the landmark stays labelled by its h2.
  */
-export function SectionFrame({
-  sectionKey,
-  ground = "ground",
-  band,
-  pad = true,
-  contained = true,
-  className,
-  children,
-}: SectionFrameProps): JSX.Element {
-  return (
-    <section
-      id={IDS[sectionKey]}
-      aria-labelledby={titleId(sectionKey)}
-      {...(band ? { "data-band": band } : {})}
-      className={cx("relative", GROUND[ground], PAD[String(pad)], className)}
-    >
-      {contained ? <div className={FRAME}>{children}</div> : children}
-    </section>
-  );
+export function SectionFrame({ sectionKey, ...rest }: SectionFrameProps): JSX.Element {
+  return <Section id={IDS[sectionKey]} {...rest} />;
 }

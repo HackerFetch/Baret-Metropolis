@@ -1,7 +1,7 @@
 import { common } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { cn, Mark, Tag } from "@baret/ui";
-import { NavLink, Outlet, useLocation, useRouteError } from "react-router";
+import { NavLink, Outlet } from "react-router";
 import { routes } from "../routes.js";
 
 const NAV = navRoutes(routes, "app");
@@ -11,13 +11,8 @@ const NAV = navRoutes(routes, "app");
  * which is why they are declared at the top level of the router.
  */
 export function Component() {
-  const { pathname } = useLocation();
-  const match = Object.values(routes).find((route) => route.path === pathname);
-
   return (
     <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[240px_1fr]">
-      <title>{match?.title ?? routes.notFound.title}</title>
-
       <aside className="border-b border-[color:var(--rule)] md:border-r md:border-b-0">
         <div className="sticky top-0 grid gap-6 p-5">
           <div className="flex items-center gap-2.5">
@@ -60,16 +55,5 @@ export function Component() {
   );
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError();
-  return (
-    <div className="grid gap-4 p-8">
-      <title>Something went wrong</title>
-      <Tag tone="blocked">Error</Tag>
-      <h1 className="text-display-l">This screen did not load.</h1>
-      <p className="text-[color:var(--fg-muted)]">
-        {error instanceof Error ? error.message : "Something went wrong."}
-      </p>
-    </div>
-  );
-}
+/** Same screen as the root's: what happened, then the way back. */
+export { ErrorBoundary } from "./RootLayout.js";

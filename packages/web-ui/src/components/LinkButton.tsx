@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUpRight } from "lucide-react";
 import type { JSX, ReactNode } from "react";
 import { Link } from "react-router";
-import { cx } from "./util.js";
+import { cx } from "../lib/util.js";
 
 /**
  * A link that looks like a BRAND button.

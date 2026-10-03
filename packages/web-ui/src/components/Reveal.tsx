@@ -1,6 +1,6 @@
-import "./reveal.css";
+import "../styles/reveal.css";
 import type { CSSProperties, JSX, ReactNode } from "react";
-import { staggerDelay } from "./motion.js";
+import { staggerDelay } from "../lib/motion.js";
 
 /**
  * The landing surface enter, on CSS (IMPROVE A5).

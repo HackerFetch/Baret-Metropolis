@@ -18,7 +18,7 @@ const SCROLL_QUERY =
 const CURSOR_QUERY = `${SCROLL_QUERY} and (forced-colors: none)`;
 
 const SmoothScroll = lazy(() =>
-  import("../SmoothScroll.js").then((m) => ({ default: m.SmoothScroll })),
+  import("./SmoothScroll.js").then((m) => ({ default: m.SmoothScroll })),
 );
 const Cursor = lazy(() => import("./Cursor.js").then((m) => ({ default: m.Cursor })));
 
@@ -49,14 +49,19 @@ function useMatch(query: string): boolean {
   return match;
 }
 
-export function Signature(): JSX.Element | null {
+/**
+ * `smoothScroll={false}` keeps the native scroll on a screen where a glide
+ * would get in the way: the wallet's sign and connect requests, where the
+ * reader has to land exactly on a finding or a button. The cursor stays.
+ */
+export function Signature({ smoothScroll = true }: { smoothScroll?: boolean }): JSX.Element | null {
   const idle = useIdle();
   const scroll = useMatch(SCROLL_QUERY);
   const cursor = useMatch(CURSOR_QUERY);
   if (!idle) return null;
   return (
     <Suspense fallback={null}>
-      {scroll ? <SmoothScroll /> : null}
+      {scroll && smoothScroll ? <SmoothScroll /> : null}
       {cursor ? <Cursor /> : null}
     </Suspense>
   );

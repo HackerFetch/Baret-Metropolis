@@ -1,11 +1,11 @@
 import { home } from "@baret/content";
+import { Reveal } from "@baret/web-ui/components/Reveal";
+import { staggerDelay } from "@baret/web-ui/lib/motion";
+import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
 import { IMG } from "../../shared/assets.js";
-import { staggerDelay } from "../../shared/motion.js";
-import { Reveal } from "../../shared/Reveal.js";
 import { SectionFrame } from "../../shared/SectionFrame.js";
 import { SectionHeader } from "../../shared/SectionHeader.js";
-import { T } from "../../shared/type.js";
 import { STAT_ROW_DELAY, StatTile } from "./pillars/StatTile.js";
 import { Points, Tile, TileMedia, TileText } from "./pillars/Tile.js";
 

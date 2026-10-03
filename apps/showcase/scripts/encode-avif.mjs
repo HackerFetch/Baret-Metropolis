@@ -3,8 +3,9 @@
  *
  * Encoded from the lossless masters in assets-raw (gitignored, local only),
  * never from the shipped WebP, so there is no generation loss. Same names and
- * widths as the WebP set, `.avif`, so `avif()` in assets.ts maps one to the
- * other. Run by hand when a master changes: `node scripts/encode-avif.mjs`.
+ * widths as the WebP set, `.avif`, so `avif()` (@baret/web-ui lib/img) maps
+ * one to the other. Run by hand when a master changes:
+ * `node scripts/encode-avif.mjs`.
  * Needs ImageMagick 7 built with libheif. The files are committed; nothing
  * runs at build time.
  *

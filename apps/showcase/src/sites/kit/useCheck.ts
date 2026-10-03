@@ -1,7 +1,7 @@
+import { runCheck } from "@baret/web-ui/lib/check";
+import type { CheckResult, CheckSource } from "@baret/web-ui/lib/check-types";
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useReduce } from "../../shared/useReduce.js";
-import { runCheck } from "./check.js";
-import type { CheckResult, CheckSource } from "./types.js";
 
 /**
  * The panel's state: idle, then a walk through the analysis phases, then the

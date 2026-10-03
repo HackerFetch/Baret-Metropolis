@@ -1,7 +1,7 @@
 import { m, useScroll, useTransform } from "motion/react";
 import { type JSX, type ReactNode, useEffect, useRef, useState } from "react";
-import { useReduce } from "./useReduce.js";
-import { cx } from "./util.js";
+import { useReduce } from "../lib/useReduce.js";
+import { cx } from "../lib/util.js";
 
 /**
  * A scroll-linked vertical drift for a picture inside a clipping frame.

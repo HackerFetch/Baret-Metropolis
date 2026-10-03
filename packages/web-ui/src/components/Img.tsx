@@ -1,7 +1,7 @@
 import { type JSX, useEffect, useRef, useState } from "react";
-import type { ImgAsset } from "./assets.js";
-import { useReduce } from "./useReduce.js";
-import { cascade, cx, POSITION_CLASSES, positionStyle } from "./util.js";
+import type { ImgAsset, Responsive } from "../lib/img.js";
+import { useReduce } from "../lib/useReduce.js";
+import { cascade, cx, POSITION_CLASSES, positionStyle } from "../lib/util.js";
 
 /**
  * Landing images. Every one is decorative: the copy beside it carries the
@@ -11,7 +11,7 @@ import { cascade, cx, POSITION_CLASSES, positionStyle } from "./util.js";
  * breakpoints cascade: md falls back to base, lg to md.
  */
 
-export type Responsive<T> = T | { base: T; md?: T; lg?: T };
+export type { Responsive } from "../lib/img.js";
 
 type Fit = "cover" | "contain";
 

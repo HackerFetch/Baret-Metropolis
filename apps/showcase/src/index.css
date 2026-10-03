@@ -8,3 +8,4 @@
 /* Sources outside this app's own tree have to be declared for Tailwind to
    scan them for class names. */
 @source "../../../packages/ui/src";
+@source "../../../packages/web-ui/src";

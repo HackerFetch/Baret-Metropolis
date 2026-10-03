@@ -1,5 +1,5 @@
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import type { JSX } from "react";
-import { LinkButton } from "../../../shared/LinkButton.js";
 
 /**
  * The secondary action, "Install the extension". Below 768 px it reads

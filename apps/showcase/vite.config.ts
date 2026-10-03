@@ -1,3 +1,4 @@
+import { webUiFonts } from "@baret/web-ui/vite";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
@@ -35,6 +36,8 @@ export default defineConfig({
   plugins: [
     // Vite awaits a promised plugin, so the config itself stays synchronous.
     baretHead(import.meta.dirname),
+    // The self-hosted faces at /fonts, shared with the wallet (packages/web-ui).
+    webUiFonts(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),

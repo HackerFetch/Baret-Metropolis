@@ -1,7 +1,7 @@
+import { FRAME } from "@baret/web-ui/lib/layout";
+import { T } from "@baret/web-ui/lib/type";
 import { ChevronDown } from "lucide-react";
 import type { JSX } from "react";
-import { FRAME } from "../../../shared/layout.js";
-import { T } from "../../../shared/type.js";
 
 /**
  * "See all 17 checks": a native, closed <details> under the moving rows.

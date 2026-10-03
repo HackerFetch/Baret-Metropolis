@@ -1,5 +1,5 @@
+import type { Responsive } from "@baret/web-ui/components/Img";
 import { IMG, type ImgAsset } from "../../../shared/assets.js";
-import type { Responsive } from "../../../shared/Img.js";
 
 /**
  * The three opener frames, in line order. Frame i illustrates

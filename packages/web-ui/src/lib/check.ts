@@ -1,4 +1,4 @@
-import type { CheckResult, CheckSource } from "./types.js";
+import type { CheckResult, CheckSource } from "./check-types.js";
 
 /**
  * Running one check, fail-closed. Whatever the source does (answers,

@@ -1,8 +1,8 @@
 import { findings } from "@baret/content";
 import { DEMO_USDC_ABI, NOVASWAP, NOVASWAP_ROUTER_ABI } from "@baret/demo";
+import { hasValues } from "@baret/web-ui/components/CheckBlocks";
 import { decodeFunctionData, maxUint256, parseEther } from "viem";
 import { describe, expect, it } from "vitest";
-import { hasValues } from "../kit/panel/Blocks.js";
 import { balanceOf, format, parseAmount, quote, quoteBack, SAMPLE, sampleCheck } from "./sample.js";
 import { buildRequest, contractOf, sourceFor } from "./source.js";
 

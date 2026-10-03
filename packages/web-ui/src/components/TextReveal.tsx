@@ -1,7 +1,7 @@
 import { m, type Variants } from "motion/react";
 import { Fragment, type JSX, type ReactNode } from "react";
-import { DUR, EASE_BRAND, VIEWPORT_ONCE } from "./motion.js";
-import { useReduce } from "./useReduce.js";
+import { DUR, EASE_BRAND, VIEWPORT_ONCE } from "../lib/motion.js";
+import { useReduce } from "../lib/useReduce.js";
 
 /**
  * The heading reveal: every word rises out of its own mask, once.

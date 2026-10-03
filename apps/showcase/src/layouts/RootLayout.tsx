@@ -2,6 +2,9 @@ import { common, home } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { Mark } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { Signature } from "@baret/web-ui/components/Signature";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { useEffect, useState } from "react";
 import {
@@ -14,9 +17,6 @@ import {
   useRouteError,
 } from "react-router";
 import { DEMO_PATHS, routes, warm } from "../routes.js";
-import { Signature } from "../shared/cursor/Signature.js";
-import { LandingMotion } from "../shared/LandingMotion.js";
-import { LinkButton } from "../shared/LinkButton.js";
 
 /**
  * The marketing chrome: a sticky header and a three-column footer.

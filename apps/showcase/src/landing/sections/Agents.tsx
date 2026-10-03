@@ -1,12 +1,12 @@
 import { home } from "@baret/content";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { Reveal } from "@baret/web-ui/components/Reveal";
+import { TextReveal } from "@baret/web-ui/components/TextReveal";
+import { GRID } from "@baret/web-ui/lib/layout";
+import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
 import { titleId } from "../../shared/ids.js";
-import { LinkButton } from "../../shared/LinkButton.js";
-import { GRID } from "../../shared/layout.js";
-import { Reveal } from "../../shared/Reveal.js";
 import { SectionFrame } from "../../shared/SectionFrame.js";
-import { TextReveal } from "../../shared/TextReveal.js";
-import { T } from "../../shared/type.js";
 import { CapPresets } from "./agents/CapPresets.js";
 
 /** Protocol tokens that keep their lowercase in the uppercase heading. */
@@ -28,7 +28,7 @@ const { agents } = home;
  * the only hands-on proof of the agent half. The heading breaks only
  * between its sentences (keepBeats, IMPROVE C2).
  *
- * Motion: the heading reveals word by word (shared/TextReveal), the other
+ * Motion: the heading reveals word by word (web-ui TextReveal), the other
  * parts rise once. Reduced motion: static.
  */
 export function AgentsSection(): JSX.Element {

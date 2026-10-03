@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Responsive } from "./Img.js";
+import type { Responsive } from "./img.js";
 
 /**
  * Private helpers for the shared landing components. Not part of the frozen

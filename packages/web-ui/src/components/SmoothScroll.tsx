@@ -2,8 +2,8 @@ import "lenis/dist/lenis.css";
 import Lenis from "lenis";
 import { cancelFrame, frame } from "motion/react";
 import { useEffect } from "react";
-import { useFinePointer } from "./cursor/useFinePointer.js";
-import { useReduce } from "./useReduce.js";
+import { useFinePointer } from "../lib/useFinePointer.js";
+import { useReduce } from "../lib/useReduce.js";
 
 /**
  * Smoothed wheel scrolling for the landing, with Lenis.
@@ -28,7 +28,7 @@ import { useReduce } from "./useReduce.js";
  *   (tabindex -1 when it is not focusable): the skip link lands on <main>.
  * - Reduced motion: no Lenis at all, the native scroll stays untouched. The
  *   preference is live, so switching it mid-visit tears Lenis down.
- * - Mounted by HomePage only; leaving the page destroys it.
+ * - Mounted once per route by Signature; leaving the route destroys it.
  */
 
 const LERP = 0.1;

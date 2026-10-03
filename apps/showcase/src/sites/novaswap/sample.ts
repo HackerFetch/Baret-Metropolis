@@ -1,6 +1,6 @@
 import { NOVASWAP } from "@baret/demo";
+import type { CheckResult, DemoMode } from "@baret/web-ui/lib/check-types";
 import { SITE_ART } from "../../shared/assets.js";
-import type { CheckResult, DemoMode } from "../kit/types.js";
 
 /**
  * NovaSwap's prepared sample, used until a wallet is connected. The

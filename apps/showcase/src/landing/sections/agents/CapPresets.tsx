@@ -1,7 +1,7 @@
 import { home } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId, useState } from "react";
-import { T } from "../../../shared/type.js";
 import { Segment } from "../verdicts/Segment.js";
 import { amount, announceCap, capProgress, capRun, capSentence, sampleLine } from "./capRun.js";
 

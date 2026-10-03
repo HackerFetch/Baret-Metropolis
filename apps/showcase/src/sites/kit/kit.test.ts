@@ -1,9 +1,9 @@
 import { findings } from "@baret/content";
 import { type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
+import { FAILED, runCheck } from "@baret/web-ui/lib/check";
+import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FAILED, runCheck } from "./check.js";
 import { analyzeCall, displayAmount, fromAnalyzeResponse } from "./live.js";
-import type { CheckResult } from "./types.js";
 import { advance, type CheckState, settle } from "./useCheck.js";
 
 const WALLET = "0x7a3f9e21c84b5d06f13a2e9b7c40d58e6f21c21e";

@@ -1,5 +1,5 @@
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { type JSX, useEffect, useRef, useState } from "react";
-import { useReduce } from "../useReduce.js";
 
 /**
  * A WebGL2 layer over the hero's <img>. Place it as the img's next sibling

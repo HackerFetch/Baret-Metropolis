@@ -1,10 +1,12 @@
+import { webUiFonts } from "@baret/web-ui/vite";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  // webUiFonts: the self-hosted faces at /fonts, shared with the showcase.
+  plugins: [webUiFonts(), react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
   resolve: { tsconfigPaths: true },
   server: {
     port: 5180,
