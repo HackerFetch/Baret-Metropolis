@@ -16,6 +16,13 @@ export const T = {
    * with breakpoints. BRAND stencil tracking +4 %.
    */
   h1: "font-stencil uppercase text-[clamp(2.625rem,0.5rem+11cqi,6rem)] leading-[0.9] tracking-[0.04em]",
+  /**
+   * An inner page's title (hub, docs, install, agents, the wallet's screens).
+   * The same stencil, one step down: 40 to 72 px, also sized by an
+   * `@container` column, so a long page title stays a headline, not a wall.
+   */
+  h1Page:
+    "font-stencil uppercase text-[clamp(2.5rem,0.75rem+8cqi,4.5rem)] leading-[0.9] tracking-[0.04em]",
   /** Section titles. Fluid 32 to 44 px, no breakpoint jump. */
   h2: "font-display font-extrabold uppercase text-[clamp(2rem,1.4rem+2.2vw,2.75rem)] leading-[0.95] tracking-normal md:tracking-[-0.01em]",
   /** The closing title only. Stencil, fluid 44 to 64 px. */
