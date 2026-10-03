@@ -83,8 +83,8 @@ baret/
 │   ├── metamask-plugin/   MetaMask Agent Wallet plugin package for the Baret firewall
 │   ├── wallet-adapter/    dApp ↔ wallet postMessage bridge
 │   ├── ext-protocol/      Extension message-bus types
-│   ├── ui/                Design tokens + shared React components
-│   └── showcase-ui/       Shared UI skeleton for showcase sites
+│   ├── ui/                Design tokens + shared React components (all three surfaces)
+│   └── web-ui/            Web signature layer for the showcase and the wallet (type, frame, motion, cursor, fonts)
 ├── contracts/         Foundry — PaymentGuard.sol, ReputationRegistry.sol
 ├── workflows/         Chainlink CRE — reputation-oracle workflow
 ├── indexer/           Envio HyperIndex config + handlers

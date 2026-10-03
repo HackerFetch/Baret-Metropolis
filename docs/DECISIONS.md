@@ -120,6 +120,13 @@
 **Alternative:** the earlier "rerouted output" NovaSwap idea in FRONTEND.md §2.3 — kept for later, the approval drain is the more common real-world attack and needs no output-token liquidity.
 **Status:** ✅ Final for NovaSwap; the other five sites follow the same pattern.
 
+### D-019 — One web signature layer for the showcase and the wallet: `packages/web-ui`
+**Date:** 2026-10-03
+**Decision:** The landing's shared layer moves into one workspace package, `@baret/web-ui`, consumed as TypeScript source through subpath exports (`lib/*`, `components/*`, `styles/*`, `vite`): the type scale, the frame and section grammar, the motion tokens and `LandingMotion`, `Reveal` and `TextReveal`, `Parallax`, `SmoothScroll` (Lenis), the eyelet cursor and `Signature`, `Img`, `LinkButton`, the verdict blocks of the Baret panel, and the self-hosted fonts. The showcase and the wallet import from it; the extension does not. The font files live once, in `packages/web-ui/fonts`, and its `webUiFonts()` Vite plugin serves them at `/fonts`. In the wallet the eyelet cursor runs on every screen, and Lenis on every screen except the two request windows, `/sign` and `/connect`.
+**Rationale:** Meriç's rule of 2026-10-02: every page shares the landing's features and its quality. The wallet had none of them (Google Fonts, no cursor, no motion), and a copy would drift from the original. Subpath exports instead of a barrel keep Lenis and the cursor in their own lazy chunks, so the landing's bundle stays as it was. On a sign or connect request the reader has to land exactly on a finding or on Decline, and a glide makes that harder, so those windows keep the native scroll.
+**Alternatives:** `packages/showcase-ui`, the name `CLAUDE.md` reserved — rejected, the wallet uses it too; folding it into `@baret/ui` — rejected, it would pull motion and Lenis into the extension; copying the files into the wallet — rejected, two implementations drift.
+**Status:** ✅ Final (Meriç, 2026-10-03)
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

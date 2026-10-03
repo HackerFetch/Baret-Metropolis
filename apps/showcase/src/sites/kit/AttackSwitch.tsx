@@ -1,5 +1,5 @@
+import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId } from "react";
-import { T } from "../../shared/type.js";
 
 /**
  * The "suspicious swap" switch at the bottom of a demo dApp's main card. It

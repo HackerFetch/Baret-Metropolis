@@ -1,9 +1,9 @@
 import { home } from "@baret/content";
+import { RevealWords } from "@baret/web-ui/components/TextReveal";
+import { DUR } from "@baret/web-ui/lib/motion";
+import { T } from "@baret/web-ui/lib/type";
 import { m } from "motion/react";
 import type { JSX } from "react";
-import { DUR } from "../../../shared/motion.js";
-import { RevealWords } from "../../../shared/TextReveal.js";
-import { T } from "../../../shared/type.js";
 
 /**
  * The opener copy: only the active line, on one flat, hard-edged graphite

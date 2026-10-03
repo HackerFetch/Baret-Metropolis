@@ -1,9 +1,9 @@
 import { novaswap } from "@baret/content";
 import { Button } from "@baret/ui";
+import type { DemoMode } from "@baret/web-ui/lib/check-types";
+import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId } from "react";
-import { T } from "../../shared/type.js";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
-import type { DemoMode } from "../kit/types.js";
 import { balanceOf, format, parseAmount, quote, quoteBack } from "./sample.js";
 
 /**

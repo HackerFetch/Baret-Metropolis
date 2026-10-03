@@ -6,6 +6,17 @@ Last updated: 2026-09-14 · Status: **Specification phase, no implementation** �
 
 ---
 
+## Implementation status (`apps/wallet`)
+
+| Surface | Status | Where |
+|---|---|---|
+| Shell | **Done** (2026-10-03): one root route wraps every screen, the request windows and setup included, with the web signature layer shared with the showcase (`@baret/web-ui`, D-019): the self-hosted fonts (no Google Fonts), the motion provider, scroll restoration, the eyelet cursor on every screen, and Lenis on every screen except `/sign` and `/connect`, where the native scroll stays. The page title comes from the route registry. | `apps/wallet/src/layouts/RootLayout.tsx`, `apps/wallet/src/router.tsx` |
+| 404 | **Built** (2026-10-03): the vector mark on a plate, one stencil line, the way back. | `apps/wallet/src/pages/NotFoundPage.tsx` |
+| Assets | **Registered** (2026-10-03): w-01 to w-14, each with 480/768 px copies. The raster marks m-01 and m-10 stay unused (the mark is the vector `Mark`). | `apps/wallet/src/assets.ts` |
+| Every other screen | Stubs that render a title; designed in the `wallet-ui` branch. | `apps/wallet/src/pages/` |
+
+---
+
 ## 0. There Are Two Wallet Surfaces — Why
 
 Baret ships two separate wallet products; both use the same `@baret/guard` analysis engine but have different account layers and different bounty targets:

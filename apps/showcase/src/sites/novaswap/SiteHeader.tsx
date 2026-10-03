@@ -1,7 +1,7 @@
 import { novaswap } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
+import { FRAME } from "@baret/web-ui/lib/layout";
 import type { JSX } from "react";
-import { FRAME } from "../../shared/layout.js";
 
 /**
  * NovaSwap's own header, in its cobalt palette. The nav switches between the

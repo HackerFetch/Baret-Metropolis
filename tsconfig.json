@@ -27,6 +27,9 @@
     },
     {
       "path": "./packages/demo"
+    },
+    {
+      "path": "./packages/web-ui"
     }
   ]
 }

@@ -23,6 +23,7 @@ export const hub = {
   },
 
   hero: {
+    /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "Showcase",
     title: "Six sites. Six threats. Read them before you sign.",
     body: "Each site looks finished and works like the real thing. Each one hides a different threat in the transaction it builds. Press its main button and see what Baret checks before anything is signed.",
@@ -41,9 +42,16 @@ export const hub = {
     { value: "25", label: "rules you can change" },
   ],
 
+  /** The heading over the six cards and their filter. */
+  scenarios: {
+    title: "Six sites, one trap each.",
+  },
+
   /** The ids match `scenario.threatClass` in each scenario file. */
   filters: {
     label: "Show",
+    /** Announced when the filter changes. */
+    status: "{count} of 6 sites shown.",
     items: [
       { id: "all", label: "All six", body: "Every scenario on this page." },
       { id: "drainer", label: "Drainers", body: "Funds taken without consent." },
@@ -55,6 +63,7 @@ export const hub = {
   /** Labels on every scenario card. The card data lives in each site's file. */
   cardLabels: {
     watchFor: "Watch for",
+    /** Not rendered on /showcase since 2026-10-03. */
     whyItMatters: "Why it matters",
     verdict: "Expected verdict",
     verdicts: {
@@ -68,8 +77,11 @@ export const hub = {
   },
 
   steps: {
+    /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "How it works",
     title: "Four steps, one sign request",
+    /** Accessible name of the step picker. */
+    legend: "Pick a step",
     items: [
       {
         short: "Connect",
@@ -94,7 +106,11 @@ export const hub = {
     ],
   },
 
-  /** The nine detector modules in docs/ARCHITECTURE.md section 6, in order. */
+  /**
+   * The nine detector modules in docs/ARCHITECTURE.md section 6, in order.
+   * Not rendered on /showcase since 2026-10-03 (cut for simplicity; the
+   * landing's checks marquee carries them).
+   */
   detectors: {
     eyebrow: "Under the hood",
     title: "Nine detectors read every request.",
@@ -141,6 +157,7 @@ export const hub = {
   },
 
   comparison: {
+    /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "The difference",
     title: "Same site, same button, two wallets.",
     body: "Every site works with any wallet in the picker. Run the attack version with the wallet you use today, then again with Baret. No wallet is singled out here. The difference is what gets read before you sign.",

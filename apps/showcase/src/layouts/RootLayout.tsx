@@ -2,6 +2,9 @@ import { common, home } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { Mark } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { Signature } from "@baret/web-ui/components/Signature";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { useEffect, useState } from "react";
 import {
@@ -14,9 +17,6 @@ import {
   useRouteError,
 } from "react-router";
 import { DEMO_PATHS, routes, warm } from "../routes.js";
-import { Signature } from "../shared/cursor/Signature.js";
-import { LandingMotion } from "../shared/LandingMotion.js";
-import { LinkButton } from "../shared/LinkButton.js";
 
 /**
  * The marketing chrome: a sticky header and a three-column footer.
@@ -43,11 +43,10 @@ import { LinkButton } from "../shared/LinkButton.js";
 const NAV = navRoutes(routes, "marketing").filter((route) => route.key !== "showcase");
 
 /**
- * The landing page sits on a wider frame than the other routes (its FRAME
- * constant, written out here because the layout must not import landing code).
+ * Every marketing page sits on the landing's frame (FRAME in @baret/web-ui
+ * lib/layout), so the header and the footer share its width and gutters.
  */
-const ROW_HOME = "max-w-[1276px] px-4 md:px-8 lg:px-12";
-const ROW_DEFAULT = "max-w-[1180px] px-5";
+const ROW = "max-w-[1276px] px-4 md:px-8 lg:px-12";
 
 /** Just under the 56 px header: the line whose band decides the header tone. */
 const PROBE_Y = 57;
@@ -120,7 +119,7 @@ function Chrome() {
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         <Outlet />
       </main>
-      <SiteFooter row={pathname === routes.home.path ? ROW_HOME : ROW_DEFAULT} />
+      <SiteFooter row={ROW} />
     </div>
   );
 }
@@ -179,7 +178,7 @@ export function headFor(raw: string): {
  */
 function SiteHeader({ pathname }: { pathname: string }) {
   const { dark, settled } = useDarkBand(pathname);
-  const row = pathname === routes.home.path ? ROW_HOME : ROW_DEFAULT;
+  const row = ROW;
   const tone = dark
     ? "border-chalk/12 bg-graphite text-chalk"
     : "border-[color:var(--rule)] bg-[color:var(--ground)] text-[color:var(--fg)]";

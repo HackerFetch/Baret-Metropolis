@@ -146,6 +146,16 @@ export interface SitePages {
   };
 }
 
+/**
+ * Another demo site's secondary pages. Each site shapes them to its own nav
+ * (one key per nav item after the first). Every figure on them is sample
+ * data, and `sampleNote` says so above each page.
+ */
+export interface SiteViews {
+  sampleNote: string;
+  readonly [view: string]: unknown;
+}
+
 export interface ScenarioSite {
   meta: Meta;
   scenario: Scenario & { threatClass: "drainer" | "trap" | "agent" };
@@ -181,7 +191,7 @@ export interface ScenarioSite {
     done: Block;
     footer: string;
     /** The fake site's other pages, one per nav item after the first. */
-    pages?: SitePages;
+    pages?: SitePages | SiteViews;
     /**
      * The card in the attack version, when it asks for something other than
      * the honest card (NovaSwap: a dUSDC sale behind "enable trading"), and
@@ -189,11 +199,13 @@ export interface ScenarioSite {
      */
     attack?: {
       switch: { label: string; on: string; off: string };
-      input: string;
-      rows: readonly { label: string; value: string }[];
-      cta: string;
-      note: string;
-      errors: { empty: string; tooHigh: string };
+      input?: string;
+      rows?: readonly { label: string; value: string }[];
+      cta?: string;
+      note?: string;
+      errors?: { empty: string; tooHigh: string };
+      /** Anything else the site's attack card needs (an agent loop, a counter). */
+      readonly [key: string]: unknown;
     };
   };
   analysis: {

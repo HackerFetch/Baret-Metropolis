@@ -1,9 +1,5 @@
 import { common, hub } from "@baret/content";
 import { Button, Sheet, SheetContent, SheetDescription, SheetTitle, Tag } from "@baret/ui";
-import type { JSX } from "react";
-import type { ImgAsset } from "../../shared/assets.js";
-import { ImgWell } from "../../shared/Img.js";
-import { T } from "../../shared/type.js";
 import {
   ChangeList,
   ClaimsList,
@@ -12,8 +8,12 @@ import {
   LiveVerdict,
   NoteBlock,
   TheAsk,
-} from "./panel/Blocks.js";
-import type { DemoMode, Verdict } from "./types.js";
+} from "@baret/web-ui/components/CheckBlocks";
+import { ImgWell } from "@baret/web-ui/components/Img";
+import type { DemoMode, Verdict } from "@baret/web-ui/lib/check-types";
+import { T } from "@baret/web-ui/lib/type";
+import type { JSX } from "react";
+import type { ImgAsset } from "../../shared/assets.js";
 import type { CheckState } from "./useCheck.js";
 
 /**

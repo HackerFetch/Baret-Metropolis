@@ -1,12 +1,12 @@
 import { home, hub } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Img } from "@baret/web-ui/components/Img";
+import { VERDICT_TONE } from "@baret/web-ui/lib/tone";
+import { T } from "@baret/web-ui/lib/type";
 import { ArrowRight } from "lucide-react";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { routeKeyFor, warm } from "../../../routes.js";
-import { Img } from "../../../shared/Img.js";
-import { VERDICT_TONE } from "../../../shared/tone.js";
-import { T } from "../../../shared/type.js";
 import { DARK_PRINT } from "../pillars/Tile.js";
 import { CARD_MEDIA, WELL_GROUND } from "./cardMedia.js";
 

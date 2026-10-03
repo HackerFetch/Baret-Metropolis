@@ -180,6 +180,8 @@ export const agents = {
   quickstart: {
     eyebrow: "Quickstart",
     title: "From install to your first blocked transaction.",
+    /** Accessible name of the TypeScript / any language / agent frameworks picker. */
+    tabs: "Show the code for",
     sdk: {
       title: "TypeScript",
       before: "Wrap the signer, then send the way you already do.",
@@ -464,6 +466,9 @@ export const agents = {
       },
     },
     note: "The playground calls the same /v1/analyze endpoint as the SDK, on a rate-limited testnet server. To run your own, start the server locally and point serverUrl at it.",
+    /** Shown while the playground answers from prepared samples. */
+    sample:
+      "Prepared sample answers. Until the playground is connected to Baret's server, nothing is sent.",
     footnote:
       "Per-agent activity needs an authenticated server, so it is not part of this public playground.",
     more: { label: "Wire this into your own agent", href: "#quickstart" },

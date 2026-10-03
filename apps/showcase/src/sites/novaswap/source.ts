@@ -1,7 +1,7 @@
 import { NOVASWAP, novaswap } from "@baret/demo";
+import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import { type Address, isAddress, parseEther } from "viem";
 import { analyzeCall, type DemoCall } from "../kit/live.js";
-import type { CheckSource, DemoMode } from "../kit/types.js";
 import { sampleCheck } from "./sample.js";
 
 /**

@@ -1,8 +1,8 @@
+import { EASE_BRAND, staggerDelay } from "@baret/web-ui/lib/motion";
+import { T } from "@baret/web-ui/lib/type";
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { animate, useInView } from "motion/react";
 import { type JSX, useEffect, useLayoutEffect, useRef } from "react";
-import { EASE_BRAND, staggerDelay } from "../../../shared/motion.js";
-import { T } from "../../../shared/type.js";
-import { useReduce } from "../../../shared/useReduce.js";
 
 /**
  * A compact stat tile: the number in display type, its line under it.

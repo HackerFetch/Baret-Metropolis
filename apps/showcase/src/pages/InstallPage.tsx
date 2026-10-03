@@ -1,139 +1,45 @@
 import { install } from "@baret/content";
-import { Tag } from "@baret/ui";
-import { Link } from "react-router";
-import { Panel, Section } from "../components/Section.js";
+import { useEffect, useState } from "react";
+import { type Browser, type BuildId, detectBrowser, leadBuild } from "../install/builds.js";
+import { Help } from "../install/Help.js";
+import { InstallHero } from "../install/InstallHero.js";
+import { InstallSteps } from "../install/InstallSteps.js";
+import { Trust } from "../install/Trust.js";
+import { INSTALL_ART } from "../shared/assets.js";
+import { ClosingBand } from "../shared/ClosingBand.js";
 
-/** /install. Loading an unpacked developer build. */
+/**
+ * /install. Five blocks (owner's order, 2026-10-03): the download in the
+ * hero, the three steps for the visitor's browser, what Baret can and cannot
+ * do, help when something goes wrong, and the way to try it. "What happens
+ * next" and "What you get" are cut.
+ *
+ * The browser is read on the client after the first render (which assumes
+ * "unknown"), so the static page and the hydrated one agree; the steps follow
+ * it until the visitor picks one.
+ */
 export function Component() {
+  const [browser, setBrowser] = useState<Browser>("unknown");
+  const [picked, setPicked] = useState<BuildId | null>(null);
+
+  useEffect(() => {
+    setBrowser(detectBrowser(navigator.userAgent));
+  }, []);
+
+  const { cta } = install;
   return (
-    <>
-      <header className="grid-paper border-b border-[color:var(--rule)]">
-        <div className="mx-auto grid w-full max-w-[1180px] gap-5 px-5 py-14 sm:py-20">
-          <Tag tone="brand" size="sm">
-            {install.hero.eyebrow}
-          </Tag>
-          <h1 className="max-w-[16ch] font-stencil text-[clamp(2.5rem,7vw,5rem)] uppercase leading-[0.9]">
-            {install.hero.title}
-          </h1>
-          <p className="max-w-[60ch] text-xl text-[color:var(--fg-muted)]">{install.hero.body}</p>
-          <div className="flex flex-wrap gap-2.5">
-            <button
-              type="button"
-              className="chamfer-sm inline-flex h-11 items-center bg-[color:var(--accent)] px-5 font-display text-base uppercase tracking-[0.08em] text-[color:var(--on-accent)]"
-            >
-              {install.hero.actions.primary.label}
-            </button>
-            <button
-              type="button"
-              className="chamfer-sm inline-flex h-11 items-center border border-[color:var(--fg)] px-5 font-display text-base uppercase tracking-[0.08em]"
-            >
-              {install.hero.actions.secondary.label}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <Section title={install.steps.chrome.title}>
-        <ol className="grid gap-3.5 md:grid-cols-3">
-          {install.steps.chrome.items.map((step) => (
-            <Panel key={step.title}>
-              <h3 className="text-display-m">{step.title}</h3>
-              <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
-            </Panel>
-          ))}
-        </ol>
-        <Panel className="mt-3.5 max-w-[70ch]">
-          <h3 className="text-display-m">{install.developerMode.title}</h3>
-          <p className="text-sm text-[color:var(--fg-muted)]">{install.developerMode.body}</p>
-        </Panel>
-      </Section>
-
-      <Section title={install.steps.firefox.title} deep>
-        <ol className="grid gap-3.5 md:grid-cols-3">
-          {install.steps.firefox.items.map((step) => (
-            <Panel key={step.title}>
-              <h3 className="text-display-m">{step.title}</h3>
-              <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
-            </Panel>
-          ))}
-        </ol>
-      </Section>
-
-      <Section title={install.trust.title}>
-        <div className="grid gap-3.5 md:grid-cols-2">
-          <Panel>
-            <h3 className="text-display-m text-[color:var(--safe)]">{install.trust.can.title}</h3>
-            <ul className="grid gap-1.5">
-              {install.trust.can.points.map((point) => (
-                <li
-                  key={point}
-                  className="grid grid-cols-[14px_1fr] gap-2 text-sm text-[color:var(--fg-muted)]"
-                >
-                  <span aria-hidden="true" className="text-[color:var(--safe)]">
-                    +
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </Panel>
-          <Panel>
-            <h3 className="text-display-m text-[color:var(--blocked)]">
-              {install.trust.cannot.title}
-            </h3>
-            <ul className="grid gap-1.5">
-              {install.trust.cannot.points.map((point) => (
-                <li
-                  key={point}
-                  className="grid grid-cols-[14px_1fr] gap-2 text-sm text-[color:var(--fg-muted)]"
-                >
-                  <span aria-hidden="true" className="text-[color:var(--blocked)]">
-                    -
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </div>
-      </Section>
-
-      <Section title={install.afterInstall.title} deep>
-        <ol className="grid gap-3.5 md:grid-cols-4">
-          {install.afterInstall.items.map((step) => (
-            <Panel key={step.title}>
-              <h3 className="text-display-m">{step.title}</h3>
-              <p className="text-sm text-[color:var(--fg-muted)]">{step.body}</p>
-            </Panel>
-          ))}
-        </ol>
-      </Section>
-
-      <Section title={install.troubleshooting.title} className="border-b-0">
-        <div className="max-w-[80ch]">
-          {install.troubleshooting.items.map((item) => (
-            <details
-              key={item.symptom}
-              name="install-troubleshooting"
-              className="border-t border-[color:var(--rule)] last:border-b"
-            >
-              <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-display text-xl uppercase tracking-[0.03em]">
-                {item.symptom}
-                <span aria-hidden="true" className="font-mono text-[color:var(--accent)]">
-                  +
-                </span>
-              </summary>
-              <p className="max-w-[70ch] pb-5 text-[color:var(--fg-muted)]">{item.fix}</p>
-            </details>
-          ))}
-        </div>
-        <Link
-          to={install.cta.actions.primary.href}
-          className="chamfer-sm mt-7 inline-flex h-11 w-max items-center bg-[color:var(--accent)] px-5 font-display text-base uppercase tracking-[0.08em] text-[color:var(--on-accent)]"
-        >
-          {install.cta.actions.primary.label}
-        </Link>
-      </Section>
-    </>
+    <div className="overflow-x-clip">
+      <InstallHero browser={browser} />
+      <InstallSteps browser={picked ?? leadBuild(browser)} onBrowser={setPicked} />
+      <Trust />
+      <Help />
+      <ClosingBand
+        title={cta.title}
+        body={cta.body}
+        primary={cta.actions.primary}
+        secondary={cta.actions.secondary}
+        picture={{ asset: INSTALL_ART.cta, position: "40% 50%" }}
+      />
+    </div>
   );
 }

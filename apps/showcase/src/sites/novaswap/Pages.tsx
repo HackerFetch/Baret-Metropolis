@@ -1,11 +1,11 @@
 import { novaswap } from "@baret/content";
 import { NOVASWAP } from "@baret/demo";
 import { Button } from "@baret/ui";
+import { Reveal } from "@baret/web-ui/components/Reveal";
+import { TextReveal } from "@baret/web-ui/components/TextReveal";
+import { FRAME, GRID } from "@baret/web-ui/lib/layout";
+import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { FRAME, GRID } from "../../shared/layout.js";
-import { Reveal } from "../../shared/Reveal.js";
-import { TextReveal } from "../../shared/TextReveal.js";
-import { T } from "../../shared/type.js";
 
 /**
  * NovaSwap's Pools, Stats and Docs pages. Same grammar as the swap page: a

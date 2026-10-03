@@ -26,6 +26,7 @@ export const docs = {
   },
 
   hero: {
+    /** Not rendered on /docs since 2026-10-03. */
     eyebrow: "Documentation",
     title: "Where the check actually happens.",
     body: "A standard wallet goes straight from the site's request to your signature. Baret adds one step in between. These files explain that step, one topic each.",
@@ -56,6 +57,9 @@ export const docs = {
     },
     note: "The specs came first. When the code and a spec disagree, the code wins and the spec gets fixed.",
   },
+
+  /** The cue at the foot of every card; the card links to the file on GitHub. */
+  open: "Read it on GitHub",
 
   groups: [
     {
@@ -139,7 +143,10 @@ export const docs = {
     },
   ],
 
-  /** For readers who arrived from a search and want the short version. */
+  /**
+   * For readers who arrived from a search and want the short version.
+   * Not rendered on /docs since 2026-10-03 (cut for simplicity).
+   */
   summary: {
     eyebrow: "Pipeline",
     title: "The short version",

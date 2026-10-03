@@ -1,9 +1,9 @@
 import { hub } from "@baret/content";
 import { Tag } from "@baret/ui";
+import type { DemoMode } from "@baret/web-ui/lib/check-types";
+import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
 import { Link } from "react-router";
-import { T } from "../../shared/type.js";
-import type { DemoMode } from "./types.js";
 
 /**
  * Baret's strip across the top of a demo dApp: it says the site is

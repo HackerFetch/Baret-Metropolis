@@ -1,10 +1,10 @@
 import { home } from "@baret/content";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
+import { TextReveal } from "@baret/web-ui/components/TextReveal";
+import { T } from "@baret/web-ui/lib/type";
 import { Fragment, type JSX } from "react";
 import { titleId } from "../../shared/ids.js";
-import { LinkButton } from "../../shared/LinkButton.js";
 import { SectionFrame } from "../../shared/SectionFrame.js";
-import { TextReveal } from "../../shared/TextReveal.js";
-import { T } from "../../shared/type.js";
 import { SecondaryAction } from "./hero/SecondaryAction.js";
 
 const { cta } = home;

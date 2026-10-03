@@ -1,7 +1,7 @@
 import type { AnalyzeResponse } from "@baret/guard";
+import { FAILED } from "@baret/web-ui/lib/check";
+import type { CheckApproval, CheckChange, CheckResult } from "@baret/web-ui/lib/check-types";
 import { formatUnits } from "viem";
-import { FAILED } from "./check.js";
-import type { CheckApproval, CheckChange, CheckResult } from "./types.js";
 
 /**
  * Baret's live answer for a demo dApp. The showcase reaches the server at

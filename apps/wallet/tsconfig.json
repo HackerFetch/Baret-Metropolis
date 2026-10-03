@@ -16,6 +16,9 @@
     },
     {
       "path": "../../packages/routes"
+    },
+    {
+      "path": "../../packages/web-ui"
     }
   ]
 }

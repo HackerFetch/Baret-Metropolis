@@ -1,8 +1,8 @@
+import { FRAME, HEADER_OFFSET } from "@baret/web-ui/lib/layout";
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { type JSX, useEffect, useRef, useState } from "react";
 import { IDS } from "../../shared/ids.js";
-import { FRAME, HEADER_OFFSET } from "../../shared/layout.js";
-import { useReduce } from "../../shared/useReduce.js";
 import { FrameLayer, type FrameState } from "./opener/FrameLayer.js";
 import { FRAMES } from "./opener/frames.js";
 import { LinePlate } from "./opener/LinePlate.js";

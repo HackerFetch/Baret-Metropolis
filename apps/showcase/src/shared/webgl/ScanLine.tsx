@@ -1,5 +1,5 @@
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import type { JSX } from "react";
-import { useReduce } from "../useReduce.js";
 
 /** The attribute the skyline loop finds the rule by, inside the same section. */
 export const SCAN_LINE_ATTR = "data-scan-line";

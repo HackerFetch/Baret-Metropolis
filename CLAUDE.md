@@ -10,7 +10,7 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 
 | Person | Git identity | Role | Owns |
 |---|---|---|---|
-| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | All UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/showcase-ui`, brand / `docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Also testing of everything:** contracts, backend, SDK, end-to-end flows — writing tests, running tests and reporting bugs are Meriç's job. |
+| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | All UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/web-ui`, brand / `docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Also testing of everything:** contracts, backend, SDK, end-to-end flows — writing tests, running tests and reporting bugs are Meriç's job. |
 | **Ezgin** | GitHub `Aeztrest` / ezgincapkan64@gmail.com (author of the five earlier Baret repos) | **Backend + Contracts + System Developer** | `apps/server` (analysis engine, detectors, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API integrations (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
 
 ## At the start of every session (every agent, every time)
