@@ -1,16 +1,17 @@
-import { common } from "@baret/content";
+import { common, walletFrame } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
 import { T } from "@baret/web-ui/lib/type";
 import { Link, Outlet, ScrollRestoration, useLocation, useRouteError } from "react-router";
+import { WalletProvider } from "../data/store.js";
 import { routes } from "../routes.js";
 
 /**
  * The shell around every wallet screen, the request windows and setup
  * included: the motion features (m.* elements, the BRAND ease-out default and
- * the reduced-motion switch), scroll restoration, and the signature layer
- * shared with the showcase (packages/web-ui).
+ * the reduced-motion switch), scroll restoration, the signature layer shared
+ * with the showcase (packages/web-ui), and the wallet's state (data/store).
  *
  * The eyelet cursor runs everywhere. Lenis smooths the wheel everywhere
  * except the two request windows, /sign and /connect: there the reader has to
@@ -31,7 +32,10 @@ export function Component() {
       <title>{match?.title ?? routes.notFound.title}</title>
       <ScrollRestoration />
       <Signature key={pathname} smoothScroll={!REQUEST_PATHS.has(pathname)} />
-      <Outlet />
+      {/* The account and everything done with it, shared by every screen (data/store). */}
+      <WalletProvider name={walletFrame.sampleData.accountName}>
+        <Outlet />
+      </WalletProvider>
     </LandingMotion>
   );
 }

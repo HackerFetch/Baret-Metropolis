@@ -12,6 +12,9 @@
       "path": "../../packages/content"
     },
     {
+      "path": "../../packages/guard"
+    },
+    {
       "path": "../../packages/ui"
     },
     {

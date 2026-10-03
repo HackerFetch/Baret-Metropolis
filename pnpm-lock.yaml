@@ -206,6 +206,9 @@ importers:
       '@baret/content':
         specifier: workspace:*
         version: link:../../packages/content
+      '@baret/guard':
+        specifier: workspace:*
+        version: link:../../packages/guard
       '@baret/routes':
         specifier: workspace:*
         version: link:../../packages/routes

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@baret/content": "workspace:*",
+    "@baret/guard": "workspace:*",
     "@baret/routes": "workspace:*",
     "@baret/ui": "workspace:*",
     "@baret/web-ui": "workspace:*",
