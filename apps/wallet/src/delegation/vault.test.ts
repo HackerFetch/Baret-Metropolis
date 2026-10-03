@@ -1,5 +1,5 @@
+import { ADDRESS, VAULT } from "@baret/wallet-ui/data/sample";
 import { describe, expect, it } from "vitest";
-import { ADDRESS, VAULT } from "../data/sample.js";
 import { merchantFrom, SAMPLE_AGENT_KEY, vaultAmount, withdrawable } from "./vault.js";
 
 describe("the vault", () => {

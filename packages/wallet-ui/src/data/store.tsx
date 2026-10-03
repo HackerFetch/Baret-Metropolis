@@ -1,5 +1,5 @@
 import { createContext, type JSX, type ReactNode, use, useReducer } from "react";
-import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-templates.js";
+import type { PolicyTemplateName } from "../../../guard/src/policy-templates.js";
 import { fromUnits, toUnits } from "./format.js";
 import { diffFields } from "./rules.js";
 import {

@@ -6,7 +6,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
 // By file: findings.ts imports types only, so zod stays out of this chunk.
-import { FINDING_SPECS } from "../../../../packages/guard/src/findings.js";
+import { FINDING_SPECS } from "../../../guard/src/findings.js";
 
 /**
  * Findings in Baret's own words: the severity, the title, the sentence with

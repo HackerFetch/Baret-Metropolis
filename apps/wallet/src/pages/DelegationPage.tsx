@@ -1,18 +1,18 @@
 import { common, delegation, policies, send } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { amount, day, when } from "@baret/wallet-ui/data/format";
+import { ADDRESS } from "@baret/wallet-ui/data/sample";
+import { free, reserved, useWallet } from "@baret/wallet-ui/data/store";
+import type { Merchant } from "@baret/wallet-ui/data/types";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { WALLET_ART } from "../assets.js";
-import { Block, Empty, Problem, Rows } from "../components/Block.js";
-import { Screen } from "../components/Screen.js";
-import { amount, day, when } from "../data/format.js";
-import { ADDRESS } from "../data/sample.js";
-import { free, reserved, useWallet } from "../data/store.js";
-import type { Merchant } from "../data/types.js";
 import {
   type MerchantForm,
   type MerchantIssue,

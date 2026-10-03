@@ -1,6 +1,6 @@
-import { fromUnits, toUnits } from "../data/format.js";
-import { free } from "../data/store.js";
-import type { Merchant, Vault } from "../data/types.js";
+import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
+import { free } from "@baret/wallet-ui/data/store";
+import type { Merchant, Vault } from "@baret/wallet-ui/data/types";
 
 /**
  * The vault screen's pure parts: whether a withdrawal fits under the

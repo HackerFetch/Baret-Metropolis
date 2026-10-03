@@ -1,7 +1,7 @@
 import { claimhub, launchpad, novaswap, orbityield } from "@baret/content";
 // By file, not through the @baret/guard barrel: this module imports types
 // only, so zod stays out of the wallet's first chunk.
-import { BALANCED_POLICY } from "../../../../packages/guard/src/policy-templates.js";
+import { BALANCED_POLICY } from "../../../guard/src/policy-templates.js";
 import type {
   ActivityItem,
   AgentPayment,

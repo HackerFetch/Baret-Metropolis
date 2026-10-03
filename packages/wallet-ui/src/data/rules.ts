@@ -1,11 +1,8 @@
 import type { CheckFinding } from "@baret/web-ui/lib/check-types";
 // By file, not through the @baret/guard barrel: these modules import types
 // only, so zod stays out of the wallet's first chunk.
-import { FINDING_SPECS } from "../../../../packages/guard/src/findings.js";
-import {
-  POLICY_TEMPLATES,
-  type PolicyTemplateName,
-} from "../../../../packages/guard/src/policy-templates.js";
+import { FINDING_SPECS } from "../../../guard/src/findings.js";
+import { POLICY_TEMPLATES, type PolicyTemplateName } from "../../../guard/src/policy-templates.js";
 import type { GuardPolicy, GuardPolicyField } from "./types.js";
 
 /**

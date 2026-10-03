@@ -2,14 +2,14 @@ import { common, walletFrame } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { Button, Mark, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Brand } from "@baret/wallet-ui/components/Brand";
+import { useWallet } from "@baret/wallet-ui/data/store";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
 import { Menu, X } from "lucide-react";
 import { type JSX, useEffect, useId, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
-import { Brand } from "../components/Brand.js";
 import { SampleNotice } from "../components/SampleNotice.js";
-import { useWallet } from "../data/store.js";
 import { routes } from "../routes.js";
 
 const NAV = navRoutes(routes, "app");

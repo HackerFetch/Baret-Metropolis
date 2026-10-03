@@ -1,15 +1,15 @@
 import { common, receive, walletFrame } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Block, Problem } from "@baret/wallet-ui/components/Block";
+import { Qr } from "@baret/wallet-ui/components/Qr";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import { groups } from "@baret/wallet-ui/lib/address";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
 import { useState } from "react";
 import { WALLET_ART } from "../assets.js";
-import { Block, Problem } from "../components/Block.js";
-import { Qr } from "../components/Qr.js";
-import { Screen } from "../components/Screen.js";
-import { useWallet } from "../data/store.js";
-import { groups } from "../lib/address.js";
 
 /**
  * Receive: the address as a QR code and as text, in four-character groups so

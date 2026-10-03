@@ -1,20 +1,20 @@
 import { common, history, policy, sign } from "@baret/content";
 import { Button, ChangeRow, truncateAddress, VerdictTag } from "@baret/ui";
+import { ActivityRow } from "@baret/wallet-ui/components/ActivityRow";
+import { Block, Empty, Rows } from "@baret/wallet-ui/components/Block";
+import { Findings } from "@baret/wallet-ui/components/Findings";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { type FilterId, matches, toCsv } from "@baret/wallet-ui/data/activity";
+import { amount } from "@baret/wallet-ui/data/format";
+import { decide } from "@baret/wallet-ui/data/rules";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import type { ActivityItem, GuardPolicy } from "@baret/wallet-ui/data/types";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId, useState } from "react";
 import { WALLET_ART } from "../assets.js";
-import { ActivityRow } from "../components/ActivityRow.js";
-import { Block, Empty, Rows } from "../components/Block.js";
-import { Findings } from "../components/Findings.js";
-import { Screen } from "../components/Screen.js";
-import { type FilterId, matches, toCsv } from "../data/activity.js";
-import { amount } from "../data/format.js";
-import { decide } from "../data/rules.js";
-import { useWallet } from "../data/store.js";
-import type { ActivityItem, GuardPolicy } from "../data/types.js";
 
 /**
  * Activity: every verdict, including requests the reader declined and the

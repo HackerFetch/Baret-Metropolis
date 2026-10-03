@@ -6,13 +6,10 @@ import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useEffect, useId, useState } from "react";
-import { Link } from "react-router";
 import { Findings } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
-import { useWallet } from "../data/store.js";
 import type { ActivityItem, SignRequest as Request } from "../data/types.js";
-import { routes } from "../routes.js";
 import { HoldButton } from "./HoldButton.js";
 import {
   actionParts,
@@ -51,6 +48,15 @@ type Phase =
 
 /** The sample confirmation, as a block number. */
 const SAMPLE_BLOCK = "48212045";
+
+/** The compact decision row: two columns, except Blocked, whose override sits under Decline. */
+function compactGrid(verdict: Request["verdict"]): string {
+  return verdict === "blocked" ? "grid gap-2" : "grid grid-cols-2 gap-2";
+}
+
+/** The rules link's look, handed to whichever surface draws the link. */
+const RULES_LINK =
+  "w-max text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
 
 function Section({
   title,
@@ -132,23 +138,46 @@ function Result({ outcome, onAgain }: { outcome: Outcome; onAgain?: () => void }
 
 export function SignRequest({
   request,
+  onLog,
   onDone,
   onAgain,
   onDecline,
-  onLog,
+  passkey = false,
+  editRules,
+  notice,
+  verdictArt,
+  footnote,
+  framed = true,
+  compact = false,
 }: {
   request: Request;
+  /** Writes the outcome to the account's log (Send also moves the balances). */
+  onLog: (item: ActivityItem) => void;
   /** Called once with the outcome, after it is logged. */
   onDone?: (outcome: Outcome) => void;
   /** Shown on the result: back to the form or the sample picker. */
   onAgain?: () => void;
   /** Decline without a result: the account's own transfer goes back to its form. */
   onDecline?: () => void;
-  /** Writes the outcome somewhere else than the plain log (Send also moves the balances). */
-  onLog?: (item: ActivityItem) => void;
+  /** The wallet asks for the passkey before every signature when its setting says so. */
+  passkey?: boolean;
+  /**
+   * The way to the rules, under the rules that fired. The wallet links its
+   * own page; the extension opens its options page. Left out, no link.
+   */
+  editRules?: (label: string, className: string) => ReactNode;
+  /** Under the header: what the surface adds, such as a first request from a site. */
+  notice?: ReactNode;
+  /** Beside the verdict once the check is in: the extension's tag for that verdict. */
+  verdictArt?: ReactNode;
+  /** The last line of the footer, such as the extension's window note. */
+  footnote?: ReactNode;
+  /** False inside a window that is already the frame (the extension popup). */
+  framed?: boolean;
+  /** The 360 px popup: the decision pinned at the foot, smaller buttons. */
+  compact?: boolean;
 }): JSX.Element {
   const reduce = useReduce();
-  const { state, dispatch } = useWallet();
   const titleId = useId();
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [stillDown, setStillDown] = useState(false);
@@ -160,9 +189,7 @@ export function SignRequest({
       onDecline();
       return;
     }
-    const item = logFor(request, outcome, new Date().toISOString(), SAMPLE_BLOCK);
-    if (onLog) onLog(item);
-    else dispatch({ type: "log", item });
+    onLog(logFor(request, outcome, new Date().toISOString(), SAMPLE_BLOCK));
     setPhase({ kind: "result", outcome });
     setSaid(sign.result[outcome].title);
     onDone?.(outcome);
@@ -222,11 +249,16 @@ export function SignRequest({
   function startSigning(outcome: Outcome): void {
     setPhase({
       kind: "signing",
-      step: state.settings.passkeyEverySignature ? "passkey" : "signing",
+      step: passkey ? "passkey" : "signing",
       outcome,
     });
   }
 
+  const frame = framed ? "border border-[color:var(--rule-strong)] bg-[color:var(--surface)]" : "";
+  // Compact (the popup): the decision stays pinned at the foot of the window,
+  // two buttons side by side; Blocked keeps Decline wide and the override small.
+  const decisionSize = compact ? "md" : "lg";
+  const decisionGrid = compact ? compactGrid(request.verdict) : "grid gap-3 sm:grid-cols-2";
   const checking = phase.kind === "checking";
   const blocked = request.verdict === "blocked";
   const unreachable = request.verdict === "unreachable";
@@ -234,10 +266,7 @@ export function SignRequest({
 
   if (phase.kind === "result") {
     return (
-      <article
-        aria-labelledby={titleId}
-        className="border border-[color:var(--rule-strong)] bg-[color:var(--surface)]"
-      >
+      <article aria-labelledby={titleId} className={frame}>
         <h1 id={titleId} className="sr-only">
           {sign.header.title}
         </h1>
@@ -250,10 +279,7 @@ export function SignRequest({
   }
 
   return (
-    <article
-      aria-labelledby={titleId}
-      className="border border-[color:var(--rule-strong)] bg-[color:var(--surface)]"
-    >
+    <article aria-labelledby={titleId} className={frame}>
       <p role="status" className="sr-only">
         {said}
       </p>
@@ -280,6 +306,10 @@ export function SignRequest({
         ) : null}
       </header>
 
+      {notice ? (
+        <div className="border-t border-[color:var(--rule)] px-5 py-5 md:px-6">{notice}</div>
+      ) : null}
+
       {request.origin && request.claim ? (
         <Section title={fill(sign.claim.label, { origin: request.origin })}>
           <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
@@ -293,7 +323,14 @@ export function SignRequest({
       ) : null}
 
       <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
-        <Verdict request={request} checking={checking} />
+        {verdictArt && !checking ? (
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+            <Verdict request={request} checking={checking} />
+            {verdictArt}
+          </div>
+        ) : (
+          <Verdict request={request} checking={checking} />
+        )}
         {!checking && !unreachable ? (
           <div className="grid gap-1 border-t border-[color:var(--rule)] pt-3 text-sm">
             <p>
@@ -399,14 +436,7 @@ export function SignRequest({
                   ))}
                 </ul>
               )}
-              {rows.length > 0 ? (
-                <Link
-                  to={routes.policies.path}
-                  className="w-max text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4"
-                >
-                  {sign.rules.edit}
-                </Link>
-              ) : null}
+              {rows.length > 0 && editRules ? editRules(sign.rules.edit, RULES_LINK) : null}
             </Section>
           ) : null}
 
@@ -467,7 +497,13 @@ export function SignRequest({
         </>
       ) : null}
 
-      <footer className="grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6">
+      <footer
+        className={
+          compact
+            ? "sticky bottom-0 z-10 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-4 pb-5"
+            : "grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6"
+        }
+      >
         {phase.kind === "signing" ? (
           <p className="font-display text-xl font-extrabold uppercase text-[color:var(--fg)]">
             {phase.step === "passkey"
@@ -502,13 +538,13 @@ export function SignRequest({
         ) : (
           <>
             {blocked ? <p className={T.small}>{sign.verdict.blocked.noSign}</p> : null}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className={decisionGrid}>
               {request.verdict === "safe" || request.verdict === "caution" ? (
                 <>
                   <Button
                     type="button"
                     variant="ghost"
-                    size="lg"
+                    size={decisionSize}
                     disabled={checking}
                     onClick={() => finish("declined")}
                   >
@@ -517,7 +553,7 @@ export function SignRequest({
                   <Button
                     type="button"
                     variant="primary"
-                    size="lg"
+                    size={decisionSize}
                     disabled={checking}
                     onClick={() => startSigning("sent")}
                   >
@@ -529,16 +565,17 @@ export function SignRequest({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="lg"
+                    size={compact ? "sm" : decisionSize}
                     disabled={checking}
                     onClick={() => setPhase({ kind: "override" })}
+                    {...(compact ? { className: "order-last justify-self-start" } : {})}
                   >
                     {sign.verdict.blocked.secondary}
                   </Button>
                   <Button
                     type="button"
                     variant="primary"
-                    size="lg"
+                    size={decisionSize}
                     disabled={checking}
                     onClick={() => finish("declined")}
                   >
@@ -550,7 +587,7 @@ export function SignRequest({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="lg"
+                    size={decisionSize}
                     disabled={checking}
                     onClick={() => finish("declined")}
                   >
@@ -559,7 +596,7 @@ export function SignRequest({
                   <Button
                     type="button"
                     variant="primary"
-                    size="lg"
+                    size={decisionSize}
                     disabled={checking || phase.kind === "retrying"}
                     onClick={() => {
                       setPhase({ kind: "retrying" });
@@ -592,9 +629,10 @@ export function SignRequest({
             <p className={`font-mono text-sm text-[color:var(--fg)] ${T.num}`} aria-hidden="true">
               {fill(sign.countdown.label, { seconds: String(left) })}
             </p>
-            <p className={T.small}>{sign.countdown.note}</p>
+            <p className={compact ? "sr-only" : T.small}>{sign.countdown.note}</p>
           </div>
         ) : null}
+        {footnote}
       </footer>
     </article>
   );

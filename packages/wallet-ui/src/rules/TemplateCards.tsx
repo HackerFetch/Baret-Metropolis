@@ -1,6 +1,6 @@
 import { policies, policy } from "@baret/content";
 import { type JSX, useId } from "react";
-import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-templates.js";
+import type { PolicyTemplateName } from "../../../guard/src/policy-templates.js";
 import { TEMPLATE_NAMES } from "../data/rules.js";
 
 /**

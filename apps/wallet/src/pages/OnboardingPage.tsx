@@ -1,6 +1,10 @@
 import { common, onboarding, walletFrame } from "@baret/content";
 import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Brand } from "@baret/wallet-ui/components/Brand";
+import { fromTemplate } from "@baret/wallet-ui/data/rules";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
@@ -13,12 +17,8 @@ import { useNavigate } from "react-router";
 import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-templates.js";
 import type { ImgAsset } from "../assets.js";
 import { WALLET_ART } from "../assets.js";
-import { Brand } from "../components/Brand.js";
 import { SampleNotice } from "../components/SampleNotice.js";
-import { fromTemplate } from "../data/rules.js";
-import { useWallet } from "../data/store.js";
 import { routes } from "../routes.js";
-import { TemplateCards } from "../rules/TemplateCards.js";
 
 /**
  * Setup, full screen, one step at a time: welcome, passkey, funds, rules,

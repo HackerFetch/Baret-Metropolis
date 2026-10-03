@@ -4,7 +4,7 @@ import type {
   CheckFinding,
   Verdict,
 } from "@baret/web-ui/lib/check-types";
-import type { GuardPolicy, GuardPolicyField } from "../../../../packages/guard/src/policy.js";
+import type { GuardPolicy, GuardPolicyField } from "../../../guard/src/policy.js";
 
 /**
  * The shapes the wallet's screens read. Today every one is filled from

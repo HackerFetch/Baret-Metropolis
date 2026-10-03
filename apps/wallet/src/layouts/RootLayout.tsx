@@ -1,10 +1,10 @@
 import { common, walletFrame } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { WalletProvider } from "@baret/wallet-ui/data/store";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
 import { T } from "@baret/web-ui/lib/type";
 import { Link, Outlet, ScrollRestoration, useLocation, useRouteError } from "react-router";
-import { WalletProvider } from "../data/store.js";
 import { routes } from "../routes.js";
 
 /**
