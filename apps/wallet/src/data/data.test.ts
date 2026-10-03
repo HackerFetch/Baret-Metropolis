@@ -105,8 +105,8 @@ describe("the wallet store", () => {
       at,
     });
     expect(next.ruleChanges.map((c) => [c.field, c.previous, c.value])).toEqual([
-      ["blockDelegatecall", "false", "true"],
-      ["maxLossPercent", "50", "25"],
+      ["blockDelegatecall", false, true],
+      ["maxLossPercent", 50, 25],
     ]);
   });
 

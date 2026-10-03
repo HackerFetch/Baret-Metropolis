@@ -87,15 +87,18 @@ export function Problem({
   body,
   action,
 }: {
-  title: string;
+  /** Left out when the body says it all (a field's name is the title then). */
+  title?: string;
   body: string;
   action?: ReactNode;
 }): JSX.Element {
   return (
     <div role="alert" className="grid gap-2 border-l-4 border-[color:var(--fg)] py-1 pl-4">
-      <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
-        {title}
-      </p>
+      {title ? (
+        <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
+          {title}
+        </p>
+      ) : null}
       <p className={`${T.body} max-w-[60ch]`}>{body}</p>
       {action ? <div className="mt-1 flex">{action}</div> : null}
     </div>

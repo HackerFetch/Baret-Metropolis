@@ -25,6 +25,14 @@ export const policies = {
     },
   },
 
+  /** How a rule's value reads in the editor and in the history of changes. */
+  values: {
+    on: "On",
+    off: "Off",
+    /** A threshold left empty: the rule is off. */
+    none: "No limit",
+  },
+
   actions: {
     useTemplate: "Start from this template",
     edit: "Change a rule",

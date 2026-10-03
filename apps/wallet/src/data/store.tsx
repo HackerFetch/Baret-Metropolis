@@ -34,8 +34,9 @@ import type {
 
 export interface RuleChange {
   readonly field: GuardPolicyField;
-  readonly previous: string;
-  readonly value: string;
+  /** The raw values; the rules page writes them out in words. */
+  readonly previous: GuardPolicy[GuardPolicyField];
+  readonly value: GuardPolicy[GuardPolicyField];
   readonly at: string;
 }
 
@@ -93,12 +94,6 @@ export function initialState(name: string): WalletState {
     settings: { lockAfterInactivity: true, passkeyEverySignature: false },
     locked: false,
   };
-}
-
-/** A rule's value as one short string, for the history of changes. */
-export function show(value: GuardPolicy[GuardPolicyField]): string {
-  if (Array.isArray(value)) return value.length === 0 ? "[]" : value.join(", ");
-  return value === null ? "off" : String(value);
 }
 
 function vaultAmount(vault: Vault, text: string, sign: 1n | -1n): Vault {
@@ -167,8 +162,8 @@ export function reduce(
     case "saveRules": {
       const changes = diffFields(state.policy, action.policy).map((field) => ({
         field,
-        previous: show(state.policy[field]),
-        value: show(action.policy[field]),
+        previous: state.policy[field],
+        value: action.policy[field],
         at: action.at,
       }));
       return {
