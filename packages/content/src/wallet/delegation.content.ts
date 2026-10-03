@@ -5,14 +5,16 @@
  * Order: explanation, model, steps, vault, merchant list, agent key, revoke,
  * activity.
  *
- * Facts this copy is held to (docs/CONTRACTS.md section 2):
- *  - The vault enforces two caps per merchant on-chain: per payment and per
- *    rolling 24 hours. The contract has no hourly cap and no expiry, so this
- *    page offers neither.
+ * Facts this copy is held to (docs/CONTRACTS.md section 2, D-013):
+ *  - The vault enforces caps per merchant on-chain: per payment, per rolling
+ *    24 hours, and per rolling hour when one is set (0 means no hourly cap).
+ *    The contract has no expiry, so this page offers none.
  *  - The agent key can only call pay. A payment over a cap, to a merchant off
- *    the list, or from a revoked key reverts. Nothing asks the owner.
- *  - The contract has no pause. Setting a merchant's caps to zero is the pause.
- *  - A withdrawal cannot take what active merchants reserve.
+ *    the list, to a paused merchant, or from a revoked key reverts. Nothing
+ *    asks the owner.
+ *  - Pausing a merchant is real (setMerchantPaused) and keeps its caps.
+ *  - The reserve is the sum of the daily caps of every merchant not removed,
+ *    paused ones included. A withdrawal cannot take it.
  */
 
 export const delegation = {
@@ -41,7 +43,7 @@ export const delegation = {
   model: {
     title: "Who can do what",
     rows: [
-      { label: "Your passkey", value: "Everything: deposit, withdraw, set caps, revoke." },
+      { label: "Your passkey", value: "Everything: deposit, withdraw, set caps, pause, revoke." },
       {
         label: "The agent key",
         value: "One thing: pay merchants on your list, inside their caps.",
@@ -66,7 +68,7 @@ export const delegation = {
       {
         short: "List",
         title: "Add merchants and their caps",
-        body: "For each merchant, set the most per payment and the most per rolling 24 hours.",
+        body: "For each merchant, set the most per payment and per rolling 24 hours, and an hourly cap if you want one.",
       },
       {
         short: "Create",
@@ -84,12 +86,14 @@ export const delegation = {
   vault: {
     title: "Vault",
     balance: "In the vault",
-    reserved: "Reserved by active merchants",
+    reserved: "Reserved by your merchants",
     free: "Free to withdraw",
     deposit: { label: "Deposit" },
     withdraw: { label: "Withdraw" },
+    /** The amount field that deposit and withdraw share. */
+    amount: { label: "Amount" },
     reservedNote:
-      "{amount} {asset} is reserved for your active merchants. Lower their caps or remove them to withdraw it.",
+      "{amount} {asset} is reserved for the merchants on your list, paused ones included. Lower their daily caps or remove them to withdraw it.",
     empty: {
       title: "The vault is empty",
       body: "Deposit a budget to let an agent pay. Until then, it can't spend anything.",
@@ -103,15 +107,18 @@ export const delegation = {
     columns: {
       merchant: "Merchant",
       perPayment: "Per payment",
+      perHour: "Per hour",
       perDay: "Per 24 hours",
       spent: "Spent, last 24 hours",
       status: "Status",
     },
     status: {
       active: "Active",
-      paused: "Paused, caps at zero",
+      paused: "Paused",
       removed: "Removed",
     },
+    /** The verbs on each merchant's row. */
+    actions: { pause: "Pause", resume: "Resume", remove: "Remove" },
     empty: {
       title: "No merchants yet",
       body: "The agent can only pay merchants on this list. Add the first one.",
@@ -120,6 +127,7 @@ export const delegation = {
     form: {
       address: { label: "Merchant address", hint: "The Monad address that receives the payments." },
       perPayment: { label: "Most per payment", hint: "A single payment above this reverts." },
+      perHour: { label: "Most per hour", hint: "Optional. Leave it empty for no hourly limit." },
       perDay: { label: "Most per 24 hours", hint: "A rolling 24 hours, not a calendar day." },
     },
 
@@ -130,6 +138,7 @@ export const delegation = {
       rows: {
         merchant: "Paid to",
         perPayment: "Most per payment",
+        perHour: "Most per rolling hour",
         perDay: "Most per rolling 24 hours",
         from: "Paid from",
         fromValue: "Your vault, not your wallet",
@@ -145,10 +154,12 @@ export const delegation = {
       points: [
         "A payment to anyone who is not on this list.",
         "A payment above that merchant's cap per payment.",
+        "A payment that takes the last hour past the hourly cap, when you set one.",
         "A payment that takes the last 24 hours past the daily cap.",
+        "A payment to a merchant you paused.",
         "Any payment from a revoked agent key.",
       ],
-      note: "Both caps are hard limits. A payment over either one reverts, nothing is paid, and the agent can't ask for more.",
+      note: "Every cap is a hard limit. A payment over any of them reverts, nothing is paid, and the agent can't ask for more.",
     },
   },
 
@@ -191,12 +202,15 @@ export const delegation = {
         label: "Revoke the agent key",
         hint: "The vault refuses every payment from this key. Create a new key to start again.",
       },
-      { label: "Pause a merchant", hint: "Sets its caps to zero. Raise them again to resume." },
+      {
+        label: "Pause a merchant",
+        hint: "Stops its payments and keeps its caps. Resume it at any time.",
+      },
       {
         label: "Remove a merchant",
         hint: "Takes one merchant off the list. The others keep working.",
       },
-      { label: "Withdraw", hint: "Takes back whatever no active merchant reserves." },
+      { label: "Withdraw", hint: "Takes back whatever your merchants do not reserve." },
     ],
     confirm: {
       title: "Revoke the agent key?",
@@ -230,7 +244,7 @@ export const delegation = {
     },
     reserved: {
       title: "That amount is reserved",
-      body: "Active merchants reserve {amount} {asset}. Lower their caps or remove them, then withdraw.",
+      body: "Your merchants reserve {amount} {asset}. Lower their daily caps or remove them, then withdraw.",
     },
   },
 } as const;
