@@ -1,11 +1,11 @@
 import { novaswap } from "@baret/content";
+import { NOVASWAP } from "@baret/demo";
 import { Button } from "@baret/ui";
 import type { JSX } from "react";
 import { FRAME, GRID } from "../../shared/layout.js";
 import { Reveal } from "../../shared/Reveal.js";
 import { TextReveal } from "../../shared/TextReveal.js";
 import { T } from "../../shared/type.js";
-import { SAMPLE } from "./sample.js";
 
 /**
  * NovaSwap's Pools, Stats and Docs pages. Same grammar as the swap page: a
@@ -182,7 +182,7 @@ export function DocsPage(): JSX.Element {
           <div className="grid gap-3 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-6">
             <p className={T.label}>{docs.contract.label}</p>
             <code className="block break-all font-mono text-base text-[color:var(--fg)]">
-              {SAMPLE.router}
+              {NOVASWAP.router}
             </code>
             <p className={T.small}>{docs.contract.note}</p>
           </div>

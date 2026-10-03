@@ -3,7 +3,7 @@ import { ChangeRow, VerdictTag } from "@baret/ui";
 import type { JSX, ReactNode } from "react";
 import { T } from "../../../shared/type.js";
 import { fill } from "../../../shared/util.js";
-import type { SampleChange, SampleFinding, SampleVerdict } from "../types.js";
+import type { CheckApproval, CheckChange, CheckFinding, Verdict } from "../types.js";
 
 /**
  * The building blocks of the Baret panel. Every label comes from
@@ -34,7 +34,7 @@ export function ExpectedVerdict({
   verdict,
   body,
 }: {
-  verdict: SampleVerdict;
+  verdict: Verdict;
   body: string;
 }): JSX.Element {
   return (
@@ -44,6 +44,29 @@ export function ExpectedVerdict({
       </div>
       <p className={T.body}>{body}</p>
       <p className={T.small}>{panel.expectedNote}</p>
+    </PanelBlock>
+  );
+}
+
+/**
+ * Baret's own answer, with one line comparing it to the expected verdict.
+ * Without `expected` (the check did not finish) the line is left out.
+ */
+export function LiveVerdict({
+  verdict,
+  expected,
+}: {
+  verdict: Verdict;
+  expected?: Verdict;
+}): JSX.Element {
+  return (
+    <PanelBlock title={panel.live}>
+      <div className="flex">
+        <VerdictTag kind={verdict} label={common.verdicts[verdict].label} />
+      </div>
+      {expected ? (
+        <p className={T.small}>{verdict === expected ? panel.match : panel.mismatch}</p>
+      ) : null}
     </PanelBlock>
   );
 }
@@ -61,8 +84,17 @@ export function TheAsk({ asks, call }: { asks: string; call: string }): JSX.Elem
   );
 }
 
-/** Findings rendered from their codes: title, the filled sentence, the fix. */
-export function FindingList({ items }: { items: readonly SampleFinding[] }): JSX.Element {
+/**
+ * True when every {placeholder} in a sentence has a non-empty value. The
+ * server leaves a value empty when it does not apply (an approval that
+ * spends nothing has no `amount`), and then the sentence is left out.
+ */
+export function hasValues(template: string, values: Readonly<Record<string, string>>): boolean {
+  return [...template.matchAll(/\{(\w+)\}/g)].every(([, key]) => Boolean(key && values[key]));
+}
+
+/** Findings rendered from their codes: title, the filled sentence, the fix when it applies. */
+export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.Element {
   return (
     <PanelBlock title={panel.findings}>
       {items.length === 0 ? (
@@ -78,7 +110,9 @@ export function FindingList({ items }: { items: readonly SampleFinding[] }): JSX
               >
                 <p className={`${T.h3} text-[color:var(--fg)]`}>{copy.title}</p>
                 <p className={T.body}>{fill(copy.body, item.values)}</p>
-                {"fix" in copy && copy.fix ? <p className={T.small}>{copy.fix}</p> : null}
+                {"fix" in copy && copy.fix && hasValues(copy.fix, item.values) ? (
+                  <p className={T.small}>{fill(copy.fix, item.values)}</p>
+                ) : null}
               </li>
             );
           })}
@@ -88,11 +122,24 @@ export function FindingList({ items }: { items: readonly SampleFinding[] }): JSX
   );
 }
 
-/** "What changes": what leaves and what arrives, in the wallet's own words. */
-export function ChangeList({ rows }: { rows: readonly SampleChange[] }): JSX.Element {
+/**
+ * "What changes": what leaves, what arrives and what the request allows, in
+ * the wallet's own words. An allowance moves nothing yet, so it gets its own
+ * row with the spender written out in full.
+ */
+export function ChangeList({
+  rows,
+  approvals,
+}: {
+  rows: readonly CheckChange[];
+  approvals: readonly CheckApproval[];
+}): JSX.Element {
   return (
     <PanelBlock title={panel.changes}>
       <div className="grid gap-2">
+        {rows.length === 0 && approvals.length === 0 ? (
+          <p className={T.body}>{sign.changes.none}</p>
+        ) : null}
         {/* ChangeRow's own note is a one-word qualifier; a sample's note is a
             sentence, so it goes on its own line where it can wrap. */}
         {rows.map((row) => (
@@ -104,6 +151,16 @@ export function ChangeList({ rows }: { rows: readonly SampleChange[] }): JSX.Ele
               direction={row.direction}
             />
             {row.note ? <p className="text-sm text-[color:var(--caution)]">{row.note}</p> : null}
+          </div>
+        ))}
+        {approvals.map((item) => (
+          <div key={`${item.unit}-${item.spender}`}>
+            <ChangeRow
+              label={sign.changes.allow}
+              value={item.unlimited || item.amount === null ? sign.changes.unlimited : item.amount}
+              unit={item.unit}
+            />
+            <p className="font-mono text-sm text-[color:var(--fg)]">{item.spender}</p>
           </div>
         ))}
       </div>

@@ -222,6 +222,13 @@ export const hub = {
       mismatch:
         "The live verdict differs from the expected one. Your rules may differ from Balanced, or a check may not have finished.",
       lesson: "Take this with you",
+      /** Under the title when the answer came from Baret's server. */
+      liveNote: "Baret's answer from its server, for this exact request on Monad testnet.",
+      /** When the check did not finish: no answer means Blocked. */
+      failed: {
+        title: "The check did not finish",
+        body: "Baret could not reach its server, or the answer did not arrive in time. With no answer, the verdict is Blocked. Do not sign.",
+      },
     },
 
     empty: {

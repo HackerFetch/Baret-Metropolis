@@ -182,6 +182,19 @@ export interface ScenarioSite {
     footer: string;
     /** The fake site's other pages, one per nav item after the first. */
     pages?: SitePages;
+    /**
+     * The card in the attack version, when it asks for something other than
+     * the honest card (NovaSwap: a dUSDC sale behind "enable trading"), and
+     * the switch at the bottom of the card that turns it on.
+     */
+    attack?: {
+      switch: { label: string; on: string; off: string };
+      input: string;
+      rows: readonly { label: string; value: string }[];
+      cta: string;
+      note: string;
+      errors: { empty: string; tooHigh: string };
+    };
   };
   analysis: {
     /** The two versions. Same page, same button, a different transaction. */
