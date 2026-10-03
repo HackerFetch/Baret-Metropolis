@@ -1,18 +1,16 @@
 import { hub, novaswap } from "@baret/content";
-import { Reveal } from "@baret/web-ui/components/Reveal";
-import { TextReveal } from "@baret/web-ui/components/TextReveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
-import { FRAME, GRID } from "@baret/web-ui/lib/layout";
-import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
-import { useSearchParams } from "react-router";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { DemoBar } from "../kit/DemoBar.js";
+import { SiteHero } from "../kit/site/Page.js";
+import { Faq, Features, SiteFooter, Stats } from "../kit/site/Sections.js";
+import { SiteHeader } from "../kit/site/SiteHeader.js";
+import { useSiteView } from "../kit/site/useSiteView.js";
 import { useCheck } from "../kit/useCheck.js";
 import { DocsPage, PoolsPage, StatsPage } from "./Pages.js";
-import { Faq, Features, SiteFooter, Stats } from "./Sections.js";
-import { SiteHeader, VIEWS, type View } from "./SiteHeader.js";
+import { NovaGlyph, VIEWS } from "./SiteHeader.js";
 import { SwapCard } from "./SwapCard.js";
 import { ART, balanceOf, parseAmount, SAMPLE } from "./sample.js";
 import { contractOf, DEMO_FROM, sourceFor } from "./source.js";
@@ -48,14 +46,7 @@ export function NovaSwapSite(): JSX.Element {
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
   // The page lives in ?view= so Back works and a page can be linked.
-  const [params, setParams] = useSearchParams();
-  const raw = params.get("view");
-  const view: View = VIEWS.find((v) => v === raw) ?? "swap";
-
-  function go(next: View): void {
-    setParams(next === "swap" ? {} : { view: next });
-    window.scrollTo({ top: 0 });
-  }
+  const { view, go } = useSiteView(VIEWS);
 
   /** The two versions spend different tokens, so each starts from its own amount. */
   function setMode(next: DemoMode): void {
@@ -104,11 +95,16 @@ export function NovaSwapSite(): JSX.Element {
         body={analysis.modes[mode].body}
       />
       <SiteHeader
+        brand={site.brand}
+        glyph={<NovaGlyph />}
+        nav={site.nav}
+        views={VIEWS}
+        view={view}
+        onView={go}
+        connect={site.connect}
         connected={connected}
         wallet={FROM}
         onConnect={() => setConnected(true)}
-        view={view}
-        onView={go}
       />
 
       <main key={view}>
@@ -117,42 +113,33 @@ export function NovaSwapSite(): JSX.Element {
         {view === "docs" ? <DocsPage /> : null}
         {view === "swap" ? (
           <>
-            <section className={`${FRAME} py-12 md:py-16 lg:py-24`}>
-              <div className={`${GRID} gap-y-12 lg:items-center`}>
-                <div className="col-span-4 grid gap-6 md:col-span-8 lg:col-span-6">
-                  <p className={T.label}>{site.hero.badge}</p>
-                  <TextReveal
-                    as="h1"
-                    text={site.hero.title}
-                    immediate
-                    className="font-display text-[clamp(2.75rem,1.5rem+4vw,5rem)] font-extrabold uppercase leading-[0.92] tracking-[-0.005em] text-[color:var(--fg)]"
-                  />
-                  <p className={`${T.lead} max-w-[46ch]`}>{site.hero.body}</p>
-                </div>
-                <Reveal className="col-span-4 md:col-span-8 lg:col-span-5 lg:col-start-8">
-                  <SwapCard
-                    mode={mode}
-                    onMode={setMode}
-                    amount={amount}
-                    onAmount={(value) => {
-                      setAmount(value);
-                      if (error) setError(null);
-                    }}
-                    error={error}
-                    onReview={review}
-                  />
-                </Reveal>
-              </div>
-            </section>
+            <SiteHero
+              badge={site.hero.badge}
+              title={site.hero.title}
+              body={site.hero.body}
+              card={
+                <SwapCard
+                  mode={mode}
+                  onMode={setMode}
+                  amount={amount}
+                  onAmount={(value) => {
+                    setAmount(value);
+                    if (error) setError(null);
+                  }}
+                  error={error}
+                  onReview={review}
+                />
+              }
+            />
 
-            <Stats />
-            <Features />
-            <Faq />
+            <Stats items={site.stats} />
+            <Features image={ART.routes} blocks={site.sections} />
+            <Faq items={site.faq} name="novaswap-faq" />
           </>
         ) : null}
       </main>
 
-      <SiteFooter />
+      <SiteFooter note={site.footer} hostname={site.hostname} />
 
       <AnalysisPanel
         open={open}
