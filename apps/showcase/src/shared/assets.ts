@@ -111,7 +111,9 @@ export const IMG = {
 
 /**
  * The demo dApps' pictures, by site, under their canonical file names
- * (public/assets/showcase). Each site has a hero and the two versions.
+ * (public/assets/showcase). Each site has a hero and the two versions
+ * (NovaSwap's hero slot is its route picture). Checked one by one: the
+ * ClaimHub danger picture (s-15) carries a green tag where orange was meant.
  */
 export const SITE_ART = {
   novaswap: {
@@ -119,4 +121,420 @@ export const SITE_ART = {
     safe: { src: "/assets/showcase/s-05.webp", width: 1536, height: 1024, ground: "#cfd0cb" },
     danger: { src: "/assets/showcase/s-06.webp", width: 1536, height: 953, ground: "#f4f1e7" },
   },
+  scrybe: {
+    hero: {
+      src: "/assets/showcase/s-01.webp",
+      width: 1536,
+      height: 864,
+      ground: "#080715",
+      srcSet: widths("/assets/showcase/s-01.webp", 1536, [480, 768]),
+    },
+    safe: {
+      src: "/assets/showcase/s-02.webp",
+      width: 1536,
+      height: 864,
+      ground: "#1D1C1C",
+      srcSet: widths("/assets/showcase/s-02.webp", 1536, [480, 768]),
+    },
+    danger: {
+      src: "/assets/showcase/s-03.webp",
+      width: 1536,
+      height: 864,
+      ground: "#161617",
+      srcSet: widths("/assets/showcase/s-03.webp", 1536, [480, 768]),
+    },
+  },
+  pixeldrop: {
+    hero: {
+      src: "/assets/showcase/s-07.webp",
+      width: 1536,
+      height: 864,
+      ground: "#0D0B19",
+      srcSet: widths("/assets/showcase/s-07.webp", 1536, [480, 768]),
+    },
+    safe: {
+      src: "/assets/showcase/s-08.webp",
+      width: 990,
+      height: 1024,
+      ground: "#463943",
+      srcSet: widths("/assets/showcase/s-08.webp", 990, [480, 768]),
+    },
+    danger: {
+      src: "/assets/showcase/s-09.webp",
+      width: 1254,
+      height: 1254,
+      ground: "#CDCAC3",
+      srcSet: widths("/assets/showcase/s-09.webp", 1254, [480, 768]),
+    },
+  },
+  orbityield: {
+    hero: {
+      src: "/assets/showcase/s-10.webp",
+      width: 1024,
+      height: 1536,
+      ground: "#CFCCC4",
+      srcSet: widths("/assets/showcase/s-10.webp", 1024, [480, 768]),
+    },
+    safe: {
+      src: "/assets/showcase/s-11.webp",
+      width: 1024,
+      height: 1536,
+      ground: "#CFCCC3",
+      srcSet: widths("/assets/showcase/s-11.webp", 1024, [480, 768]),
+    },
+    danger: {
+      src: "/assets/showcase/s-12.webp",
+      width: 1024,
+      height: 1536,
+      ground: "#D2CFC7",
+      srcSet: widths("/assets/showcase/s-12.webp", 1024, [480, 768]),
+    },
+  },
+  claimhub: {
+    hero: {
+      src: "/assets/showcase/s-13.webp",
+      width: 1024,
+      height: 1536,
+      ground: "#28204A",
+      srcSet: widths("/assets/showcase/s-13.webp", 1024, [480, 768]),
+    },
+    safe: {
+      src: "/assets/showcase/s-14.webp",
+      width: 1536,
+      height: 1024,
+      ground: "#E1DBD1",
+      srcSet: widths("/assets/showcase/s-14.webp", 1536, [480, 768]),
+    },
+    danger: {
+      src: "/assets/showcase/s-15.webp",
+      width: 1254,
+      height: 1254,
+      ground: "#C8C5BD",
+      srcSet: widths("/assets/showcase/s-15.webp", 1254, [480, 768]),
+    },
+  },
+  launchpad: {
+    hero: {
+      src: "/assets/showcase/s-16.webp",
+      width: 1024,
+      height: 1536,
+      ground: "#1F164F",
+      srcSet: widths("/assets/showcase/s-16.webp", 1024, [480, 768]),
+    },
+    safe: {
+      src: "/assets/showcase/s-17.webp",
+      width: 1254,
+      height: 1254,
+      ground: "#CBC7BC",
+      srcSet: widths("/assets/showcase/s-17.webp", 1254, [480, 768]),
+    },
+    danger: {
+      src: "/assets/showcase/s-18.webp",
+      width: 1254,
+      height: 1254,
+      ground: "#A3A19C",
+      srcSet: widths("/assets/showcase/s-18.webp", 1254, [480, 768]),
+    },
+  },
 } as const satisfies Record<string, Record<string, ImgAsset>>;
+
+/**
+ * /showcase, the hub. Every picture was opened and checked against its job.
+ */
+export const HUB_ART = {
+  /** Six blank tags on a wire at a day site: six sites, one trap each (FILE h-01). */
+  hero: {
+    src: "/assets/showcase/h-01.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#C9C4BB",
+    srcSet: widths("/assets/showcase/h-01.webp", 1254, [480, 768]),
+  },
+  /** A grid of squares with a few marked orange: many requests, a few flagged (FILE h-06). The filter's All six. */
+  all: {
+    src: "/assets/showcase/h-06.webp",
+    width: 1536,
+    height: 864,
+    ground: "#FBFBF8",
+    srcSet: widths("/assets/showcase/h-06.webp", 1536, [480, 768]),
+  },
+  /** Water running into a drain ringed in orange (FILE h-02). The filter's Drainers. */
+  drainer: {
+    src: "/assets/showcase/h-02.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#ABA497",
+    srcSet: widths("/assets/showcase/h-02.webp", 1254, [480, 768]),
+  },
+  /** A tag beside a floor hatch (FILE h-03). The filter's Trust traps. */
+  trap: {
+    src: "/assets/showcase/h-03.webp",
+    width: 1448,
+    height: 1086,
+    ground: "#A39C90",
+    srcSet: widths("/assets/showcase/h-03.webp", 1448, [480, 768]),
+  },
+  /** A drum counter with an orange pointer (FILE h-04). The filter's Silent agents. */
+  agent: {
+    src: "/assets/showcase/h-04.webp",
+    width: 1448,
+    height: 1086,
+    ground: "#A49E96",
+    srcSet: widths("/assets/showcase/h-04.webp", 1448, [480, 768]),
+  },
+  /** Four line-art panels in one strip: plug, press, tag, frame (FILE h-05). Cropped one panel per step. */
+  steps: { src: "/assets/showcase/h-05.webp", width: 1536, height: 864, ground: "#FCFAF8" },
+  /** Two blank tags on black: two wallets, one request (FILE l-17, drawn for the landing comparison). */
+  difference: {
+    src: "/assets/landing/l-17.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#151415",
+    srcSet: widths("/assets/landing/l-17.webp", 1536, [480, 768]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/**
+ * /docs. `cards` is keyed by the card's `file` in docs.content.ts, so a card
+ * finds its picture without an index. The d-02 set was checked one by one.
+ */
+export const DOCS_ART = {
+  /** A tower model on a drafting table, plans beside it (FILE l-33). */
+  hero: {
+    src: "/assets/landing/l-33.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#DFDCD2",
+    srcSet: widths("/assets/landing/l-33.webp", 1254, [480, 768]),
+  },
+  /** Tags on a wire at a site, one fallen to the ground (FILE l-18). */
+  limitations: {
+    src: "/assets/landing/l-18.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#B0AAA4",
+    srcSet: widths("/assets/landing/l-18.webp", 1536, [480, 768]),
+  },
+  /** A site office window at night: plans on the desk, the crane outside (FILE d-04). */
+  cta: {
+    src: "/assets/docs/d-04.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#150A0A",
+    srcSet: widths("/assets/docs/d-04.webp", 1536, [768, 1024]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/** The eleven docs cards' line drawings (FILE d-02a to d-02k), by card file. */
+export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
+  /** Vision: a hard hat from above. */
+  "docs/PROJECT_OVERVIEW.md": {
+    src: "/assets/docs/d-02a.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#F4F2EE",
+    srcSet: widths("/assets/docs/d-02a.webp", 1254, [480, 768]),
+  },
+  /** Architecture: a tower in section. */
+  "docs/ARCHITECTURE.md": {
+    src: "/assets/docs/d-02b.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#F3F2EE",
+    srcSet: widths("/assets/docs/d-02b.webp", 1024, [480, 768]),
+  },
+  /** Wallet spec: a lockbox. */
+  "docs/WALLET.md": {
+    src: "/assets/docs/d-02c.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EDEBE7",
+    srcSet: widths("/assets/docs/d-02c.webp", 1536, [480, 768]),
+  },
+  /** Frontend content: a shopfront. */
+  "docs/FRONTEND.md": {
+    src: "/assets/docs/d-02d.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EEECE8",
+    srcSet: widths("/assets/docs/d-02d.webp", 1536, [480, 768]),
+  },
+  /** Contracts: a bolted plate. */
+  "docs/CONTRACTS.md": {
+    src: "/assets/docs/d-02e.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EEECE8",
+    srcSet: widths("/assets/docs/d-02e.webp", 1536, [480, 768]),
+  },
+  /** x402 payments: a parking meter. */
+  "docs/X402_FACILITATOR.md": {
+    src: "/assets/docs/d-02f.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EFEDE9",
+    srcSet: widths("/assets/docs/d-02f.webp", 1536, [480, 768]),
+  },
+  /** Resources: a toolbox. */
+  "docs/RESOURCES.md": {
+    src: "/assets/docs/d-02g.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EEEDE9",
+    srcSet: widths("/assets/docs/d-02g.webp", 1536, [480, 768]),
+  },
+  /** Bounties and tracks: a rosette. */
+  "docs/BOUNTIES_AND_TRACKS.md": {
+    src: "/assets/docs/d-02h.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#EEECE8",
+    srcSet: widths("/assets/docs/d-02h.webp", 1024, [480, 768]),
+  },
+  /** Roadmap: a wall calendar. */
+  "docs/ROADMAP.md": {
+    src: "/assets/docs/d-02i.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#F0EEEA",
+    srcSet: widths("/assets/docs/d-02i.webp", 1536, [480, 768]),
+  },
+  /** Decision log: a rubber stamp. */
+  "docs/DECISIONS.md": {
+    src: "/assets/docs/d-02j.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#EEECE8",
+    srcSet: widths("/assets/docs/d-02j.webp", 1536, [480, 768]),
+  },
+  /** Brand: a swatch fan. */
+  "docs/BRAND.md": {
+    src: "/assets/docs/d-02k.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#EAE8E4",
+    srcSet: widths("/assets/docs/d-02k.webp", 1254, [480, 768]),
+  },
+};
+
+/**
+ * /install. `steps` follows the three steps in order: extract, open, load.
+ */
+export const INSTALL_ART = {
+  /** A hard hat on a concrete block, a tag on its strap, a day site (FILE i-01). */
+  hero: {
+    src: "/assets/install/i-01.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#D6D7D8",
+    srcSet: widths("/assets/install/i-01.webp", 1536, [768, 1024]),
+  },
+  /** A crate opened on a hard hat: extract the zip (FILE i-03). */
+  extract: {
+    src: "/assets/install/i-03.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#E6E4E1",
+    srcSet: widths("/assets/install/i-03.webp", 1536, [480, 768]),
+  },
+  /** A fence gate swung open: open the extensions page (FILE i-04). */
+  open: {
+    src: "/assets/install/i-04.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#E3E1DA",
+    srcSet: widths("/assets/install/i-04.webp", 1536, [480, 768]),
+  },
+  /** A hand hanging a hard hat on a hook rail: load it and pin it (FILE i-05). */
+  load: {
+    src: "/assets/install/i-05.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#DEDACF",
+    srcSet: widths("/assets/install/i-05.webp", 1536, [480, 768]),
+  },
+  /** Cutters taking a tag off its wire: when something goes wrong (FILE i-06). */
+  help: {
+    src: "/assets/install/i-06.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#6D6258",
+    srcSet: widths("/assets/install/i-06.webp", 1536, [480, 768]),
+  },
+  /** A blank tag on black (FILE i-02). */
+  cta: {
+    src: "/assets/install/i-02.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#1C1C1B",
+    srcSet: widths("/assets/install/i-02.webp", 1536, [480, 768]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/**
+ * /agents. The three layers in order: the check, the guarded signer, the vault.
+ */
+export const AGENTS_ART = {
+  /** Robot carts with tags rolling across a night site: agents at work (FILE a-01). */
+  hero: {
+    src: "/assets/agents/a-01.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#2F275B",
+    srcSet: widths("/assets/agents/a-01.webp", 1536, [768, 1024]),
+  },
+  /** A press drawn as a plan, a gauge on its line: measured before it acts (FILE a-05). */
+  check: {
+    src: "/assets/agents/a-05.webp",
+    width: 1536,
+    height: 1024,
+    ground: "#F1F0EC",
+    srcSet: widths("/assets/agents/a-05.webp", 1536, [480, 768]),
+  },
+  /** An open toolbox with a hard hat inside: the kit that wraps the signer (FILE a-02). */
+  signer: {
+    src: "/assets/agents/a-02.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#C9C6BC",
+    srcSet: widths("/assets/agents/a-02.webp", 1254, [480, 768]),
+  },
+  /** A covered switch with a tag: caps and the kill switch (FILE a-04). */
+  vault: {
+    src: "/assets/agents/a-04.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#CFCBC3",
+    srcSet: widths("/assets/agents/a-04.webp", 1254, [480, 768]),
+  },
+  /** A gloved hand picking one of three tags: pick a starting policy (FILE a-03). */
+  policy: {
+    src: "/assets/agents/a-03.webp",
+    width: 1254,
+    height: 1254,
+    ground: "#C9C6BC",
+    srcSet: widths("/assets/agents/a-03.webp", 1254, [480, 768]),
+  },
+  /** A tag on a closed shutter: no answer, no signature (FILE a-06). */
+  cta: {
+    src: "/assets/agents/a-06.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#2D2D2D",
+    srcSet: widths("/assets/agents/a-06.webp", 1024, [480, 768]),
+  },
+} as const satisfies Record<string, ImgAsset>;
+
+/**
+ * The not-found page.
+ */
+export const NOT_FOUND_ART = {
+  /** A site door tagged out (FILE l-29). */
+  door: {
+    src: "/assets/landing/l-29.webp",
+    width: 1024,
+    height: 1536,
+    ground: "#D7D1C4",
+    srcSet: widths("/assets/landing/l-29.webp", 1024, [480, 768]),
+  },
+} as const satisfies Record<string, ImgAsset>;
