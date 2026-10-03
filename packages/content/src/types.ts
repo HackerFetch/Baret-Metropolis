@@ -277,8 +277,8 @@ export interface ScenarioSite {
         asks: string;
         /** The function the site calls, shown in mono. */
         call: string;
-        /** `asks` and `call` for more than one item, when the card takes a quantity ({count}). */
-        many?: { asks: string; call: string };
+        /** `asks`, `call` and `expectedBody` for more than one item, when the card takes a quantity ({count}). */
+        many?: { asks: string; call: string; expectedBody: string };
         /** The verdict this version should get under the Balanced rules. */
         expected: VerdictKind | "capped";
         /** Why that verdict is expected. Framed as expected, never as found. */
