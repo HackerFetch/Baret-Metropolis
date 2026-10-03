@@ -24,6 +24,7 @@ export const history = {
 
   rows: {
     sent: "Sent {amount} {asset} to {recipient}",
+    signed: "Signed a request from {origin}",
     received: "Received {amount} {asset}",
     allowance: "Allowed {spender} to spend {amount} {asset}",
     revoke: "Revoked {spender}",
