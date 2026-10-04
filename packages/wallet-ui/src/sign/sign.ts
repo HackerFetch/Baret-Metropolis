@@ -1,5 +1,6 @@
 import { policy, sign } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
+import type { CheckFinding } from "@baret/web-ui/lib/check-types";
 import { counted, fill } from "@baret/web-ui/lib/util";
 import { amount } from "../data/format.js";
 import type { ActivityItem, SignRequest } from "../data/types.js";
@@ -86,18 +87,41 @@ export function ruleRows(request: SignRequest): { label: string; detail: string 
   }));
 }
 
-/** The one suggested fix for a blocked request. */
-export function fixFor(request: SignRequest): string {
+/** A finding's fix line, when the finding carries the values the line needs. */
+function fixLine(finding: CheckFinding): string | null {
   const { fix } = sign.verdict.blocked;
-  const unlimited = request.findings.find((f) => f.code === "ERC20_APPROVAL_UNLIMITED");
-  if (unlimited?.values.amount) {
-    return fill(fix.boundedAllowance, {
-      amount: unlimited.values.amount,
-      asset: unlimited.values.asset ?? "",
-    });
+  const { values: v } = finding;
+  switch (finding.code) {
+    case "ERC20_APPROVAL_UNLIMITED":
+      return v.amount
+        ? fill(fix.boundedAllowance, { amount: v.amount, asset: v.asset ?? "" })
+        : null;
+    case "NFT_OPERATOR_GRANTED":
+      return fix.singleItem;
+    case "POST_BALANCE_TOO_LOW":
+      return v.limit
+        ? fill(fix.keepFloor, { limit: [v.limit, v.asset].filter(Boolean).join(" ") })
+        : null;
+    default:
+      return null;
   }
-  if (request.findings.some((f) => f.code === "NFT_OPERATOR_GRANTED")) return fix.singleItem;
-  return fix.fallback;
+}
+
+/**
+ * The one suggested fix for a blocked request: the server's first suggestion
+ * when it has one this screen can word, then the findings, then the fallback.
+ */
+export function fixFor(request: SignRequest): string {
+  const first = request.suggestions?.[0];
+  const suggested = first ? fixLine(first) : null;
+  if (suggested) return suggested;
+  const unlimited = request.findings.find((f) => f.code === "ERC20_APPROVAL_UNLIMITED");
+  const fromUnlimited = unlimited ? fixLine(unlimited) : null;
+  if (fromUnlimited) return fromUnlimited;
+  if (request.findings.some((f) => f.code === "NFT_OPERATOR_GRANTED")) {
+    return sign.verdict.blocked.fix.singleItem;
+  }
+  return sign.verdict.blocked.fix.fallback;
 }
 
 export type Outcome = "sent" | "overridden" | "declined" | "expired";

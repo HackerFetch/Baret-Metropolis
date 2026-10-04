@@ -69,6 +69,38 @@ describe("the request's words", () => {
     );
   });
 
+  it("prefers the server's first suggestion for the fix", () => {
+    const blocked = sample("blocked");
+    expect(
+      fixFor({
+        ...blocked,
+        suggestions: [
+          { code: "ERC20_APPROVAL_UNLIMITED", values: { amount: "25", asset: "USDC" } },
+        ],
+      }),
+    ).toBe("Allow only 25 USDC, the amount this request needs.");
+    expect(
+      fixFor({
+        ...blocked,
+        suggestions: [{ code: "POST_BALANCE_TOO_LOW", values: { limit: "5", asset: "MON" } }],
+      }),
+    ).toBe("Send less, so you keep at least 5 MON after this.");
+  });
+
+  it("falls back to the findings when no suggestion can be worded", () => {
+    const blocked = sample("blocked");
+    expect(
+      fixFor({ ...blocked, suggestions: [{ code: "KNOWN_MALICIOUS_ADDRESS", values: {} }] }),
+    ).toBe("Decline, then ask the site for a request that fits your rules.");
+    expect(
+      fixFor({
+        ...blocked,
+        suggestions: [],
+        findings: [{ code: "NFT_OPERATOR_GRANTED", values: {} }],
+      }),
+    ).toBe("Allow the one item this needs, not the whole collection.");
+  });
+
   it("splits any template so chosen values keep their case", () => {
     expect(
       fillParts("{origin} wants to connect", { origin: "novaswap.example" }, new Set(["origin"])),

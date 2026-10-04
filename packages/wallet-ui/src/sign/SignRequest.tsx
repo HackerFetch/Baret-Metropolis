@@ -234,6 +234,7 @@ export function SignRequest({
   footnote,
   framed = true,
   compact = false,
+  network = "testnet",
 }: {
   request: Request;
   /** True while Baret's answer is on its way; left out, a sample timer stands in. */
@@ -269,6 +270,8 @@ export function SignRequest({
   framed?: boolean;
   /** The 360 px popup: the decision pinned at the foot, smaller buttons. */
   compact?: boolean;
+  /** The network the request is on, named in the header. */
+  network?: "testnet" | "mainnet";
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
@@ -403,7 +406,10 @@ export function SignRequest({
           if (alive.current) finish(outcome, receipt);
         },
         () => {
-          if (alive.current) setPhase({ kind: "review" });
+          // A failed signature or send goes back to the decision, and says so.
+          if (!alive.current) return;
+          setPhase({ kind: "review" });
+          setSaid(sign.status.failed);
         },
       );
       return;
@@ -526,7 +532,7 @@ export function SignRequest({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className={T.label}>{sign.header.title}</p>
               <Tag tone="network" size="sm">
-                {common.networks.testnet.label}
+                {common.networks[network].label}
               </Tag>
             </div>
             <h1

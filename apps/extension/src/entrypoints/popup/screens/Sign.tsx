@@ -247,6 +247,7 @@ export function SignPhase({
         {current.kind === "transaction" ? (
           <SignRequest
             request={current.request}
+            network={current.network}
             compact
             framed={false}
             onLog={(item) => {

@@ -229,6 +229,8 @@ export const sign = {
   status: {
     signing: "Signing",
     sending: "Sending",
+    /** Signing or sending failed; the request goes back to the decision. */
+    failed: "It was not sent. Nothing was signed.",
     /** Standalone wallet only. The extension signs with its unlocked key. */
     passkey: "Confirm with your passkey",
   },
