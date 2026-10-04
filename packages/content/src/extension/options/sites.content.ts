@@ -20,6 +20,9 @@ export const sites = {
     { id: "spending", label: "Can spend" },
   ],
 
+  /** The name a screen reader gives the filter group. */
+  filter: { legend: "Show" },
+
   columns: {
     site: "Site",
     status: "Status",
@@ -82,6 +85,7 @@ export const sites = {
       spend: "Spend up to {amount} {asset} without a new signature",
       unlimited: "Spend all of your {asset} without a new signature",
       payments: "Take payments within your caps",
+      operator: "Move every item in {contract} without a new signature",
       none: "It cannot spend anything without a new signature.",
     },
 
@@ -106,11 +110,15 @@ export const sites = {
     },
 
     actions: {
+      title: "Manage this site",
       pause: {
         label: "Pause this site",
         hint: "Declines its requests until you resume. Nothing changes on-chain.",
       },
-      resume: { label: "Resume" },
+      resume: {
+        label: "Resume",
+        hint: "Its requests reach you again, each checked before you sign.",
+      },
       disconnect: {
         label: "Disconnect",
         hint: "It has to ask again next time. Nothing changes on-chain.",
@@ -119,10 +127,13 @@ export const sites = {
         label: "Block this site",
         hint: "Declines every connect, sign and payment request from it.",
       },
-      unblock: { label: "Unblock" },
+      unblock: {
+        label: "Unblock",
+        hint: "It can ask to connect again. It stays disconnected until you allow it.",
+      },
       revoke: {
-        label: "Revoke its allowances",
-        hint: "One transaction per allowance. Each costs a network fee.",
+        label: "Revoke its permissions",
+        hint: "One transaction per permission. Each costs a network fee.",
       },
       forget: {
         label: "Forget this site",
@@ -145,8 +156,10 @@ export const sites = {
     },
 
     revoke: {
-      title: "Revoke {count} allowances from {origin}?",
-      body: "This sends {count} transactions, one per allowance. You sign each one, and each costs a network fee.",
+      title: "Revoke {count} permissions from {origin}?",
+      titleOne: "Revoke 1 permission from {origin}?",
+      body: "This sends {count} transactions, one per permission. You sign each one, and each costs a network fee.",
+      bodyOne: "This sends 1 transaction. You sign it, and it costs a network fee.",
       action: "Revoke {count}",
       cancel: "Keep them",
     },
@@ -156,6 +169,17 @@ export const sites = {
       body: "Its connection and request history are deleted from this device. Allowances on-chain are not touched.",
       action: "Forget it",
       cancel: "Keep it",
+    },
+
+    /** One line in the page's status region after each action. */
+    done: {
+      paused: "{origin} is paused. Its requests are declined until you resume it.",
+      resumed: "{origin} is connected again. Its requests reach you for review.",
+      disconnected: "{origin} is disconnected. It has to ask again next time.",
+      blocked: "{origin} is blocked. Baret declines every request from it.",
+      unblocked: "{origin} is unblocked. It can ask to connect again.",
+      revoked: "Revoked. {origin} can no longer spend from this wallet.",
+      forgotten: "{origin} and its history are deleted from this device.",
     },
 
     errors: {
