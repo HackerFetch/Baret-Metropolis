@@ -12,7 +12,7 @@ export const popupSettings = {
   title: "Settings",
 
   rows: {
-    network: { label: "Network", hint: "Monad testnet" },
+    network: { label: "Network" },
     rules: {
       label: "Rules",
       hint: {
@@ -22,9 +22,17 @@ export const popupSettings = {
         custom: "Custom rules",
       },
     },
-    security: { label: "Security", hint: "Locks after {count} minutes idle" },
+    security: {
+      label: "Security",
+      hint: "Locks after {count} minutes idle",
+      hintOne: "Locks after 1 minute idle",
+    },
     sites: { label: "Sites", hint: "{count} connected" },
-    payments: { label: "Payments", hint: "{count} sites with caps" },
+    payments: {
+      label: "Payments",
+      hint: "{count} sites with caps",
+      hintOne: "1 site with caps",
+    },
     about: { label: "About", hint: "Open source under the MIT licence" },
   },
 

@@ -11,9 +11,10 @@ import {
   TheAsk,
 } from "@baret/web-ui/components/CheckBlocks";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { StaggerItem } from "@baret/web-ui/components/Reveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import type { JSX, ReactNode } from "react";
+import { type JSX, type ReactNode, useLayoutEffect, useRef } from "react";
 import type { ImgAsset } from "../../shared/assets.js";
 import type { CheckState } from "./useCheck.js";
 
@@ -75,11 +76,29 @@ export function AnalysisPanel({
   onTryOther: () => void;
 }): JSX.Element {
   const result = state.phase === "done" ? state.result : null;
+
+  // The sheet opens from state, with no Radix trigger, so Radix has nothing
+  // to send focus back to. Remember the control that opened it (a layout
+  // effect runs before the sheet moves focus inside) and return there.
+  const opener = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const el = document.activeElement;
+    opener.current = el instanceof HTMLElement && el !== document.body ? el : null;
+  }, [open]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
+        closeLabel={common.actions.close}
         data-scope="baret"
+        onCloseAutoFocus={(event) => {
+          const el = opener.current;
+          if (!el?.isConnected) return;
+          event.preventDefault();
+          el.focus();
+        }}
         className="gap-0 overflow-y-auto p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[520px]"
       >
         <header className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5">
@@ -101,7 +120,7 @@ export function AnalysisPanel({
 
         {/* Addresses are one long word: let them wrap so the panel never
             outgrows a phone screen. */}
-        <div className="grid gap-5 px-6 py-6 [overflow-wrap:anywhere] [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
+        <div className="grid gap-5 px-6 py-6 [overflow-wrap:anywhere] [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0 [&>div:first-child>section:first-child]:border-t-0 [&>div:first-child>section:first-child]:pt-0">
           {state.phase === "checking" ? (
             <ol aria-label={panel.title} className="grid gap-2">
               {panel.phases.map((line, i) => (
@@ -129,22 +148,31 @@ export function AnalysisPanel({
 
           {result && result.source !== "failed" ? (
             <>
-              {result.source === "live" ? (
-                <LiveVerdict verdict={result.verdict} expected={copy.expected} />
-              ) : null}
-              <ExpectedVerdict verdict={copy.expected} body={copy.expectedBody} />
+              {/* Verdict, findings and changes rise in like the landing's blocks. */}
+              <StaggerItem index={0} className="grid gap-5">
+                {result.source === "live" ? (
+                  <LiveVerdict verdict={result.verdict} expected={copy.expected} />
+                ) : null}
+                <ExpectedVerdict verdict={copy.expected} body={copy.expectedBody} />
+              </StaggerItem>
               {image ? (
                 <ImgWell
                   asset={image}
                   ratio="16/10"
                   fit="contain"
+                  // The sheet is the full width on phones and 520 px from 640 px.
+                  sizes="(min-width: 640px) 480px, 100vw"
                   className="border border-[color:var(--rule)]"
                 />
               ) : null}
               <TheAsk asks={copy.asks} call={copy.call} />
               {extra}
-              <FindingList items={result.findings} />
-              <ChangeList rows={result.changes} approvals={result.approvals} />
+              <StaggerItem index={1} className="grid">
+                <FindingList items={result.findings} />
+              </StaggerItem>
+              <StaggerItem index={2} className="grid">
+                <ChangeList rows={result.changes} approvals={result.approvals} />
+              </StaggerItem>
               <ClaimsList claims={copy.claims} />
               {mode === "danger" ? (
                 <NoteBlock title={copy.without.title} body={copy.without.body} />

@@ -294,16 +294,8 @@ export function Component() {
                 </Tag>
               }
             />
-            <Endpoint
-              label={nodeRow.label}
-              hint={nodeRow.hint}
-              onSwitch={() => say(optionsSettings.saved)}
-            />
-            <Endpoint
-              label={serverRow.label}
-              hint={serverRow.hint}
-              onSwitch={() => say(optionsSettings.saved)}
-            />
+            <Endpoint label={nodeRow.label} hint={nodeRow.hint} />
+            <Endpoint label={serverRow.label} hint={serverRow.hint} />
           </Rows>
         </Block>
 

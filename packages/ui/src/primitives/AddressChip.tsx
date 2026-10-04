@@ -9,19 +9,35 @@ import { cn } from "../cn.js";
  * that was swapped at the last step. The full value is always in the title,
  * so it can be read without copying.
  */
-export interface AddressChipProps {
-  address: string;
-  /** Turns the whole chip into a copy control. */
-  copyable?: boolean;
-  className?: string;
-}
+/*
+ * A copy control needs its two words, and copy lives in packages/content, so
+ * the caller passes them. A chip that only shows the address needs none.
+ */
+type AddressChipCopyProps =
+  | { copyable?: true; copyLabel: string; copiedLabel: string }
+  | { copyable: false; copyLabel?: never; copiedLabel?: never };
 
+export type AddressChipProps = {
+  address: string;
+  className?: string;
+} & AddressChipCopyProps;
+
+/*
+ * The elision is three ASCII dots, not the ellipsis character: the copy rules
+ * ban that character and the shortened address is on screen everywhere.
+ */
 export function truncateAddress(address: string): string {
   if (address.length <= 12) return address;
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function AddressChip({ address, copyable = true, className }: AddressChipProps) {
+export function AddressChip({
+  address,
+  copyable = true,
+  copyLabel,
+  copiedLabel,
+  className,
+}: AddressChipProps) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -41,8 +57,11 @@ export function AddressChip({ address, copyable = true, className }: AddressChip
         {truncateAddress(address)}
       </span>
       {copyable ? (
-        <span className="font-mono text-label uppercase text-[color:var(--fg-faint)]">
-          {copied ? "Copied" : "Copy"}
+        <span
+          aria-live="polite"
+          className="font-mono text-label uppercase text-[color:var(--fg-faint)]"
+        >
+          {copied ? copiedLabel : copyLabel}
         </span>
       ) : null}
     </>

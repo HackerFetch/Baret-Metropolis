@@ -1,5 +1,5 @@
 import { policies, policy } from "@baret/content";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { decide } from "../data/rules.js";
 import type { ActivityItem, GuardPolicy, GuardPolicyField } from "../data/types.js";
 
@@ -61,7 +61,9 @@ export function valueText(field: GuardPolicyField, value: GuardPolicy[GuardPolic
       ? "empty" in display
         ? display.empty
         : ""
-      : fill("some" in display ? display.some : "", { count: String(value.length) });
+      : "some" in display
+        ? counted(value.length, display.some, "someOne" in display ? display.someOne : display.some)
+        : "";
   }
   if (field === "minComplianceTier") {
     const display = "display" in words ? words.display : undefined;

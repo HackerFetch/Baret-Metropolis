@@ -81,7 +81,8 @@ export function Img({
       width={asset.width}
       height={asset.height}
       alt=""
-      decoding="async"
+      // The LCP picture decodes in step with the paint, not after it.
+      decoding={loading === "priority" ? "auto" : "async"}
       loading={lazy ? "lazy" : "eager"}
       {...(loading === "priority" ? { fetchPriority: "high" as const } : {})}
       onLoad={() => setLoaded(true)}
@@ -149,6 +150,7 @@ export function ImgWell({
   dim,
   className,
   sizes,
+  loading,
 }: {
   asset: ImgAsset;
   ratio: keyof typeof RATIO;
@@ -157,6 +159,8 @@ export function ImgWell({
   dim?: boolean;
   className?: string;
   sizes?: string;
+  /** As on Img; "priority" for a well that holds the route's LCP picture. */
+  loading?: "priority" | "eager" | "lazy";
 }): JSX.Element {
   return (
     <div
@@ -168,6 +172,7 @@ export function ImgWell({
         {...(fit ? { fit } : {})}
         {...(position ? { position } : {})}
         {...(sizes ? { sizes } : {})}
+        {...(loading ? { loading } : {})}
         className={cx("absolute inset-0 size-full", dim && "dark:brightness-90")}
       />
     </div>

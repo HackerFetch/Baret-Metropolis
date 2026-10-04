@@ -77,7 +77,7 @@ function download(json: string): void {
 }
 
 const LINK =
-  "text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]";
+  "inline-flex min-h-11 items-center text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]";
 
 export function Component() {
   const { state, dispatch } = useWallet();
@@ -92,11 +92,15 @@ export function Component() {
   const rulesValue =
     changed === 0 ? policy.templates[state.template].name : policies.current.custom.label;
 
+  /**
+   * Reset deletes what this browser holds, as the danger zone says: the
+   * wallet loads again empty and starts over at setup, which says it was reset.
+   */
   function confirm(): void {
     dispatch({ type: "reset" });
     setAcknowledged(false);
     dialog.current?.close();
-    setSaved(settings.saved);
+    window.location.assign(`${routes.onboarding.path}?sample=empty&reset=1`);
   }
 
   if (!account || !security || !network || !privacy || !about) return null;
@@ -137,9 +141,9 @@ export function Component() {
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       autoComplete="off"
-                      className="w-full min-w-0 border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-3 py-2 text-base text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)] md:w-56"
+                      className="w-full min-w-0 border border-[color:var(--control-edge)] bg-[color:var(--ground)] h-11 px-3 py-2 text-base text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)] md:w-56"
                     />
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       {common.actions.done}
                     </Button>
                   </form>
@@ -241,7 +245,6 @@ export function Component() {
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
                     onClick={() =>
                       download(
                         JSON.stringify(

@@ -22,12 +22,24 @@ export interface MarkProps extends Omit<SVGProps<SVGSVGElement>, "viewBox"> {
   slit?: string;
   /** Use currentColor for the hat instead of the brand orange. */
   mono?: boolean;
+  /**
+   * Hide the mark from assistive tech. Use it wherever a wordmark or a heading
+   * beside the mark already names the product, so the name is read once.
+   */
+  decorative?: boolean;
+  /**
+   * The accessible name when the mark stands alone. Defaults to the brand
+   * name, which is a proper noun and reads the same in every locale.
+   */
+  label?: string;
 }
 
 export function Mark({
   size = 24,
   slit = "var(--surface, #f8f8f5)",
   mono = false,
+  decorative = false,
+  label = "Baret",
   ...rest
 }: MarkProps) {
   const hat = mono ? "currentColor" : "var(--accent, #ff4f00)";
@@ -39,8 +51,10 @@ export function Mark({
       viewBox="0 0 64 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="Baret"
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : label}
+      aria-hidden={decorative ? true : undefined}
+      focusable={decorative ? false : undefined}
       {...rest}
     >
       {/* Dome: 38 wide, 24 tall, shoulders at 3:2. Flatter than a half circle,

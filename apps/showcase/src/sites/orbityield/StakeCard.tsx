@@ -1,4 +1,5 @@
 import { orbityield } from "@baret/content";
+import { orbityieldUnits } from "@baret/content/showcase/orbityield.content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
@@ -31,7 +32,8 @@ export function StakeCard({
   amount: string;
   onAmount: (value: string) => void;
   error: string | null;
-  onStake: () => void;
+  /** False when the amount is refused, so the card can move focus to it. */
+  onStake: () => boolean;
 }): JSX.Element {
   const danger = mode === "danger";
   const value = parseAmount(amount);
@@ -42,7 +44,8 @@ export function StakeCard({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        onStake();
+        // A refused amount moves focus to the input, which reads out its error.
+        if (!onStake()) event.currentTarget.querySelector("input")?.focus();
       }}
       className="grid gap-5 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-6 md:p-8"
     >
@@ -50,9 +53,9 @@ export function StakeCard({
 
       <AmountField
         label={stake?.label ?? panel.input}
-        balance={`${panel.balance} ${format(SAMPLE.mon)} MON`}
+        balance={`${panel.balance} ${format(SAMPLE.mon)} ${orbityieldUnits.stake}`}
         max={{ label: panel.max, onMax: () => onAmount(String(SAMPLE.mon)) }}
-        unit="MON"
+        unit={orbityieldUnits.stake}
         value={amount}
         onChange={onAmount}
         error={error}

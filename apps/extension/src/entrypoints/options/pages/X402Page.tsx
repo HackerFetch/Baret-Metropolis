@@ -3,7 +3,7 @@ import { Button, Meter, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Empty } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
-import { amount, fromUnits, toUnits } from "@baret/wallet-ui/data/format";
+import { amount } from "@baret/wallet-ui/data/format";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
@@ -13,9 +13,10 @@ import { Link } from "react-router";
 import { OPTIONS_ART } from "../../../assets.js";
 import { now, payments } from "../../../data/derive.js";
 import { useExtension } from "../../../data/store.js";
-import type { Caps, Payment, PaymentPermission, Problem } from "../../../data/types.js";
+import type { Payment, PaymentPermission, Problem } from "../../../data/types.js";
 import { timeOf } from "../../../data/words.js";
 import { Dialog, Figure, INPUT, LINK } from "../parts/kit.js";
+import { DECIMALS, type Draft, readDraft, spentWithin, VAULT_ASSET } from "./x402-money.js";
 
 /**
  * Payments, the x402 page. x402 keeps no running total, so this page is where
@@ -30,8 +31,6 @@ const { wedge, summary, ticker, merchants, facilitators, problems, receipts, set
 const { revoke } = optionsAllowances;
 
 const DAY = 86_400_000;
-/** USDC's decimals: the finest a cap or an amount can be. */
-const DECIMALS = 6;
 /** The stand-in for a revoke transaction: how long confirming takes. */
 const CONFIRM_MS = 700;
 const STAGES = ["checked", "verified", "settled"] as const;
@@ -46,7 +45,7 @@ const DAY_NUMBER = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: 
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" });
 
 /** The outside link's look: the kit's link with room for its icon. */
-const OUT = `${LINK} inline-flex min-h-6 min-w-6 items-center gap-1.5`;
+const OUT = `${LINK} min-w-6 gap-1.5`;
 
 function num(text: string): number {
   const value = Number.parseFloat(text);
@@ -56,16 +55,6 @@ function num(text: string): number {
 /** The calendar day in UTC, as a count of days: the sample's dates are UTC. */
 function dayOf(iso: string): number {
   return Math.floor(Date.parse(iso) / DAY);
-}
-
-/** What the payments of the last `days` days add up to. */
-function spentWithin(list: readonly Payment[], days: number, at: string = now()): string {
-  const end = Date.parse(at);
-  const total = list.reduce((sum, p) => {
-    const age = end - Date.parse(p.at);
-    return age >= 0 && age < days * DAY ? sum + num(p.amount) : sum;
-  }, 0);
-  return `${total.toFixed(2)} USDC`;
 }
 
 /** "0.50 USDC"; a cap that is not set reads None. */
@@ -129,9 +118,9 @@ function StatusTag({ status }: { status: PaymentPermission["status"] }): JSX.Ele
 function Summary(): JSX.Element {
   const { state } = useExtension();
   const figures = [
-    { label: summary.today, value: spentWithin(state.payments, 1) },
-    { label: summary.week, value: spentWithin(state.payments, 7) },
-    { label: summary.month, value: spentWithin(state.payments, 30) },
+    { label: summary.today, value: spentWithin(state.payments, 1, now()) },
+    { label: summary.week, value: spentWithin(state.payments, 7, now()) },
+    { label: summary.month, value: spentWithin(state.payments, 30, now()) },
     { label: summary.merchants, value: String(payments(state.permissions).length) },
     {
       label: summary.declined,
@@ -231,47 +220,6 @@ function Ticker(): JSX.Element {
       )}
     </Block>
   );
-}
-
-interface Draft {
-  readonly perPayment: string;
-  readonly hour: string;
-  readonly day: string;
-}
-
-type DraftErrors = Partial<Record<keyof Draft, string>>;
-
-/** A cap as typed, in base units; null when it is not an amount above 0. */
-function units(text: string): bigint | null {
-  const value = toUnits(text, DECIMALS);
-  return value !== null && value > 0n ? value : null;
-}
-
-function decimal(value: bigint): string {
-  return fromUnits(value, DECIMALS, { min: 2, max: DECIMALS });
-}
-
-/** The caps a draft makes, or what is wrong with each field. */
-function readDraft(draft: Draft): { caps: Caps | null; errors: DraftErrors } {
-  const words = merchants.capsDialog.errors;
-  const perPayment = units(draft.perPayment);
-  const day = units(draft.day);
-  const noHour = draft.hour.trim() === "";
-  const hour = noHour ? null : units(draft.hour);
-  const errors: DraftErrors = {};
-  if (perPayment === null) errors.perPayment = words.amount;
-  if (day === null) errors.day = words.amount;
-  if (!noHour && hour === null) errors.hour = words.amount;
-  else if (hour !== null && day !== null && hour > day) errors.hour = words.order;
-  if (perPayment === null || day === null || errors.hour) return { caps: null, errors };
-  return {
-    caps: {
-      perPayment: decimal(perPayment),
-      hour: hour === null ? null : decimal(hour),
-      day: decimal(day),
-    },
-    errors,
-  };
 }
 
 function CapField({
@@ -507,7 +455,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           onClick={() =>
                             dispatch({
@@ -522,7 +470,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="soft"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           onClick={() => openCaps(p)}
                         >
@@ -531,7 +479,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="danger"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           disabled={working}
                           onClick={() => openRevoke(p)}
@@ -549,6 +497,7 @@ function Merchants(): JSX.Element {
       )}
       <div className="grid gap-2">
         {list.length > 0 ? <p className={T.small}>{merchants.firstPayment}</p> : null}
+        {list.length > 0 ? <p className={T.small}>{merchants.pauseHint}</p> : null}
         <p
           ref={status}
           role="status"
@@ -570,6 +519,7 @@ function Merchants(): JSX.Element {
         <p className={T.body}>
           {capsFor ? fill(capsDialog.body, { merchant: capsFor.merchant }) : null}
         </p>
+        <p className={T.small}>{capsDialog.onchain}</p>
         <CapField
           label={columns.perPayment}
           unit={capsFor?.asset ?? ""}
@@ -674,7 +624,7 @@ function Facilitators(): JSX.Element {
                   <td
                     className={`whitespace-nowrap py-3.5 text-right align-top text-sm text-[color:var(--fg)] sm:pr-4 ${T.num}`}
                   >
-                    {`${amount(f.volume, DECIMALS)} USDC`}
+                    {`${amount(f.volume, DECIMALS)} ${state.payments.find((p) => p.facilitator === f.id)?.asset ?? VAULT_ASSET}`}
                   </td>
                   <td className="hidden py-3.5 text-right align-top sm:table-cell">{tag}</td>
                 </tr>
@@ -743,7 +693,6 @@ function Problems(): JSX.Element {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
                         onClick={() => {
                           dispatch({ type: "permissionStatus", id: merchant.id, status: "paused" });
                           document.getElementById(dismissId(problem.id))?.focus();
@@ -756,7 +705,6 @@ function Problems(): JSX.Element {
                       id={dismissId(problem.id)}
                       type="button"
                       variant="soft"
-                      size="sm"
                       aria-describedby={titleId}
                       onClick={() => dismiss(index, problem.id)}
                     >
@@ -841,7 +789,7 @@ function Receipts(): JSX.Element {
                       href={`${extFrame.links.explorer}/tx/${p.hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className={`${OUT} justify-end font-mono`}
+                      className={`${OUT} min-w-11 justify-end font-mono`}
                     >
                       <span className="hidden sm:inline">{truncateAddress(p.hash)}</span>
                       <span className="sr-only">{receipts.explorer}</span>

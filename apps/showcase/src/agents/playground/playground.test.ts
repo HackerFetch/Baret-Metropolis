@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ACTIONS, randomAddress, SAMPLES, verdictFor } from "./sample.js";
 import {
   isAddress,
+  isNotSent,
   parseTransaction,
   requestFor,
   sampleResult,
@@ -133,6 +134,9 @@ describe("the playground source", () => {
     );
     expect(result.source).toBe("failed");
     expect(result.verdict).toBe("blocked");
+    expect(isNotSent(result)).toBe(true);
+    expect(outcomeOf(result)).toBe("notSent");
+    expect(terminalLines(result, "balanced")[1]).toBe("baret > not sent, nothing checked");
   });
 
   it("makes a 0x address of 40 hex digits", () => {
@@ -150,13 +154,30 @@ describe("the terminal", () => {
     expect(lines[1]).toBe("baret > Blocked. Rule: Block unlimited allowances");
   });
 
-  it("counts the findings of a Caution", () => {
-    const lines = terminalLines(sampleResult("wrongPayee", "balanced"), "balanced");
-    expect(lines[1]).toBe("baret > Caution. 1 findings, no rule broken.");
+  it("names a Caution block as a reason, not as the toggle that would allow it", () => {
+    const lines = terminalLines(sampleResult("wrongPayee", "strict"), "strict");
+    expect(lines[1]).toBe("baret > Blocked. Rule: Caution not allowed by this policy");
+  });
+
+  it("does not re-judge a live block, and never leaves the rule empty", () => {
+    const live = { ...sampleResult("unlimitedAllowance", "balanced"), source: "live" as const };
+    expect(terminalLines(live, "balanced")[1]).toBe("baret > Blocked. Rule: see the findings");
+    const bare = { ...live, findings: [] };
+    expect(terminalLines(bare, "balanced")[1]).toBe("baret > Blocked. Rule: see the findings");
+  });
+
+  it("counts the findings of a Caution, one and many", () => {
+    const one = sampleResult("wrongPayee", "balanced");
+    expect(one.findings).toHaveLength(1);
+    expect(terminalLines(one, "balanced")[1]).toBe("baret > Caution. 1 finding, no rule broken.");
+    const two = { ...one, findings: [...one.findings, ...one.findings] };
+    expect(terminalLines(two, "balanced")[1]).toBe("baret > Caution. 2 findings, no rule broken.");
   });
 
   it("treats a failed check as unreachable", () => {
-    expect(outcomeOf({ ...sampleResult("pay", "strict"), source: "failed" })).toBe("unreachable");
+    const failed = { ...sampleResult("pay", "strict"), source: "failed" as const };
+    expect(outcomeOf(failed)).toBe("unreachable");
+    expect(isNotSent(failed)).toBe(false);
   });
 });
 

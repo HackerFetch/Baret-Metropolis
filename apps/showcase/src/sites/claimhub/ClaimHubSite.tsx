@@ -13,7 +13,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { ClaimCard } from "./ClaimCard.js";
 import { ClaimGlyph, VIEWS } from "./Glyph.js";
 import { ART, SAMPLE, walletFor } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * ClaimHub: an airdrop page in its own kraft palette, with Baret's strip on
@@ -39,16 +39,18 @@ export function ClaimHubSite(): JSX.Element {
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
-  /** The page's eligibility check: any address, or the connected wallet when left empty. */
-  function checkEligibility(): void {
+  /** The page's eligibility check: any address, or the sample wallet when left empty. */
+  /** False when the address is refused, so the card can move focus to it. */
+  function checkEligibility(): boolean {
     const next = walletFor(address, SAMPLE.wallet);
     if (next === null) {
       setError(site.panel.errors.invalid);
-      return;
+      return false;
     }
     setError(null);
     if (address.trim() === "") setConnected(true);
     setWallet(next);
+    return true;
   }
 
   function runCheck(version: DemoMode): void {
@@ -87,7 +89,7 @@ export function ClaimHubSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="claimhub-page-faq" />
         ) : (
@@ -112,9 +114,9 @@ export function ClaimHubSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="claimhub-faq" />
+            <Faq items={site.faq} name="claimhub-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
@@ -125,7 +127,7 @@ export function ClaimHubSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

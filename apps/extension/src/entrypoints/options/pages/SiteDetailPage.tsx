@@ -5,7 +5,7 @@ import { Block, type Row, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, day } from "@baret/wallet-ui/data/format";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { Check, X } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -451,7 +451,7 @@ export function Component() {
 
       <Dialog
         open={ask === "revoke"}
-        title={fill(revoking.length === 1 ? detail.revoke.titleOne : detail.revoke.title, values)}
+        title={counted(revoking.length, detail.revoke.title, detail.revoke.titleOne, values)}
         action={working ? optionsAllowances.revoke.working : fill(detail.revoke.action, values)}
         cancel={working ? common.actions.close : detail.revoke.cancel}
         danger
@@ -460,7 +460,7 @@ export function Component() {
         onConfirm={() => setWorking(true)}
       >
         <p className={T.body}>
-          {fill(revoking.length === 1 ? detail.revoke.bodyOne : detail.revoke.body, values)}
+          {counted(revoking.length, detail.revoke.body, detail.revoke.bodyOne, values)}
         </p>
         <ul className="grid border-t border-[color:var(--rule)]">
           {revoking.map((p) => (

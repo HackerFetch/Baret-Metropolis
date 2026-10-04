@@ -1,4 +1,4 @@
-import { home, hub } from "@baret/content";
+import { home } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Img } from "@baret/web-ui/components/Img";
 import { VERDICT_TONE } from "@baret/web-ui/lib/tone";
@@ -92,7 +92,7 @@ function Verdict({ card }: { card: ShowcaseCardData }): JSX.Element {
     <span>
       <span className="sr-only">{home.showcase.labels.verdict} </span>
       <Tag tone={VERDICT_TONE[card.verdict]} size="sm">
-        {hub.cardLabels.verdicts[card.verdict]}
+        {home.showcase.verdicts[card.verdict]}
       </Tag>
     </span>
   );

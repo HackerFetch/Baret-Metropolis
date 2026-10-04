@@ -32,7 +32,7 @@ export function TopStrip({
   const { header } = popupHome;
   return (
     <header className="flex h-14 shrink-0 items-center gap-1 border-b border-[color:var(--rule)] bg-[color:var(--ground-deep)] pr-1.5 pl-3">
-      <Mark size={22} slit="var(--ground-deep)" />
+      <Mark size={22} slit="var(--ground-deep)" decorative />
       <button
         type="button"
         onClick={onAccounts}
@@ -99,7 +99,7 @@ export function TabBar({
       {/* The ink bar slides to the active tab (a transform, so it never re-lays out). */}
       <span
         aria-hidden="true"
-        className="absolute top-[-1px] left-0 h-0.5 w-1/4 bg-[color:var(--fg)] transition-transform duration-200 ease-out motion-reduce:transition-none"
+        className="absolute top-[-1px] left-0 h-0.5 w-1/4 bg-[color:var(--fg)] transition-transform duration-[240ms] ease-out motion-reduce:transition-none"
         style={{ transform: `translateX(${index * 100}%)` }}
       />
       {TABS.map((tab) => {

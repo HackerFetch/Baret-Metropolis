@@ -5,7 +5,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { DocsIndex } from "../docs/DocsIndex.js";
 import { Limitations } from "../docs/Limitations.js";
 import { Timeline } from "../docs/Timeline.js";
-import { DOCS_ART } from "../shared/assets.js";
+import { DOCS_ART, LCP_SIZES } from "../shared/assets.js";
 import { ClosingBand } from "../shared/ClosingBand.js";
 import { PageHero } from "../shared/PageHero.js";
 
@@ -47,7 +47,8 @@ export function Component() {
             asset={DOCS_ART.hero}
             ratio="1/1"
             dim
-            sizes="(min-width: 1024px) 480px, 100vw"
+            loading="priority"
+            sizes={LCP_SIZES.docs}
             className="border border-[color:var(--rule)]"
           />
         }

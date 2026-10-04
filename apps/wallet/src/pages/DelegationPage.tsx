@@ -1,11 +1,18 @@
 import { common, delegation, policies, send } from "@baret/content";
-import { Button, truncateAddress } from "@baret/ui";
+import { Button, Meter, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, day, when } from "@baret/wallet-ui/data/format";
 import { ADDRESS } from "@baret/wallet-ui/data/sample";
-import { free, reserved, useWallet } from "@baret/wallet-ui/data/store";
+import {
+  canDeposit,
+  canWithdraw,
+  free,
+  ready,
+  reserved,
+  useWallet,
+} from "@baret/wallet-ui/data/store";
 import type { Merchant } from "@baret/wallet-ui/data/types";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
@@ -83,7 +90,7 @@ function Field({
       {hint || error ? (
         <p
           id={hintId}
-          className={error ? "text-sm font-medium text-[color:var(--blocked)]" : T.small}
+          className={error ? "text-sm font-medium text-[color:var(--blocked-ink)]" : T.small}
         >
           {error ?? hint}
         </p>
@@ -126,11 +133,12 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
           </div>
         ))}
       </dl>
+      {/* Spent against the daily cap; the figures above say the same in words. */}
+      <Meter value={Number(merchant.spent) || 0} max={Number(merchant.perDay) || 0} />
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           variant="ghost"
-          size="sm"
           onClick={() =>
             dispatch({
               type: "merchantStatus",
@@ -144,7 +152,6 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
         <Button
           type="button"
           variant="danger"
-          size="sm"
           onClick={() =>
             dispatch({ type: "merchantStatus", address: merchant.address, status: "removed" })
           }
@@ -281,15 +288,19 @@ function AddMerchant({ onDone }: { onDone: () => void }): JSX.Element {
 export function Component() {
   const { state, dispatch } = useWallet();
   const amountId = useId();
+  const amountErrorId = useId();
   const dialogTitle = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [money, setMoney] = useState("");
-  const [moneyIssue, setMoneyIssue] = useState<"invalid" | "reserved" | null>(null);
+  const [moneyIssue, setMoneyIssue] = useState<
+    "invalid" | "reserved" | "balance" | "vaultBalance" | null
+  >(null);
   const [adding, setAdding] = useState(false);
   const [keyPhase, setKeyPhase] = useState<"idle" | "creating" | "registering">("idle");
   const [revealed, setRevealed] = useState(false);
   const [said, setSaid] = useState("");
   const { vault } = state;
+  const vaultRead = ready(state, "balances");
   const listed = vault.merchants.filter((m) => m.status !== "removed");
 
   // Creating the key: the passkey prompt, then the transaction that registers it.
@@ -315,8 +326,18 @@ export function Component() {
       setMoneyIssue("invalid");
       return;
     }
+    // Fail-closed: more than the vault holds, or an unread balance, withdraws nothing.
+    if (kind === "withdraw" && !canWithdraw(state, value)) {
+      setMoneyIssue("vaultBalance");
+      return;
+    }
     if (kind === "withdraw" && withdrawable(vault, money) !== "ok") {
       setMoneyIssue("reserved");
+      return;
+    }
+    // Fail-closed: more than the account holds, or an unread balance, deposits nothing.
+    if (kind === "deposit" && !canDeposit(state, value)) {
+      setMoneyIssue("balance");
       return;
     }
     dispatch({ type: kind, amount: value });
@@ -389,28 +410,39 @@ export function Component() {
         </Block>
 
         <Block title={vaultWords.title}>
-          {vault.balance === "0.00" ? (
+          {/* Fail-closed: an unread vault shows no figures, not a stale or zero balance. */}
+          {vaultRead ? null : (
+            <Problem title={delegation.errors.vault.title} body={delegation.errors.vault.body} />
+          )}
+          {vaultRead && vault.balance === "0.00" ? (
             <Empty title={vaultWords.empty.title} body={vaultWords.empty.body} />
           ) : null}
-          <dl className="grid gap-6 sm:grid-cols-3">
-            {(
-              [
-                [vaultWords.balance, vault.balance],
-                [vaultWords.reserved, reserved(vault)],
-                [vaultWords.free, free(vault)],
-              ] as const
-            ).map(([label, value]) => (
-              <div key={label} className="grid gap-1 border-t border-[color:var(--rule)] pt-3">
-                <dt className={T.small}>{label}</dt>
-                <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
-                  {amount(value, 6)} <span className="text-lg">{ASSET}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className={T.small}>
-            {fill(vaultWords.reservedNote, { amount: amount(reserved(vault), 6), asset: ASSET })}
-          </p>
+          {vaultRead ? (
+            <>
+              <dl className="grid gap-6 sm:grid-cols-3">
+                {(
+                  [
+                    [vaultWords.balance, vault.balance],
+                    [vaultWords.reserved, reserved(vault)],
+                    [vaultWords.free, free(vault)],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} className="grid gap-1 border-t border-[color:var(--rule)] pt-3">
+                    <dt className={T.small}>{label}</dt>
+                    <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
+                      {amount(value, 6)} <span className="text-lg">{ASSET}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className={T.small}>
+                {fill(vaultWords.reservedNote, {
+                  amount: amount(reserved(vault), 6),
+                  asset: ASSET,
+                })}
+              </p>
+            </>
+          ) : null}
           <div className="grid max-w-[520px] gap-2">
             <label htmlFor={amountId} className="text-sm font-medium text-[color:var(--fg)]">
               {vaultWords.amount.label}
@@ -426,6 +458,7 @@ export function Component() {
                   setMoneyIssue(null);
                 }}
                 aria-invalid={moneyIssue ? true : undefined}
+                aria-describedby={moneyIssue ? amountErrorId : undefined}
                 className={`${INPUT} min-w-[10rem] flex-1 font-mono tabular-nums`}
               />
               <Button type="button" variant="ghost" onClick={() => move("deposit")}>
@@ -435,20 +468,34 @@ export function Component() {
                 {vaultWords.withdraw.label}
               </Button>
             </div>
-            {moneyIssue === "invalid" ? (
-              <p className="text-sm font-medium text-[color:var(--blocked)]">
-                {send.errors.amountZero.title}
-              </p>
-            ) : null}
-            {moneyIssue === "reserved" ? (
-              <Problem
-                title={delegation.errors.reserved.title}
-                body={fill(delegation.errors.reserved.body, {
-                  amount: amount(reserved(vault), 6),
-                  asset: ASSET,
-                })}
-              />
-            ) : null}
+            <div id={amountErrorId}>
+              {moneyIssue === "invalid" ? (
+                <p role="alert" className="text-sm font-medium text-[color:var(--blocked-ink)]">
+                  {send.errors.amountZero.title}
+                </p>
+              ) : null}
+              {moneyIssue === "reserved" ? (
+                <Problem
+                  title={delegation.errors.reserved.title}
+                  body={fill(delegation.errors.reserved.body, {
+                    amount: amount(reserved(vault), 6),
+                    asset: ASSET,
+                  })}
+                />
+              ) : null}
+              {moneyIssue === "balance" ? (
+                <Problem
+                  title={delegation.errors.balance.title}
+                  body={fill(delegation.errors.balance.body, { asset: ASSET })}
+                />
+              ) : null}
+              {moneyIssue === "vaultBalance" ? (
+                <Problem
+                  title={delegation.errors.vaultBalance.title}
+                  body={fill(delegation.errors.vaultBalance.body, { asset: ASSET })}
+                />
+              ) : null}
+            </div>
           </div>
         </Block>
 
@@ -456,7 +503,7 @@ export function Component() {
           title={merchants.title}
           aside={
             adding ? null : (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
+              <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
                 {merchants.add}
               </Button>
             )
@@ -471,12 +518,7 @@ export function Component() {
                 ? {}
                 : {
                     action: (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setAdding(true)}
-                      >
+                      <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
                         {merchants.empty.action.label}
                       </Button>
                     ),
@@ -546,12 +588,7 @@ export function Component() {
                   </div>
                 ) : (
                   <div className="flex">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRevealed(true)}
-                    >
+                    <Button type="button" variant="ghost" onClick={() => setRevealed(true)}>
                       {agentKey.handover.reveal}
                     </Button>
                   </div>

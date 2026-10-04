@@ -11,8 +11,8 @@ import { useReduce } from "../lib/useReduce.js";
  * it trails softly and never overshoots.
  *
  * Only for a fine, hovering pointer with no reduced-motion preference and no
- * forced colours; touch, pen-without-hover, reduced motion and High Contrast keep the native cursor and render
- * nothing. Position lives in motion values (no React render per move); the
+ * forced colours; touch, pen-without-hover, reduced motion and High
+ * Contrast keep the native cursor and render nothing. Position lives in motion values (no React render per move); the
  * hover, press and visibility states are data attributes on <html>, styled in
  * cursor.css. The native cursor is hidden only while this is mounted, by the
  * `baret-cursor` class on <html>. Mounted once per route by Signature.
@@ -20,6 +20,13 @@ import { useReduce } from "../lib/useReduce.js";
 
 /** stiffness 520, mass 0.5: critical damping is about 32; 44 stays above it. */
 const RING_SPRING = { stiffness: 520, damping: 44, mass: 0.5 } as const;
+
+/**
+ * The last mouse or pen position, kept across mounts. Signature remounts on
+ * every route change, so the new eyelet starts where the pointer already is
+ * and shows at once instead of waiting for the next move.
+ */
+let last: { x: number; y: number } | null = null;
 
 export function Cursor(): JSX.Element | null {
   const reduce = useReduce();
@@ -43,8 +50,8 @@ function useForcedColors(): boolean {
 }
 
 function Eyelet(): JSX.Element {
-  const x = useMotionValue(-100);
-  const y = useMotionValue(-100);
+  const x = useMotionValue(last?.x ?? -100);
+  const y = useMotionValue(last?.y ?? -100);
   const rx = useSpring(x, RING_SPRING);
   const ry = useSpring(y, RING_SPRING);
 
@@ -52,7 +59,12 @@ function Eyelet(): JSX.Element {
     const html = document.documentElement;
     const ds = html.dataset;
     html.classList.add("baret-cursor");
-    let seen = false;
+    // Already on the page: the dot and the ring start on the known spot.
+    let seen = last !== null;
+    if (last) {
+      ds.cursorVisible = "";
+      ds.cursorState = classify(document.elementFromPoint(last.x, last.y));
+    }
 
     // Mouse and pen both hover on a fine pointer, and the native pointer is
     // hidden for both, so both drive the eyelet. Touch hides it instead.
@@ -62,8 +74,10 @@ function Eyelet(): JSX.Element {
     const move = (e: PointerEvent): void => {
       if (!tracks(e)) {
         delete ds.cursorVisible;
+        last = null;
         return;
       }
+      last = { x: e.clientX, y: e.clientY };
       x.set(e.clientX);
       y.set(e.clientY);
       if (!seen) {
@@ -84,10 +98,14 @@ function Eyelet(): JSX.Element {
       delete ds.cursorVisible;
       delete ds.cursorPress;
       seen = false;
+      last = null;
     };
     const down = (e: PointerEvent): void => {
       if (tracks(e)) ds.cursorPress = "";
-      else delete ds.cursorVisible;
+      else {
+        delete ds.cursorVisible;
+        last = null;
+      }
     };
     const up = (): void => {
       delete ds.cursorPress;

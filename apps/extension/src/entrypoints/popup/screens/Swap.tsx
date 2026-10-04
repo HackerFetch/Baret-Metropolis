@@ -1,4 +1,5 @@
-import { extFrame, popupHome } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { popupHome } from "@baret/content/extension/popup/home.content";
 import { ImgWell } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
 import { ArrowUpRight } from "lucide-react";

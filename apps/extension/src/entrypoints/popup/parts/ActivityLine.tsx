@@ -1,4 +1,8 @@
-import { common, extFrame, findings as findingCopy, popupActivity, sign } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { popupActivity } from "@baret/content/extension/popup/activity.content";
+import { common } from "@baret/content/shared/common.content";
+import { findings as findingCopy } from "@baret/content/shared/findings.content";
+import { sign } from "@baret/content/wallet/sign.content";
 import { ChangeRow, truncateAddress, VerdictTag } from "@baret/ui";
 import { amount } from "@baret/wallet-ui/data/format";
 import { T } from "@baret/web-ui/lib/type";

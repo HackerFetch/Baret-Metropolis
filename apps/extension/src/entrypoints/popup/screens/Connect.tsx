@@ -1,17 +1,23 @@
-import { common, connect, popupConnect, sign } from "@baret/content";
+import { popupConnect } from "@baret/content/extension/popup/connect.content";
+import { common } from "@baret/content/shared/common.content";
+import { connect } from "@baret/content/wallet/connect.content";
+import { sign } from "@baret/content/wallet/sign.content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Parts } from "@baret/wallet-ui/components/Parts";
 import { amount } from "@baret/wallet-ui/data/format";
 import { fillParts } from "@baret/wallet-ui/lib/parts";
 import { Img } from "@baret/web-ui/components/Img";
+import { DUR } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { useReduce } from "@baret/web-ui/lib/useReduce";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { Check, X } from "lucide-react";
-import { type JSX, useId, useState } from "react";
+import { m } from "motion/react";
+import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";
 import type { ConnectSample } from "../../../data/sample.js";
 import { activeAccount, useExtension } from "../../../data/store.js";
-import { useCountdown } from "../parts/Requests.js";
+import { RISE_PX, useCountdown } from "../parts/Requests.js";
 
 /**
  * The connect phase: a site asks to see an address. The window says what the
@@ -75,6 +81,44 @@ function Note({
   );
 }
 
+/** The answer replaces the window: focus moves to it, and it rises in quietly. */
+function ConnectResult({
+  result,
+  origin,
+  onFinished,
+}: {
+  result: "connected" | "declined" | "expired";
+  origin: string;
+  onFinished: () => void;
+}): JSX.Element {
+  const reduce = useReduce();
+  const title = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    title.current?.focus();
+  }, []);
+  return (
+    <m.div
+      className="grid content-start gap-4 px-5 py-8"
+      initial={reduce ? false : { opacity: 0, y: RISE_PX }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduce ? 0 : DUR.enter, ease: "easeOut" }}
+    >
+      <h1 className="font-display text-3xl font-extrabold uppercase leading-none text-[color:var(--fg)]">
+        {connect.title}
+      </h1>
+      {/* The outcome takes focus, so it is read the moment it replaces the window. */}
+      <p ref={title} tabIndex={-1} className={`${T.body} outline-none`}>
+        {fill(connect.result[result], { origin })}
+      </p>
+      <div className="flex">
+        <Button type="button" variant="ghost" onClick={onFinished}>
+          {common.actions.back}
+        </Button>
+      </div>
+    </m.div>
+  );
+}
+
 export function ConnectPhase({
   sample,
   onFinished,
@@ -90,6 +134,7 @@ export function ConnectPhase({
   const [remember, setRemember] = useState(false);
   const [result, setResult] = useState<"connected" | "declined" | "expired" | null>(null);
   const left = useCountdown(300, result === null, () => setResult("expired"));
+  const reduce = useReduce();
 
   function answer(next: "connected" | "declined"): void {
     if (next === "connected") {
@@ -99,26 +144,13 @@ export function ConnectPhase({
   }
 
   if (result) {
-    return (
-      <div className="grid content-start gap-4 px-5 py-8">
-        <h1 className="font-display text-3xl font-extrabold uppercase leading-none text-[color:var(--fg)]">
-          {connect.title}
-        </h1>
-        <p role="status" className={T.body}>
-          {fill(connect.result[result], { origin })}
-        </p>
-        <div className="flex">
-          <Button type="button" variant="ghost" onClick={onFinished}>
-            {common.actions.back}
-          </Button>
-        </div>
-      </div>
-    );
+    return <ConnectResult result={result} origin={origin} onFinished={onFinished} />;
   }
 
   return (
     <article aria-labelledby={titleId} className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {/* Relative, so the sr-only legend stays inside the scroller and the page stays 600 px. */}
+      <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div
           className="relative aspect-[3/1] overflow-hidden border-b border-[color:var(--rule)]"
           style={{ backgroundColor: POPUP_ART.connect.ground }}
@@ -141,7 +173,12 @@ export function ConnectPhase({
           </p>
         </header>
 
-        <div className="grid gap-4 border-t border-[color:var(--rule)] px-5 py-5">
+        <m.div
+          className="grid gap-4 border-t border-[color:var(--rule)] px-5 py-5"
+          initial={reduce ? false : { opacity: 0, y: RISE_PX }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduce ? 0 : DUR.enter, ease: "easeOut" }}
+        >
           {sample.already ? (
             <div className="grid gap-3 border-l-4 border-[color:var(--rule-strong)] pl-3">
               <div className="grid gap-1">
@@ -194,7 +231,7 @@ export function ConnectPhase({
             />
           ) : null}
           <p className="text-sm text-[color:var(--fg)]">{connect.note}</p>
-        </div>
+        </m.div>
 
         <fieldset className="grid gap-2 border-t border-[color:var(--rule)] px-5 py-5">
           <legend className="sr-only">{popupConnect.accountPicker.title}</legend>
@@ -254,17 +291,33 @@ export function ConnectPhase({
       </div>
 
       <footer className="grid shrink-0 gap-2.5 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-3 pb-3">
+        {/* With no secure connection, the safer answer carries the weight: Decline is primary. */}
         <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="ghost" onClick={() => answer("declined")}>
-            {connect.actions.reject}
-          </Button>
-          <Button type="button" variant="primary" onClick={() => answer("connected")}>
-            {connect.actions.approve}
-          </Button>
+          {sample.secure ? (
+            <>
+              <Button type="button" variant="ghost" onClick={() => answer("declined")}>
+                {connect.actions.reject}
+              </Button>
+              <Button type="button" variant="primary" onClick={() => answer("connected")}>
+                {connect.actions.approve}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button type="button" variant="ghost" onClick={() => answer("connected")}>
+                {connect.actions.approve}
+              </Button>
+              <Button type="button" variant="primary" onClick={() => answer("declined")}>
+                {connect.actions.reject}
+              </Button>
+            </>
+          )}
         </div>
         <div className="grid gap-0.5">
           <p className={`font-mono text-xs text-[color:var(--fg)] ${T.num}`} aria-hidden="true">
-            {fill(sign.countdown.label, { seconds: String(left) })}
+            {counted(left, sign.countdown.label, sign.countdown.labelOne, {
+              seconds: String(left),
+            })}
           </p>
           <p className="text-xs text-[color:var(--fg-muted)]">{popupConnect.windowNote}</p>
         </div>

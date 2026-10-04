@@ -4,13 +4,13 @@ import { Block, Problem } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { when } from "@baret/wallet-ui/data/format";
 import { changedFields, diffFields, fromTemplate } from "@baret/wallet-ui/data/rules";
-import { useWallet } from "@baret/wallet-ui/data/store";
+import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { GuardPolicy } from "@baret/wallet-ui/data/types";
 import { fromJson, type Preview, preview, valueText } from "@baret/wallet-ui/rules/fields";
 import { RuleEditor } from "@baret/wallet-ui/rules/RuleEditor";
 import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { useId, useRef, useState } from "react";
 import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-templates.js";
 import { WALLET_ART } from "../assets.js";
@@ -39,6 +39,8 @@ export function Component() {
   const { state, dispatch } = useWallet();
   const tabName = useId();
   const jsonId = useId();
+  const jsonErrorId = useId();
+  const jsonRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<GuardPolicy>(state.policy);
   const [template, setTemplate] = useState<PolicyTemplateName>(state.template);
@@ -46,13 +48,16 @@ export function Component() {
   const [tab, setTab] = useState<Tab>("form");
   const [json, setJson] = useState(() => JSON.stringify(state.policy, null, 2));
   const [notice, setNotice] = useState<{
-    kind: "saved" | "invalid" | "import";
+    kind: "saved" | "invalid" | "import" | "save" | "json" | "preview";
     field?: string;
   } | null>(null);
   const [previewed, setPreviewed] = useState<Preview | null>(null);
 
+  // Fail-closed: without Baret the rules can't be checked, so save and preview refuse.
+  const analyzerReady = ready(state, "analyzer");
   const unsaved = diffFields(state.policy, draft).length > 0 || template !== state.template;
   const changed = changedFields(draft, template);
+  const jsonBad = tab === "json" && (notice?.kind === "json" || notice?.kind === "invalid");
   const templateName = policy.templates[template].name;
 
   /** Replace the whole draft (a template, a reset, JSON, an import): the form starts over from it. */
@@ -63,18 +68,36 @@ export function Component() {
     setPreviewed(null);
   }
 
+  /** The schema loads on first use, so zod stays out of the page's first chunk. Null when it fails. */
+  async function schema(): Promise<typeof import("@baret/guard")["guardPolicySchema"] | null> {
+    try {
+      return (await import("@baret/guard")).guardPolicySchema;
+    } catch {
+      return null;
+    }
+  }
+
   async function save(): Promise<void> {
+    if (!analyzerReady) {
+      setNotice({ kind: "save" });
+      return;
+    }
     let next = draft;
     if (tab === "json") {
       const parsed = fromJson(json);
       if (!parsed) {
-        setNotice({ kind: "invalid" });
+        setNotice({ kind: "json" });
+        jsonRef.current?.focus();
         return;
       }
       next = parsed;
     }
-    // The schema loads with the first save only, so zod stays out of the page's first chunk.
-    const { guardPolicySchema } = await import("@baret/guard");
+    // A schema that fails to load (offline, or a redeploy) saves nothing.
+    const guardPolicySchema = await schema();
+    if (!guardPolicySchema) {
+      setNotice({ kind: "save" });
+      return;
+    }
     const checked = guardPolicySchema.safeParse(next);
     if (!checked.success) {
       const field = String(checked.error.issues[0]?.path[0] ?? "");
@@ -88,7 +111,11 @@ export function Component() {
 
   async function importFile(file: File): Promise<void> {
     const parsed = fromJson(await file.text());
-    const { guardPolicySchema } = await import("@baret/guard");
+    const guardPolicySchema = await schema();
+    if (!guardPolicySchema) {
+      setNotice({ kind: "save" });
+      return;
+    }
     const checked = parsed ? guardPolicySchema.safeParse(parsed) : null;
     if (!checked?.success) {
       setNotice({ kind: "import" });
@@ -109,10 +136,12 @@ export function Component() {
             <p className={T.body}>
               {changed.length === 0
                 ? fill(policies.current.matches, { template: templateName })
-                : fill(policies.current.custom.note, {
-                    template: templateName,
-                    count: String(changed.length),
-                  })}
+                : counted(
+                    changed.length,
+                    policies.current.custom.note,
+                    policies.current.custom.noteOne,
+                    { template: templateName },
+                  )}
             </p>
             <p className={T.small}>{policy.intro.failClosed}</p>
           </div>
@@ -129,7 +158,6 @@ export function Component() {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => replace(fromTemplate(template, draft.allowedAssets))}
               >
                 {fill(policies.actions.reset, { template: templateName })}
@@ -145,7 +173,7 @@ export function Component() {
               {(["form", "json"] as const).map((id) => (
                 <label
                   key={id}
-                  className="relative flex h-10 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)]"
+                  className="relative flex h-11 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] forced-color-adjust-none forced-colors:text-[CanvasText] forced-colors:has-[:checked]:bg-[Highlight] forced-colors:has-[:checked]:text-[HighlightText] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)]"
                 >
                   <input
                     type="radio"
@@ -155,8 +183,15 @@ export function Component() {
                     onChange={() => {
                       if (id === "json") setJson(JSON.stringify(draft, null, 2));
                       else {
+                        // Unreadable JSON stays on its tab with the reason, so no edit is lost.
                         const parsed = fromJson(json);
-                        if (parsed) replace(parsed);
+                        if (!parsed) {
+                          setNotice({ kind: "json" });
+                          jsonRef.current?.focus();
+                          return;
+                        }
+                        replace(parsed);
+                        if (notice?.kind === "json") setNotice(null);
                       }
                       setTab(id);
                     }}
@@ -183,7 +218,10 @@ export function Component() {
                 {policy.editor.tabs.json}
               </label>
               <textarea
+                ref={jsonRef}
                 id={jsonId}
+                aria-invalid={jsonBad || undefined}
+                aria-describedby={notice?.kind === "json" ? jsonErrorId : undefined}
                 rows={18}
                 spellCheck={false}
                 value={json}
@@ -191,6 +229,11 @@ export function Component() {
                 className="w-full resize-y border border-[color:var(--control-edge)] bg-[color:var(--ground)] p-4 font-mono text-sm text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]"
               />
               <p className={T.small}>{policy.editor.jsonHint}</p>
+              {notice?.kind === "json" ? (
+                <div id={jsonErrorId}>
+                  <Problem body={policies.errors.json} />
+                </div>
+              ) : null}
             </div>
           )}
 
@@ -209,6 +252,17 @@ export function Component() {
                 <p className="text-sm text-[color:var(--fg)]">{policy.editor.saved}</p>
               ) : null}
             </div>
+            {notice?.kind === "save" ? (
+              <Problem
+                title={policies.errors.save.title}
+                body={policies.errors.save.body}
+                action={
+                  <Button type="button" variant="ghost" onClick={() => void save()}>
+                    {policies.errors.save.action.label}
+                  </Button>
+                }
+              />
+            ) : null}
             {notice?.kind === "invalid" ? (
               <Problem
                 {...(notice.field && notice.field in policy.fields
@@ -223,16 +277,25 @@ export function Component() {
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8">
           <Block title={policies.preview.title}>
             <p className={T.body}>
-              {fill(policies.preview.body, {
-                count: String(preview(state.activity, state.policy, draft).count),
-              })}
+              {counted(
+                preview(state.activity, state.policy, draft).count,
+                policies.preview.body,
+                policies.preview.bodyOne,
+              )}
             </p>
             <div className="flex">
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                onClick={() => setPreviewed(preview(state.activity, state.policy, draft))}
+                onClick={() => {
+                  if (!analyzerReady) {
+                    setPreviewed(null);
+                    setNotice({ kind: "preview" });
+                    return;
+                  }
+                  if (notice?.kind === "preview") setNotice(null);
+                  setPreviewed(preview(state.activity, state.policy, draft));
+                }}
               >
                 {policies.preview.run}
               </Button>
@@ -253,6 +316,9 @@ export function Component() {
                 </>
               )}
             </div>
+            {notice?.kind === "preview" ? (
+              <Problem title={policies.errors.preview.title} body={policies.errors.preview.body} />
+            ) : null}
           </Block>
 
           <Block title={policies.history.title}>
@@ -286,17 +352,11 @@ export function Component() {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => download(JSON.stringify(state.policy, null, 2))}
               >
                 {policies.actions.export}
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => fileRef.current?.click()}
-              >
+              <Button type="button" variant="ghost" onClick={() => fileRef.current?.click()}>
                 {policies.actions.import}
               </Button>
               <input

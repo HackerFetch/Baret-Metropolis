@@ -106,56 +106,6 @@ export const hub = {
     ],
   },
 
-  /**
-   * The nine detector modules in docs/ARCHITECTURE.md section 6, in order.
-   * Not rendered on /showcase since 2026-10-03 (cut for simplicity; the
-   * landing's checks marquee carries them).
-   */
-  detectors: {
-    eyebrow: "Under the hood",
-    title: "Nine detectors read every request.",
-    body: "Each site trips a different few. The sign request shows only the findings that came up, one sentence each.",
-    items: [
-      {
-        title: "Simulation",
-        body: "Runs the transaction on current Monad state over Alchemy RPC, without sending it. A call that would fail is flagged.",
-      },
-      {
-        title: "Allowances",
-        body: "Flags token allowances, unlimited ones, access to whole collections and signed allowances.",
-      },
-      {
-        title: "Contracts",
-        body: "Checks the contract you call against the reported list and the contracts Baret knows.",
-      },
-      {
-        title: "Dangerous calls",
-        body: "Flags a contract deleting itself, code borrowed from another contract, and ownership changing hands.",
-      },
-      {
-        title: "Reputation",
-        body: "Reads Nansen labels and the on-chain reputation registry that Chainlink CRE threat feeds keep current.",
-      },
-      {
-        title: "Compliance",
-        body: "For assets that need a verified identity, checks both accounts with Cleanverse before the transfer.",
-      },
-      {
-        title: "Call depth",
-        body: "Flags calls that reach many contracts deep or bundle many operations into one signature.",
-      },
-      {
-        title: "Fees",
-        body: "Flags a gas limit far above what the simulation used.",
-      },
-      {
-        title: "Payments",
-        body: "Checks that an x402 payment goes to the address the server asked for, in the real asset it asked for.",
-      },
-    ],
-    action: { label: "Read the architecture", href: "/docs" },
-  },
-
   comparison: {
     /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "The difference",
@@ -203,6 +153,8 @@ export const hub = {
     pill: "Simulated site",
     notice: "A simulation on Monad testnet. Tokens here have no value.",
     back: { label: "Back to the showcase", href: "/showcase" },
+    // Screen-reader headings for a demo home's figures and FAQ.
+    site: { statsTitle: "Figures", faqTitle: "Questions" },
 
     toggle: {
       legend: "Which version to build",

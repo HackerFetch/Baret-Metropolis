@@ -20,6 +20,7 @@ const TOKENS = [
   "--rule-strong",
   "--control-edge",
   "--accent",
+  "--accent-mark",
   "--accent-deep",
   "--accent-dim",
   "--on-accent",
@@ -38,6 +39,34 @@ function blocksFor(name: string): string[] {
   return blocks;
 }
 
+type Rgb = readonly [number, number, number];
+
+/** A token's value in one block: #rrggbb, or rgb(r g b / a) laid over `under`. */
+function colour(block: string, token: string, under?: Rgb): Rgb {
+  const value = new RegExp(`${token}:\\s*([^;]+);`).exec(block)?.[1]?.trim() ?? "";
+  const hex = /^#([0-9a-f]{6})$/i.exec(value)?.[1];
+  if (hex) return [0, 2, 4].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)) as unknown as Rgb;
+  const rgb = /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(value);
+  if (!rgb || !under) throw new Error(`${token} has no colour I can read: "${value}"`);
+  const alpha = Number(rgb[4]);
+  return [1, 2, 3].map(
+    (i, k) => Number(rgb[i]) * alpha + (under[k] ?? 0) * (1 - alpha),
+  ) as unknown as Rgb;
+}
+
+/** WCAG 2 contrast ratio. */
+function ratio(a: Rgb, b: Rgb): number {
+  const lum = (c: Rgb) => {
+    const [r, g, bl] = c.map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    }) as unknown as Rgb;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 describe("dApp themes", () => {
   it.each(DAPP_NAMES)("%s defines every token in light, OS dark and explicit dark", (name) => {
     const blocks = blocksFor(name);
@@ -52,4 +81,17 @@ describe("dApp themes", () => {
       expect(css).not.toContain(token);
     }
   });
+
+  it.each(DAPP_NAMES)(
+    "%s keeps faint text at 4.5:1 and marks at 3:1 on ground and surface",
+    (name) => {
+      for (const block of blocksFor(name)) {
+        for (const bg of ["--ground", "--surface"]) {
+          const under = colour(block, bg);
+          expect(ratio(colour(block, "--fg-faint", under), under)).toBeGreaterThanOrEqual(4.5);
+          expect(ratio(colour(block, "--accent-mark"), under)).toBeGreaterThanOrEqual(3);
+        }
+      }
+    },
+  );
 });

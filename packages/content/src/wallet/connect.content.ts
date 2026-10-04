@@ -52,6 +52,8 @@ export const connect = {
 
   result: {
     connected: "Connected to {origin}.",
+    /** Approved without "Don't ask again": nothing is kept. */
+    connectedOnce: "Connected to {origin} for now. It asks again next time.",
     declined: "Declined. {origin} was told you said no.",
     expired: "The request timed out, so {origin} was not connected.",
   },

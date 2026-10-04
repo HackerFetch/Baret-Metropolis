@@ -31,15 +31,19 @@ describe.each(SHAPES)("showcase %s", (_shape, render) => {
     }
   });
 
-  it("labels the verdict for screen readers before the tag text from hub", () => {
+  it("labels the verdict for screen readers before the tag text", () => {
     for (const card of cards) {
       const host = mount(render(card));
       const sr = host.querySelector(".sr-only");
       expect(sr?.textContent?.trim()).toBe(labels.verdict);
       const text = host.textContent ?? "";
-      const verdict = hub.cardLabels.verdicts[card.verdict];
+      const verdict = home.showcase.verdicts[card.verdict];
       expect(text.indexOf(labels.verdict)).toBeLessThan(text.indexOf(verdict));
     }
+  });
+
+  it("keeps the card's verdict words the same as the hub's", () => {
+    expect(home.showcase.verdicts).toEqual(hub.cardLabels.verdicts);
   });
 
   it("shows Scrybe as blocked at the cap", () => {

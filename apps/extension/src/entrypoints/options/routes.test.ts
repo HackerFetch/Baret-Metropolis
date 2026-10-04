@@ -45,13 +45,17 @@ describe("options registry", () => {
     expect(matchesPattern(routes.siteDetail.path, "/sites")).toBe(false);
   });
 
-  it("every route loads and exports a Component", async () => {
-    for (const [key, route] of Object.entries(routes)) {
+  // One test per route, each with its own budget: importing every page cold
+  // in one test ran close to the default 5 s timeout on a busy machine (K7).
+  it.each(Object.entries(routes))(
+    "%s loads and exports a Component",
+    async (key, route) => {
       const module = await route.load();
       expect(
         (module as { Component?: unknown }).Component,
         `${key} has no Component export`,
       ).toBeTypeOf("function");
-    }
-  });
+    },
+    30_000,
+  );
 });

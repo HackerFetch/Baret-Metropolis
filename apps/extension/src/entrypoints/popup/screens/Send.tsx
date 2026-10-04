@@ -1,4 +1,5 @@
-import { popupSend, send } from "@baret/content";
+import { popupSend } from "@baret/content/extension/popup/send.content";
+import { send } from "@baret/content/wallet/send.content";
 import { Button, ChangeRow, truncateAddress } from "@baret/ui";
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
 import {
@@ -114,7 +115,13 @@ export function Send({
   const review = useLatest(() => {
     if (!asset) return;
     const request = transferRequest(asset, value, recipient.trim(), state.policy);
-    onReview({ kind: "transaction", id: `own-${Date.now()}`, request, firstTime: false });
+    onReview({
+      kind: "transaction",
+      id: `own-${Date.now()}`,
+      network: state.network,
+      request,
+      firstTime: false,
+    });
   });
 
   // "Checking the address": a short wait that stands in for the server.

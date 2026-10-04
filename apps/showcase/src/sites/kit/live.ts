@@ -1,7 +1,6 @@
 import type { AnalyzeResponse } from "@baret/guard";
 import { FAILED } from "@baret/web-ui/lib/check";
 import type { CheckApproval, CheckChange, CheckResult } from "@baret/web-ui/lib/check-types";
-import { formatUnits } from "viem";
 
 /**
  * Baret's live answer for a demo dApp. The showcase reaches the server at
@@ -37,11 +36,28 @@ export async function analyzeCall(call: DemoCall, signal: AbortSignal): Promise<
   return parsed.success ? fromAnalyzeResponse(parsed.data, call.from) : FAILED;
 }
 
-/** Base units to a short display amount: at most four decimals, no trailing zeros. */
+/**
+ * Base units to a short display amount: at most four decimals, cut (never
+ * rounded up), no trailing zeros. BigInt maths only, so the live seam does
+ * not pull in a chain library. A negative amount keeps its sign unless it
+ * shows as 0 (no "-0"); a negative or fractional `decimals` throws, which
+ * the caller turns into FAILED.
+ */
 export function displayAmount(raw: bigint, decimals: number): string {
-  const [whole = "0", fraction = ""] = formatUnits(raw, decimals).split(".");
+  if (!Number.isInteger(decimals) || decimals < 0) throw new RangeError("decimals");
+  const sign = raw < 0n ? "-" : "";
+  const abs = raw < 0n ? -raw : raw;
+  const base = 10n ** BigInt(decimals);
+  const whole = (abs / base).toString();
+  const fraction = (abs % base).toString().padStart(decimals, "0");
   const short = fraction.slice(0, 4).replace(/0+$/, "");
-  return short ? `${whole}.${short}` : whole;
+  const body = short ? `${whole}.${short}` : whole;
+  return body === "0" ? body : `${sign}${body}`;
+}
+
+/** A contract address cut to its head and tail, the unit of a token with no symbol. */
+export function shortAddress(address: string): string {
+  return address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
 }
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
@@ -49,7 +65,10 @@ const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 /**
  * AnalyzeResponse to what the panel reads. Only the visitor's own balance
  * changes and allowances are shown: that is the "What changes" a wallet
- * would show before signing.
+ * would show before signing. A token with no symbol is named by its
+ * shortened contract address, so an allowance never shows a blank unit.
+ * firedRules, suggestions, sources and expiresAt are not mapped yet:
+ * CheckResult has no place for them.
  */
 export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): CheckResult {
   const changes: CheckChange[] = response.estimatedChanges
@@ -62,7 +81,7 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
         {
           direction: delta < 0n ? "out" : "in",
           value: displayAmount(abs, c.asset.decimals),
-          unit: c.asset.symbol,
+          unit: c.asset.symbol || (c.asset.address ? shortAddress(c.asset.address) : ""),
         } as const,
       ];
     });
@@ -70,7 +89,7 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
   const approvals: CheckApproval[] = response.approvals
     .filter((a) => same(a.owner, wallet))
     .map((a) => ({
-      unit: a.symbol ?? "",
+      unit: a.symbol || shortAddress(a.contract),
       spender: a.spender,
       unlimited: a.unlimited,
       amount:

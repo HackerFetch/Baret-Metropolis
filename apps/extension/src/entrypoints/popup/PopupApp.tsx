@@ -1,3 +1,4 @@
+import { extFrame } from "@baret/content";
 import { AnimatePresence, m } from "motion/react";
 import { type JSX, useReducer, useState } from "react";
 import { unread } from "../../data/derive.js";
@@ -36,7 +37,8 @@ import { Uninitialized } from "./screens/Uninitialized.js";
  *
  * The phase comes from the background once it is wired. Until then the
  * sample picker under the notice at the top stands in for it, and the store
- * (data/store.tsx) holds the sample wallet.
+ * (data/store.tsx) holds the sample wallet. The picker's strip stays off the
+ * request screens (signing, connecting), which own the whole canvas.
  */
 
 export function PopupApp({
@@ -46,7 +48,7 @@ export function PopupApp({
   start: Start;
   onRestart: (start: Start) => void;
 }): JSX.Element {
-  const { state, dispatch } = useExtension();
+  const { state, dispatch, check } = useExtension();
   const [nav, go] = useReducer(reducePopup, {
     phase: (start.phase === "alert" ? "alert" : start.phase) satisfies Phase,
     tab: "home",
@@ -56,7 +58,10 @@ export function PopupApp({
   const [lockReason, setLockReason] = useState<LockReason>("idle");
   // A transfer from the Send form becomes the request the signing phase shows.
   const [own, setOwn] = useState<ReturnType<typeof queueOf> | null>(null);
-  const query = scenarioQuery(state.scenario);
+  const query = scenarioQuery(state.scenario, start.reachable);
+  // Restore and the forgot-passphrase reset start from an empty wallet, never
+  // the sample this popup shows.
+  const restore = `${scenarioQuery("empty", start.reachable)}&restore=1`;
   const account = activeAccount(state);
   const alertsUnread = unread(state.alerts);
 
@@ -68,9 +73,7 @@ export function PopupApp({
     body = (
       <Uninitialized
         onSetup={() => openOptions("onboarding", query)}
-        onRestore={() =>
-          openOptionsPath("/onboarding", query ? `${query}&restore=1` : "?restore=1")
-        }
+        onRestore={() => openOptionsPath("/onboarding", restore)}
       />
     );
   } else if (nav.phase === "locked") {
@@ -79,7 +82,7 @@ export function PopupApp({
         reason={lockReason}
         values={{ count: String(state.settings.lockMinutes), origin: "" }}
         onOpen={ready}
-        onReset={() => openOptionsPath("/onboarding", query ? `${query}&restore=1` : "?restore=1")}
+        onReset={() => openOptionsPath("/onboarding", restore)}
       />
     );
   } else if (nav.phase === "signing") {
@@ -97,6 +100,7 @@ export function PopupApp({
   } else {
     body = (
       <div className="flex h-full flex-col">
+        <h1 className="sr-only">{extFrame.popup.title}</h1>
         <TopStrip
           account={account}
           unread={alertsUnread}
@@ -112,6 +116,8 @@ export function PopupApp({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16, ease: "easeOut" }}
+              // Covered by a sheet: out of the tab order and away from readers.
+              inert={nav.overlay !== null}
               className="absolute inset-0 overflow-y-auto overscroll-contain"
             >
               {nav.tab === "home" ? (
@@ -127,7 +133,8 @@ export function PopupApp({
                     else if (target === "allowances") go({ type: "tab", tab: "allowances" });
                     else if (target === "payments") openOptions("payments", query);
                     else if (target === "settings") openOptions("settings", query);
-                    else dispatch({ type: "reachable", value: true, at: new Date().toISOString() });
+                    // Retry asks again: Baret counts as unreachable until it answers.
+                    else check();
                   }}
                 />
               ) : nav.tab === "activity" ? (
@@ -196,8 +203,10 @@ export function PopupApp({
 
   return (
     <div className="flex h-full flex-col bg-[color:var(--ground)] text-[color:var(--fg)]">
-      <SampleStrip onOpen={() => setPicker(true)} />
-      <div className="relative min-h-0 flex-1">{body}</div>
+      {nav.phase === "signing" || nav.phase === "connecting" ? null : (
+        <SampleStrip onOpen={() => setPicker(true)} />
+      )}
+      <main className="relative min-h-0 flex-1">{body}</main>
       <SamplePanel
         open={picker}
         start={start}

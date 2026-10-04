@@ -14,7 +14,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { ContributeCard } from "./ContributeCard.js";
 import { LaunchGlyph, VIEWS } from "./Glyph.js";
 import { ART, limitOf, SAMPLE, saleOf } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * LaunchPad: a token sale page in its own plum palette, with Baret's strip
@@ -49,19 +49,21 @@ export function LaunchPadSite(): JSX.Element {
     check.start({ mode: version, amount: value });
   }
 
-  function contribute(): void {
+  /** False when the amount is refused, so the card can move focus to it. */
+  function contribute(): boolean {
     const value = parseAmount(amount);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     const broken = limitOf(value);
     if (broken) {
       setError(site.panel.errors[broken]);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -93,7 +95,7 @@ export function LaunchPadSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="launchpad-page-faq" />
         ) : (
@@ -116,9 +118,9 @@ export function LaunchPadSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="launchpad-faq" />
+            <Faq items={site.faq} name="launchpad-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
@@ -129,7 +131,7 @@ export function LaunchPadSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

@@ -4,18 +4,20 @@ import { hasValues } from "@baret/web-ui/components/CheckBlocks";
 import type { CheckFinding } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import type { JSX } from "react";
+import { type JSX, useId } from "react";
 // By file: findings.ts imports types only, so zod stays out of this chunk.
 import { FINDING_SPECS } from "../../../guard/src/findings.js";
 
 /**
  * Findings in Baret's own words: the severity, the title, the sentence with
  * the request's values, the fix when every value it needs is there, and why
- * it matters behind a native disclosure. Shared by the sign request and the
+ * it matters behind a native disclosure (one open at a time, 44 px target). Shared by the sign request and the
  * activity log's details. Addresses are shortened in the title only; the
  * sentence keeps them whole, wrapped.
  */
 export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Element {
+  // One shared name makes the "why" disclosures exclusive.
+  const group = useId();
   if (items.length === 0) return <p className={T.body}>{sign.findings.none}</p>;
   return (
     <ul className="grid gap-5">
@@ -44,11 +46,11 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
               </p>
             ) : null}
             {"why" in words && words.why ? (
-              <details className="group">
-                <summary className="flex w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
+              <details name={group} className="group">
+                <summary className="flex min-h-11 w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
                   <span
                     aria-hidden="true"
-                    className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"
+                    className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-[160ms] group-open:rotate-45 motion-reduce:transition-none"
                   >
                     +
                   </span>

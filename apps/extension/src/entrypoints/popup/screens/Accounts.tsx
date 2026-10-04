@@ -1,4 +1,6 @@
-import { accounts, common, extFrame } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { accounts } from "@baret/content/extension/popup/accounts.content";
+import { common } from "@baret/content/shared/common.content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { amount } from "@baret/wallet-ui/data/format";

@@ -58,6 +58,9 @@ export const extFrame = {
     apply: "Show it",
   },
 
+  /** The popup's screen-reader heading while the wallet is open (ready, alert). */
+  popup: { title: "Baret wallet" },
+
   /** Under the locked screen's field while the wallet is a sample. */
   lockedHint: "Sample wallet: any passphrase of 12 characters or more opens it.",
   /** Beside every recovery phrase the sample shows. */

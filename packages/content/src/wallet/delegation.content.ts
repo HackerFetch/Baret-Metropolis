@@ -242,6 +242,16 @@ export const delegation = {
       title: "That did not go through",
       body: "The vault rejected the transaction, so nothing changed. Check the amount and try again.",
     },
+    /** A deposit above what the account holds, or a balance that did not load. */
+    balance: {
+      title: "Not enough in your account",
+      body: "Your account holds less {asset} than that, or its balance did not load. Nothing was deposited.",
+    },
+    /** A withdrawal above what the vault holds, or a balance that did not load. */
+    vaultBalance: {
+      title: "Not enough in your vault",
+      body: "Your vault holds less {asset} than that, or its balance did not load. Nothing was withdrawn.",
+    },
     reserved: {
       title: "That amount is reserved",
       body: "Your merchants reserve {amount} {asset}. Lower their daily caps or remove them, then withdraw.",

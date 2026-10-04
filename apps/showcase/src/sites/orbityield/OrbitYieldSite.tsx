@@ -14,7 +14,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { OrbitGlyph, VIEWS } from "./Glyph.js";
 import { StakeCard } from "./StakeCard.js";
 import { ART, overLimit, poolOf, SAMPLE } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * OrbitYield: a liquid staking page in its own observatory palette, with
@@ -50,18 +50,20 @@ export function OrbitYieldSite(): JSX.Element {
     check.start({ mode: version, amount: value });
   }
 
-  function stake(): void {
+  /** False when the amount is refused, so the card can move focus to it. */
+  function stake(): boolean {
     const value = parseAmount(amount);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     if (value > SAMPLE.mon) {
       setError(site.panel.errors.tooHigh);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -93,7 +95,7 @@ export function OrbitYieldSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="orbityield-page-faq" />
         ) : (
@@ -116,9 +118,9 @@ export function OrbitYieldSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="orbityield-faq" />
+            <Faq items={site.faq} name="orbityield-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
@@ -129,7 +131,7 @@ export function OrbitYieldSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

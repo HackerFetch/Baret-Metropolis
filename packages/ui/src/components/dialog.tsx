@@ -27,43 +27,71 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-[rgb(18_19_22/0.45)] duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className,
-      )}
+      className={cn("fixed inset-0 isolate z-50 bg-[rgb(18_19_22/0.45)]", className)}
       {...props}
     />
   );
 }
 
+/*
+ * Dialog motion. These keyframes live here, not in Tailwind utilities, because
+ * the animate-in plugin is not installed. Radix keeps the content mounted until
+ * its exit animation ends. BRAND timings from packages/web-ui/src/lib/motion.ts:
+ * 240 ms in, 160 ms out, the BRAND ease (--ease-count), no overshoot. Only
+ * opacity and scale move, so the centring translate is left alone. Reduced
+ * motion turns it off.
+ */
+const DIALOG_MOTION = `
+@keyframes baret-dialog-fade-in { from { opacity: 0; } }
+@keyframes baret-dialog-fade-out { to { opacity: 0; } }
+@keyframes baret-dialog-in { from { opacity: 0; scale: 0.98; } }
+@keyframes baret-dialog-out { to { opacity: 0; scale: 0.98; } }
+[data-slot="dialog-overlay"][data-state="open"] { animation: baret-dialog-fade-in 240ms var(--ease-count) both; }
+[data-slot="dialog-overlay"][data-state="closed"] { animation: baret-dialog-fade-out 160ms var(--ease-count) both; }
+[data-slot="dialog-content"][data-state="open"] { animation: baret-dialog-in 240ms var(--ease-count) both; }
+[data-slot="dialog-content"][data-state="closed"] { animation: baret-dialog-out 160ms var(--ease-count) both; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="dialog-overlay"], [data-slot="dialog-content"] { animation: none !important; }
+}
+`;
+
+/*
+ * The built-in close button needs a name, and copy lives in packages/content,
+ * so it renders only when the caller passes `closeLabel`. `showCloseButton`
+ * stays a plain boolean because CommandDialog forwards one.
+ */
+type DialogCloseLabelProps = { showCloseButton?: boolean; closeLabel?: string };
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  closeLabel,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean;
-}) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & DialogCloseLabelProps) {
   return (
     <DialogPortal>
+      <style href="baret-dialog-motion" precedence="default">
+        {DIALOG_MOTION}
+      </style>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none sm:max-w-sm",
           className,
         )}
         {...props}
       >
         {children}
-        {showCloseButton && (
+        {showCloseButton && closeLabel ? (
           <DialogPrimitive.Close data-slot="dialog-close" asChild>
-            <Button variant="ghost" className="absolute top-2 right-2" size="icon-sm">
-              <XIcon />
-              <span className="sr-only">Close</span>
+            <Button variant="ghost" className="absolute top-2 right-2" size="icon">
+              <XIcon aria-hidden="true" />
+              <span className="sr-only">{closeLabel}</span>
             </Button>
           </DialogPrimitive.Close>
-        )}
+        ) : null}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -75,13 +103,14 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/* A footer close button is shown only when the caller passes its label. */
 function DialogFooter({
   className,
-  showCloseButton = false,
+  closeLabel,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean;
+  closeLabel?: string;
 }) {
   return (
     <div
@@ -93,11 +122,11 @@ function DialogFooter({
       {...props}
     >
       {children}
-      {showCloseButton && (
+      {closeLabel ? (
         <DialogPrimitive.Close asChild>
-          <Button variant="ghost">Close</Button>
+          <Button variant="ghost">{closeLabel}</Button>
         </DialogPrimitive.Close>
-      )}
+      ) : null}
     </div>
   );
 }

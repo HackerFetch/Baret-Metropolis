@@ -70,7 +70,7 @@ export function Dialog({
       ref={ref}
       aria-labelledby={titleId}
       onClose={onCancel}
-      className="m-auto w-[min(92vw,560px)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-0 text-[color:var(--fg)] backdrop:bg-black/55"
+      className="m-auto w-[min(92vw,560px)] transition-[opacity,translate] duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none starting:open:translate-y-[14px] starting:open:opacity-0 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-0 text-[color:var(--fg)] backdrop:bg-black/55"
     >
       <div className="grid gap-5 p-6">
         <h2 id={titleId} className={`${T.h3} text-[color:var(--fg)]`}>
@@ -213,9 +213,14 @@ export function LogLine({ item }: { item: Activity }): JSX.Element {
   );
 }
 
-/** A link inside running copy or beside a block title. */
-export const LINK =
+const LINK_BASE =
   "text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 transition-colors hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+
+/** A standalone link (beside a block title, under a row): a 44 px target. */
+export const LINK = `${LINK_BASE} inline-flex min-h-11 items-center`;
+
+/** A link inside running copy: the line's own height, nothing added. */
+export const TEXT_LINK = LINK_BASE;
 
 /** Locks the wallet from any page (Settings, Lock now): the layout provides it. */
 export const LockContext = createContext<() => void>(() => {});

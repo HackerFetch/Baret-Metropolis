@@ -3,7 +3,7 @@ import { Img } from "@baret/web-ui/components/Img";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { INSTALL_ART } from "../shared/assets.js";
+import { INSTALL_ART, LCP_SIZES } from "../shared/assets.js";
 import { PageHero } from "../shared/PageHero.js";
 import { type Browser, BUILDS, leadBuild, otherBuild } from "./builds.js";
 
@@ -60,7 +60,7 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
       actions={
         <>
           <p className={`${T.small} w-full min-h-[2lh] text-[color:var(--fg)] md:min-h-[1lh]`}>
-            {hero.detected[browser]}
+            {(published ? hero.detected : hero.detectedPending)[browser]}
           </p>
           {actions}
         </>
@@ -83,7 +83,9 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
               </a>
             </p>
           ) : (
-            <p className={`${T.small} max-w-[56ch]`}>{download.status}</p>
+            <p className={`${T.small} max-w-[56ch]`}>
+              {published ? download.status : download.statusPending}
+            </p>
           )}
         </div>
       }
@@ -91,9 +93,9 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
         <div className="relative aspect-[3/2] overflow-hidden border border-[color:var(--rule)] lg:aspect-[4/5]">
           <Img
             asset={INSTALL_ART.hero}
-            loading="eager"
+            loading="priority"
             position="62% 50%"
-            sizes="(min-width: 1024px) 480px, 100vw"
+            sizes={LCP_SIZES.install}
             className="absolute inset-0 size-full"
           />
         </div>

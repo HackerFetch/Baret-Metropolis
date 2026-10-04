@@ -60,7 +60,7 @@ function forgottenIn(state: unknown): string | null {
 const TH = `${T.label} py-3 font-normal`;
 const TD = `py-3.5 text-sm text-[color:var(--fg)] ${T.num}`;
 const SITE_LINK =
-  "font-mono text-base text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 [overflow-wrap:anywhere] hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+  "inline-flex min-h-11 items-center font-mono text-base text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 [overflow-wrap:anywhere] hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
 
 export function Component() {
   const { state } = useExtension();
@@ -139,7 +139,7 @@ export function Component() {
                 title={sites.emptyFiltered.title}
                 body={sites.emptyFiltered.body}
                 action={
-                  <Button type="button" variant="ghost" size="sm" onClick={clear}>
+                  <Button type="button" variant="ghost" size="md" onClick={clear}>
                     {sites.emptyFiltered.action.label}
                   </Button>
                 }

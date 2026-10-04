@@ -1,4 +1,12 @@
+import { optionsFrame } from "@baret/content/extension/options/frame.content";
 import { defineRoutes } from "@baret/routes";
+
+const { pages } = optionsFrame;
+
+/** "{page} · Baret settings": the page name with the product after it. */
+export function pageTitle(page: string): string {
+  return optionsFrame.title.replace("{page}", page);
+}
 
 /**
  * The extension options page.
@@ -12,56 +20,56 @@ import { defineRoutes } from "@baret/routes";
 export const routes = defineRoutes({
   home: {
     path: "/",
-    title: "Baret",
-    label: "Overview",
+    title: pageTitle(pages.home),
+    label: pages.home,
     group: "main",
     load: () => import("./pages/HomePage.js"),
   },
   activity: {
     path: "/activity",
-    title: "Activity",
-    label: "Activity",
+    title: pageTitle(pages.activity),
+    label: pages.activity,
     group: "main",
     load: () => import("./pages/ActivityPage.js"),
   },
   allowances: {
     path: "/permissions",
-    title: "Standing permissions",
-    label: "Permissions",
+    title: pageTitle(pages.allowances),
+    label: pages.allowances,
     group: "main",
     load: () => import("./pages/AllowancesPage.js"),
   },
   policies: {
     path: "/rules",
-    title: "Your rules",
-    label: "Rules",
+    title: pageTitle(pages.policies),
+    label: pages.policies,
     group: "main",
     load: () => import("./pages/PoliciesPage.js"),
   },
   x402: {
     path: "/payments",
-    title: "Agent payments",
-    label: "Payments",
+    title: pageTitle(pages.x402),
+    label: pages.x402,
     group: "main",
     load: () => import("./pages/X402Page.js"),
   },
   sites: {
     path: "/sites",
-    title: "Sites",
-    label: "Sites",
+    title: pageTitle(pages.sites),
+    label: pages.sites,
     group: "main",
     load: () => import("./pages/SitesPage.js"),
   },
   siteDetail: {
     path: "/sites/:origin",
-    title: "Site",
+    title: pageTitle(pages.siteDetail),
     hidden: true,
     load: () => import("./pages/SiteDetailPage.js"),
   },
   settings: {
     path: "/settings",
-    title: "Settings",
-    label: "Settings",
+    title: pageTitle(pages.settings),
+    label: pages.settings,
     group: "main",
     load: () => import("./pages/SettingsPage.js"),
   },
@@ -72,7 +80,7 @@ export const routes = defineRoutes({
    */
   onboarding: {
     path: "/onboarding",
-    title: "Set up Baret",
+    title: pageTitle(pages.onboarding),
     group: "setup",
     hidden: true,
     load: () => import("./pages/OnboardingPage.js"),
@@ -80,7 +88,7 @@ export const routes = defineRoutes({
 
   notFound: {
     path: "/*",
-    title: "Not found",
+    title: pageTitle(pages.notFound),
     hidden: true,
     load: () => import("./pages/NotFoundPage.js"),
   },

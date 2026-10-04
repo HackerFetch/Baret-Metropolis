@@ -13,7 +13,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { PixelGlyph, VIEWS } from "./Glyph.js";
 import { MintCard } from "./MintCard.js";
 import { ART, parseQuantity, priceOf, SAMPLE } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * PixelDrop: a mint page for the Night Shift collection in its own
@@ -48,18 +48,20 @@ export function PixelDropSite(): JSX.Element {
     check.start({ mode: version, count: pieces });
   }
 
-  function mint(): void {
+  /** False when the quantity is refused, so the card can move focus to it. */
+  function mint(): boolean {
     const value = parseQuantity(quantity);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     if (value > SAMPLE.perWallet) {
       setError(site.panel.errors.tooHigh);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -99,7 +101,7 @@ export function PixelDropSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="pixeldrop-page-faq" />
         ) : (
@@ -122,9 +124,9 @@ export function PixelDropSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} />
-            <Faq items={site.faq} name="pixeldrop-faq" />
+            <Faq items={site.faq} name="pixeldrop-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
@@ -135,7 +137,7 @@ export function PixelDropSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

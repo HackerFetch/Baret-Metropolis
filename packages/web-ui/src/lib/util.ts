@@ -27,6 +27,20 @@ export function fill(template: string, values: Readonly<Record<string, string>>)
   return template.replace(/\{(\w+)\}/g, (match, name: string) => values[name] ?? match);
 }
 
+/**
+ * Pick the singular twin of a counted line when `count` is 1, then fill the
+ * chosen form with `{count}` and the other values. Both forms are filled, so
+ * a placeholder in the `...One` string never leaks.
+ */
+export function counted(
+  count: number,
+  many: string,
+  one: string,
+  values: Readonly<Record<string, string>> = {},
+): string {
+  return fill(count === 1 ? one : many, { ...values, count: String(count) });
+}
+
 /** A responsive value resolved mobile-first: md falls back to base, lg to md. */
 export interface Cascade<V> {
   readonly base: V;

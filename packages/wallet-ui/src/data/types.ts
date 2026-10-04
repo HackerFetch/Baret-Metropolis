@@ -109,9 +109,23 @@ export interface AgentPayment {
   readonly amount: string;
 }
 
-/** A sign request a site sent, with Baret's answer (or none: unreachable). */
+/** How sure Baret is of its answer (AnalyzeResponse.confidence). */
+export type SignConfidence = "high" | "medium" | "low";
+
+/** One data source Baret asked, and whether it answered (AnalyzeResponse.sources). */
+export interface SignSource {
+  readonly name: "alchemy" | "nansen" | "reputation-registry" | "cleanverse";
+  /** skipped: no rule in this policy needed it. */
+  readonly status: "ok" | "unavailable" | "skipped";
+}
+
+/**
+ * A sign request a site sent, with Baret's answer (or none: unreachable).
+ * data/analyze.ts fills one from the server's /v1/analyze answer.
+ */
 export interface SignRequest {
-  readonly id: "safe" | "caution" | "blocked" | "unreachable";
+  /** The request's own id: the sample's name today, the server's requestId once live. */
+  readonly id: string;
   /** The site that asks; null for a transfer the account starts itself. */
   readonly origin: string | null;
   /** A key of content sign.actions, and the values for its sentence. */
@@ -141,6 +155,11 @@ export interface SignRequest {
   };
   /** Seconds until the request declines on its own. */
   readonly expires: number;
+  /** Left out by the samples; set from a live answer. */
+  readonly confidence?: SignConfidence;
+  readonly sources?: readonly SignSource[];
+  /** What would make the request pass: a finding code and the values of its fix line. */
+  readonly suggestions?: readonly CheckFinding[];
 }
 
 /** A connection request. */

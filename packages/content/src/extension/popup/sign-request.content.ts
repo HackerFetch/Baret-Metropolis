@@ -25,6 +25,7 @@ export const signRequest = {
   queue: {
     label: "1 of {count}",
     body: "{count} requests are waiting. You decide on them one at a time.",
+    bodyOne: "1 request is waiting. You decide on it now.",
     next: "Next request",
     declineAll: "Decline all",
   },
@@ -36,6 +37,8 @@ export const signRequest = {
     body: "Signing sends no transaction. Sites often use it to confirm this address is yours.",
     check: "A message can't be simulated. Baret shows it exactly as the site sent it.",
     contentLabel: "The message",
+    /** The scrollable text itself; its own name, so it is not a second "The message" region. */
+    textLabel: "Message text",
     unreadable: {
       title: "This isn't readable text",
       body: "It's raw data, and it can authorize things you can't see. Sign only if you started this.",
@@ -43,7 +46,11 @@ export const signRequest = {
     actions: { sign: "Sign message", decline: "Decline" },
   },
 
-  /** eth_signTypedData_v4. Where a permit hides. */
+  /**
+   * eth_signTypedData_v4. Where a permit hides. It is checked like a
+   * transaction: the verdict, findings and rules come from wallet/sign, and
+   * Blocked or Can't reach Baret has no sign button, only the hold to override.
+   */
   typedData: {
     title: "Sign structured data",
     subtitle: "{origin} asks you to sign these fields",
@@ -73,6 +80,7 @@ export const signRequest = {
       errors: {
         empty: "Set all three caps.",
         belowPayment: "The per-payment cap can't be lower than this payment.",
+        hour: "The hourly cap can't be lower than the per-payment cap.",
         order: "The hourly cap can't be higher than the daily cap.",
       },
       actions: { approve: "Pay {amount} {asset}", decline: "Decline" },

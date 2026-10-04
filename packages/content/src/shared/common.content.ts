@@ -8,11 +8,14 @@
  * top of shared/findings.content.ts.
  */
 
+/** The brand line. The footer reads it from here so the two never drift. */
+const tagline = "Check it first. Then sign.";
+
 export const common = {
   brand: {
     name: "Baret",
     wordmark: "BARET",
-    tagline: "Read first. Then sign.",
+    tagline,
     oneLine: "The firewall for your signature on Monad.",
     description:
       "Baret reads every Monad transaction before you sign it. It simulates what the transaction will do, checks it against your rules and gives you a verdict with the reasons: Safe, Caution or Blocked.",
@@ -209,9 +212,12 @@ export const common = {
       title: "Something went wrong",
       body: "The action did not finish and nothing was signed. If this keeps happening, copy the error from your activity log.",
       action: { label: "Try again" },
-      /** The route error screen: tag, heading and the way back. */
+      /** The route error screen: tag, heading, body, a reload and the way back. */
       tag: "Error",
       heading: "This page did not load.",
+      pageBody:
+        "Part of the site failed to load, often because a new version went live while this tab was open. Reload the page to try again.",
+      reload: "Reload the page",
       back: "Back to the start",
     },
   },
@@ -248,7 +254,7 @@ export const common = {
    * href twice.
    */
   footer: {
-    tagline: "Read first. Then sign.",
+    tagline,
     note: "Free and open source under the MIT licence. Running on Monad testnet.",
     groups: [
       {
@@ -295,6 +301,8 @@ export const common = {
   /** The corner ribbon on a fake showcase site. */
   demo: {
     ribbon: "Demo site",
+    /** Accessible name of the landmark that holds the ribbon. */
+    label: "Baret showcase",
   },
 
   /** One line repeated wherever a showcase site could be taken for a real one. */

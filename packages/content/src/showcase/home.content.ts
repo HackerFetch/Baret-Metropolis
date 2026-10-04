@@ -35,7 +35,7 @@ export const home = {
     description:
       "Baret simulates every Monad transaction before you or your AI agent signs it, checks it against your rules, and explains the verdict in plain words.",
     /** og:image:alt for the static share card in index.html (G1/G3). */
-    imageAlt: "Baret: check every Monad transaction before you sign",
+    imageAlt: "The Baret logo: an orange helmet beside the BARET wordmark on a light grid",
   },
 
   /** The scroll-driven opener, one line per frame, written against the
@@ -89,9 +89,10 @@ export const home = {
     label: "Checks Baret runs before you sign",
     /** Summary of the closed <details> under the strip (H4). The number must
      *  match `items.length`; a test in apps/showcase guards it. */
-    allChecks: "See all 17 checks",
-    /** Accessible name of the static list inside that disclosure. */
-    allChecksList: "All 17 checks Baret runs before you sign",
+    allChecks: "See the 17 checks",
+    /** Accessible name of the static list inside that disclosure. The
+     *  detectors emit more codes than this list, so it never claims "all". */
+    allChecksList: "17 of the checks Baret runs before you sign",
     items: [
       "A transaction that would fail", // simulation: SIMULATION_FAILED
       "A simulation with gaps", // simulation: LOW_CONFIDENCE_INCOMPLETE_DATA
@@ -351,6 +352,15 @@ export const home = {
     notice:
       "These sites are fakes built for the showcase. They run on testnet and cannot touch real money.",
     labels: { verdict: "Expected verdict", open: "Open the site" },
+    /** The card's verdict tag. Same words as `hub.cardLabels.verdicts`, kept
+     *  here so the landing does not load the hub's copy. */
+    verdicts: {
+      safe: "Safe",
+      caution: "Caution",
+      blocked: "Blocked",
+      unreachable: "Can't reach Baret",
+      capped: "Blocked at the cap",
+    },
     cards: [
       {
         name: "Scrybe",
@@ -533,11 +543,12 @@ export const home = {
     },
     note: "Free to use. Open source. On Monad testnet.",
     /** The trust line as linked facts (D3), rendered in place of `note`. A
-     *  fact links only where it has a real destination. "Not audited yet"
-     *  waits for Ezgin to confirm (tasks/FOR_EZGIN.md). */
+     *  fact links only where it has a real destination. No audit is done or
+     *  booked (Ezgin, 2026-10-02), so the line says so. */
     facts: [
       { label: "MIT licence" },
       { label: "Source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
+      { label: "Not audited yet" },
       { label: "Monad testnet only" },
       { label: "Fails closed" },
     ],

@@ -38,6 +38,16 @@ export const send = {
   },
 
   errors: {
+    /** No assets: an empty account has nothing to send. */
+    noAssets: {
+      title: "Nothing to send yet",
+      body: "This account holds no assets. Add some testnet MON from the faucet, then come back.",
+    },
+    /** Fail-closed: balances that did not load leave nothing to check against. */
+    balance: {
+      title: "Can't read your balance",
+      body: "Monad did not answer, so Baret can't check what you can send. Try again in a moment.",
+    },
     invalidAddress: {
       title: "That is not a Monad address",
       body: "It should start with 0x and be 42 characters long.",

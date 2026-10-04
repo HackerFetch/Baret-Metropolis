@@ -9,8 +9,12 @@ import { staggerDelay } from "../lib/motion.js";
  * is 10 % above the bottom of the viewport; reveal.css turns that into the
  * BRAND landing rise (460 ms, 14 px, once). The hidden state exists only once
  * the observer is attached: without script, without IntersectionObserver,
- * under reduced motion, in print and in tests every surface renders as a
- * plain, fully visible element. No Motion code runs here.
+ * under reduced motion and in print every surface renders as a plain, fully
+ * visible element. In server markup (renderToStaticMarkup) it is plain too.
+ * happy-dom does define IntersectionObserver but never fires it, so in DOM
+ * tests a surface carries `data-reveal` and never gets `data-in`; happy-dom
+ * applies no CSS, so it still reads as visible there. No Motion code runs
+ * here.
  *
  * Grid rule: use `Stagger` only for groups that stay on one row at every width
  * (header lines, a 4-up row). For grids that stack on phones, give each item

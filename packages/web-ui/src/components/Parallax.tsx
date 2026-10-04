@@ -1,5 +1,5 @@
 import { m, useScroll, useTransform } from "motion/react";
-import { type JSX, type ReactNode, useEffect, useRef, useState } from "react";
+import { type JSX, type ReactNode, useCallback, useRef, useSyncExternalStore } from "react";
 import { useReduce } from "../lib/useReduce.js";
 import { cx } from "../lib/util.js";
 
@@ -39,16 +39,26 @@ export interface ParallaxProps {
 const PHONE = "(max-width: 767px)";
 const WIDE = "(min-width: 1440px)";
 
+/**
+ * Live media-query match. A client-only render reads the real value in its
+ * first render, so a phone never shows the desktop pose for a frame. While
+ * React hydrates the prerendered landing it uses the server value (desktop,
+ * as drawn), then re-renders before paint with the reader's width.
+ */
 function useMq(query: string): boolean {
-  const [hit, setHit] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    const on = (): void => setHit(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, [query]);
-  return hit;
+  const subscribe = useCallback(
+    (onChange: () => void): (() => void) => {
+      const mq = window.matchMedia(query);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    [query],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }
 
 function Drift({

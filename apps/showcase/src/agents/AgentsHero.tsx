@@ -1,5 +1,4 @@
-import { agents, common } from "@baret/content";
-import { CopyButton } from "@baret/web-ui/components/CopyButton";
+import { agents } from "@baret/content";
 import { Img } from "@baret/web-ui/components/Img";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Parallax } from "@baret/web-ui/components/Parallax";
@@ -9,7 +8,7 @@ import { TextReveal } from "@baret/web-ui/components/TextReveal";
 import { FRAME, GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { AGENTS_ART } from "../shared/assets.js";
+import { AGENTS_ART, LCP_SIZES } from "../shared/assets.js";
 
 /**
  * The agents page opens like the landing's hero, at night: robot carts with
@@ -17,7 +16,7 @@ import { AGENTS_ART } from "../shared/assets.js";
  * 35 % graphite veil and drift a little with the scroll; below 1024 px the
  * photo is a band on top and the copy follows on graphite. The claim, one
  * paragraph (first sentence in chalk), the way to the quickstart (the one
- * orange) and to the playground, and the install line with a copy button.
+ * orange) and to the playground, and the planned install line with its status.
  */
 
 const ID = "hero";
@@ -36,9 +35,9 @@ export function AgentsHero(): JSX.Element {
         <Parallax amount={0.03} settle={0.03}>
           <Img
             asset={AGENTS_ART.hero}
-            loading="eager"
+            loading="priority"
             position={{ base: "70% 60%", lg: "80% 60%" }}
-            sizes="100vw"
+            sizes={LCP_SIZES.agents}
             className="absolute inset-0 size-full"
           />
         </Parallax>
@@ -75,14 +74,11 @@ export function AgentsHero(): JSX.Element {
                 fullOnPhone
               />
             </div>
-            <div className="mt-8 flex max-w-[420px] items-center justify-between gap-2 border border-chalk/25 bg-ink/40 pl-4">
-              <code className="min-w-0 truncate font-mono text-sm text-chalk">{hero.install}</code>
-              <CopyButton
-                text={hero.install}
-                label={common.actions.copy}
-                done={common.actions.copied}
-                inverse
-              />
+            {/* The kit is not on npm yet: the line shows the planned command
+                without a copy button, so nobody runs it today. */}
+            <div className="mt-8 max-w-[420px] border border-chalk/25 bg-ink/40 px-4 py-3">
+              <code className="block break-all font-mono text-sm text-chalk">{hero.install}</code>
+              <p className="mt-1 text-sm text-chalk/70">{hero.installStatus}</p>
             </div>
           </div>
         </div>

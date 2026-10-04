@@ -85,10 +85,13 @@ function whenLoaded(img: HTMLImageElement, run: () => void): () => void {
 export function SkylineCanvas(): JSX.Element | null {
   const reduce = useReduce();
   const ref = useRef<HTMLCanvasElement>(null);
-  // Decided once, up front: no WebGL2 or Save-Data means no canvas at all.
-  const [state, setState] = useState<"idle" | "shown" | "done" | "off">(() =>
-    allowed() ? "idle" : "off",
-  );
+  // Decided once, after mount: no WebGL2 or Save-Data means no canvas at all.
+  // It starts "off" because the landing is prerendered and the server has no
+  // WebGL; deciding during the first render would mismatch that HTML.
+  const [state, setState] = useState<"idle" | "shown" | "done" | "off">("off");
+  useEffect(() => {
+    if (allowed()) setState("idle");
+  }, []);
   // A reduced-motion round trip unmounts the canvas; the next one starts
   // hidden. Adjusted during render, not in an effect cleanup.
   const [seenReduce, setSeenReduce] = useState(reduce);

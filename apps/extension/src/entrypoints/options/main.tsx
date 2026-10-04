@@ -10,13 +10,14 @@ import "../../styles.css";
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root.");
 
-// The sample wallet the page starts from: options.html?sample=empty for a new one.
+// The sample wallet the page starts from: options.html?sample=empty for a new
+// one, ?offline=1 when Baret does not answer, ?sample=loading while it never does.
 const start = readStart(location.search, "ready");
 
 createRoot(container).render(
   <StrictMode>
     <LandingMotion>
-      <ExtensionProvider start={{ scenario: start.scenario }}>
+      <ExtensionProvider start={{ scenario: start.scenario, reachable: start.reachable }}>
         <RouterProvider router={router} />
       </ExtensionProvider>
     </LandingMotion>

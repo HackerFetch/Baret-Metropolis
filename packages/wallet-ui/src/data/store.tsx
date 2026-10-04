@@ -8,6 +8,8 @@ import {
   AGENT_PAYMENTS,
   ALERTS,
   ASSETS,
+  DRIFT_ALERT,
+  EMPTY_VAULT,
   PERMISSIONS,
   POLICY,
   VAULT,
@@ -40,7 +42,47 @@ export interface RuleChange {
   readonly at: string;
 }
 
+/** Where a part of the state stands. Only "ok" means it can be trusted. */
+export type LoadStatus = "ok" | "loading" | "error";
+
+export interface WalletStatus {
+  /** The Baret server: without it nothing is checked, so nothing is signed. */
+  readonly analyzer: LoadStatus;
+  /** The account's balances, read from Monad RPC. */
+  readonly balances: LoadStatus;
+  /** The account's activity, read from the indexer. */
+  readonly activity: LoadStatus;
+}
+
+/**
+ * Which sample the wallet starts from, read once from `?sample=`:
+ * - default: a few days of history, everything reachable.
+ * - empty: a new account with no assets, activity or permissions.
+ * - offline: Baret unreachable, balances and activity failed to load.
+ * - drift: the default account plus a drift alert.
+ * - passkey-error, fund-timeout: the default account; onboarding reads
+ *   them to fail its passkey or its funding step.
+ */
+export const SAMPLES = [
+  "default",
+  "empty",
+  "offline",
+  "drift",
+  "passkey-error",
+  "fund-timeout",
+] as const;
+export type Sample = (typeof SAMPLES)[number];
+
+/** The sample a query string names; anything unknown is the default one. */
+export function readSample(search: string): Sample {
+  const name = new URLSearchParams(search).get("sample");
+  return (SAMPLES as readonly string[]).includes(name ?? "") ? (name as Sample) : "default";
+}
+
 export interface WalletState {
+  readonly sample: Sample;
+  /** Fail-closed: a part not "ok" is shown as failed or loading, never as data. */
+  readonly status: WalletStatus;
   readonly address: string;
   readonly accountName: string;
   readonly assets: readonly Asset[];
@@ -57,6 +99,11 @@ export interface WalletState {
     readonly lockAfterInactivity: boolean;
     readonly passkeyEverySignature: boolean;
   };
+  /**
+   * Whether the wallet is locked. Sample only: it lives in memory, so it
+   * covers the tab it was set in, and a request window opened as a new
+   * document starts unlocked. The live keystore will hold it instead.
+   */
   readonly locked: boolean;
 }
 
@@ -76,15 +123,82 @@ export type WalletAction =
   | { type: "merchantStatus"; address: string; status: Merchant["status"] }
   | { type: "createAgent"; address: string; created: string }
   | { type: "revokeAgent"; at: string }
+  | { type: "status"; key: keyof WalletStatus; value: LoadStatus }
   | { type: "reset" };
 
-export function initialState(name: string): WalletState {
-  return {
+const ALL_OK: WalletStatus = { analyzer: "ok", balances: "ok", activity: "ok" };
+
+/** True only when that part loaded: loading and error both read as not ready. */
+export function ready(state: WalletState, key: keyof WalletStatus): boolean {
+  return state.status[key] === "ok";
+}
+
+/** The merchants the agent can pay today: those neither paused nor removed. */
+export function activeMerchants(vault: Vault): number {
+  return vault.merchants.filter((m) => m.status === "active").length;
+}
+
+/**
+ * Keep the agent's permission row in step with the vault: it names how many
+ * merchants the agent can pay, and it goes when the agent key is revoked.
+ */
+function withAgentRow(permissions: readonly Permission[], vault: Vault): readonly Permission[] {
+  const row = permissions.find((p) => p.kind === "agent");
+  if (!vault.agent) return row ? permissions.filter((p) => p !== row) : permissions;
+  const values = { count: String(activeMerchants(vault)) };
+  if (!row) return [...permissions, { id: "agent", kind: "agent", values }];
+  return permissions.map((p) => (p === row ? { ...p, values } : p));
+}
+
+/**
+ * Whether the account holds enough of the vault's asset for a deposit.
+ * Fail-closed: an unreadable balance or amount refuses it.
+ */
+export function canDeposit(state: WalletState, amount: string): boolean {
+  if (!ready(state, "balances")) return false;
+  const asset = state.assets.find((a) => a.symbol === state.vault.asset);
+  if (!asset) return false;
+  const held = toUnits(asset.balance, asset.decimals);
+  const wanted = toUnits(amount, asset.decimals);
+  return held !== null && wanted !== null && wanted > 0n && wanted <= held;
+}
+
+/** The vault's asset has 6 decimals (USDC); its balance is kept to 2 places. */
+const VAULT_DECIMALS = 6;
+
+/**
+ * Whether the vault holds enough for a withdrawal back to the account.
+ * Fail-closed like canDeposit: unreadable balances, a missing account row
+ * for the asset (the amount would land nowhere) or an unreadable amount
+ * refuse it.
+ */
+export function canWithdraw(state: WalletState, amount: string): boolean {
+  if (!ready(state, "balances")) return false;
+  if (!state.assets.some((a) => a.symbol === state.vault.asset)) return false;
+  const held = toUnits(state.vault.balance, VAULT_DECIMALS);
+  const wanted = toUnits(amount, VAULT_DECIMALS);
+  return held !== null && wanted !== null && wanted > 0n && wanted <= held;
+}
+
+/** Move an amount of the vault's asset in (sign -1) or out (sign 1) of the account. */
+function accountAmount(state: WalletState, text: string, sign: 1n | -1n): readonly Asset[] {
+  return state.assets.map((asset) => {
+    if (asset.symbol !== state.vault.asset) return asset;
+    const balance = toUnits(asset.balance, asset.decimals) ?? 0n;
+    const change = toUnits(text, asset.decimals) ?? 0n;
+    return { ...asset, balance: fromUnits(balance + sign * change, asset.decimals) };
+  });
+}
+
+export function initialState(name: string, sample: Sample = "default"): WalletState {
+  const base: WalletState = {
+    sample,
+    status: ALL_OK,
     address: ACCOUNT.address,
     accountName: name,
     assets: ASSETS,
     activity: ACTIVITY,
-    permissions: PERMISSIONS,
+    permissions: withAgentRow(PERMISSIONS, VAULT),
     alerts: ALERTS,
     policy: POLICY,
     template: "balanced",
@@ -94,19 +208,48 @@ export function initialState(name: string): WalletState {
     settings: { lockAfterInactivity: true, passkeyEverySignature: false },
     locked: false,
   };
+  switch (sample) {
+    case "empty":
+      return {
+        ...base,
+        assets: [],
+        activity: [],
+        permissions: [],
+        alerts: [],
+        vault: EMPTY_VAULT,
+        agentPayments: [],
+      };
+    case "offline":
+      // Nothing that failed to load is shown: no balances, no activity, and
+      // none of the on-chain views read over the same RPC (the vault, the
+      // permissions and the alerts about them).
+      return {
+        ...base,
+        status: { analyzer: "error", balances: "error", activity: "error" },
+        assets: [],
+        activity: [],
+        permissions: [],
+        alerts: [],
+        vault: EMPTY_VAULT,
+        agentPayments: [],
+      };
+    case "drift":
+      return { ...base, alerts: [DRIFT_ALERT, ...base.alerts] };
+    default:
+      return base;
+  }
 }
 
 function vaultAmount(vault: Vault, text: string, sign: 1n | -1n): Vault {
-  const decimals = 6;
-  const balance = toUnits(vault.balance, decimals) ?? 0n;
-  const change = toUnits(text, decimals) ?? 0n;
-  return { ...vault, balance: fromUnits(balance + sign * change, decimals, { max: 2 }) };
+  const balance = toUnits(vault.balance, VAULT_DECIMALS) ?? 0n;
+  const change = toUnits(text, VAULT_DECIMALS) ?? 0n;
+  return { ...vault, balance: fromUnits(balance + sign * change, VAULT_DECIMALS, { max: 2 }) };
 }
 
 export function reduce(
   state: WalletState,
   action: WalletAction,
-  initial = initialState,
+  initial: (name: string) => WalletState = (name) => initialState(name, state.sample),
 ): WalletState {
   switch (action.type) {
     case "rename":
@@ -174,41 +317,59 @@ export function reduce(
       };
     }
     case "deposit":
-      return { ...state, vault: vaultAmount(state.vault, action.amount, 1n) };
+      // Refused above what the account holds; the page says why.
+      if (!canDeposit(state, action.amount)) return state;
+      return {
+        ...state,
+        assets: accountAmount(state, action.amount, -1n),
+        vault: vaultAmount(state.vault, action.amount, 1n),
+      };
     case "withdraw":
-      return { ...state, vault: vaultAmount(state.vault, action.amount, -1n) };
+      // Refused above what the vault holds, or with balances unread.
+      if (!canWithdraw(state, action.amount)) return state;
+      return {
+        ...state,
+        assets: accountAmount(state, action.amount, 1n),
+        vault: vaultAmount(state.vault, action.amount, -1n),
+      };
     case "merchant": {
       const others = state.vault.merchants.filter((m) => m.address !== action.merchant.address);
-      return { ...state, vault: { ...state.vault, merchants: [...others, action.merchant] } };
+      const vault = { ...state.vault, merchants: [...others, action.merchant] };
+      return { ...state, vault, permissions: withAgentRow(state.permissions, vault) };
     }
-    case "merchantStatus":
-      return {
-        ...state,
-        vault: {
-          ...state.vault,
-          merchants: state.vault.merchants.map((m) =>
-            m.address === action.address ? { ...m, status: action.status } : m,
-          ),
-        },
+    case "merchantStatus": {
+      const vault = {
+        ...state.vault,
+        merchants: state.vault.merchants.map((m) =>
+          m.address === action.address ? { ...m, status: action.status } : m,
+        ),
       };
-    case "createAgent":
+      return { ...state, vault, permissions: withAgentRow(state.permissions, vault) };
+    }
+    case "createAgent": {
+      const vault = {
+        ...state.vault,
+        agent: { address: action.address, created: action.created, payments: 0 },
+      };
       return {
         ...state,
-        vault: {
-          ...state.vault,
-          agent: { address: action.address, created: action.created, payments: 0 },
-        },
+        vault,
+        permissions: withAgentRow(state.permissions, vault),
         alerts: state.alerts.filter((alert) => alert.kind !== "agentRevoked"),
       };
+    }
     case "revokeAgent":
       return {
         ...state,
         vault: { ...state.vault, agent: null },
+        permissions: withAgentRow(state.permissions, { ...state.vault, agent: null }),
         alerts: [
           { id: `agent-revoked-${action.at}`, kind: "agentRevoked", values: {} },
           ...state.alerts,
         ],
       };
+    case "status":
+      return { ...state, status: { ...state.status, [action.key]: action.value } };
     case "reset":
       return initial(state.accountName);
   }
@@ -229,10 +390,12 @@ export function WalletProvider({
   name: string;
   children: ReactNode;
 }): JSX.Element {
+  // The sample is read once, on the first render; the wallet is not prerendered.
   const [state, dispatch] = useReducer(
     (current: WalletState, action: WalletAction) => reduce(current, action),
     name,
-    initialState,
+    (start: string) =>
+      initialState(start, readSample(typeof window === "undefined" ? "" : window.location.search)),
   );
   return <WalletContext value={{ state, dispatch }}>{children}</WalletContext>;
 }

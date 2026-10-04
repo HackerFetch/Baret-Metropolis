@@ -22,6 +22,7 @@ export const policies = {
     custom: {
       label: "Custom",
       note: "Started from {template}. {count} rules changed.",
+      noteOne: "Started from {template}. {count} rule changed.",
     },
   },
 
@@ -44,6 +45,7 @@ export const policies = {
   preview: {
     title: "Before you save",
     body: "Your last {count} requests, checked again under these rules.",
+    bodyOne: "Your last request, checked again under these rules.",
     run: "Run the preview",
     running: "Checking your recent requests again",
     same: "Same outcome for all of them.",
@@ -86,6 +88,8 @@ export const policies = {
       body: "Your previous rules still apply. Try again.",
       action: { label: "Try again" },
     },
+    /** JSON that does not parse: the switch to the form waits until it does. */
+    json: "Baret can't read this JSON, so the form can't show it. Fix it here first. Your rules did not change.",
     import: {
       title: "Baret can't read that file",
       body: "It is not a rule set Baret recognises. Nothing changed.",

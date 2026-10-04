@@ -27,10 +27,12 @@ import { Points, Tile, TileMedia, TileText } from "./pillars/Tile.js";
  * Tiles rise in order (60 ms apart, once). Stats count up once in view.
  */
 
-const P_SIZES = "(min-width: 1024px) 480px, 100vw";
+/** Slot widths: on phones a tile sits inside the 16 px page gutters, and on
+ *  tablets the Pre-sign picture takes half its tile. */
+const P_SIZES = "(min-width: 1024px) 480px, (min-width: 768px) 50vw, calc(100vw - 32px)";
 /** Every tile's ruled points sit on its floor, so the three share one baseline rhythm. */
 const POINTS_FLOOR = "mt-auto pt-6";
-const SIDE_SIZES = "(min-width: 1024px) 260px, (min-width: 768px) 50vw, 100vw";
+const SIDE_SIZES = "(min-width: 1024px) 260px, (min-width: 768px) 50vw, calc(100vw - 32px)";
 
 export function PillarsSection(): JSX.Element {
   const { title, body, items } = home.pillars;

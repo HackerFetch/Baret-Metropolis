@@ -3,7 +3,7 @@ import { Reveal } from "@baret/web-ui/components/Reveal";
 import { GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { BarChart, PageFrame, PageHead, Totals } from "./Page.js";
+import { BarChart, Fill, PageFrame, PageHead, Totals } from "./Page.js";
 import { FaqList } from "./Sections.js";
 
 /**
@@ -97,7 +97,7 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent)] hover:text-[color:var(--fg)]"
+                  className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent-mark)] hover:text-[color:var(--fg)]"
                 >
                   {section.title}
                 </a>
@@ -110,16 +110,25 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
         {view.sections.map((section) => (
           <Reveal
             key={section.id}
-            className="grid min-w-0 scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent)] pt-5"
+            className="grid min-w-0 scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent-mark)] pt-5"
           >
             <h2 id={section.id} className={`${T.h3} text-[color:var(--fg)]`}>
               {section.title}
             </h2>
             <p className={`${T.body} max-w-[64ch]`}>{section.body}</p>
             {section.code ? (
-              <pre className="overflow-x-auto border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm">
-                <code>{section.code}</code>
-              </pre>
+              <>
+                {/* biome-ignore lint/a11y/useSemanticElements: the code box is a named region and keeps pre whitespace. */}
+                <pre
+                  // biome-ignore lint/a11y/noNoninteractiveTabindex: the code scrolls sideways, so the keyboard must reach it.
+                  tabIndex={0}
+                  role="region"
+                  aria-label={section.title}
+                  className="overflow-x-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent-mark)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm"
+                >
+                  <code>{section.code}</code>
+                </pre>
+              </>
             ) : null}
           </Reveal>
         ))}
@@ -150,16 +159,16 @@ function ListView({ view }: { view: Of<"list"> }): JSX.Element {
 
 /** Each share's fill, in order: the accent first, then quieter inks. */
 const SHARE_FILL = [
-  "bg-[color:var(--accent)]",
+  "bg-[color:var(--accent-mark)]",
   "bg-[color:var(--fg)]",
   "bg-[color:var(--fg-muted)]",
-  "bg-[color:var(--rule-strong)]",
+  "bg-[color:var(--fg-faint)]",
 ] as const;
 
 function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {
   return (
     <Reveal className="grid gap-8">
-      <div aria-hidden="true" className="flex h-12 gap-0.5 md:h-16">
+      <Fill axis="x" aria-hidden className="flex h-12 gap-0.5 md:h-16">
         {view.items.map((item, i) => (
           <span
             key={item.label}
@@ -167,28 +176,30 @@ function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {
             style={{ width: `${item.value}%` }}
           />
         ))}
-      </div>
+      </Fill>
       <dl className="grid border-t border-[color:var(--rule-strong)] md:grid-cols-2">
         {view.items.map((item, i) => (
+          // A group holds only its dt and dd (valid HTML for a dl): the swatch
+          // sits inside the dt, and the dd is indented to the label.
           <div
             key={item.label}
-            className={`grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-b border-[color:var(--rule)] py-5 ${i % 2 === 1 ? "md:border-l md:pl-6" : "md:pr-6"}`}
+            className={`grid gap-y-1 border-b border-[color:var(--rule)] py-5 ${i % 2 === 1 ? "md:border-l md:pl-6" : "md:pr-6"}`}
           >
-            <span
-              aria-hidden="true"
-              className={`mt-2 size-3 ${SHARE_FILL[i % SHARE_FILL.length]}`}
-            />
-            <div className="grid gap-1">
-              <dt className="flex items-baseline justify-between gap-4">
+            <dt className="flex items-baseline gap-4">
+              <span
+                aria-hidden="true"
+                className={`size-3 shrink-0 self-start mt-2 ${SHARE_FILL[i % SHARE_FILL.length]}`}
+              />
+              <span className="flex flex-1 items-baseline justify-between gap-4">
                 <span className={`${T.h3} text-[color:var(--fg)]`}>{item.label}</span>
                 <span
                   className={`${T.num} font-display text-2xl font-extrabold text-[color:var(--fg)]`}
                 >
                   {item.value}%
                 </span>
-              </dt>
-              <dd className={T.body}>{item.body}</dd>
-            </div>
+              </span>
+            </dt>
+            <dd className={`${T.body} pl-7`}>{item.body}</dd>
           </div>
         ))}
       </dl>

@@ -47,7 +47,7 @@ export function Rules({ onNext }: { onNext: () => void }): JSX.Element {
             <Button type="button" variant="primary" size="lg" onClick={save}>
               {rules.action.label}
             </Button>
-            <Link to={routes.policies.path} className={`${LINK} inline-flex min-h-11 items-center`}>
+            <Link to={routes.policies.path} className={LINK}>
               {rules.customise.label}
             </Link>
           </div>

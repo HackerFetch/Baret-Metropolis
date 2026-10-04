@@ -7,12 +7,43 @@
  * stays out of the wallet (BRAND section 09): this is "sample data".
  */
 export const walletFrame = {
+  /**
+   * Tab titles, one per route (apps/wallet/src/routes.ts). Each names the
+   * wallet, so a request window opened by a site still says whose it is.
+   */
+  meta: {
+    titles: {
+      home: "Baret Wallet",
+      send: "Send · Baret Wallet",
+      receive: "Receive · Baret Wallet",
+      history: "Activity · Baret Wallet",
+      policies: "Your rules · Baret Wallet",
+      delegation: "Agent delegation · Baret Wallet",
+      settings: "Settings · Baret Wallet",
+      onboarding: "Set up your wallet · Baret Wallet",
+      connect: "Connection request · Baret Wallet",
+      sign: "Sign request · Baret Wallet",
+      notFound: "Not found · Baret Wallet",
+    },
+  },
   nav: {
     /** Accessible name of the wallet's navigation landmark. */
     label: "Wallet",
     open: "Open the menu",
     close: "Close the menu",
+    /** The sidebar labels, one per app screen. */
+    labels: {
+      home: "Home",
+      send: "Send",
+      receive: "Receive",
+      history: "Activity",
+      policies: "Rules",
+      delegation: "Agents",
+      settings: "Settings",
+    },
   },
+  /** The first stop on every app screen, past the sidebar to the screen. */
+  skip: "Skip to content",
   account: {
     label: "Account",
     copy: "Copy the address",
@@ -24,6 +55,10 @@ export const walletFrame = {
     title: "The wallet is locked",
     body: "Your passkey opens it again. Until then, nothing in it can be read or signed.",
     action: "Unlock with your passkey",
+    /** In a request window: the request waits behind the lock. */
+    request: "A site is waiting for an answer. Unlock to read the request, or decline it now.",
+    decline: "Decline the request",
+    declined: "Request declined. Nothing was signed or shared.",
   },
   sample: {
     tag: "Sample data",
@@ -34,6 +69,8 @@ export const walletFrame = {
     faucet: "https://faucet.monad.xyz",
     showcase: "https://baret-metropolis.vercel.app/showcase",
     source: "https://github.com/HackerFetch/Baret-Metropolis",
+    /** The Monad testnet explorer, for a transaction hash in the history. */
+    explorer: "https://testnet.monadexplorer.com",
     limits:
       "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/WALLET.md#7-out-of-scope-for-v1-scope-guard",
   },
@@ -43,6 +80,8 @@ export const walletFrame = {
   samples: {
     legend: "Sample request",
     note: "Pick a sample to see how each verdict reads.",
+    /** The connect window shows no verdict, so its note speaks of requests. */
+    noteConnect: "Pick a sample to see how each request reads.",
   },
 } as const;
 

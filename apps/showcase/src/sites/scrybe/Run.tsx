@@ -15,6 +15,9 @@ import { runOf, SAMPLE, usdc } from "./sample.js";
 
 const { run } = scrybe.analysis;
 
+/** "0.05 USDC": the amount with its unit, from the copy. */
+const priced = (units: bigint): string => fill(scrybe.amount, { amount: usdc(units) });
+
 export function Run({ cap }: { cap: bigint }): JSX.Element {
   return (
     <PanelBlock title={run.title}>
@@ -30,14 +33,14 @@ export function Run({ cap }: { cap: bigint }): JSX.Element {
             {payment.paid ? (
               <span className="flex items-baseline gap-4">
                 <span className={`${T.num} font-mono text-sm text-[color:var(--fg-muted)]`}>
-                  {fill(run.total, { total: `${usdc(payment.total)} USDC` })}
+                  {fill(run.total, { total: priced(payment.total) })}
                 </span>
                 <span className={T.label}>{run.paid}</span>
               </span>
             ) : (
               <span className="flex items-center gap-4">
                 <span className={`${T.num} font-mono text-sm text-[color:var(--fg-muted)]`}>
-                  {usdc(SAMPLE.price)} USDC
+                  {priced(SAMPLE.price)}
                 </span>
                 <VerdictTag kind="blocked" label={hub.cardLabels.verdicts.capped} />
               </span>

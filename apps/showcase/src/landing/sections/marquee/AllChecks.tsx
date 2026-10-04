@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import type { JSX } from "react";
 
 /**
- * "See all 17 checks": a native, closed <details> under the moving rows.
+ * "See the 17 checks": a native, closed <details> under the moving rows.
  * Moving text cannot be read on purpose, so this is the one place a sighted
  * reader sees the whole list, as plain static text. It is also the list
  * screen readers use (the rows are aria-hidden), and find-in-page opens it.

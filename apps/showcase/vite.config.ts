@@ -62,6 +62,9 @@ export default defineConfig({
 
   build: {
     target: "baseline-widely-available",
+    // Read by scripts/route-heads.mjs to preload each route's own chunks,
+    // then deleted from dist.
+    manifest: true,
     // A security product does not publish its source (E4). "hidden" still
     // wrote every .map into dist, where anyone could fetch it by URL, so maps
     // are off by default. BARET_SOURCEMAPS=1 turns them back on for a build

@@ -20,18 +20,19 @@ const VARIANT = {
   /* The transparent border is invisible until forced colours paint it, so
      the primary keeps its box in high contrast and matches ghost's height. */
   primary:
-    "border border-transparent bg-[color:var(--accent)] text-[color:var(--on-accent)] hover:bg-[color:var(--accent-deep)]",
+    "text-[color:var(--on-accent)] before:border-transparent before:bg-[color:var(--accent)] hover:before:bg-[color:var(--accent-deep)]",
   /** Everything else. A rule, not a fill. */
   ghost:
-    "border border-[color:var(--fg)] text-[color:var(--fg)] hover:bg-[color:var(--ground-deep)]",
+    "text-[color:var(--fg)] before:border-[color:var(--fg)] hover:before:bg-[color:var(--ground-deep)]",
   /** Quieter than ghost, for a third action in a row. */
-  soft: "border border-transparent bg-[color:var(--ground-deep)] text-[color:var(--fg)] hover:bg-[color:var(--rule)]",
+  soft: "text-[color:var(--fg)] before:border-transparent before:bg-[color:var(--ground-deep)] hover:before:bg-[color:var(--rule)]",
   /**
    * Revoke, reset, sign anyway. Red is reserved for an action that cannot be
-   * undone, so that red always means the same thing.
+   * undone, so that red always means the same thing. The text takes the ink
+   * shade, which holds 4.5:1 on the light grounds; the rule and fill keep red.
    */
   danger:
-    "border border-[color:var(--blocked)] text-[color:var(--blocked)] hover:bg-[color:var(--blocked)] hover:text-[color:var(--surface)]",
+    "text-[color:var(--blocked-ink)] before:border-[color:var(--blocked)] hover:text-[color:var(--surface)] hover:before:bg-[color:var(--blocked)]",
 } as const;
 
 const SIZE = {
@@ -71,11 +72,15 @@ export function Button({
       type={asChild ? undefined : (type ?? "button")}
       data-slot="button"
       className={cn(
-        "chamfer-sm inline-flex shrink-0 items-center justify-center gap-2 font-display font-extrabold uppercase tracking-[0.08em]",
+        "relative isolate inline-flex shrink-0 items-center justify-center gap-2 font-display font-extrabold uppercase tracking-[0.08em]",
+        // A clip-path also clips the element's own outline, so the button
+        // stays unclipped and carries the focus ring, and the chamfered face
+        // (fill and border) is painted by a pseudo-element behind the label.
+        "before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:border before:content-[''] before:[clip-path:polygon(0_0,calc(100%_-_var(--chamfer-sm))_0,100%_var(--chamfer-sm),100%_100%,0_100%)]",
         // Listed properties only: outline-color stays out so the focus ring
         // appears instantly. The face gives under a press (0.97), 100ms in,
         // 150ms out, and holds still for a viewer who asked for less motion.
-        "transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.97] active:duration-100 motion-reduce:active:scale-100",
+        "transition-[color,transform] duration-150 ease-out before:transition-[background-color,border-color] before:duration-150 before:ease-out active:scale-[0.97] active:duration-100 motion-reduce:active:scale-100",
         "focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[color:var(--accent)]",
         "disabled:pointer-events-none disabled:opacity-40",
         "[&_svg]:size-4 [&_svg]:shrink-0",

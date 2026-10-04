@@ -16,11 +16,11 @@ import {
   unread,
 } from "./derive.js";
 import { ACTIVITY, DRIFT_ALERT, PERMISSIONS, queueOf, REQUESTS, SAMPLE_NOW } from "./sample.js";
-import { initialState, reduce } from "./store.js";
+import { failUnlock, initialState, reduce, startState } from "./store.js";
 import type { PaymentPermission } from "./types.js";
 import { activityText, headline, partyOf, permissionLine, statusOf, timeOf } from "./words.js";
 
-const full = () => initialState({ scenario: "full" });
+const full = () => startState({ scenario: "full" });
 
 describe("times against the sample's present", () => {
   it("reads minutes, hours and days ago", () => {
@@ -70,7 +70,7 @@ describe("caps", () => {
 
 describe("the popup's one banner", () => {
   it("puts funds that moved without you above everything", () => {
-    const state = initialState({ scenario: "full", drift: true });
+    const state = startState({ scenario: "full", drift: true });
     expect(bannerOf(state)?.kind).toBe("drift");
     expect(unread(state.alerts)).toBe(3);
   });
@@ -82,12 +82,33 @@ describe("the popup's one banner", () => {
   });
 
   it("asks a new wallet for its backup", () => {
-    expect(bannerOf(initialState({ scenario: "empty" }))?.kind).toBe("backup");
+    expect(bannerOf(startState({ scenario: "empty" }))?.kind).toBe("backup");
   });
 
   it("treats Baret unreachable as the second most urgent", () => {
     const down = reduce(full(), { type: "reachable", value: false, at: SAMPLE_NOW });
     expect(bannerOf(down)?.kind).toBe("unreachable");
+  });
+
+  it("counts Baret as unreachable until a check answers", () => {
+    expect(initialState({ scenario: "full" }).reachable).toBeNull();
+    expect(bannerOf(initialState({ scenario: "full" }))?.kind).toBe("unreachable");
+    expect(startState({ scenario: "full", reachable: false }).reachable).toBe(false);
+    const checking = reduce(full(), { type: "check" });
+    expect(bannerOf(checking)?.kind).toBe("unreachable");
+  });
+});
+
+describe("the unlock pause", () => {
+  it("pauses on every fifth wrong passphrase and keeps it in the store", () => {
+    let lock = { failures: 0, pausedUntil: null as string | null };
+    for (let i = 0; i < 4; i += 1) lock = failUnlock(lock, SAMPLE_NOW);
+    expect(lock.pausedUntil).toBeNull();
+    lock = failUnlock(lock, SAMPLE_NOW);
+    expect(Date.parse(lock.pausedUntil ?? "") - Date.parse(SAMPLE_NOW)).toBe(30_000);
+    const state = reduce(full(), { type: "unlockFailed", at: SAMPLE_NOW });
+    expect(state.lock.failures).toBe(1);
+    expect(reduce(state, { type: "unlocked" }).lock.failures).toBe(0);
   });
 });
 

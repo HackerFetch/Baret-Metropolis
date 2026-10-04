@@ -4,7 +4,7 @@ import { Segment } from "@baret/web-ui/components/Segment";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId } from "react";
+import { type JSX, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 import { CAPS, type Cap, SAMPLE, usdc } from "./sample.js";
 
@@ -20,7 +20,7 @@ const { panel, attack } = scrybe.site;
 const { watch } = scrybe.analysis;
 
 const FIELD =
-  "w-full resize-y border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 text-lg text-[color:var(--fg)] placeholder:text-[color:var(--fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]";
+  "w-full resize-y border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 text-lg text-[color:var(--fg)] placeholder:text-[color:var(--fg-muted)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]";
 
 export function AskCard({
   mode,
@@ -39,12 +39,14 @@ export function AskCard({
   cap: Cap;
   onCap: (cap: Cap) => void;
   error: string | null;
-  onAsk: () => void;
+  /** False when the question is missing. */
+  onAsk: () => boolean;
 }): JSX.Element {
   const titleId = useId();
   const errorId = useId();
   const capName = useId();
   const capHintId = useId();
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
   const danger = mode === "danger";
   const values = { amount: usdc(SAMPLE.price), merchant: truncateAddress(SAMPLE.merchant) };
 
@@ -53,7 +55,8 @@ export function AskCard({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        onAsk();
+        // A failed ask moves focus to the question, which reads out its error.
+        if (!onAsk()) fieldRef.current?.focus();
       }}
       className="grid gap-5 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-6 md:p-8"
     >
@@ -71,7 +74,7 @@ export function AskCard({
                 name={capName}
                 value={String(value)}
                 checked={cap === value}
-                label={`${usdc(value)} USDC`}
+                label={fill(scrybe.amount, { amount: usdc(value) })}
                 onSelect={(next) => {
                   const picked = CAPS.find((c) => String(c) === next);
                   if (picked !== undefined) onCap(picked);
@@ -86,6 +89,7 @@ export function AskCard({
       ) : (
         <div className="grid gap-2">
           <textarea
+            ref={fieldRef}
             aria-labelledby={titleId}
             rows={3}
             value={question}
@@ -95,11 +99,14 @@ export function AskCard({
             {...(error ? { "aria-describedby": errorId } : {})}
             className={FIELD}
           />
-          {error ? (
-            <p id={errorId} className="text-sm font-medium text-[color:var(--blocked)]">
-              {error}
-            </p>
-          ) : null}
+          {/* Always mounted, so the error is announced when it appears. */}
+          <p
+            id={errorId}
+            aria-live="polite"
+            className="text-sm font-medium text-[color:var(--blocked)] empty:hidden"
+          >
+            {error}
+          </p>
         </div>
       )}
 

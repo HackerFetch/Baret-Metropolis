@@ -15,5 +15,8 @@ export interface StakeInput {
   readonly amount: number;
 }
 
+/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
+export const LIVE = false;
+
 export const SOURCE: CheckSource<StakeInput> = async (input) =>
   sampleCheck(input.mode, input.amount);

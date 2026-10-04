@@ -139,7 +139,7 @@ export function StepFrame({
 }
 
 export const LABEL = "text-sm font-medium text-[color:var(--fg)]";
-export const ERROR = "text-sm font-medium text-[color:var(--blocked)]";
+export const ERROR = "text-sm font-medium text-[color:var(--blocked-ink)]";
 
 /** A labelled field: the hint and any error under it, both read with the field. */
 export function TextField({
@@ -258,7 +258,7 @@ export function AddressLine(): JSX.Element {
   );
 }
 
-/** The mark beside a line: a check once it is finished, a quiet pulse while it runs. */
+/** The mark beside a line: a check once it is finished, a still dot while it runs. */
 export function Mark({ done }: { done: boolean }): JSX.Element {
   return (
     <span
@@ -268,7 +268,7 @@ export function Mark({ done }: { done: boolean }): JSX.Element {
       {done ? (
         <Check className="size-4" strokeWidth={2} />
       ) : (
-        <span className="size-1.5 bg-[color:var(--fg-muted)] motion-safe:animate-pulse" />
+        <span className="size-1.5 bg-[color:var(--fg-muted)]" />
       )}
     </span>
   );

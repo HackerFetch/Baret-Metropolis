@@ -20,9 +20,14 @@ export const SAMPLE = {
 /** The three NovaSwap pictures (paths live in shared/assets.ts). */
 export const ART = SITE_ART.novaswap;
 
-/** "12.5" -> 12.5; anything that is not a positive number -> null. */
+/** Digits with at most one decimal mark and 18 decimals: what parseEther takes. */
+const DECIMAL = /^(\d+([.,]\d{0,18})?|[.,]\d{1,18})$/;
+
+/** "12.5" -> 12.5; anything that is not a positive decimal ("1e3", "0x5") -> null. */
 export function parseAmount(raw: string): number | null {
-  const value = Number(raw.replace(",", ".").trim());
+  const text = raw.trim();
+  if (!DECIMAL.test(text)) return null;
+  const value = Number(text.replace(",", "."));
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 

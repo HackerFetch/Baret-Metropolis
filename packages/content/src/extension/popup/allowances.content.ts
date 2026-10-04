@@ -38,6 +38,7 @@ export const allowances = {
       value: "{actual} of {cap}",
     },
     payments: "{count} payments today",
+    paymentsOne: "1 payment today",
     lastUsed: "Last used",
     neverUsed: "Not used yet",
     noCap: "No cap",
@@ -70,6 +71,7 @@ export const allowances = {
 
   revokeAll: {
     title: "Revoke all {count}?",
+    titleOne: "Revoke the 1 allowance?",
     body: "Every site and agent loses access. Each revoke is its own transaction with its own fee.",
     action: "Revoke all",
     cancel: "Cancel",
@@ -89,6 +91,8 @@ export const allowances = {
     action: "Save caps",
     errors: {
       origin: "Enter the full site address, starting with https://.",
+      numbers: "Enter each cap as a number, such as 0.50.",
+      hour: "The hourly cap can't be lower than the per-payment cap.",
       order: "The hourly cap can't be higher than the daily cap.",
     },
   },

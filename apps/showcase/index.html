@@ -51,6 +51,19 @@
       href="/fonts/big-shoulders-display-800.woff2"
     />
     <link rel="stylesheet" href="/src/fonts.css" />
+    <!--
+      "/" is prerendered into #root (scripts/prerender.mjs). A host answers an
+      unknown path with this same file, so on any other path the markup stays
+      hidden until main.tsx swaps in the right page.
+    -->
+    <style>
+      [data-prerender-hidden] #root > * {
+        display: none;
+      }
+    </style>
+    <script>
+      if (location.pathname !== "/") document.documentElement.dataset.prerenderHidden = "";
+    </script>
     <script>
       // Resolve the theme before first paint so the page never flashes the
       // wrong ground. Absent attribute means follow the operating system.
@@ -61,13 +74,19 @@
         }
       } catch {}
     </script>
+    <!--
+      Structured data. The description is home.meta.description word for word;
+      the absolute url needs BARET_SITE_URL, so scripts/head.mjs is the place
+      to add it (and to write this block from @baret/content).
+    -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Baret",
+        "description": "Baret simulates every Monad transaction before you or your AI agent signs it, checks it against your rules, and explains the verdict in plain words.",
         "applicationCategory": "SecurityApplication",
-        "operatingSystem": "Chrome",
+        "operatingSystem": "Chrome, Firefox",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://opensource.org/licenses/MIT"
       }

@@ -1,9 +1,10 @@
-import { common, signRequest } from "@baret/content";
+import { signRequest } from "@baret/content/extension/popup/sign-request.content";
+import { common } from "@baret/content/shared/common.content";
 import type { ActivityItem } from "@baret/wallet-ui/data/types";
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { Img } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { VERDICT_ART } from "../../../assets.js";
 import { activeAccount, useExtension } from "../../../data/store.js";
@@ -104,6 +105,7 @@ const DECIDED: Record<Decision, ActivityStatus> = {
   signed: "confirmed",
   declined: "declined",
   expired: "expired",
+  overridden: "overridden",
 };
 
 /** A message, structured data or a payment, as one row of the log. */
@@ -133,21 +135,17 @@ function fromOther(
   }
   if (request.kind === "typedData") {
     const permit = request.permit;
+    const rule = request.rules[0]?.rule;
     return {
       ...base,
       kind: "typedData",
       status: DECIDED[decision],
       counterparty: permit?.spender ?? null,
       values: permit ? { asset: permit.asset } : {},
-      verdict: permit ? "caution" : null,
-      findings: permit
-        ? [
-            {
-              code: "PERMIT_SIGNATURE_DETECTED",
-              values: { spender: permit.spender, amount: permit.amount ?? "", asset: permit.asset },
-            },
-          ]
-        : [],
+      // Baret's own verdict on the signature, never a stand-in.
+      verdict: request.verdict,
+      findings: request.findings,
+      ...(rule && decision === "overridden" ? { rule } : {}),
     };
   }
   return fromPayment(request, decision, base);
@@ -175,6 +173,23 @@ function fromPayment(
   };
 }
 
+/**
+ * The request as the popup may act on it. While Baret is unreachable, or its
+ * reach is still unknown, every verdict counts as Can't reach Baret and a
+ * payment counts as not checked, so no one-click Sign or pay is offered.
+ */
+export function asChecked(request: PopupRequest, reachable: boolean | null): PopupRequest {
+  if (reachable === true) return request;
+  if (request.kind === "transaction") {
+    return { ...request, request: { ...request.request, verdict: "unreachable" } };
+  }
+  if (request.kind === "typedData") return { ...request, verdict: "unreachable" };
+  if (request.kind === "payment" && (request.state === "first" || request.state === "auto")) {
+    return { ...request, state: "notChecked" };
+  }
+  return request;
+}
+
 export function SignPhase({
   queue,
   onFinished,
@@ -186,18 +201,20 @@ export function SignPhase({
   const account = activeAccount(state)?.id ?? state.active;
   const query = scenarioQuery(state.scenario);
   const [index, setIndex] = useState(0);
-  const current = queue[index];
+  const waiting = queue[index];
+  const current = waiting ? asChecked(waiting, state.reachable) : undefined;
   const more = index + 1 < queue.length;
   const next = () => (more ? setIndex(index + 1) : onFinished());
 
   if (!current) return null;
 
   function declineAll(): void {
-    for (const request of queue.slice(index)) {
+    const rest = queue.slice(index).map((request) => asChecked(request, state.reachable));
+    for (const request of rest) {
       if (request.kind === "transaction") continue;
       dispatch({ type: "log", item: fromOther(request, "declined", account) });
     }
-    for (const request of queue.slice(index)) {
+    for (const request of rest) {
       if (request.kind !== "transaction") continue;
       const at = new Date().toISOString();
       dispatch({
@@ -241,7 +258,7 @@ export function SignPhase({
             <TextButton onClick={declineAll}>{signRequest.queue.declineAll}</TextButton>
           </div>
           <p className="text-xs text-[color:var(--fg-muted)]">
-            {fill(signRequest.queue.body, { count: String(queue.length - index) })}
+            {counted(queue.length - index, signRequest.queue.body, signRequest.queue.bodyOne)}
           </p>
         </div>
       ) : null}
@@ -249,6 +266,7 @@ export function SignPhase({
         {current.kind === "transaction" ? (
           <SignRequest
             request={current.request}
+            network={current.network}
             compact
             framed={false}
             onLog={(item) => {
@@ -318,8 +336,11 @@ export function SignPhase({
                   caps,
                   spent: { hour: current.amount, day: current.amount },
                   paymentsToday: 1,
-                  facilitator: "f1",
-                  week: [0, 0, 0, 0, 0, 0, Number.parseFloat(current.amount)],
+                  // The request names its facilitator; the store keys them by id.
+                  facilitator:
+                    state.facilitators.find((f) => f.name === current.facilitator)?.id ??
+                    current.facilitator,
+                  week: [0, 0, 0, 0, 0, 0, Number(current.amount)],
                 },
               });
             }}

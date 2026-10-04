@@ -10,7 +10,7 @@ import { extOnboarding } from "@baret/content";
 import { Button } from "@baret/ui";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { type JSX, useEffect, useState } from "react";
 import { SETUP_ART } from "../../../../assets.js";
 import { AddressLine, StepFrame } from "./Frame.js";
@@ -33,7 +33,7 @@ export function Key({ onNext }: { onNext: () => void }): JSX.Element {
         <div className="grid max-w-[36rem] gap-3">
           {reduce ? null : (
             <div aria-hidden="true" className="h-1 overflow-hidden bg-[color:var(--rule)]">
-              <motion.div
+              <m.div
                 className="h-full origin-left bg-[color:var(--accent)]"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}

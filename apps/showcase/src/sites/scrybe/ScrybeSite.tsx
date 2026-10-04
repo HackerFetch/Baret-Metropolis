@@ -14,7 +14,7 @@ import { AskCard } from "./AskCard.js";
 import { ScrybeGlyph, VIEWS } from "./Glyph.js";
 import { AgentsBridge, Run } from "./Run.js";
 import { ART, type Cap, SAMPLE, START_CAP, usdc } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * Scrybe: a pay-per-answer service in its own highlighter palette, with
@@ -50,13 +50,15 @@ export function ScrybeSite(): JSX.Element {
     check.start({ mode: version, cap });
   }
 
-  function ask(): void {
+  /** False when the question is missing, so the card can move focus to it. */
+  function ask(): boolean {
     if (mode === "safe" && question.trim() === "") {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode);
+    return true;
   }
 
   function tryOther(): void {
@@ -89,7 +91,7 @@ export function ScrybeSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="scrybe-page-faq" />
         ) : (
@@ -114,9 +116,9 @@ export function ScrybeSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} />
-            <Faq items={site.faq} name="scrybe-faq" />
+            <Faq items={site.faq} name="scrybe-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
@@ -125,9 +127,13 @@ export function ScrybeSite(): JSX.Element {
 
       <AnalysisPanel
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Closing the panel cancels a check that is still running.
+          if (!next) check.reset();
+        }}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

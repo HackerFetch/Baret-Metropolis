@@ -7,7 +7,7 @@ import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
  * and starts one copy to the left, so no edge of the track is ever exposed at
  * any width. Every row drifts at one constant ratio of the scroll (RATIO),
  * the same at every width, so the checks stay readable while they move. A
- * pass no longer shows every check: the "See all 17 checks" disclosure
+ * pass no longer shows every check: the "See the 17 checks" disclosure
  * (AllChecks) and the reduced-motion list carry all of them, for sighted
  * readers and screen readers alike. No loop, no spring.
  */

@@ -286,6 +286,7 @@ export const policy = {
       display: {
         empty: "Any country",
         some: "{count} countries",
+        someOne: "{count} country",
       },
     },
     minComplianceTier: {
@@ -348,6 +349,7 @@ export const policy = {
       display: {
         empty: "None, so every payment is blocked",
         some: "{count} assets",
+        someOne: "{count} asset",
       },
     },
     allowedMerchantOrigins: {
@@ -358,6 +360,7 @@ export const policy = {
       display: {
         empty: "Any site, within your caps",
         some: "{count} sites",
+        someOne: "{count} site",
       },
     },
 

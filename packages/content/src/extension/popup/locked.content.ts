@@ -3,7 +3,8 @@
  *
  * The button never says "unlock" (docs/BRAND.md section 09). `reason` is the
  * small line under the title that says why the wallet is locked right now.
- * {count} in `reason.idle` is the auto-lock setting, in minutes.
+ * {count} in `reason.idle` is the auto-lock setting, in minutes. The pause
+ * after too many tries is announced once; its countdown is shown, not read.
  */
 
 export const locked = {
@@ -15,6 +16,7 @@ export const locked = {
 
   reason: {
     idle: "Locked after {count} minutes without activity.",
+    idleOne: "Locked after 1 minute without activity.",
     manual: "You locked it.",
     restart: "Locked when the browser restarted.",
     signRequest: "{origin} is waiting for your signature. Open the wallet to review it.",
@@ -25,7 +27,11 @@ export const locked = {
     wrong: { title: "Wrong passphrase", body: "Check Caps Lock and try again." },
     throttled: {
       title: "Too many tries",
-      body: "Wait {seconds} seconds, then try again. The pause slows down anyone guessing.",
+      body: "Wait {count} seconds, then try again. The pause slows down anyone guessing.",
+      bodyOne: "Wait 1 second, then try again. The pause slows down anyone guessing.",
+      countdown: "{count} seconds left",
+      countdownOne: "1 second left",
+      over: "The pause is over. You can try again.",
     },
   },
 

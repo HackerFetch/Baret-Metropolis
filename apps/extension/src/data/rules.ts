@@ -1,4 +1,4 @@
-import { policy } from "@baret/content";
+import { policy } from "@baret/content/shared/policy.content";
 import { FIELDS, kindOf } from "@baret/wallet-ui/rules/fields";
 import type { GuardPolicy, GuardPolicyField } from "./types.js";
 

@@ -16,4 +16,7 @@ export interface ClaimInput {
   readonly wallet: string;
 }
 
+/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
+export const LIVE = false;
+
 export const SOURCE: CheckSource<ClaimInput> = async (input) => sampleCheck(input.mode);

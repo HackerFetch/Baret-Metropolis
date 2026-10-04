@@ -15,6 +15,7 @@ export const optionsAllowances = {
 
   summary: {
     total: "{count} permissions",
+    totalOne: "{count} permission",
     unlimited: "{count} with no limit",
     paused: "{count} paused",
     spent24h: "{amount} spent under caps in 24 hours",
