@@ -1,4 +1,4 @@
-import { alerts } from "@baret/content";
+import { alerts } from "@baret/content/extension/popup/alerts.content";
 import { Button } from "@baret/ui";
 import { Parts } from "@baret/wallet-ui/components/Parts";
 import { T } from "@baret/web-ui/lib/type";

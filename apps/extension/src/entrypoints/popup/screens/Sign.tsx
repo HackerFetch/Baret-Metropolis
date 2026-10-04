@@ -1,9 +1,10 @@
-import { common, signRequest } from "@baret/content";
+import { signRequest } from "@baret/content/extension/popup/sign-request.content";
+import { common } from "@baret/content/shared/common.content";
 import type { ActivityItem } from "@baret/wallet-ui/data/types";
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { Img } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { VERDICT_ART } from "../../../assets.js";
 import { activeAccount, useExtension } from "../../../data/store.js";
@@ -104,6 +105,7 @@ const DECIDED: Record<Decision, ActivityStatus> = {
   signed: "confirmed",
   declined: "declined",
   expired: "expired",
+  overridden: "overridden",
 };
 
 /** A message, structured data or a payment, as one row of the log. */
@@ -133,21 +135,17 @@ function fromOther(
   }
   if (request.kind === "typedData") {
     const permit = request.permit;
+    const rule = request.rules[0]?.rule;
     return {
       ...base,
       kind: "typedData",
       status: DECIDED[decision],
       counterparty: permit?.spender ?? null,
       values: permit ? { asset: permit.asset } : {},
-      verdict: permit ? "caution" : null,
-      findings: permit
-        ? [
-            {
-              code: "PERMIT_SIGNATURE_DETECTED",
-              values: { spender: permit.spender, amount: permit.amount ?? "", asset: permit.asset },
-            },
-          ]
-        : [],
+      // Baret's own verdict on the signature, never a stand-in.
+      verdict: request.verdict,
+      findings: request.findings,
+      ...(rule && decision === "overridden" ? { rule } : {}),
     };
   }
   return fromPayment(request, decision, base);
@@ -241,7 +239,7 @@ export function SignPhase({
             <TextButton onClick={declineAll}>{signRequest.queue.declineAll}</TextButton>
           </div>
           <p className="text-xs text-[color:var(--fg-muted)]">
-            {fill(signRequest.queue.body, { count: String(queue.length - index) })}
+            {counted(queue.length - index, signRequest.queue.body, signRequest.queue.bodyOne)}
           </p>
         </div>
       ) : null}
@@ -318,8 +316,11 @@ export function SignPhase({
                   caps,
                   spent: { hour: current.amount, day: current.amount },
                   paymentsToday: 1,
-                  facilitator: "f1",
-                  week: [0, 0, 0, 0, 0, 0, Number.parseFloat(current.amount)],
+                  // The request names its facilitator; the store keys them by id.
+                  facilitator:
+                    state.facilitators.find((f) => f.name === current.facilitator)?.id ??
+                    current.facilitator,
+                  week: [0, 0, 0, 0, 0, 0, Number(current.amount)],
                 },
               });
             }}

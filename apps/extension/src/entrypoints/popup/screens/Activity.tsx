@@ -1,4 +1,4 @@
-import { popupActivity } from "@baret/content";
+import { popupActivity } from "@baret/content/extension/popup/activity.content";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";

@@ -18,6 +18,12 @@ import type { CheckChange, CheckFinding } from "@baret/web-ui/lib/check-types";
 
 export type { Asset, ConnectRequest, GuardPolicy, GuardPolicyField, LoggedVerdict, SignRequest };
 
+/** The Monad network a request is for: testnet (10143) or mainnet (143). */
+export type Network = "testnet" | "mainnet";
+
+/** A rule that fired on a request, with its limit and the observed value. */
+export type FiredRule = SignRequest["rules"][number];
+
 /** One account. Every account comes from the same recovery phrase. */
 export interface Account {
   readonly id: string;
@@ -229,6 +235,7 @@ export interface MessageRequest {
   readonly kind: "message";
   readonly id: string;
   readonly origin: string;
+  readonly network: Network;
   /** Exactly as the site sent it. */
   readonly text: string;
   readonly readable: boolean;
@@ -240,6 +247,15 @@ export interface TypedDataRequest {
   readonly kind: "typedData";
   readonly id: string;
   readonly origin: string;
+  readonly network: Network;
+  /**
+   * Baret's verdict on the signature, from /v1/analyze like a transaction.
+   * "unreachable" when the check did not answer: it counts as Blocked.
+   */
+  readonly verdict: LoggedVerdict;
+  readonly findings: readonly CheckFinding[];
+  /** The rules that fired, with the limit and the observed value. */
+  readonly rules: readonly FiredRule[];
   readonly fields: readonly { readonly name: string; readonly value: string }[];
   /** The allowance a permit hides inside the fields, when there is one. */
   readonly permit: {
@@ -257,6 +273,7 @@ export interface PaymentRequest {
   readonly kind: "payment";
   readonly id: string;
   readonly origin: string;
+  readonly network: Network;
   readonly merchant: string;
   readonly amount: string;
   readonly asset: string;
@@ -279,6 +296,7 @@ export interface PaymentRequest {
 export interface TransactionRequest {
   readonly kind: "transaction";
   readonly id: string;
+  readonly network: Network;
   readonly request: SignRequest;
   /** The site has not sent a sign request before. */
   readonly firstTime: boolean;

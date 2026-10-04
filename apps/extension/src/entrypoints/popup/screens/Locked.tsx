@@ -1,12 +1,14 @@
-import { extFrame, locked } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { locked } from "@baret/content/extension/popup/locked.content";
 import { Button } from "@baret/ui";
 import { Brand } from "@baret/wallet-ui/components/Brand";
 import { Img } from "@baret/web-ui/components/Img";
 import { TextReveal } from "@baret/web-ui/components/TextReveal";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";
+import { PAUSE_MS, useExtension } from "../../../data/store.js";
 import { useLatest } from "../../../lib/useLatest.js";
 import { PopupProblem, TEXT_BUTTON } from "../frame/bits.js";
 import { Confirm } from "../frame/Sheet.js";
@@ -19,14 +21,29 @@ import { Confirm } from "../frame/Sheet.js";
  * says why. Forgetting the passphrase is explained honestly: nobody can
  * recover it, and only the recovery phrase brings the wallet back.
  *
- * The sample wallet opens with any passphrase of twelve characters or more,
- * and the hint under the field says so.
+ * The screen asks the store to open the wallet: the passphrase check, the
+ * count of wrong tries and the pause live behind that seam (the keystore
+ * later), so reopening the popup does not end a pause. The pause is
+ * announced once; its countdown is shown, not read, and its end is said once.
  */
 
-export type LockReason = keyof typeof locked.reason;
+export type LockReason = Exclude<keyof typeof locked.reason, "idleOne">;
 
-const PAUSE_AFTER = 5;
-const PAUSE_SECONDS = 30;
+/** Whole seconds until `until` (ms), counted down once a second while it lasts. */
+function useSecondsLeft(until: number): number {
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    setClock(Date.now());
+    if (until <= Date.now()) return;
+    const id = window.setInterval(() => {
+      const at = Date.now();
+      setClock(at);
+      if (at >= until) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [until]);
+  return Math.max(0, Math.ceil((until - clock) / 1000));
+}
 
 export function Locked({
   reason,
@@ -40,45 +57,52 @@ export function Locked({
   onOpen: () => void;
   onReset: () => void;
 }): JSX.Element {
+  const { state, unlock } = useExtension();
   const fieldId = useId();
   const hintId = useId();
+  const errorId = useId();
   const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [shown, setShown] = useState(false);
-  const [wrong, setWrong] = useState(0);
-  const [pause, setPause] = useState(0);
+  const [wrong, setWrong] = useState(false);
   const [working, setWorking] = useState(false);
   const [forgot, setForgot] = useState(false);
-
-  // The pause after too many tries counts down a second at a time.
-  useEffect(() => {
-    if (pause <= 0) return;
-    const id = window.setTimeout(() => setPause((s) => s - 1), 1000);
-    return () => window.clearTimeout(id);
-  }, [pause]);
-
-  // The stand-in for the keystore: a short wait, then the wallet.
+  const [said, setSaid] = useState("");
   const open = useLatest(onOpen);
-  useEffect(() => {
-    if (!working) return;
-    const id = window.setTimeout(() => open.current(), 600);
-    return () => window.clearTimeout(id);
-  }, [working, open]);
 
-  function submit(): void {
-    if (pause > 0 || working) return;
-    if (value.length >= 12) {
-      setWorking(true);
+  const until = state.lock.pausedUntil ? Date.parse(state.lock.pausedUntil) : 0;
+  const left = useSecondsLeft(until);
+  const paused = left > 0;
+  const pauseSeconds = Math.round(PAUSE_MS / 1000);
+
+  // The end of a pause is said once, in the live region that is always there.
+  const wasPaused = useRef(paused);
+  useEffect(() => {
+    if (wasPaused.current && !paused) setSaid(locked.errors.throttled.over);
+    wasPaused.current = paused;
+  }, [paused]);
+
+  async function submit(): Promise<void> {
+    if (paused || working || value === "") return;
+    setWorking(true);
+    setSaid("");
+    const result = await unlock(value);
+    if (result.ok) {
+      open.current();
       return;
     }
-    const tries = wrong + 1;
-    setWrong(tries);
-    if (tries % PAUSE_AFTER === 0) setPause(PAUSE_SECONDS);
+    setWorking(false);
+    setWrong(true);
     setValue("");
     input.current?.focus();
   }
 
-  const paused = pause > 0;
+  const reasonText =
+    reason === "idle"
+      ? counted(Number(values.count ?? 0), locked.reason.idle, locked.reason.idleOne, values)
+      : fill(locked.reason[reason], values);
+  const showError = paused || (wrong && !working);
+  const locking = paused || working;
 
   return (
     <div className="flex h-full flex-col">
@@ -93,10 +117,10 @@ export function Locked({
           className="@container grid gap-5 px-5 pt-5 pb-6"
           onSubmit={(event) => {
             event.preventDefault();
-            submit();
+            void submit();
           }}
         >
-          <Brand />
+          <Brand slit="var(--ground)" />
           <div className="grid gap-2">
             <TextReveal
               as="h1"
@@ -104,7 +128,7 @@ export function Locked({
               immediate
               className={`${T.h1Page} text-balance text-[color:var(--fg)]`}
             />
-            <p className={T.small}>{fill(locked.reason[reason], values)}</p>
+            <p className={T.small}>{reasonText}</p>
           </div>
           <p className={T.body}>{locked.body}</p>
 
@@ -121,12 +145,14 @@ export function Locked({
                 onChange={(event) => setValue(event.target.value)}
                 placeholder={locked.field.placeholder}
                 autoComplete="current-password"
-                aria-describedby={hintId}
-                aria-invalid={wrong > 0 && value === "" ? true : undefined}
-                disabled={paused || working}
+                aria-describedby={showError ? `${hintId} ${errorId}` : hintId}
+                aria-invalid={wrong && value === "" ? true : undefined}
+                // Read-only, not disabled, so focus stays on the field during a pause.
+                readOnly={locking}
+                aria-disabled={locking ? true : undefined}
                 // biome-ignore lint/a11y/noAutofocus: the field is the whole screen.
                 autoFocus
-                className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-[color:var(--fg)] outline-none placeholder:text-[color:var(--fg-muted)] disabled:opacity-50"
+                className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-[color:var(--fg)] outline-none placeholder:text-[color:var(--fg-muted)] aria-disabled:opacity-50"
               />
               <button
                 type="button"
@@ -142,21 +168,43 @@ export function Locked({
             </p>
           </div>
 
-          {paused ? (
-            <PopupProblem
-              title={locked.errors.throttled.title}
-              body={fill(locked.errors.throttled.body, { seconds: String(pause) })}
-            />
-          ) : wrong > 0 && !working ? (
-            <PopupProblem title={locked.errors.wrong.title} body={locked.errors.wrong.body} />
-          ) : null}
+          <div id={errorId}>
+            {paused ? (
+              <>
+                <PopupProblem
+                  title={locked.errors.throttled.title}
+                  body={counted(
+                    pauseSeconds,
+                    locked.errors.throttled.body,
+                    locked.errors.throttled.bodyOne,
+                  )}
+                />
+                <p
+                  aria-hidden="true"
+                  className={`mt-2 pl-4 font-mono text-xs text-[color:var(--fg)] ${T.num}`}
+                >
+                  {counted(
+                    left,
+                    locked.errors.throttled.countdown,
+                    locked.errors.throttled.countdownOne,
+                  )}
+                </p>
+              </>
+            ) : wrong && !working ? (
+              <PopupProblem title={locked.errors.wrong.title} body={locked.errors.wrong.body} />
+            ) : null}
+          </div>
+          <p aria-live="polite" className="sr-only">
+            {said}
+          </p>
 
           <Button
             type="submit"
             variant="primary"
             size="lg"
             block
-            disabled={paused || working || value === ""}
+            disabled={value === "" && !locking}
+            aria-disabled={locking ? true : undefined}
           >
             {working ? locked.working : locked.action.label}
           </Button>

@@ -1,4 +1,6 @@
-import { common, extFrame, popupReceive } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { popupReceive } from "@baret/content/extension/popup/receive.content";
+import { common } from "@baret/content/shared/common.content";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Qr } from "@baret/wallet-ui/components/Qr";
 import { groups } from "@baret/wallet-ui/lib/address";
@@ -44,7 +46,7 @@ export function Receive({ onClose }: { onClose: () => void }): JSX.Element {
           <div className="flex items-center justify-between gap-3">
             <p className={T.label}>{popupReceive.address.label}</p>
             <Tag tone="network" size="sm">
-              {common.networks.testnet.label}
+              {common.networks[state.network].label}
             </Tag>
           </div>
           <p

@@ -1,4 +1,6 @@
-import { common, type popupActivity, type popupHome } from "@baret/content";
+import type { popupActivity } from "@baret/content/extension/popup/activity.content";
+import type { popupHome } from "@baret/content/extension/popup/home.content";
+import { common } from "@baret/content/shared/common.content";
 import { amount as grouped, toUnits } from "@baret/wallet-ui/data/format";
 import { changedFields } from "@baret/wallet-ui/data/rules";
 import { SAMPLE_NOW } from "./sample.js";
@@ -185,3 +187,6 @@ const DAY = 86_400_000;
 export function unusedFor30Days(p: Permission, at: string = now()): boolean {
   return Date.parse(at) - Date.parse(p.lastUsed ?? p.granted) > 30 * DAY;
 }
+
+/** The token agent payments settle in over x402, when no site names its own yet. */
+export const PAYMENT_ASSET = "USDC";

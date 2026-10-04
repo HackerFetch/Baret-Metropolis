@@ -1,8 +1,9 @@
-import { popupSettings } from "@baret/content";
+import { popupSettings } from "@baret/content/extension/popup/settings.content";
+import { common } from "@baret/content/shared/common.content";
 import { Button } from "@baret/ui";
 import { Img } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { ChevronRight } from "lucide-react";
 import { type JSX, useEffect, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";
@@ -44,7 +45,12 @@ export function SettingsTab({
   }, [working, resetNow]);
 
   const list: { key: string; label: string; hint: string; link: OptionsLink }[] = [
-    { key: "network", label: rows.network.label, hint: rows.network.hint, link: "settings" },
+    {
+      key: "network",
+      label: rows.network.label,
+      hint: common.networks[state.network].label,
+      link: "settings",
+    },
     {
       key: "rules",
       label: rows.rules.label,
@@ -54,7 +60,7 @@ export function SettingsTab({
     {
       key: "security",
       label: rows.security.label,
-      hint: fill(rows.security.hint, { count: String(state.settings.lockMinutes) }),
+      hint: counted(state.settings.lockMinutes, rows.security.hint, rows.security.hintOne),
       link: "settings",
     },
     {
@@ -68,7 +74,7 @@ export function SettingsTab({
     {
       key: "payments",
       label: rows.payments.label,
-      hint: fill(rows.payments.hint, { count: String(payments(state.permissions).length) }),
+      hint: counted(payments(state.permissions).length, rows.payments.hint, rows.payments.hintOne),
       link: "payments",
     },
     { key: "about", label: rows.about.label, hint: rows.about.hint, link: "settings" },

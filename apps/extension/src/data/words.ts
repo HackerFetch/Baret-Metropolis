@@ -1,4 +1,8 @@
-import { alerts, optionsAllowances, optionsHome, policy, popupActivity } from "@baret/content";
+import { optionsAllowances } from "@baret/content/extension/options/allowances.content";
+import { optionsHome } from "@baret/content/extension/options/home.content";
+import { popupActivity } from "@baret/content/extension/popup/activity.content";
+import { alerts } from "@baret/content/extension/popup/alerts.content";
+import { policy } from "@baret/content/shared/policy.content";
 import { truncateAddress } from "@baret/ui";
 import { amount, when } from "@baret/wallet-ui/data/format";
 import { fillParts, type Part } from "@baret/wallet-ui/lib/parts";
@@ -115,6 +119,4 @@ export function exposureText(p: Permission, assets: readonly Asset[] = []): stri
 }
 
 /** The singular twin of a counted line when the count is 1. */
-export function counted(count: number, many: string, one: string): string {
-  return count === 1 ? one : fill(many, { count: String(count) });
-}
+export { counted } from "@baret/web-ui/lib/util";

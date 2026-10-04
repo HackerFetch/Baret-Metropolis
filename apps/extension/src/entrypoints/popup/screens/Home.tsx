@@ -1,4 +1,6 @@
-import { allowances as allowanceCopy, extFrame, popupHome } from "@baret/content";
+import { extFrame } from "@baret/content/extension/frame.content";
+import { allowances as allowanceCopy } from "@baret/content/extension/popup/allowances.content";
+import { popupHome } from "@baret/content/extension/popup/home.content";
 import { Button, Meter } from "@baret/ui";
 import { Parts } from "@baret/wallet-ui/components/Parts";
 import { amount } from "@baret/wallet-ui/data/format";

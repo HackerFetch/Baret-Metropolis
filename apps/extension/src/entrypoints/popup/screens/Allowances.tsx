@@ -1,12 +1,13 @@
-import { allowances, common } from "@baret/content";
+import { allowances } from "@baret/content/extension/popup/allowances.content";
+import { common } from "@baret/content/shared/common.content";
 import { Button, Meter } from "@baret/ui";
 import { Tag, type TagTone } from "@baret/ui/primitives/Tag";
-import { amount } from "@baret/wallet-ui/data/format";
+import { amount, toUnits } from "@baret/wallet-ui/data/format";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";
-import { ago, capReached, nearCap, now, payments } from "../../../data/derive.js";
+import { ago, capReached, nearCap, now, PAYMENT_ASSET, payments } from "../../../data/derive.js";
 import { useExtension } from "../../../data/store.js";
 import type { PaymentPermission, Permission } from "../../../data/types.js";
 import { short } from "../../../data/words.js";
@@ -73,7 +74,7 @@ function PaymentBody({ p }: { p: PaymentPermission }): JSX.Element {
       <MeterLine label={card.meters.hour} spent={p.spent.hour} cap={p.caps.hour} asset={p.asset} />
       <MeterLine label={card.meters.day} spent={p.spent.day} cap={p.caps.day} asset={p.asset} />
       <p className={`text-xs text-[color:var(--fg-muted)] ${T.num}`}>
-        {fill(card.payments, { count: String(p.paymentsToday) })} ·{" "}
+        {counted(p.paymentsToday, card.payments, card.paymentsOne)} ·{" "}
         {p.lastUsed ? `${card.lastUsed} ${ago(p.lastUsed, now())}` : card.neverUsed}
       </p>
     </div>
@@ -81,18 +82,32 @@ function PaymentBody({ p }: { p: PaymentPermission }): JSX.Element {
 }
 
 const NUMBER = /^\d+(?:[.,]\d{1,6})?$/;
+/** Caps are compared in base units, so no float rounding decides a set. */
+const CAP_DECIMALS = 6;
+const capUnits = (text: string) =>
+  NUMBER.test(text.trim()) ? toUnits(text.trim(), CAP_DECIMALS) : null;
 
 function CapsForm({
   open,
+  asset,
   onClose,
   onSave,
 }: {
   open: boolean;
+  /** The token the caps are in. */
+  asset: string;
   onClose: () => void;
   onSave: (origin: string, caps: { perPayment: string; hour: string; day: string }) => void;
 }): JSX.Element {
   const { add } = allowances;
-  const ids = { origin: useId(), perPayment: useId(), hour: useId(), day: useId() };
+  const ids = {
+    origin: useId(),
+    perPayment: useId(),
+    hour: useId(),
+    day: useId(),
+    originError: useId(),
+    capsError: useId(),
+  };
   const [origin, setOrigin] = useState("https://");
   const [perPayment, setPerPayment] = useState("");
   const [hour, setHour] = useState("");
@@ -100,9 +115,23 @@ function CapsForm({
   const [tried, setTried] = useState(false);
 
   const host = /^https:\/\/[a-z0-9.-]+\.[a-z]{2,}\/?$/i.test(origin.trim());
-  const numbers = [perPayment, hour, day].every((v) => NUMBER.test(v.trim()));
-  const order = Number(hour.replace(",", ".")) <= Number(day.replace(",", "."));
-  const valid = host && numbers && order;
+  const per = capUnits(perPayment);
+  const hourCap = capUnits(hour);
+  const dayCap = capUnits(day);
+  // The first thing wrong with the caps, in the order a reader fixes them.
+  const capsError =
+    per === null || hourCap === null || dayCap === null
+      ? add.errors.numbers
+      : hourCap < per
+        ? add.errors.hour
+        : hourCap > dayCap
+          ? add.errors.order
+          : null;
+  const valid = host && capsError === null;
+  const originShown = tried && !host;
+  const capsShown = tried && capsError !== null;
+  const capInvalid = (value: string) =>
+    capsShown && (capUnits(value) === null || capsError !== add.errors.numbers);
 
   const field =
     "h-11 w-full min-w-0 border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-3 text-base text-[color:var(--fg)] focus-visible:border-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
@@ -143,16 +172,19 @@ function CapsForm({
           placeholder={add.fields.origin.placeholder}
           inputMode="url"
           autoComplete="off"
-          aria-invalid={tried && !host ? true : undefined}
+          aria-invalid={originShown ? true : undefined}
+          aria-describedby={originShown ? ids.originError : undefined}
           className={field}
         />
-        {tried && !host ? (
-          <p className="text-sm text-[color:var(--fg)]">{add.errors.origin}</p>
+        {originShown ? (
+          <p id={ids.originError} className="text-sm text-[color:var(--fg)]">
+            {add.errors.origin}
+          </p>
         ) : null}
       </div>
       <p className="flex items-baseline justify-between text-sm">
         <span className={T.label}>{add.fields.asset.label}</span>
-        <span className="font-medium text-[color:var(--fg)]">USDC</span>
+        <span className="font-medium text-[color:var(--fg)]">{asset}</span>
       </p>
       <div className="grid grid-cols-3 gap-2">
         {(
@@ -173,14 +205,17 @@ function CapsForm({
               inputMode="decimal"
               placeholder="0.00"
               autoComplete="off"
-              aria-invalid={tried && !NUMBER.test(value.trim()) ? true : undefined}
+              aria-invalid={capInvalid(value) ? true : undefined}
+              aria-describedby={capsShown ? ids.capsError : undefined}
               className={`${field} ${T.num}`}
             />
           </div>
         ))}
       </div>
-      {tried && numbers && !order ? (
-        <p className="text-sm text-[color:var(--fg)]">{add.errors.order}</p>
+      {capsShown ? (
+        <p id={ids.capsError} className="text-sm text-[color:var(--fg)]">
+          {capsError}
+        </p>
       ) : null}
     </Confirm>
   );
@@ -226,7 +261,11 @@ export function AllowancesTab({
   }, [pending, dispatch]);
 
   const pays = payments(cards);
-  const spent = pays.reduce((sum, p) => sum + Number(p.spent.day), 0).toFixed(2);
+  const asset = pays[0]?.asset ?? PAYMENT_ASSET;
+  // Summed in base units; every payment site here settles in the same token.
+  const cents =
+    pays.reduce((sum, p) => sum + (toUnits(p.spent.day, CAP_DECIMALS) ?? 0n), 0n) / 10_000n;
+  const spent = `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
   const near = pays.filter(nearCap).length;
   const { summary, card, revoke, revokeAll } = allowances;
 
@@ -247,9 +286,10 @@ export function AllowancesTab({
         <CapsForm
           key={adding ? "open" : "closed"}
           open={adding}
+          asset={asset}
           onClose={() => setAdding(false)}
           onSave={(origin, caps) => {
-            dispatch({ type: "caps", permission: newPayment(origin, caps, state.active) });
+            dispatch({ type: "caps", permission: newPayment(origin, caps, state.active, asset) });
             setAdding(false);
           }}
         />
@@ -266,7 +306,7 @@ export function AllowancesTab({
           fill(summary.active, {
             count: String(cards.filter((c) => c.status === "active").length),
           }),
-          fill(summary.spent, { actual: `${spent} USDC` }),
+          fill(summary.spent, { actual: `${spent} ${asset}` }),
           fill(summary.nearCap, { count: String(near) }),
         ].map((line, i) => (
           <div
@@ -408,7 +448,7 @@ export function AllowancesTab({
 
       <Confirm
         open={all}
-        title={fill(revokeAll.title, { count: String(cards.length) })}
+        title={counted(cards.length, revokeAll.title, revokeAll.titleOne)}
         action={working ? revoke.working : revokeAll.action}
         cancel={revokeAll.cancel}
         disabled={working}
@@ -424,9 +464,10 @@ export function AllowancesTab({
       <CapsForm
         key={adding ? "open" : "closed"}
         open={adding}
+        asset={asset}
         onClose={() => setAdding(false)}
         onSave={(origin, caps) => {
-          dispatch({ type: "caps", permission: newPayment(origin, caps, state.active) });
+          dispatch({ type: "caps", permission: newPayment(origin, caps, state.active, asset) });
           setAdding(false);
         }}
       />
@@ -439,6 +480,7 @@ function newPayment(
   origin: string,
   caps: { perPayment: string; hour: string; day: string },
   account: string,
+  asset: string,
 ): PaymentPermission {
   const at = new Date().toISOString();
   return {
@@ -452,7 +494,7 @@ function newPayment(
     holder: origin,
     uses: [],
     merchant: origin,
-    asset: "USDC",
+    asset,
     caps: { perPayment: caps.perPayment, hour: caps.hour, day: caps.day },
     spent: { hour: "0.00", day: "0.00" },
     paymentsToday: 0,

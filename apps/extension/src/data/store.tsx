@@ -1,6 +1,16 @@
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
 import { diffFields, type TEMPLATE_NAMES } from "@baret/wallet-ui/data/rules";
-import { createContext, type JSX, type ReactNode, use, useReducer } from "react";
+import {
+  createContext,
+  type JSX,
+  type ReactNode,
+  use,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
+import { useLatest } from "../lib/useLatest.js";
 import {
   ACCOUNTS,
   ACTIVITY,
@@ -25,6 +35,7 @@ import type {
   Facilitator,
   GuardPolicy,
   GuardPolicyField,
+  Network,
   Payment,
   PaymentPermission,
   Permission,
@@ -75,9 +86,44 @@ export interface ExtState {
   readonly template: TemplateName;
   readonly ruleChanges: readonly RuleChange[];
   readonly settings: Settings;
-  /** Whether the Baret server answers. When it does not, every request counts as Blocked. */
-  readonly reachable: boolean;
+  /**
+   * Whether the Baret server answers. Null until the first check answers (and
+   * while a check runs): unknown counts as unreachable, and while Baret is
+   * unreachable every request counts as Blocked.
+   */
+  readonly reachable: boolean | null;
   readonly lastCheck: string | null;
+  /** The Monad network the wallet is on. */
+  readonly network: Network;
+  /** Wrong passphrases in a row, and the pause they earned. Held by the keystore later. */
+  readonly lock: LockState;
+}
+
+export interface LockState {
+  readonly failures: number;
+  /** ISO time the pause ends; null when there is none. */
+  readonly pausedUntil: string | null;
+}
+
+/** What an unlock attempt came back with. */
+export type UnlockResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly pausedUntil: string | null };
+
+/** Every fifth wrong passphrase in a row pauses the field for thirty seconds. */
+export const PAUSE_AFTER = 5;
+export const PAUSE_MS = 30_000;
+
+/** The lock after one more wrong passphrase at `at`. Pure, tested in data.test.ts. */
+export function failUnlock(lock: LockState, at: string): LockState {
+  const failures = lock.failures + 1;
+  return {
+    failures,
+    pausedUntil:
+      failures % PAUSE_AFTER === 0
+        ? new Date(Date.parse(at) + PAUSE_MS).toISOString()
+        : lock.pausedUntil,
+  };
 }
 
 export type ExtAction =
@@ -100,12 +146,20 @@ export type ExtAction =
   | { type: "clearActivity" }
   | { type: "dismissProblem"; id: string }
   | { type: "reachable"; value: boolean; at: string }
+  | { type: "check" }
+  | { type: "unlockFailed"; at: string }
+  | { type: "unlocked" }
   | { type: "reset" };
 
 export interface StartOptions {
   readonly scenario: Scenario;
   /** The popup's "with an alert" preview: funds left without a signature. */
   readonly drift?: boolean;
+  /**
+   * The sample server's answer to a reachability check: true (the default),
+   * false for the offline preview, null for one that never answers (loading).
+   */
+  readonly reachable?: boolean | null;
 }
 
 export function initialState({ scenario, drift = false }: StartOptions): ExtState {
@@ -114,7 +168,10 @@ export function initialState({ scenario, drift = false }: StartOptions): ExtStat
     policy: POLICY,
     template: "balanced" as const,
     ruleChanges: [],
-    reachable: true,
+    // Unknown until the source answers: fail-closed.
+    reachable: null,
+    network: "testnet" as const,
+    lock: { failures: 0, pausedUntil: null },
   };
   if (scenario === "empty") {
     const [first] = ACCOUNTS;
@@ -336,14 +393,40 @@ export function reduce(state: ExtState, action: ExtAction): ExtState {
         reachable: action.value,
         lastCheck: action.value ? action.at : state.lastCheck,
       };
+    case "check":
+      return { ...state, reachable: null };
+    case "unlockFailed":
+      return { ...state, lock: failUnlock(state.lock, action.at) };
+    case "unlocked":
+      return { ...state, lock: { failures: 0, pausedUntil: null } };
     case "reset":
-      return initialState({ scenario: "empty" });
+      return { ...initialState({ scenario: "empty" }), reachable: state.reachable };
   }
 }
+
+/**
+ * The state a sample page starts in: the sample server answers the first
+ * check before the first paint. A real source starts from initialState and
+ * dispatches "reachable" when it answers.
+ */
+export function startState(options: StartOptions): ExtState {
+  const state = initialState(options);
+  const answer = options.reachable === undefined ? true : options.reachable;
+  return answer === null ? state : { ...state, reachable: answer };
+}
+
+/** The sample keystore: any passphrase of twelve characters or more opens it. */
+const SAMPLE_MIN = 12;
+/** How long the sample keystore and the sample server take to answer. */
+const SAMPLE_WAIT_MS = 600;
 
 interface Store {
   readonly state: ExtState;
   readonly dispatch: (action: ExtAction) => void;
+  /** Ask the keystore to open the wallet. Wrong tries and the pause live here, not in a screen. */
+  readonly unlock: (passphrase: string) => Promise<UnlockResult>;
+  /** Check again whether Baret answers; reachable is unknown until it does. */
+  readonly check: () => void;
 }
 
 const ExtensionContext = createContext<Store | null>(null);
@@ -355,8 +438,65 @@ export function ExtensionProvider({
   start: StartOptions;
   children: ReactNode;
 }): JSX.Element {
-  const [state, dispatch] = useReducer(reduce, start, initialState);
-  return <ExtensionContext value={{ state, dispatch }}>{children}</ExtensionContext>;
+  const [state, dispatch] = useReducer(reduce, start, startState);
+  const latest = useLatest(state);
+  const answer = start.reachable === undefined ? true : start.reachable;
+  const timers = useRef(new Set<number>());
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      for (const id of pending) window.clearTimeout(id);
+    };
+  }, []);
+
+  const store = useMemo<Store>(() => {
+    function later(run: () => void): void {
+      const id = window.setTimeout(() => {
+        timers.current.delete(id);
+        run();
+      }, SAMPLE_WAIT_MS);
+      timers.current.add(id);
+    }
+    return {
+      state,
+      dispatch,
+      unlock: (passphrase) =>
+        new Promise<UnlockResult>((resolve) => {
+          const { lock } = latest.current;
+          const at = new Date().toISOString();
+          if (lock.pausedUntil && Date.parse(lock.pausedUntil) > Date.parse(at)) {
+            resolve({ ok: false, pausedUntil: lock.pausedUntil });
+            return;
+          }
+          later(() => {
+            if (passphrase.length >= SAMPLE_MIN) {
+              dispatch({ type: "unlocked" });
+              resolve({ ok: true });
+              return;
+            }
+            const done = new Date().toISOString();
+            dispatch({ type: "unlockFailed", at: done });
+            const next = failUnlock(latest.current.lock, done);
+            resolve({
+              ok: false,
+              pausedUntil:
+                next.pausedUntil && Date.parse(next.pausedUntil) > Date.parse(done)
+                  ? next.pausedUntil
+                  : null,
+            });
+          });
+        }),
+      check: () => {
+        dispatch({ type: "check" });
+        // The offline and loading previews keep their answer.
+        if (answer === null) return;
+        later(() => dispatch({ type: "reachable", value: answer, at: new Date().toISOString() }));
+      },
+    };
+  }, [state, answer, latest]);
+
+  return <ExtensionContext value={store}>{children}</ExtensionContext>;
 }
 
 export function useExtension(): Store {

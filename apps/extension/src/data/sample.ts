@@ -1,5 +1,12 @@
-import { extFrame } from "@baret/content";
-import { ACCOUNT, ADDRESS, ASSETS, POLICY, SIGN_REQUESTS } from "@baret/wallet-ui/data/sample";
+import { extFrame } from "@baret/content/extension/frame.content";
+import {
+  ACCOUNT,
+  ADDRESS,
+  AGENT_PAYMENTS,
+  ASSETS,
+  POLICY,
+  SIGN_REQUESTS,
+} from "@baret/wallet-ui/data/sample";
 import type {
   Account,
   Activity,
@@ -16,6 +23,11 @@ import type {
   Site,
   Watched,
 } from "./types.js";
+
+/** Today's payments to scrybe.example, shared with the wallet's agent vault. */
+const SCRYBE_USES = AGENT_PAYMENTS.filter((p) => p.merchant === "scrybe.example").map(
+  ({ at, amount }) => ({ at, amount }),
+);
 
 /**
  * The extension's sample wallet. Every screen reads it until the background,
@@ -336,12 +348,8 @@ export const PERMISSIONS: readonly Permission[] = [
     granted: "2026-09-30T09:00:00Z",
     lastUsed: "2026-10-03T13:42:00Z",
     holder: ADDRESS.scrybe,
-    uses: [
-      { at: "2026-10-03T13:42:00Z", amount: "0.50" },
-      { at: "2026-10-03T13:20:00Z", amount: "0.50" },
-      { at: "2026-10-03T13:05:00Z", amount: "0.40" },
-      { at: "2026-10-03T12:58:00Z", amount: "0.30" },
-    ],
+    // The same payments the wallet's agent vault lists for this merchant.
+    uses: SCRYBE_USES,
     merchant: "scrybe.example",
     asset: "USDC",
     caps: { perPayment: "0.50", hour: "2.00", day: "5.00" },
@@ -485,10 +493,8 @@ export const FACILITATORS: readonly Facilitator[] = [
 
 /** The last seven days of x402 payments, newest first. */
 export const PAYMENTS: readonly Payment[] = [
-  ["2026-10-03T13:42:00Z", "0.50"],
-  ["2026-10-03T13:20:00Z", "0.50"],
-  ["2026-10-03T13:05:00Z", "0.40"],
-  ["2026-10-03T12:58:00Z", "0.30"],
+  // Today's match the wallet's agent vault for the same merchant.
+  ...SCRYBE_USES.map(({ at, amount }) => [at, amount]),
   ["2026-10-02T17:12:00Z", "0.50"],
   ["2026-10-02T09:41:00Z", "0.40"],
   ["2026-10-01T15:03:00Z", "0.50"],
@@ -580,8 +586,11 @@ export { ASSETS, POLICY };
 function transaction(id: SignRequest["id"], firstTime = false): PopupRequest {
   const request = SIGN_REQUESTS.find((r) => r.id === id);
   if (!request) throw new Error(`no sample sign request ${id}`);
-  return { kind: "transaction", id: `tx-${id}`, request, firstTime };
+  return { kind: "transaction", id: `tx-${id}`, network: "testnet", request, firstTime };
 }
+
+/** The largest uint256: a permit's way of saying no limit. */
+const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
 /** A sign-in message, exactly as a site sends it (EIP-4361). */
 const SIGN_IN = [
@@ -605,6 +614,7 @@ export const REQUESTS = {
   message: {
     kind: "message",
     id: "msg",
+    network: "testnet",
     origin: "scrybe.example",
     text: SIGN_IN,
     readable: true,
@@ -613,6 +623,7 @@ export const REQUESTS = {
   unreadable: {
     kind: "message",
     id: "msg-raw",
+    network: "testnet",
     origin: "freemint.example",
     text: "0x8f3d2a6c1e9b4f70a5d8c3e6b1f4a7d0c9e2b5f8a1d4c7e0b3f6a9d2c5e8b1f4a7d0c3e6b9f2a5d8c1e4b7f0a3d6c9e2b5f8a1d4",
     readable: false,
@@ -621,7 +632,18 @@ export const REQUESTS = {
   permit: {
     kind: "typedData",
     id: "permit",
+    network: "testnet",
     origin: "pixeldrop.example",
+    // Baret's answer from /v1/analyze: a permit to a known drainer is Blocked.
+    verdict: "blocked",
+    findings: [
+      {
+        code: "PERMIT_SIGNATURE_DETECTED",
+        values: { spender: ADDRESS.drainer, amount: MAX_UINT, asset: "USDC" },
+      },
+      { code: "KNOWN_MALICIOUS_ADDRESS", values: { address: ADDRESS.drainer } },
+    ],
+    rules: [{ rule: "blockPermit" }, { rule: "blockKnownMalicious" }],
     fields: [
       { name: "primaryType", value: "Permit" },
       { name: "domain.name", value: "USD Coin" },
@@ -631,7 +653,7 @@ export const REQUESTS = {
       { name: "spender", value: ADDRESS.drainer },
       {
         name: "value",
-        value: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+        value: MAX_UINT,
       },
       { name: "nonce", value: "0" },
       { name: "deadline", value: "1791590400" },
@@ -647,6 +669,7 @@ export const REQUESTS = {
   firstPayment: {
     kind: "payment",
     id: "pay-first",
+    network: "testnet",
     origin: "atlas.example",
     merchant: EXT_ADDRESS.atlas,
     amount: "0.05",
@@ -658,6 +681,7 @@ export const REQUESTS = {
   autoPayment: {
     kind: "payment",
     id: "pay-auto",
+    network: "testnet",
     origin: "scrybe.example",
     merchant: "scrybe.example",
     amount: "0.50",
@@ -671,6 +695,7 @@ export const REQUESTS = {
   overCap: {
     kind: "payment",
     id: "pay-over",
+    network: "testnet",
     origin: "scrybe.example",
     merchant: "scrybe.example",
     amount: "0.80",
@@ -685,6 +710,7 @@ export const REQUESTS = {
   notChecked: {
     kind: "payment",
     id: "pay-unchecked",
+    network: "testnet",
     origin: "scrybe.example",
     merchant: "scrybe.example",
     amount: "0.50",
