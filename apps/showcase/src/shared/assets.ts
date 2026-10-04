@@ -14,6 +14,20 @@ import { avif, type ImgAsset, widths } from "@baret/web-ui/lib/img";
 
 export type { ImgAsset } from "@baret/web-ui/lib/img";
 
+/**
+ * The `sizes` each route's LCP picture renders with. scripts/head.mjs writes
+ * a preload for the same set and sizes into that route's HTML, so the browser
+ * starts the one candidate it will use with the HTML, not after the scripts.
+ */
+export const LCP_SIZES = {
+  home: "100vw",
+  agents: "100vw",
+  install: "(min-width: 1024px) 480px, 100vw",
+  // The well sits inside the 16 px phone gutters: 100vw would ask a DPR 2
+  // phone for the 1254 px original instead of the 768 px copy.
+  docs: "(min-width: 1024px) 480px, calc(100vw - 32px)",
+} as const;
+
 export const IMG = {
   l01: {
     src: "/assets/landing/l-01.webp",

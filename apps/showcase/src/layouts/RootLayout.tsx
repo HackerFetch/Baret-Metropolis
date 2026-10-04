@@ -10,10 +10,10 @@ import { useEffect, useState } from "react";
 import {
   Link,
   NavLink,
-  Outlet,
   ScrollRestoration,
   useLocation,
   useMatches,
+  useOutlet,
   useRouteError,
 } from "react-router";
 import { DEMO_PATHS, routes, warm } from "../routes.js";
@@ -95,6 +95,10 @@ function Chrome() {
   const head = headFor(raw);
   const { path: pathname, title, noindex, demo } = head;
   const description = useHandleDescription() ?? head.description;
+  // Null while a lazy page loads on first visit: this layout is also the
+  // route's HydrateFallback (router.tsx), so the header paints at once and
+  // the footer waits for the page instead of jumping down when it lands.
+  const outlet = useOutlet();
 
   if (demo) {
     return (
@@ -102,8 +106,8 @@ function Chrome() {
         <title>{title}</title>
         {/* The demo sites imitate products on purpose; keep them out of search (G4). */}
         <meta name="robots" content="noindex" />
-        <Outlet />
-        <DemoRibbon />
+        {outlet}
+        {outlet ? <DemoRibbon /> : null}
       </>
     );
   }
@@ -117,9 +121,9 @@ function Chrome() {
       <SkipLink />
       <SiteHeader pathname={pathname} />
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-        <Outlet />
+        {outlet}
       </main>
-      <SiteFooter row={ROW} />
+      {outlet ? <SiteFooter row={ROW} /> : null}
     </div>
   );
 }

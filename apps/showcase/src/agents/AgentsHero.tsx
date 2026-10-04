@@ -9,7 +9,7 @@ import { TextReveal } from "@baret/web-ui/components/TextReveal";
 import { FRAME, GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { AGENTS_ART } from "../shared/assets.js";
+import { AGENTS_ART, LCP_SIZES } from "../shared/assets.js";
 
 /**
  * The agents page opens like the landing's hero, at night: robot carts with
@@ -36,9 +36,9 @@ export function AgentsHero(): JSX.Element {
         <Parallax amount={0.03} settle={0.03}>
           <Img
             asset={AGENTS_ART.hero}
-            loading="eager"
+            loading="priority"
             position={{ base: "70% 60%", lg: "80% 60%" }}
-            sizes="100vw"
+            sizes={LCP_SIZES.agents}
             className="absolute inset-0 size-full"
           />
         </Parallax>

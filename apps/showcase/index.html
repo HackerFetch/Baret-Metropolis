@@ -51,6 +51,19 @@
       href="/fonts/big-shoulders-display-800.woff2"
     />
     <link rel="stylesheet" href="/src/fonts.css" />
+    <!--
+      "/" is prerendered into #root (scripts/prerender.mjs). A host answers an
+      unknown path with this same file, so on any other path the markup stays
+      hidden until main.tsx swaps in the right page.
+    -->
+    <style>
+      [data-prerender-hidden] #root > * {
+        display: none;
+      }
+    </style>
+    <script>
+      if (location.pathname !== "/") document.documentElement.dataset.prerenderHidden = "";
+    </script>
     <script>
       // Resolve the theme before first paint so the page never flashes the
       // wrong ground. Absent attribute means follow the operating system.

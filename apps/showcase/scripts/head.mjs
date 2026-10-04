@@ -28,7 +28,7 @@ import { docs } from "../../../packages/content/src/showcase/docs.content.ts";
 import { home } from "../../../packages/content/src/showcase/home.content.ts";
 import { hub } from "../../../packages/content/src/showcase/hub.content.ts";
 import { install } from "../../../packages/content/src/showcase/install.content.ts";
-import { IMG } from "../src/shared/assets.ts";
+import { AGENTS_ART, DOCS_ART, IMG, INSTALL_ART, LCP_SIZES } from "../src/shared/assets.ts";
 import { writeRouteHeads } from "./route-heads.mjs";
 
 export const HEAD_MARK = "<!-- baret:head -->";
@@ -43,26 +43,41 @@ const esc = (s) =>
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
 
-/** The opener's frame 0, the LCP image on "/". Same set Img renders. */
-function lcpPreload() {
-  const a = IMG.l06;
-  const set = a.avifSrcSet ?? a.srcSet;
-  const type = a.avifSrcSet ? ' type="image/avif"' : "";
-  return `<link rel="preload" as="image" fetchpriority="high"${type} imagesizes="100vw" imagesrcset="${set}">`;
+/** A preload for a route's LCP picture: the same set and sizes its Img renders. */
+function imagePreload(asset, sizes) {
+  const set = asset.avifSrcSet ?? asset.srcSet;
+  const type = asset.avifSrcSet ? ' type="image/avif"' : "";
+  const source = set ? `imagesizes="${sizes}" imagesrcset="${set}"` : `href="${asset.src}"`;
+  return `<link rel="preload" as="image" fetchpriority="high"${type} ${source}>`;
 }
 
 /**
- * One route's head. `path` "/" gets the landing copy and the LCP preload;
- * every other route gets its registry title and the brand line.
+ * The LCP picture of each route that has one: the opener's frame 0 on "/",
+ * the hero on /agents, /install and /docs. The other routes paint text first.
  */
-export function headFor({ path, title, description, site }) {
-  const url = site ? `${site}${path}` : "";
+const LCP = {
+  "/": () => imagePreload(IMG.l06, LCP_SIZES.home),
+  "/agents": () => imagePreload(AGENTS_ART.hero, LCP_SIZES.agents),
+  "/install": () => imagePreload(INSTALL_ART.hero, LCP_SIZES.install),
+  "/docs": () => imagePreload(DOCS_ART.hero, LCP_SIZES.docs),
+};
+
+/**
+ * One route's head. `path` "/" gets the landing copy; every other route gets
+ * its registry title and the brand line. A route with a picture as its LCP
+ * gets that picture's preload, and `preload` adds the route's own chunks
+ * (route-heads.mjs). `noindex` pages (the demo sites, the utility pages) get
+ * a robots tag and no canonical; main.tsx swaps the tag for RootLayout's.
+ */
+export function headFor({ path, title, description, site, noindex = false, preload = [] }) {
+  const url = site && !noindex ? `${site}${path}` : "";
   const image = `${site}/og.png`;
   const t = esc(title);
   const d = esc(description);
   const tags = [
     `<title data-static-head>${t}</title>`,
     `<meta data-static-head name="description" content="${d}">`,
+    noindex && '<meta data-static-head name="robots" content="noindex">',
     url && `<link rel="canonical" href="${url}">`,
     '<meta property="og:type" content="website">',
     '<meta property="og:site_name" content="Baret">',
@@ -74,7 +89,8 @@ export function headFor({ path, title, description, site }) {
     '<meta property="og:image:height" content="630">',
     `<meta property="og:image:alt" content="${esc(home.meta.imageAlt)}">`,
     '<meta name="twitter:card" content="summary_large_image">',
-    path === "/" && lcpPreload(),
+    LCP[path]?.(),
+    ...preload,
   ].filter(Boolean);
   return [START, ...tags, END].join("\n    ");
 }
@@ -114,7 +130,8 @@ export function baretHead() {
       site = (env.BARET_SITE_URL || process.env.BARET_SITE_URL || vercelSite).replace(/\/+$/, "");
       outDir = resolve(config.root, config.build.outDir);
       routesFile = resolve(config.root, "src/routes.ts");
-      isBuild = config.command === "build";
+      // The SSR pass that prerender.mjs runs writes no HTML of its own.
+      isBuild = config.command === "build" && !config.build.ssr;
       if (site && !/^https?:\/\/[^/]+/.test(site)) {
         throw new Error(`baret-head: BARET_SITE_URL must be an absolute URL, got "${site}"`);
       }

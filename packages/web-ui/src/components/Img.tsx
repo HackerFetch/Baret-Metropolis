@@ -149,6 +149,7 @@ export function ImgWell({
   dim,
   className,
   sizes,
+  loading,
 }: {
   asset: ImgAsset;
   ratio: keyof typeof RATIO;
@@ -157,6 +158,8 @@ export function ImgWell({
   dim?: boolean;
   className?: string;
   sizes?: string;
+  /** As on Img; "priority" for a well that holds the route's LCP picture. */
+  loading?: "priority" | "eager" | "lazy";
 }): JSX.Element {
   return (
     <div
@@ -168,6 +171,7 @@ export function ImgWell({
         {...(fit ? { fit } : {})}
         {...(position ? { position } : {})}
         {...(sizes ? { sizes } : {})}
+        {...(loading ? { loading } : {})}
         className={cx("absolute inset-0 size-full", dim && "dark:brightness-90")}
       />
     </div>
