@@ -94,10 +94,18 @@ ${urls}
 /**
  * `descriptions` maps a registry key to that page's meta description from
  * @baret/content; a route without one falls back to `description` (the brand
- * line). The head markers are stripped from every written page, "/" included,
+ * line). `heads` maps a demo site's key to its scenario `{ title,
+ * description }`, which replaces the registry title in that site's file. The head markers are stripped from every written page, "/" included,
  * once they are no longer needed.
  */
-export async function writeRouteHeads({ outDir, routesFile, site, description, descriptions }) {
+export async function writeRouteHeads({
+  outDir,
+  routesFile,
+  site,
+  description,
+  descriptions,
+  heads,
+}) {
   const source = await readFile(routesFile, "utf8");
   const routes = marketingRoutes(source);
   if (routes.length === 0) throw new Error("route-heads: no marketing routes found");
@@ -122,7 +130,8 @@ export async function writeRouteHeads({ outDir, routesFile, site, description, d
   }
   for (const route of unlistedRoutes(source)) {
     const preload = chunkPreloads(manifest, route.module);
-    await write(route, headFor({ ...route, description, site, noindex: true, preload }));
+    const own = heads?.[route.key] ?? { title: route.title, description };
+    await write(route, headFor({ ...route, ...own, site, noindex: true, preload }));
   }
   // A real 404 for hosts that serve one for unmatched paths (Vercel serves
   // dist/404.html with status 404 once no catch-all rewrite answers first):

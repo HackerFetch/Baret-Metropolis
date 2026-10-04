@@ -4,33 +4,58 @@ import * as HomePage from "./pages/HomePage.js";
 import { routes } from "./routes.js";
 
 /**
- * A page's own meta description, loaded with its chunk and handed to
- * RootLayout as the route handle, so the live head matches the static
- * dist/<route>/index.html that scripts/head.mjs writes. Each lookup is a
- * dynamic import so the page copy stays in the page chunk, not the entry.
- * The path points at the content file itself, never the barrel: importing
- * the @baret/content barrel (statically or dynamically) pulled all four
- * pages' copy into the entry chunk (+27 KB raw, measured). @baret/content now
- * exports `./showcase/*.content`; switch these to
- * `@baret/content/showcase/<name>.content` after the next dev-server restart
- * (a running Vite server keeps the old exports map cached).
+ * A page's own head, loaded with its chunk and handed to RootLayout as the
+ * route handle, so the live head matches the static dist/<route>/index.html
+ * that scripts/head.mjs writes: the description for the marketing pages,
+ * and the scenario title and description for the demo sites (so a tab reads
+ * "NovaSwap swap scenario · Baret", never the imitated product's name
+ * alone). Each lookup is a dynamic import so the copy stays in the page
+ * chunk, not the entry. The path points at the content file itself, never
+ * the barrel: importing the @baret/content barrel (statically or
+ * dynamically) pulled all four pages' copy into the entry chunk (+27 KB raw,
+ * measured).
  */
-const DESCRIBE: Partial<Record<keyof typeof routes, () => Promise<string>>> = {
+type Head = { readonly title?: string; readonly description: string };
+const HEAD: Partial<Record<keyof typeof routes, () => Promise<Head>>> = {
   showcase: () =>
-    import("../../../packages/content/src/showcase/hub.content.js").then(
-      ({ hub }) => hub.meta.description,
-    ),
+    import("../../../packages/content/src/showcase/hub.content.js").then(({ hub }) => ({
+      description: hub.meta.description,
+    })),
   agents: () =>
-    import("../../../packages/content/src/showcase/agents.content.js").then(
-      ({ agents }) => agents.meta.description,
-    ),
+    import("../../../packages/content/src/showcase/agents.content.js").then(({ agents }) => ({
+      description: agents.meta.description,
+    })),
   docs: () =>
-    import("../../../packages/content/src/showcase/docs.content.js").then(
-      ({ docs }) => docs.meta.description,
-    ),
+    import("../../../packages/content/src/showcase/docs.content.js").then(({ docs }) => ({
+      description: docs.meta.description,
+    })),
   install: () =>
-    import("../../../packages/content/src/showcase/install.content.js").then(
-      ({ install }) => install.meta.description,
+    import("../../../packages/content/src/showcase/install.content.js").then(({ install }) => ({
+      description: install.meta.description,
+    })),
+  scrybe: () =>
+    import("../../../packages/content/src/showcase/scrybe.content.js").then(
+      ({ scrybe }) => scrybe.meta,
+    ),
+  novaswap: () =>
+    import("../../../packages/content/src/showcase/novaswap.content.js").then(
+      ({ novaswap }) => novaswap.meta,
+    ),
+  pixeldrop: () =>
+    import("../../../packages/content/src/showcase/pixeldrop.content.js").then(
+      ({ pixeldrop }) => pixeldrop.meta,
+    ),
+  orbityield: () =>
+    import("../../../packages/content/src/showcase/orbityield.content.js").then(
+      ({ orbityield }) => orbityield.meta,
+    ),
+  claimhub: () =>
+    import("../../../packages/content/src/showcase/claimhub.content.js").then(
+      ({ claimhub }) => claimhub.meta,
+    ),
+  launchpad: () =>
+    import("../../../packages/content/src/showcase/launchpad.content.js").then(
+      ({ launchpad }) => launchpad.meta,
     ),
 };
 
@@ -63,9 +88,9 @@ export const routeObjects: RouteObject[] = [
         : {
             path: key === "notFound" ? "*" : route.path.slice(1),
             lazy: async () => {
-              const describe = DESCRIBE[key as keyof typeof routes];
-              const [page, description] = await Promise.all([route.load(), describe?.()]);
-              return description ? { ...page, handle: { description } } : page;
+              const head = HEAD[key as keyof typeof routes];
+              const [page, handle] = await Promise.all([route.load(), head?.()]);
+              return handle ? { ...page, handle } : page;
             },
           },
     ),

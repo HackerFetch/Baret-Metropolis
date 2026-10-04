@@ -24,10 +24,16 @@ import { loadEnv } from "vite";
 // `.js` specifiers Node cannot map to `.ts`. These files import nothing.
 import { common } from "../../../packages/content/src/shared/common.content.ts";
 import { agents } from "../../../packages/content/src/showcase/agents.content.ts";
+import { claimhub } from "../../../packages/content/src/showcase/claimhub.content.ts";
 import { docs } from "../../../packages/content/src/showcase/docs.content.ts";
 import { home } from "../../../packages/content/src/showcase/home.content.ts";
 import { hub } from "../../../packages/content/src/showcase/hub.content.ts";
 import { install } from "../../../packages/content/src/showcase/install.content.ts";
+import { launchpad } from "../../../packages/content/src/showcase/launchpad.content.ts";
+import { novaswap } from "../../../packages/content/src/showcase/novaswap.content.ts";
+import { orbityield } from "../../../packages/content/src/showcase/orbityield.content.ts";
+import { pixeldrop } from "../../../packages/content/src/showcase/pixeldrop.content.ts";
+import { scrybe } from "../../../packages/content/src/showcase/scrybe.content.ts";
 import { AGENTS_ART, DOCS_ART, IMG, INSTALL_ART, LCP_SIZES } from "../src/shared/assets.ts";
 import { writeRouteHeads } from "./route-heads.mjs";
 
@@ -168,12 +174,19 @@ export function baretHead() {
         docs: docs.meta.description,
         install: install.meta.description,
       };
+      // The demo sites' files carry their scenario title and description,
+      // so an unfurl never shows the imitated product's name alone.
+      const demos = { scrybe, novaswap, pixeldrop, orbityield, claimhub, launchpad };
+      const heads = Object.fromEntries(
+        Object.entries(demos).map(([key, site]) => [key, site.meta]),
+      );
       await writeRouteHeads({
         outDir,
         routesFile,
         site,
         description: common.brand.description,
         descriptions,
+        heads,
       });
     },
   };
