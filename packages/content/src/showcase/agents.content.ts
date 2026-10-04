@@ -39,6 +39,8 @@ export const agents = {
       secondary: { label: "Try the playground", href: "#playground" },
     },
     install: "pnpm add @baret/agent-kit",
+    /** Shown next to the install line until the kit is on npm. */
+    installStatus: "Planned. The kit is not published yet.",
   },
 
   /** The argument. Concrete over scary. */
@@ -169,7 +171,7 @@ export const agents = {
       {
         short: "Install",
         title: "Install the kit",
-        body: "Add @baret/agent-kit to a TypeScript or Node agent. From any other language, use the baret CLI.",
+        body: "Add @baret/agent-kit to a TypeScript or Node agent once it is published. Until then, any language can call the HTTP API.",
       },
       {
         short: "Policy",
@@ -190,6 +192,28 @@ export const agents = {
     title: "From install to your first blocked transaction.",
     /** Accessible name of the TypeScript / any language / agent frameworks picker. */
     tabs: "Show the code for",
+    /** Under a sample whose package or endpoint does not exist yet. Such a sample has no copy button. */
+    planned: "Planned. Not published yet, so this code does not run today.",
+    /** The one path that works today: the analysis server's own endpoint. */
+    http: {
+      title: "HTTP API",
+      before: "Works today. Start the server locally and post an unsigned transaction to it.",
+      code: [
+        "curl -X POST http://localhost:8080/v1/analyze \\",
+        '  -H "content-type: application/json" \\',
+        "  -d '{",
+        '    "network": "testnet",',
+        '    "transaction": {',
+        '      "from": "<agent address>",',
+        '      "to": "<contract address>",',
+        '      "value": "0",',
+        '      "data": "0x"',
+        "    }",
+        "  }'",
+      ],
+      after:
+        "The answer carries a decision: safe, caution or blocked. Sign only on safe or caution. No answer means no signature.",
+    },
     sdk: {
       title: "TypeScript",
       before: "Wrap the signer, then send the way you already do.",
@@ -377,15 +401,15 @@ export const agents = {
   },
 
   /**
-   * Nothing here is a result. The playground sends a real transaction to the
-   * analysis server and renders what comes back. Action descriptions say what
+   * Nothing here is a result. The six actions answer from prepared samples; a
+   * pasted transaction goes to the analysis server only in a live build. Action descriptions say what
    * the agent tries; they never say what Baret will find.
    */
   playground: {
     /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Playground",
     title: "Watch an agent ask first.",
-    body: "Pick something an agent might try and a starting policy. The playground sends it to the same analysis the SDK calls and shows what your agent would get back.",
+    body: "Pick something an agent might try and a starting policy. The playground shows what your agent would get back for a prepared example.",
     picker: {
       label: "What the agent tries",
       items: {
@@ -443,8 +467,15 @@ export const agents = {
         "baret > Caution. {count} findings, no rule broken.",
         "agent > signing and logging the findings.",
       ],
+      /** The first caution line when there is exactly one finding. */
+      cautionOne: "baret > Caution. {count} finding, no rule broken.",
       blocked: ["baret > Blocked. Rule: {rule}", "agent > refusing to sign. transaction dropped."],
       unreachable: ["baret > no answer", "agent > no check, no signature. stopping."],
+      notSent: ["baret > not sent, nothing checked", "agent > no check, no signature. stopping."],
+      /** Rule names that read better as a reason than the policy toggle's label. */
+      ruleNames: { allowWarnings: "Caution not allowed by this policy" },
+      /** After "Rule:" when this page cannot name the rule (a live answer, or no single rule). */
+      ruleFallback: "see the findings",
     },
     result: {
       safe: { label: "Safe", body: "Allowed. Your agent signs and sends." },
@@ -459,6 +490,10 @@ export const agents = {
       unreachable: {
         label: "Can't reach Baret",
         body: "The check did not finish, so this counts as Blocked. Your agent signs nothing.",
+      },
+      notSent: {
+        label: "Not checked",
+        body: "This demo did not send the transaction, so this counts as Blocked. Your agent signs nothing.",
       },
       findings: "Findings",
       noFindings: "No findings. Every check ran and found nothing to report.",
@@ -490,10 +525,15 @@ export const agents = {
         body: "The check did not run, so your agent would sign nothing. Try again in a moment.",
       },
     },
-    note: "The playground calls the same /v1/analyze endpoint as the SDK, on a rate-limited testnet server. To run your own, start the server locally and point serverUrl at it.",
-    /** Shown while the playground answers from prepared samples. */
-    sample:
-      "Prepared sample answers. Until the playground is connected to Baret's server, nothing is sent.",
+    note: "To check a real transaction, start the server locally and post it to /v1/analyze, as the HTTP API sample shows.",
+    /** Shown only when pasted transactions go to the server. */
+    liveNote:
+      "A pasted transaction goes to the same /v1/analyze endpoint, on a rate-limited testnet server.",
+    /** Shown under the button while one of the six actions is picked. */
+    sample: "Prepared sample answers. The six actions are not sent to Baret's server.",
+    /** Shown under the button for a pasted transaction when this build sends nothing. */
+    notSent:
+      "This demo does not send pasted transactions yet. Nothing is checked, so the answer is Blocked.",
     footnote:
       "Per-agent activity needs an authenticated server, so it is not part of this public playground.",
     /** Not rendered on /agents since 2026-10-03. */
@@ -555,7 +595,7 @@ export const agents = {
 
   cta: {
     title: "Your agent stops instead of signing blind.",
-    body: "Install the kit, pick a policy and wrap the signer. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
+    body: "Pick a policy and call the HTTP API today. Wrap the signer once the kit is published. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
     actions: {
       primary: { label: "Read the quickstart", href: "#quickstart" },
       secondary: { label: "Read the vault spec", href: "/docs#contracts-and-payments" },

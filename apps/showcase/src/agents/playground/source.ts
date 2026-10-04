@@ -14,8 +14,9 @@ import { type ActionId, type PolicyName, SAMPLES, verdictFor } from "./sample.js
  * never writes calldata by hand. "Paste your own" is a real transaction: with
  * `VITE_BARET_PLAYGROUND=live` it goes to Baret's `/v1/analyze` with the
  * picked policy; without it nothing is sent, and since nothing was checked,
- * the answer is the fail-closed one. With the defaults the page never calls
- * the API.
+ * the answer is NOT_SENT: fail-closed like a failed check, but the page says
+ * nothing was sent instead of "can't reach Baret". With the defaults the page
+ * never calls the API.
  */
 
 export type PlaygroundInput =
@@ -102,6 +103,18 @@ const env: unknown = import.meta.env.VITE_BARET_PLAYGROUND;
 /** True only when the env flag asks for live answers. */
 export const LIVE = env === "live";
 
+/**
+ * A pasted transaction this build did not send. A failed check (Blocked), kept
+ * as its own object so the page can say why: `runCheck` resolves the source's
+ * answer as it is, so the reference survives.
+ */
+export const NOT_SENT: CheckResult = { ...FAILED };
+
+/** True when the answer is NOT_SENT: nothing was sent, so nothing was checked. */
+export function isNotSent(result: CheckResult): boolean {
+  return result === NOT_SENT;
+}
+
 /** The prepared answer for one action under one policy. */
 export function sampleResult(action: ActionId, policy: PolicyName): CheckResult {
   const sample = SAMPLES[action];
@@ -139,7 +152,7 @@ async function liveResult(
 export function sourceFor(live: boolean): CheckSource<PlaygroundInput> {
   return async (input, signal) => {
     if (input.kind === "action") return sampleResult(input.action, input.policy);
-    if (!live) return FAILED;
+    if (!live) return NOT_SENT;
     return liveResult(input.transaction, input.from, input.policy, signal);
   };
 }

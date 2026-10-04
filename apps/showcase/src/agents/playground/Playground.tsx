@@ -16,9 +16,11 @@ import { outcomeOf } from "./terminal.js";
 /**
  * Watch an agent ask first. Pick what the agent tries and a starting policy,
  * then check it: the terminal prints the exchange and the answer appears
- * with its findings. Prepared samples by default (nothing is sent); a pasted
- * transaction goes to Baret only with VITE_BARET_PLAYGROUND=live, and
- * without it the answer is the fail-closed one. One status region announces
+ * with its findings. The six actions always answer from prepared samples and
+ * say so under the button. A pasted transaction goes to Baret only with
+ * VITE_BARET_PLAYGROUND=live; without it nothing is sent, the page says so,
+ * and the answer is the fail-closed one. The agent address only shows for a
+ * pasted transaction, the one run that reads it. One status region announces
  * each verdict; nothing runs until the button is pressed.
  */
 
@@ -36,7 +38,7 @@ const sentence = (error: { title: string; body: string }): string =>
   `${error.title}. ${error.body}`;
 
 const INPUT =
-  "w-full border border-[color:var(--control-edge)] bg-[color:var(--surface)] px-3 py-2.5 font-mono text-sm text-[color:var(--fg)] placeholder:text-[color:var(--fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+  "min-h-11 w-full border border-[color:var(--control-edge)] bg-[color:var(--surface)] px-3 py-2.5 font-mono text-sm text-[color:var(--fg)] placeholder:text-[color:var(--fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
 
 export function Playground({
   policy,
@@ -89,7 +91,6 @@ export function Playground({
   }
 
   const state = check.state;
-  // The address only counts for a pasted transaction; the six actions answer from samples.
   const addressError = error?.field === "address" && choice === "custom" ? error.message : null;
   const txError = error?.field === "transaction" && choice === "custom" ? error.message : null;
 
@@ -133,46 +134,48 @@ export function Playground({
             <p className={`${T.small} mt-3 min-h-[2lh]`}>{describe}</p>
           </fieldset>
 
-          <div className="grid gap-2">
-            <label htmlFor={addressId} className={T.label}>
-              {fields.address.label}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <input
-                id={addressId}
-                value={address}
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                  if (error?.field === "address") setError(null);
-                }}
-                spellCheck={false}
-                autoComplete="off"
-                aria-invalid={addressError ? true : undefined}
-                aria-describedby={
-                  addressError ? `${addressHintId} ${addressErrorId}` : addressHintId
-                }
-                className={`${INPUT} min-w-[16rem] flex-1`}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setAddress(randomAddress());
-                  if (error?.field === "address") setError(null);
-                }}
-              >
-                {playground.randomAddress.label}
-              </Button>
-            </div>
-            <p id={addressHintId} className={T.small}>
-              {fields.address.hint}
-            </p>
-            {addressError ? (
-              <p id={addressErrorId} className="text-sm font-medium text-[color:var(--blocked)]">
-                {addressError}
+          {choice === "custom" ? (
+            <div className="grid gap-2">
+              <label htmlFor={addressId} className={T.label}>
+                {fields.address.label}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  id={addressId}
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    if (error?.field === "address") setError(null);
+                  }}
+                  spellCheck={false}
+                  autoComplete="off"
+                  aria-invalid={addressError ? true : undefined}
+                  aria-describedby={
+                    addressError ? `${addressHintId} ${addressErrorId}` : addressHintId
+                  }
+                  className={`${INPUT} min-w-[16rem] flex-1`}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setAddress(randomAddress());
+                    if (error?.field === "address") setError(null);
+                  }}
+                >
+                  {playground.randomAddress.label}
+                </Button>
+              </div>
+              <p id={addressHintId} className={T.small}>
+                {fields.address.hint}
               </p>
-            ) : null}
-          </div>
+              {addressError ? (
+                <p id={addressErrorId} className="text-sm font-medium text-[color:var(--blocked)]">
+                  {addressError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="grid gap-1">
             <p className={T.label}>{fields.network.label}</p>
@@ -216,7 +219,14 @@ export function Playground({
             <Button type="submit" variant="primary" size="lg" className="w-full md:w-auto">
               {playground.action.label}
             </Button>
-            {LIVE ? null : <p className={T.small}>{playground.sample}</p>}
+            {/* What actually happens on this run: prepared answers for the six
+                actions, and for a pasted transaction a plain "not sent" when
+                this build does not send it. */}
+            {choice !== "custom" ? (
+              <p className={T.small}>{playground.sample}</p>
+            ) : LIVE ? null : (
+              <p className={T.small}>{playground.notSent}</p>
+            )}
           </div>
         </form>
 
@@ -228,6 +238,7 @@ export function Playground({
 
       <div className="mt-12 grid gap-2 border-t border-[color:var(--rule)] pt-6">
         <p className={T.small}>{playground.note}</p>
+        {LIVE ? <p className={T.small}>{playground.liveNote}</p> : null}
         <p className={T.small}>{playground.footnote}</p>
       </div>
       <p role="status" className="sr-only">

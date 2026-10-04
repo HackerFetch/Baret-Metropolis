@@ -24,6 +24,7 @@ const TONE: Record<Outcome, "safe" | "caution" | "blocked" | "neutral"> = {
   caution: "caution",
   blocked: "blocked",
   unreachable: "neutral",
+  notSent: "neutral",
 };
 
 export function Terminal({ lines }: { lines: readonly string[] }): JSX.Element {
@@ -66,18 +67,19 @@ export function Result({
         </div>
         <p className={`${T.body} text-[color:var(--fg)]`}>{copy[outcome].body}</p>
       </div>
-      {outcome === "unreachable" ? null : (
+      {outcome === "unreachable" || outcome === "notSent" ? null : (
         <section className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
-          <h4 className={T.label}>{copy.findings}</h4>
+          <h3 className={T.label}>{copy.findings}</h3>
           {result.findings.length === 0 ? (
             <p className={T.body}>{copy.noFindings}</p>
           ) : (
             <ul className="grid gap-4">
-              {result.findings.map((item) => {
+              {result.findings.map((item, i) => {
                 const words = findingCopy[item.code];
                 return (
                   <li
-                    key={item.code}
+                    // biome-ignore lint/suspicious/noArrayIndexKey: a live answer can repeat a code, and the list never reorders.
+                    key={`${item.code}-${i}`}
                     className="grid gap-1 border-l-4 border-[color:var(--rule-strong)] pl-3"
                   >
                     <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
@@ -98,7 +100,7 @@ export function Result({
       )}
       {result.changes.length > 0 || result.approvals.length > 0 ? (
         <section className="grid gap-2 border-t border-[color:var(--rule)] pt-5">
-          <h4 className={T.label}>{copy.changes}</h4>
+          <h3 className={T.label}>{copy.changes}</h3>
           {result.changes.map((row) => (
             <ChangeRow
               key={`${row.direction}-${row.unit}`}

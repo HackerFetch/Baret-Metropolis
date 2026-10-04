@@ -18,19 +18,30 @@ import type { PolicyName } from "./playground/sample.js";
  * code, one sample at a time behind a radio group (TypeScript, any
  * language, agent frameworks): the line before it, the code with a copy
  * button, the line after it. The SDK and CLI samples carry the policy picked
- * in the playground. The code scrolls sideways inside its own box only.
+ * in the playground. The code scrolls sideways inside its own box only, and
+ * the box takes keyboard focus so it can be scrolled without a pointer. Only
+ * the HTTP sample works today: the kit, CLI and MCP samples are planned, so
+ * they carry a status line and no copy button.
  */
 
 const ID = "quickstart";
 const { quickstart, steps } = agents;
-const SAMPLES = { sdk: quickstart.sdk, cli: quickstart.cli, mcp: quickstart.mcp } as const;
+const SAMPLES = {
+  http: quickstart.http,
+  sdk: quickstart.sdk,
+  cli: quickstart.cli,
+  mcp: quickstart.mcp,
+} as const;
 type SampleId = keyof typeof SAMPLES;
+/** The one sample whose endpoint exists today. */
+const WORKS_TODAY: SampleId = "http";
 
 export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
   const name = useId();
-  const [tab, setTab] = useState<SampleId>("sdk");
+  const [tab, setTab] = useState<SampleId>(WORKS_TODAY);
   const sample = SAMPLES[tab];
   const code = withPolicy(sample.code, policy);
+  const planned = tab !== WORKS_TODAY;
   return (
     <Section id={ID} ground="deep">
       <SectionHeader titleId={titleIdOf(ID)} title={quickstart.title} layout="stack" />
@@ -55,7 +66,7 @@ export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
         <Reveal className="col-span-4 min-w-0 md:col-span-8 lg:col-span-7" delay={0.06}>
           <fieldset>
             <legend className="sr-only">{quickstart.tabs}</legend>
-            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {(Object.keys(SAMPLES) as SampleId[]).map((id) => (
                 <Segment
                   key={id}
@@ -70,10 +81,23 @@ export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
           </fieldset>
           <p className={`${T.body} mt-6 text-[color:var(--fg)]`}>{sample.before}</p>
           <div className="mt-3 border border-[color:var(--rule-strong)] bg-[color:var(--surface)]">
-            <div className="flex justify-end border-b border-[color:var(--rule)]">
-              <CopyButton text={code} label={common.actions.copy} done={common.actions.copied} />
-            </div>
-            <pre className="overflow-x-auto px-4 py-4 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm">
+            {planned ? (
+              <p className={`${T.small} border-b border-[color:var(--rule)] px-4 py-3`}>
+                {quickstart.planned}
+              </p>
+            ) : (
+              <div className="flex justify-end border-b border-[color:var(--rule)]">
+                <CopyButton text={code} label={common.actions.copy} done={common.actions.copied} />
+              </div>
+            )}
+            {/* biome-ignore lint/a11y/useSemanticElements: the code box is a named region and keeps pre whitespace. */}
+            <pre
+              role="region"
+              aria-label={sample.title}
+              // biome-ignore lint/a11y/noNoninteractiveTabindex: the code box scrolls, so it takes focus to scroll by keyboard.
+              tabIndex={0}
+              className="overflow-x-auto px-4 py-4 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] md:text-sm"
+            >
               <code>{code}</code>
             </pre>
           </div>
