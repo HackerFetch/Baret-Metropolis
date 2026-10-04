@@ -3,6 +3,7 @@ import { ADDRESS, SIGN_REQUESTS } from "./sample.js";
 import {
   activeMerchants,
   canDeposit,
+  canWithdraw,
   initialState,
   readSample,
   ready,
@@ -44,6 +45,19 @@ describe("the wallet samples", () => {
     expect(state.assets).toEqual([]);
     expect(state.activity).toEqual([]);
     expect(canDeposit(state, "1")).toBe(false);
+    // The on-chain views go too: no stale vault, permissions or alerts.
+    expect(state.vault.balance).toBe("0.00");
+    expect(state.vault.merchants).toEqual([]);
+    expect(state.vault.agent).toBeNull();
+    expect(state.permissions).toEqual([]);
+    expect(state.alerts).toEqual([]);
+  });
+
+  it("refuses every vault move offline", () => {
+    const state = initialState("Main account", "offline");
+    expect(canWithdraw(state, "1")).toBe(false);
+    expect(reduce(state, { type: "withdraw", amount: "1" })).toBe(state);
+    expect(reduce(state, { type: "deposit", amount: "1" })).toBe(state);
   });
 
   it("adds a drift alert in the drift sample", () => {
@@ -87,6 +101,17 @@ describe("the vault and the account", () => {
     const next = reduce(start, { type: "withdraw", amount: "10" });
     expect(usdc(next)).toBe("129.50");
     expect(next.vault.balance).toBe("50.00");
+  });
+
+  it("refuses a withdrawal above the vault balance", () => {
+    expect(canWithdraw(start, "60")).toBe(true);
+    expect(canWithdraw(start, "60.01")).toBe(false);
+    expect(reduce(start, { type: "withdraw", amount: "60.01" })).toBe(start);
+  });
+
+  it("refuses an empty or unreadable withdrawal", () => {
+    expect(canWithdraw(start, "0")).toBe(false);
+    expect(canWithdraw(start, "abc")).toBe(false);
   });
 });
 

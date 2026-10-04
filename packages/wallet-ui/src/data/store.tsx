@@ -99,6 +99,11 @@ export interface WalletState {
     readonly lockAfterInactivity: boolean;
     readonly passkeyEverySignature: boolean;
   };
+  /**
+   * Whether the wallet is locked. Sample only: it lives in memory, so it
+   * covers the tab it was set in, and a request window opened as a new
+   * document starts unlocked. The live keystore will hold it instead.
+   */
   readonly locked: boolean;
 }
 
@@ -158,6 +163,23 @@ export function canDeposit(state: WalletState, amount: string): boolean {
   return held !== null && wanted !== null && wanted > 0n && wanted <= held;
 }
 
+/** The vault's asset has 6 decimals (USDC); its balance is kept to 2 places. */
+const VAULT_DECIMALS = 6;
+
+/**
+ * Whether the vault holds enough for a withdrawal back to the account.
+ * Fail-closed like canDeposit: unreadable balances, a missing account row
+ * for the asset (the amount would land nowhere) or an unreadable amount
+ * refuse it.
+ */
+export function canWithdraw(state: WalletState, amount: string): boolean {
+  if (!ready(state, "balances")) return false;
+  if (!state.assets.some((a) => a.symbol === state.vault.asset)) return false;
+  const held = toUnits(state.vault.balance, VAULT_DECIMALS);
+  const wanted = toUnits(amount, VAULT_DECIMALS);
+  return held !== null && wanted !== null && wanted > 0n && wanted <= held;
+}
+
 /** Move an amount of the vault's asset in (sign -1) or out (sign 1) of the account. */
 function accountAmount(state: WalletState, text: string, sign: 1n | -1n): readonly Asset[] {
   return state.assets.map((asset) => {
@@ -198,12 +220,17 @@ export function initialState(name: string, sample: Sample = "default"): WalletSt
         agentPayments: [],
       };
     case "offline":
-      // Nothing that failed to load is shown: no balances, no activity.
+      // Nothing that failed to load is shown: no balances, no activity, and
+      // none of the on-chain views read over the same RPC (the vault, the
+      // permissions and the alerts about them).
       return {
         ...base,
         status: { analyzer: "error", balances: "error", activity: "error" },
         assets: [],
         activity: [],
+        permissions: [],
+        alerts: [],
+        vault: EMPTY_VAULT,
         agentPayments: [],
       };
     case "drift":
@@ -214,10 +241,9 @@ export function initialState(name: string, sample: Sample = "default"): WalletSt
 }
 
 function vaultAmount(vault: Vault, text: string, sign: 1n | -1n): Vault {
-  const decimals = 6;
-  const balance = toUnits(vault.balance, decimals) ?? 0n;
-  const change = toUnits(text, decimals) ?? 0n;
-  return { ...vault, balance: fromUnits(balance + sign * change, decimals, { max: 2 }) };
+  const balance = toUnits(vault.balance, VAULT_DECIMALS) ?? 0n;
+  const change = toUnits(text, VAULT_DECIMALS) ?? 0n;
+  return { ...vault, balance: fromUnits(balance + sign * change, VAULT_DECIMALS, { max: 2 }) };
 }
 
 export function reduce(
@@ -299,6 +325,8 @@ export function reduce(
         vault: vaultAmount(state.vault, action.amount, 1n),
       };
     case "withdraw":
+      // Refused above what the vault holds, or with balances unread.
+      if (!canWithdraw(state, action.amount)) return state;
       return {
         ...state,
         assets: accountAmount(state, action.amount, 1n),

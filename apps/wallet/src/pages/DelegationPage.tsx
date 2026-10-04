@@ -5,7 +5,14 @@ import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, day, when } from "@baret/wallet-ui/data/format";
 import { ADDRESS } from "@baret/wallet-ui/data/sample";
-import { canDeposit, free, reserved, useWallet } from "@baret/wallet-ui/data/store";
+import {
+  canDeposit,
+  canWithdraw,
+  free,
+  ready,
+  reserved,
+  useWallet,
+} from "@baret/wallet-ui/data/store";
 import type { Merchant } from "@baret/wallet-ui/data/types";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
@@ -285,12 +292,15 @@ export function Component() {
   const dialogTitle = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [money, setMoney] = useState("");
-  const [moneyIssue, setMoneyIssue] = useState<"invalid" | "reserved" | "balance" | null>(null);
+  const [moneyIssue, setMoneyIssue] = useState<
+    "invalid" | "reserved" | "balance" | "vaultBalance" | null
+  >(null);
   const [adding, setAdding] = useState(false);
   const [keyPhase, setKeyPhase] = useState<"idle" | "creating" | "registering">("idle");
   const [revealed, setRevealed] = useState(false);
   const [said, setSaid] = useState("");
   const { vault } = state;
+  const vaultRead = ready(state, "balances");
   const listed = vault.merchants.filter((m) => m.status !== "removed");
 
   // Creating the key: the passkey prompt, then the transaction that registers it.
@@ -314,6 +324,11 @@ export function Component() {
     const value = vaultAmount(money);
     if (!value) {
       setMoneyIssue("invalid");
+      return;
+    }
+    // Fail-closed: more than the vault holds, or an unread balance, withdraws nothing.
+    if (kind === "withdraw" && !canWithdraw(state, value)) {
+      setMoneyIssue("vaultBalance");
       return;
     }
     if (kind === "withdraw" && withdrawable(vault, money) !== "ok") {
@@ -395,28 +410,39 @@ export function Component() {
         </Block>
 
         <Block title={vaultWords.title}>
-          {vault.balance === "0.00" ? (
+          {/* Fail-closed: an unread vault shows no figures, not a stale or zero balance. */}
+          {vaultRead ? null : (
+            <Problem title={delegation.errors.vault.title} body={delegation.errors.vault.body} />
+          )}
+          {vaultRead && vault.balance === "0.00" ? (
             <Empty title={vaultWords.empty.title} body={vaultWords.empty.body} />
           ) : null}
-          <dl className="grid gap-6 sm:grid-cols-3">
-            {(
-              [
-                [vaultWords.balance, vault.balance],
-                [vaultWords.reserved, reserved(vault)],
-                [vaultWords.free, free(vault)],
-              ] as const
-            ).map(([label, value]) => (
-              <div key={label} className="grid gap-1 border-t border-[color:var(--rule)] pt-3">
-                <dt className={T.small}>{label}</dt>
-                <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
-                  {amount(value, 6)} <span className="text-lg">{ASSET}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className={T.small}>
-            {fill(vaultWords.reservedNote, { amount: amount(reserved(vault), 6), asset: ASSET })}
-          </p>
+          {vaultRead ? (
+            <>
+              <dl className="grid gap-6 sm:grid-cols-3">
+                {(
+                  [
+                    [vaultWords.balance, vault.balance],
+                    [vaultWords.reserved, reserved(vault)],
+                    [vaultWords.free, free(vault)],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} className="grid gap-1 border-t border-[color:var(--rule)] pt-3">
+                    <dt className={T.small}>{label}</dt>
+                    <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
+                      {amount(value, 6)} <span className="text-lg">{ASSET}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className={T.small}>
+                {fill(vaultWords.reservedNote, {
+                  amount: amount(reserved(vault), 6),
+                  asset: ASSET,
+                })}
+              </p>
+            </>
+          ) : null}
           <div className="grid max-w-[520px] gap-2">
             <label htmlFor={amountId} className="text-sm font-medium text-[color:var(--fg)]">
               {vaultWords.amount.label}
@@ -461,6 +487,12 @@ export function Component() {
                 <Problem
                   title={delegation.errors.balance.title}
                   body={fill(delegation.errors.balance.body, { asset: ASSET })}
+                />
+              ) : null}
+              {moneyIssue === "vaultBalance" ? (
+                <Problem
+                  title={delegation.errors.vaultBalance.title}
+                  body={fill(delegation.errors.vaultBalance.body, { asset: ASSET })}
                 />
               ) : null}
             </div>

@@ -3,7 +3,7 @@ import { useWallet, WalletProvider } from "@baret/wallet-ui/data/store";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
 import type { JSX } from "react";
-import { Outlet, ScrollRestoration, useLocation, useMatches } from "react-router";
+import { Outlet, ScrollRestoration, useMatches } from "react-router";
 import { routes } from "../routes.js";
 import * as AppLayout from "./AppLayout.js";
 import { Locked } from "./Locked.js";
@@ -23,31 +23,34 @@ import { Locked } from "./Locked.js";
  *
  * A locked wallet answers a request window with the lock screen, never the
  * request: fail-closed. Unlocking shows the request; declining needs no unlock.
+ * The lock lives in memory only while the wallet runs on sample data
+ * (data/store), so it covers the tab it was set in: a request window opened
+ * as a new document starts unlocked until the live keystore holds the lock.
  */
 
-/** The request windows a site opens. */
-const REQUEST_PATHS: ReadonlySet<string> = new Set([routes.sign.path, routes.connect.path]);
+/** What a route carries in its handle (router.tsx). */
+type Handle = { title?: string; standalone?: boolean; request?: boolean };
 
-/** The screens that render outside the sidebar layout (router.tsx). */
-const STANDALONE_PATHS: ReadonlySet<string> = new Set(
-  Object.values(routes)
-    .filter((route) => route.group === "popup" || route.group === "setup")
-    .map((route) => route.path),
-);
+type Match = { handle?: unknown };
 
-/** The path without a trailing slash, so /send/ reads as /send. */
-function clean(pathname: string): string {
-  return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-}
-
-/** The title the deepest matched route carries in its handle (router.tsx). */
-function useTitle(): string {
-  const matches = useMatches();
-  for (let i = matches.length - 1; i >= 0; i -= 1) {
-    const handle = matches[i]?.handle as { title?: string } | undefined;
-    if (handle?.title) return handle.title;
+/**
+ * What the deepest matched route says about itself: its title, whether it
+ * renders outside the sidebar layout, and whether it is a request window.
+ * Read from the router's match, never from the URL string, because the router
+ * matches paths case-insensitively and decodes escapes: /Sign and /%73ign
+ * render the sign page, so they must get the lock gate too.
+ */
+export function routeFlags(matches: readonly Match[]): Required<Handle> {
+  let title: string | undefined;
+  let standalone = false;
+  let request = false;
+  for (const match of matches) {
+    const handle = match.handle as Handle | undefined;
+    if (handle?.title) title = handle.title;
+    if (handle?.standalone) standalone = true;
+    if (handle?.request) request = true;
   }
-  return routes.home.title;
+  return { title: title ?? routes.notFound.title, standalone, request };
 }
 
 /** A request window behind the lock shows the lock screen instead. */
@@ -60,9 +63,7 @@ function Gate({ request }: { request: boolean }): JSX.Element {
 }
 
 export function Component(): JSX.Element {
-  const { pathname } = useLocation();
-  const request = REQUEST_PATHS.has(clean(pathname));
-  const title = useTitle();
+  const { title, request } = routeFlags(useMatches());
   return (
     <LandingMotion>
       {/* React 19 hoists a <title> rendered anywhere into the head. */}
@@ -84,13 +85,12 @@ export function Component(): JSX.Element {
  * frame arrives with the entry instead of one lazy hop later.
  */
 export function HydrateFallback(): JSX.Element {
-  const path = clean(useLocation().pathname);
-  const match = Object.values(routes).find((route) => route.path === path);
+  const { title, standalone } = routeFlags(useMatches());
   return (
     <LandingMotion>
-      <title>{match?.title ?? routes.notFound.title}</title>
+      <title>{title}</title>
       <WalletProvider name={walletFrame.sampleData.accountName}>
-        {STANDALONE_PATHS.has(path) ? null : <AppLayout.Component />}
+        {standalone ? null : <AppLayout.Component />}
       </WalletProvider>
     </LandingMotion>
   );
