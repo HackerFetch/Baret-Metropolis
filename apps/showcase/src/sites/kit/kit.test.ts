@@ -155,6 +155,7 @@ describe("live answer", () => {
     expect(displayAmount(1_000_100n, 6)).toBe("1.0001");
     expect(displayAmount(42n, 0)).toBe("42");
     expect(displayAmount(-2_500_000n, 6)).toBe("-2.5");
+    expect(displayAmount(-1n, 18)).toBe("0");
     expect(displayAmount(123_456_789_012_345_678_901_234_567n, 18)).toBe("123456789.0123");
     expect(() => displayAmount(1n, -1)).toThrow();
     expect(() => displayAmount(1n, 1.5)).toThrow();

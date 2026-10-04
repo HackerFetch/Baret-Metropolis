@@ -39,8 +39,9 @@ export async function analyzeCall(call: DemoCall, signal: AbortSignal): Promise<
 /**
  * Base units to a short display amount: at most four decimals, cut (never
  * rounded up), no trailing zeros. BigInt maths only, so the live seam does
- * not pull in a chain library. A negative amount keeps its sign; a negative
- * or fractional `decimals` throws, which the caller turns into FAILED.
+ * not pull in a chain library. A negative amount keeps its sign unless it
+ * shows as 0 (no "-0"); a negative or fractional `decimals` throws, which
+ * the caller turns into FAILED.
  */
 export function displayAmount(raw: bigint, decimals: number): string {
   if (!Number.isInteger(decimals) || decimals < 0) throw new RangeError("decimals");
@@ -50,7 +51,8 @@ export function displayAmount(raw: bigint, decimals: number): string {
   const whole = (abs / base).toString();
   const fraction = (abs % base).toString().padStart(decimals, "0");
   const short = fraction.slice(0, 4).replace(/0+$/, "");
-  return `${sign}${short ? `${whole}.${short}` : whole}`;
+  const body = short ? `${whole}.${short}` : whole;
+  return body === "0" ? body : `${sign}${body}`;
 }
 
 /** A contract address cut to its head and tail, the unit of a token with no symbol. */

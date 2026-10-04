@@ -34,7 +34,9 @@ import { useReduce } from "../lib/useReduce.js";
  *   Lenis is stopped, so the page under the overlay never moves.
  * - Reduced motion: no Lenis at all, the native scroll stays untouched. The
  *   preference is live, so switching it mid-visit tears Lenis down.
- * - Mounted once per route by Signature; leaving the route destroys it.
+ * - Mounted once by Signature in the layout, so it outlives route changes; a
+ *   pathname change ends any glide in flight (RouteReset) so
+ *   ScrollRestoration's position wins. In-page views call `stopGlide` too.
  */
 
 const LERP = 0.1;
@@ -52,9 +54,20 @@ function preventSmooth(node: HTMLElement): boolean {
   return node.closest(NATIVE_SCROLL) !== null;
 }
 
-/** The same-page hash a click went to, or null. Modified clicks are left alone. */
 /** The running instance, so a route change can drop an unfinished glide. */
 let running: Lenis | null = null;
+
+/**
+ * Ends a glide still in flight, at the real scroll position. stop() and
+ * start() each reset Lenis; a modal that still locks the page keeps it
+ * stopped (see syncLock). Does nothing when Lenis is not running.
+ */
+export function stopGlide(): void {
+  const lenis = running;
+  if (!lenis) return;
+  lenis.stop();
+  if (!document.body.hasAttribute("data-scroll-locked")) lenis.start();
+}
 
 /**
  * A new page must not inherit the last page's glide. The layout stays
@@ -72,16 +85,12 @@ function RouteReset(): null {
       first.current = false;
       return;
     }
-    const lenis = running;
-    if (!lenis) return;
-    // stop() and start() each reset Lenis to the real position; a modal that
-    // still locks the page keeps it stopped (see syncLock).
-    lenis.stop();
-    if (!document.body.hasAttribute("data-scroll-locked")) lenis.start();
+    stopGlide();
   }, [pathname]);
   return null;
 }
 
+/** The same-page hash a click went to, or null. Modified clicks are left alone. */
 function sameDocumentHash(e: MouseEvent): string | null {
   if (e.defaultPrevented || e.button !== 0) return null;
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;

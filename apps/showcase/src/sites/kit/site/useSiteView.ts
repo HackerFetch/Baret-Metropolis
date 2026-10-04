@@ -1,3 +1,4 @@
+import { stopGlide } from "@baret/web-ui/components/SmoothScroll";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 
@@ -16,17 +17,6 @@ export function viewFrom<V extends string>(views: readonly V[], raw: string | nu
   return views.find((v) => v === raw) ?? views[0];
 }
 
-/**
- * Stops a wheel glide that is still in flight. Lenis (SmoothScroll) keeps
- * writing its old target for half a second, which would override the
- * router's reset to the top of the new view. Lenis listens on the window and
- * drops its glide on a middle-button press; nothing else listens there.
- */
-function stopGlide(): void {
-  if (typeof PointerEvent === "undefined") return;
-  window.dispatchEvent(new PointerEvent("pointerdown", { button: 1 }));
-}
-
 export function useSiteView<V extends string>(
   views: readonly [V, ...V[]],
 ): { view: V; go: (next: V) => void } {
@@ -42,7 +32,9 @@ export function useSiteView<V extends string>(
     if (stray) setParams({}, { replace: true, preventScrollReset: true });
   }, [stray, setParams]);
 
-  // Back and Forward restore a saved position; a glide must not override it.
+  // Back and Forward restore a saved position; a wheel glide still in flight
+  // (SmoothScroll) must not override it. A new view (go) starts at the top
+  // for the same reason.
   useEffect(() => {
     window.addEventListener("popstate", stopGlide);
     return () => window.removeEventListener("popstate", stopGlide);

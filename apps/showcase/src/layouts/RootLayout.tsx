@@ -150,8 +150,9 @@ export function Component() {
   // the marketing chrome never remounts it and loses the saved positions.
   // The signature layer (Lenis wheel smoothing and the eyelet cursor) runs on
   // every page and stays mounted across navigation, so the cursor never
-  // drops back to the native one mid-visit; Lenis picks up the position
-  // ScrollRestoration writes on its next native scroll event.
+  // drops back to the native one mid-visit. A pathname change ends any Lenis
+  // glide in flight (SmoothScroll's RouteReset), so the position
+  // ScrollRestoration writes is the one the new page keeps.
   // LandingMotion gives every page the motion features (m.* elements, the
   // BRAND ease-out default and the reduced-motion switch).
   return (
@@ -176,14 +177,14 @@ function RouteAnnouncer() {
   const { pathname } = useLocation();
   const { title } = usePageHead();
   const [message, setMessage] = useState("");
-  const first = useRef(true);
+  // The last path handled, not a one-shot flag: StrictMode runs the effect
+  // twice on mount, and a flag would let the second run steal focus on load.
+  const last = useRef(pathname);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: path changes only; the title follows the path
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (last.current === pathname) return;
+    last.current = pathname;
     focusMain();
     setMessage(title);
   }, [pathname]);

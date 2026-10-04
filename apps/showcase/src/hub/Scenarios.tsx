@@ -6,7 +6,7 @@ import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { staggerDelay } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
-import { type JSX, useId, useState } from "react";
+import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { HUB_ART } from "../shared/assets.js";
 import { FILTER_PARAM, filterScenarios, filterStatus, parseFilter } from "./hub.js";
@@ -43,6 +43,17 @@ export function Scenarios(): JSX.Element {
   const shown = filterScenarios(filter);
   const current = filters.items.find((f) => f.id === filter) ?? filters.items[0];
 
+  // The status follows the URL, so a pick and Back/Forward both announce the
+  // count. The first render (a fresh load or a deep link) stays quiet; the
+  // last filter is compared rather than a flag, so StrictMode's second
+  // effect run does not announce either.
+  const last = useRef(filter);
+  useEffect(() => {
+    if (last.current === filter) return;
+    last.current = filter;
+    setSaid(filterStatus(filterScenarios(filter).length));
+  }, [filter]);
+
   const pick = (value: string): void => {
     const next = parseFilter(value);
     setParams(
@@ -54,7 +65,6 @@ export function Scenarios(): JSX.Element {
       },
       { preventScrollReset: true },
     );
-    setSaid(filterStatus(filterScenarios(next).length));
   };
 
   return (

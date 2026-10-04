@@ -23,23 +23,24 @@ function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Po
 /*
  * Sheet motion. These keyframes live here, not in Tailwind utilities, because
  * the animate-in plugin is not installed. Radix keeps the content mounted until
- * its exit animation ends, so the fall-out plays too. BRAND timings from
- * packages/web-ui/src/lib/motion.ts: 240 ms in, 160 ms out, the BRAND ease
- * (--ease-count), no overshoot. Reduced motion turns it off.
+ * its exit animation ends, so the fall-out plays too. BRAND section 08 sheet
+ * slide: 260 ms in on the sheet curve (--ease-out-soft, EASE_OUT_SOFT in
+ * packages/web-ui/src/lib/motion.ts), 160 ms out, no overshoot. The overlay
+ * fades on the same timing. Reduced motion turns it off.
  */
 const SHEET_MOTION = `
 @keyframes baret-sheet-fade-in { from { opacity: 0; } }
 @keyframes baret-sheet-fade-out { to { opacity: 0; } }
 @keyframes baret-sheet-in { from { opacity: 0; translate: var(--baret-sheet-from); } }
 @keyframes baret-sheet-out { to { opacity: 0; translate: var(--baret-sheet-from); } }
-[data-slot="sheet-overlay"][data-state="open"] { animation: baret-sheet-fade-in 240ms var(--ease-count) both; }
-[data-slot="sheet-overlay"][data-state="closed"] { animation: baret-sheet-fade-out 160ms var(--ease-count) both; }
+[data-slot="sheet-overlay"][data-state="open"] { animation: baret-sheet-fade-in 260ms var(--ease-out-soft) both; }
+[data-slot="sheet-overlay"][data-state="closed"] { animation: baret-sheet-fade-out 160ms var(--ease-out-soft) both; }
 [data-slot="sheet-content"] { --baret-sheet-from: 2.5rem 0; }
 [data-slot="sheet-content"][data-side="left"] { --baret-sheet-from: -2.5rem 0; }
 [data-slot="sheet-content"][data-side="top"] { --baret-sheet-from: 0 -2.5rem; }
 [data-slot="sheet-content"][data-side="bottom"] { --baret-sheet-from: 0 2.5rem; }
-[data-slot="sheet-content"][data-state="open"] { animation: baret-sheet-in 240ms var(--ease-count) both; }
-[data-slot="sheet-content"][data-state="closed"] { animation: baret-sheet-out 160ms var(--ease-count) both; }
+[data-slot="sheet-content"][data-state="open"] { animation: baret-sheet-in 260ms var(--ease-out-soft) both; }
+[data-slot="sheet-content"][data-state="closed"] { animation: baret-sheet-out 160ms var(--ease-out-soft) both; }
 @media (prefers-reduced-motion: reduce) {
   [data-slot="sheet-overlay"], [data-slot="sheet-content"] { animation: none !important; }
 }
