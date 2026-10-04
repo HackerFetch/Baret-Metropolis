@@ -44,8 +44,10 @@ import {
  * - `onSign(outcome, sending)`: signs and sends once the reader decides
  *   (after the passkey, when asked for). It calls `sending()` when the signed
  *   transaction leaves, and resolves with its hash and block, which the
- *   result and the log show. A rejection goes back to the decision. Left
- *   out, timers stand in and the sample block is shown. Nothing is sent.
+ *   result and the log show. A rejection before `sending()` goes back to the
+ *   decision; one after it keeps the screen on Sending, so nothing is signed
+ *   twice. Left out, timers stand in and the sample block is shown. Nothing
+ *   is sent.
  */
 
 type Phase =
@@ -179,6 +181,14 @@ function Verdict({
   );
 }
 
+function stepWords(step: "passkey" | "signing" | "sending"): string {
+  return step === "passkey"
+    ? sign.status.passkey
+    : step === "signing"
+      ? sign.status.signing
+      : sign.status.sending;
+}
+
 function Result({
   outcome,
   block,
@@ -275,9 +285,10 @@ export function SignRequest({
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
-  // A fresh answer from Check again replaces the request the surface passed.
-  const [fresh, setFresh] = useState<Request | null>(null);
-  const request = fresh ?? given;
+  // A fresh answer from Check again replaces the request the surface passed,
+  // until the surface passes a new one.
+  const [fresh, setFresh] = useState<{ request: Request; over: Request } | null>(null);
+  const request = fresh && fresh.over === given ? fresh.request : given;
   // Live answers land after a wait: drop them once the screen is gone.
   const alive = useRef(true);
   useEffect(() => {
@@ -294,6 +305,7 @@ export function SignRequest({
   const foot = useRef<HTMLElement>(null);
   const overrideTitle = useRef<HTMLParagraphElement>(null);
   const overrideTrigger = useRef<HTMLButtonElement>(null);
+  const signingStatus = useRef<HTMLParagraphElement>(null);
   // Where focus goes once the override opens or closes; null leaves it alone.
   const [focusTo, setFocusTo] = useState<"override" | "trigger" | null>(null);
 
@@ -334,8 +346,8 @@ export function SignRequest({
     const block = receipt?.block ?? SAMPLE_BLOCK;
     const item = logFor(request, outcome, new Date().toISOString(), block);
     onLog(receipt ? { ...item, hash: receipt.hash } : item);
+    // The result focuses its own title, so the status region stays quiet.
     setPhase({ kind: "result", outcome, block });
-    setSaid(sign.result[outcome].title);
     onDone?.(outcome);
   }
 
@@ -344,6 +356,8 @@ export function SignRequest({
   useEffect(() => {
     if (phase.kind !== "checking" || pending === true) return;
     const reveal = () => {
+      // A live answer may expire sooner than the request: the shorter wins.
+      if (pending === false) setLeft((value) => Math.min(value, request.expires));
       setPhase({ kind: "review" });
       setSaid(common.verdicts[request.verdict].aria);
     };
@@ -353,7 +367,7 @@ export function SignRequest({
     }
     const id = window.setTimeout(reveal, reduce ? 0 : 700);
     return () => window.clearTimeout(id);
-  }, [phase, pending, reduce, request.verdict]);
+  }, [phase, pending, reduce, request.verdict, request.expires]);
 
   function stayDown(): void {
     setStillDown(true);
@@ -374,7 +388,7 @@ export function SignRequest({
             stayDown();
             return;
           }
-          setFresh(next);
+          setFresh({ request: next, over: given });
           setLeft(next.expires);
           setStillDown(false);
           setPhase({ kind: "review" });
@@ -399,15 +413,24 @@ export function SignRequest({
       if (phase.step !== "signing") return;
       const outcome = phase.outcome;
       if (outcome !== "sent" && outcome !== "overridden") return;
+      let gone = false;
       onSign(outcome, () => {
+        gone = true;
         if (alive.current) setPhase({ kind: "signing", step: "sending", outcome });
       }).then(
         (receipt) => {
           if (alive.current) finish(outcome, receipt);
         },
         () => {
-          // A failed signature or send goes back to the decision, and says so.
           if (!alive.current) return;
+          // Once it has left, a failure does not mean nothing was sent: the
+          // screen stays on Sending, so it can never be signed twice.
+          if (gone) {
+            setPhase({ kind: "signing", step: "sending", outcome });
+            setSaid(sign.status.unknown);
+            return;
+          }
+          // A failed signature goes back to the decision, and says so.
           setPhase({ kind: "review" });
           setSaid(sign.status.failed);
         },
@@ -423,6 +446,17 @@ export function SignRequest({
     const id = window.setTimeout(next, phase.step === "passkey" ? 900 : 600);
     return () => window.clearTimeout(id);
   }, [phase]);
+
+  // The pressed control is gone while it signs: focus moves to the status,
+  // and each step is spoken.
+  const signing = phase.kind === "signing";
+  const step = phase.kind === "signing" ? phase.step : null;
+  useEffect(() => {
+    if (signing) signingStatus.current?.focus();
+  }, [signing]);
+  useEffect(() => {
+    if (step) setSaid(stepWords(step));
+  }, [step]);
 
   // The countdown runs while the request waits for an answer.
   const waiting = phase.kind === "review" || phase.kind === "override" || phase.kind === "checking";
@@ -762,12 +796,12 @@ export function SignRequest({
             }
           >
             {phase.kind === "signing" ? (
-              <p className="font-display text-xl font-extrabold uppercase text-[color:var(--fg)]">
-                {phase.step === "passkey"
-                  ? sign.status.passkey
-                  : phase.step === "signing"
-                    ? sign.status.signing
-                    : sign.status.sending}
+              <p
+                ref={signingStatus}
+                tabIndex={-1}
+                className={`font-display text-xl font-extrabold uppercase text-[color:var(--fg)] ${FOCUS_TARGET}`}
+              >
+                {stepWords(phase.step)}
               </p>
             ) : phase.kind === "override" ? (
               // Compact: the explanation scrolls with the request; only the hold stays pinned.

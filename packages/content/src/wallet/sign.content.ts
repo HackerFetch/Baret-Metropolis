@@ -231,6 +231,8 @@ export const sign = {
     sending: "Sending",
     /** Signing or sending failed; the request goes back to the decision. */
     failed: "It was not sent. Nothing was signed.",
+    /** Sending failed after the transaction left: it may have gone through. */
+    unknown: "It may have been sent. Check your activity before you try again.",
     /** Standalone wallet only. The extension signs with its unlocked key. */
     passkey: "Confirm with your passkey",
   },
