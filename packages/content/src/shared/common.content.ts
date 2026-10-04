@@ -212,9 +212,12 @@ export const common = {
       title: "Something went wrong",
       body: "The action did not finish and nothing was signed. If this keeps happening, copy the error from your activity log.",
       action: { label: "Try again" },
-      /** The route error screen: tag, heading and the way back. */
+      /** The route error screen: tag, heading, body, a reload and the way back. */
       tag: "Error",
       heading: "This page did not load.",
+      pageBody:
+        "Part of the site failed to load, often because a new version went live while this tab was open. Reload the page to try again.",
+      reload: "Reload the page",
       back: "Back to the start",
     },
   },
@@ -298,6 +301,8 @@ export const common = {
   /** The corner ribbon on a fake showcase site. */
   demo: {
     ribbon: "Demo site",
+    /** Accessible name of the landmark that holds the ribbon. */
+    label: "Baret showcase",
   },
 
   /** One line repeated wherever a showcase site could be taken for a real one. */

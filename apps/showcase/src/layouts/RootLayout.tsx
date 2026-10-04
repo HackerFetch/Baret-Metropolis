@@ -6,7 +6,7 @@ import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Signature } from "@baret/web-ui/components/Signature";
 import { useMotionValueEvent, useScroll } from "motion/react";
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   Link,
   NavLink,
@@ -33,7 +33,9 @@ import { DEMO_PATHS, routes, warm } from "../routes.js";
  * main.tsx before React renders.)
  *
  * ScrollRestoration restores the position on back/forward and starts a new
- * page at the top. It writes the native scroll position, which Lenis (the
+ * page at the top. A new document load (a typed URL, an outside link) first
+ * drops the saved position of the tab's first entry, so it opens at the top
+ * too (forgetFreshLoadScroll). It writes the native scroll position, which Lenis (the
  * landing's wheel smoothing) reads back on its next native scroll event, so
  * the two never fight. A hash in the URL scrolls to its target, which lands
  * under the 56 px header through the scroll-padding in tokens.css.
@@ -52,17 +54,87 @@ const ROW = "max-w-[1276px] px-4 md:px-8 lg:px-12";
 const PROBE_Y = 57;
 
 /**
- * The deepest route handle's description. router.tsx loads it with each lazy
- * page (the same text scripts/head.mjs writes into dist/<route>/index.html),
- * so the live head agrees with the static one after hydration.
+ * React Router keys the first entry of every document "default", so a fresh
+ * load in a tab that visited the site would jump to the old page's position.
+ * Runs once at module load, before ScrollRestoration reads the store; a
+ * reload or a back/forward load keeps it.
  */
-function useHandleDescription(): string | undefined {
+const SCROLL_STORE = "react-router-scroll-positions";
+function forgetFreshLoadScroll(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav?.type !== "navigate") return;
+    const saved = JSON.parse(sessionStorage.getItem(SCROLL_STORE) ?? "{}") as Record<
+      string,
+      number
+    >;
+    if (!("default" in saved)) return;
+    delete saved.default;
+    sessionStorage.setItem(SCROLL_STORE, JSON.stringify(saved));
+  } catch {
+    // Storage blocked: nothing was saved, so nothing can be restored.
+  }
+}
+forgetFreshLoadScroll();
+
+/** The page's main region: #main on marketing routes, the site's own <main> on a demo. */
+function pageMain(): HTMLElement | null {
+  return document.getElementById("main") ?? document.querySelector("main");
+}
+
+/**
+ * Moves focus to the page's main region without scrolling. A demo site's
+ * <main> is not focusable by itself, so it gets tabindex -1 and, like #main,
+ * no focus ring (it is a region, not a control).
+ */
+function focusMain(): HTMLElement | null {
+  const main = pageMain();
+  if (!main) return null;
+  if (!main.hasAttribute("tabindex")) {
+    main.setAttribute("tabindex", "-1");
+    main.style.outline = "none";
+  }
+  main.focus({ preventScroll: true });
+  return main;
+}
+
+/**
+ * The deepest route handle's title and description. router.tsx loads them
+ * with each lazy page (the same text scripts/head.mjs writes into
+ * dist/<route>/index.html), so the live head agrees with the static one
+ * after hydration.
+ */
+function useHandleMeta(): { title?: string; description?: string } {
   const matches = useMatches();
   for (let i = matches.length - 1; i >= 0; i--) {
-    const handle = matches[i]?.handle as { description?: unknown } | undefined;
-    if (typeof handle?.description === "string") return handle.description;
+    const handle = matches[i]?.handle as { title?: unknown; description?: unknown } | undefined;
+    const title = typeof handle?.title === "string" ? handle.title : undefined;
+    const description = typeof handle?.description === "string" ? handle.description : undefined;
+    if (title || description) {
+      return { ...(title ? { title } : {}), ...(description ? { description } : {}) };
+    }
   }
-  return undefined;
+  return {};
+}
+
+/**
+ * The head for the current URL: the registry's, with the page's own title
+ * and description from its route handle when it has them (a demo site's
+ * scenario title, for one). `own` is the handle's description alone.
+ */
+function usePageHead() {
+  const { pathname } = useLocation();
+  const head = headFor(pathname);
+  const meta = useHandleMeta();
+  return {
+    ...head,
+    title: meta.title ?? head.title,
+    own: meta.description,
+    description: meta.description ?? head.description,
+  };
 }
 
 /** True when a [data-band="dark"] element covers the line just under the header. */
@@ -74,27 +146,57 @@ function darkBandUnderHeader(): boolean {
 }
 
 export function Component() {
-  const { pathname } = useLocation();
   // One ScrollRestoration for every route, so a hop between a demo site and
   // the marketing chrome never remounts it and loses the saved positions.
   // The signature layer (Lenis wheel smoothing and the eyelet cursor) runs on
-  // every page; keyed by path so each route starts it fresh at the top.
+  // every page and stays mounted across navigation, so the cursor never
+  // drops back to the native one mid-visit; Lenis picks up the position
+  // ScrollRestoration writes on its next native scroll event.
   // LandingMotion gives every page the motion features (m.* elements, the
   // BRAND ease-out default and the reduced-motion switch).
   return (
     <LandingMotion>
       <ScrollRestoration />
-      <Signature key={pathname} />
+      <Signature />
+      <RouteAnnouncer />
       <Chrome />
     </LandingMotion>
   );
 }
 
+/**
+ * After a client-side navigation, focus moves to the new page's main region
+ * (without scrolling, so ScrollRestoration keeps its position) and the page
+ * title is read out through a polite live region. The region is mounted
+ * once, above both chromes, and stays empty on the first load, where the
+ * browser announces the document itself. A hash-only change keeps focus
+ * where the hash put it.
+ */
+function RouteAnnouncer() {
+  const { pathname } = useLocation();
+  const { title } = usePageHead();
+  const [message, setMessage] = useState("");
+  const first = useRef(true);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: path changes only; the title follows the path
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    focusMain();
+    setMessage(title);
+  }, [pathname]);
+
+  return (
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {message}
+    </div>
+  );
+}
+
 function Chrome() {
-  const { pathname: raw } = useLocation();
-  const head = headFor(raw);
-  const { path: pathname, title, noindex, demo } = head;
-  const description = useHandleDescription() ?? head.description;
+  const { path: pathname, title, description, own, noindex, demo } = usePageHead();
   // Null while a lazy page loads on first visit: this layout is also the
   // route's HydrateFallback (router.tsx), so the header paints at once and
   // the footer waits for the page instead of jumping down when it lands.
@@ -104,9 +206,13 @@ function Chrome() {
     return (
       <>
         <title>{title}</title>
+        {own ? <meta name="description" content={own} /> : null}
         {/* The demo sites imitate products on purpose; keep them out of search (G4). */}
         <meta name="robots" content="noindex" />
-        {outlet}
+        <SkipLink />
+        {/* Room at the end of the page for the fixed ribbon, so the site's
+            footer can scroll clear of it (K5). */}
+        <div className="pb-[calc(4rem+env(safe-area-inset-bottom))]">{outlet}</div>
         {outlet ? <DemoRibbon /> : null}
       </>
     );
@@ -129,13 +235,22 @@ function Chrome() {
 }
 
 /**
- * The first tab stop on every marketing route (WCAG 2.4.1). Hidden until it
- * takes keyboard focus. The label lives in the copy as common.nav.skip.
+ * The first tab stop on every route (WCAG 2.4.1). Hidden until it takes
+ * keyboard focus. The label lives in the copy as common.nav.skip. A demo
+ * site's own <main> has no id, so there the click finds it and moves focus
+ * by hand.
  */
 function SkipLink() {
+  const skip = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (document.getElementById("main")) return;
+    event.preventDefault();
+    focusMain()?.scrollIntoView({ block: "start" });
+  };
   return (
+    // biome-ignore lint/a11y/useValidAnchor: a real in-page link; the handler only stands in for a missing #main on demo sites
     <a
       href="#main"
+      onClick={skip}
       // The padding sits on the focus variants because `not-sr-only` resets
       // it: a plain px-4 left a 145x17 px target (IMPROVE F3).
       className="sr-only z-50 bg-[color:var(--ground)] font-mono text-[12px] uppercase tracking-[0.06em] text-[color:var(--fg)] focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:inline-flex focus-visible:min-h-11 focus-visible:items-center focus-visible:border focus-visible:border-[color:var(--fg)] focus-visible:px-4 focus-visible:py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
@@ -170,7 +285,8 @@ export function headFor(raw: string): {
     path,
     title: match?.title ?? routes.notFound.title,
     description: path === routes.home.path ? home.meta.description : common.brand.description,
-    noindex: demo || !match || match === routes.notFound,
+    // Utility routes (the hidden /kit gallery, not found) stay out of search too.
+    noindex: demo || !match || match.group === "utility",
     demo,
   };
 }
@@ -206,7 +322,8 @@ function SiteHeader({ pathname }: { pathname: string }) {
           viewTransition
           className="flex min-h-11 min-w-11 shrink-0 items-center gap-2"
         >
-          <Mark size={22} slit={dark ? "var(--color-graphite)" : "var(--ground)"} />
+          {/* Decorative: the wordmark (sr-only on narrow phones) names the link once. */}
+          <Mark decorative size={22} slit={dark ? "var(--color-graphite)" : "var(--ground)"} />
           <span className="font-stencil text-lg uppercase tracking-[0.04em] max-[374px]:sr-only md:text-xl">
             {common.brand.wordmark}
           </span>
@@ -229,7 +346,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
               {route.label}
             </NavLink>
           ))}
-          <HeaderAction dark={dark} />
+          <HeaderAction dark={dark} current={pathname === routes.showcase.path} />
         </nav>
       </div>
     </header>
@@ -242,10 +359,24 @@ function SiteHeader({ pathname }: { pathname: string }) {
  * the hero and closing buttons stay the only orange in their viewport. The
  * long label from 768 px, the short one on phones; the hidden copy is
  * display:none, so it is out of the tab order and the accessibility tree.
+ * On /showcase itself it is the current page, so it becomes a nav item with
+ * the active border and aria-current instead of a call to action.
  */
-function HeaderAction({ dark }: { dark: boolean }) {
+function HeaderAction({ dark, current }: { dark: boolean; current: boolean }) {
   const variant = dark ? "ghostInverse" : "ghost";
   const href = routes.showcase.path;
+  if (current) {
+    return (
+      <NavLink
+        to={href}
+        data-nav-item=""
+        viewTransition
+        className={`${navClass(true, dark)} min-[360px]:ml-1 md:ml-3`}
+      >
+        {routes.showcase.label}
+      </NavLink>
+    );
+  }
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: warms the chunk on intent; the link inside is the control
     <span
@@ -323,7 +454,7 @@ function SiteFooter({ row }: { row: string }) {
       >
         <div className="col-span-3 sm:col-span-1">
           <div className="mb-3 flex items-center gap-2.5">
-            <Mark size={24} slit="var(--ground)" />
+            <Mark decorative size={24} slit="var(--ground)" />
             <span className="font-stencil text-lg uppercase tracking-[0.04em]">
               {common.brand.wordmark}
             </span>
@@ -356,7 +487,7 @@ function SiteFooter({ row }: { row: string }) {
 /** Footer hrefs come from the copy, so some of them leave the site. */
 function FooterLink({ href, label }: { href: string; label: string }) {
   const className =
-    "inline-flex min-h-11 items-center text-sm text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]";
+    "inline-flex min-h-11 min-w-11 items-center text-sm text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]";
 
   if (href.startsWith("http")) {
     return (
@@ -372,40 +503,105 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-/** Pinned to every demo site so nobody mistakes one for a real product. */
+/**
+ * Pinned to every demo site so nobody mistakes one for a real product. It
+ * sits above the safe-area inset in its own landmark; only the link takes
+ * taps (a 44 px target around the tag), and the demo layout reserves room
+ * at the end of the page so the site's footer scrolls clear of it.
+ */
 function DemoRibbon() {
   return (
     // data-scope="baret": the ribbon is Baret's, so it keeps Baret's palette
     // on top of a dApp theme (sites/theme).
-    <div
+    <aside
+      aria-label={common.demo.label}
       data-scope="baret"
-      className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+      className="pointer-events-none fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2"
     >
-      <Link to={routes.showcase.path} viewTransition className="pointer-events-auto">
+      <Link
+        to={routes.showcase.path}
+        viewTransition
+        className="pointer-events-auto inline-flex min-h-11 min-w-11 items-center justify-center"
+      >
         <Tag tone="brand" size="sm">
           {common.demo.ribbon}
         </Tag>
       </Link>
-    </div>
+    </aside>
   );
 }
 
+/**
+ * A lazy chunk that no longer exists (a tab left open across a deploy)
+ * fails its import. One automatic reload fetches the new build; a second
+ * failure within a minute shows the error page instead of looping.
+ */
+const RELOAD_FLAG = "baret-chunk-reload";
+const CHUNK_ERROR =
+  /dynamically imported module|Importing a module script failed|error loading dynamically imported module/i;
+
+function useChunkReload(error: unknown): boolean {
+  const chunk = error instanceof Error && CHUNK_ERROR.test(error.message);
+  const [reloading, setReloading] = useState(chunk);
+  useEffect(() => {
+    if (!chunk) return;
+    try {
+      const last = Number(sessionStorage.getItem(RELOAD_FLAG) ?? 0);
+      if (Date.now() - last > 60_000) {
+        sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+        window.location.reload();
+        return;
+      }
+    } catch {
+      // Storage blocked: never reload blind, show the page.
+    }
+    setReloading(false);
+  }, [chunk]);
+  return reloading;
+}
+
+/**
+ * The route error page, inside the site chrome. It never prints the raw
+ * error to readers (that goes to the console); it offers a reload and the
+ * way back to the start.
+ */
 export function ErrorBoundary() {
   const error = useRouteError();
-  const message = error instanceof Error ? error.message : common.errors.unknown.title;
+  const { pathname } = useLocation();
+  const reloading = useChunkReload(error);
+  const copy = common.errors.unknown;
+
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  const action =
+    "chamfer-sm inline-flex min-h-11 w-max items-center border border-[color:var(--fg)] px-4 font-display text-sm uppercase tracking-[0.08em]";
 
   return (
-    <div className="mx-auto grid min-h-dvh max-w-[640px] place-content-start gap-4 px-5 py-24">
-      <title>{common.errors.unknown.title}</title>
-      <Tag tone="blocked">{common.errors.unknown.tag}</Tag>
-      <h1 className="font-display text-display-l uppercase">{common.errors.unknown.heading}</h1>
-      <p className="text-[color:var(--fg-muted)]">{message}</p>
-      <Link
-        to={routes.home.path}
-        className="chamfer-sm w-max border border-[color:var(--fg)] px-4 py-2 font-display text-sm uppercase tracking-[0.08em]"
-      >
-        {common.errors.unknown.back}
-      </Link>
+    <div className="flex min-h-dvh flex-col">
+      <title>{copy.title}</title>
+      <meta name="robots" content="noindex" />
+      <SkipLink />
+      <SiteHeader pathname={headFor(pathname).path} />
+      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+        {/* Blank for the moment a chunk failure reloads the page. */}
+        {reloading ? null : (
+          <div className={`mx-auto grid w-full gap-4 py-24 ${ROW}`}>
+            <Tag tone="blocked">{copy.tag}</Tag>
+            <h1 className="font-display text-display-l uppercase">{copy.heading}</h1>
+            <p className="max-w-[60ch] text-[color:var(--fg-muted)]">{copy.pageBody}</p>
+            <div className="flex flex-wrap gap-3">
+              <button type="button" onClick={() => window.location.reload()} className={action}>
+                {copy.reload}
+              </button>
+              <Link to={routes.home.path} className={action}>
+                {copy.back}
+              </Link>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
