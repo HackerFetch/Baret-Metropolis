@@ -1,5 +1,6 @@
 import { x402 } from "@baret/content";
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
+import { fill } from "@baret/web-ui/lib/util";
 import type { Caps, Payment } from "../../../data/types.js";
 
 /**
@@ -24,18 +25,28 @@ function decimal(value: bigint): string {
  * What the payments of the last `days` days add up to, one total per asset in
  * the order the assets first appear ("1.20 USDC"). An asset the ledger holds
  * but that was not used in the window reads 0.00, so the figure never blanks.
+ * When a payment in the window has an amount that cannot be read, that
+ * asset's total is unknown and reads as unavailable, never as a smaller sum.
  */
 export function spentWithin(list: readonly Payment[], days: number, at: string): string {
   const end = Date.parse(at);
-  const totals = new Map<string, bigint>();
+  const totals = new Map<string, bigint | null>();
   for (const p of list) {
-    const sum = totals.get(p.asset) ?? 0n;
+    const sum = totals.has(p.asset) ? (totals.get(p.asset) ?? null) : 0n;
     const age = end - Date.parse(p.at);
-    const units = age >= 0 && age < days * DAY ? (toUnits(p.amount, DECIMALS) ?? 0n) : 0n;
-    totals.set(p.asset, sum + units);
+    if (!(age >= 0 && age < days * DAY)) {
+      totals.set(p.asset, sum);
+      continue;
+    }
+    const units = toUnits(p.amount, DECIMALS);
+    totals.set(p.asset, sum === null || units === null ? null : sum + units);
   }
   if (totals.size === 0) return `${decimal(0n)} ${VAULT_ASSET}`;
-  return [...totals].map(([asset, units]) => `${decimal(units)} ${asset}`).join(" + ");
+  return [...totals]
+    .map(([asset, units]) =>
+      units === null ? fill(x402.summary.unavailable, { asset }) : `${decimal(units)} ${asset}`,
+    )
+    .join(" + ");
 }
 
 export interface Draft {

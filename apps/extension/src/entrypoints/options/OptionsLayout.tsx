@@ -104,8 +104,14 @@ function titleFor(pathname: string): { title: string; page: string } {
   return { title: routes.notFound.title, page: optionsFrame.pages.notFound };
 }
 
+/** Where the forgot-passphrase reset reloads to: an empty wallet, on restore. */
+export function resetHref(path: string, reachable: boolean | null): string {
+  const query = scenarioQuery("empty", reachable);
+  return `${path}${query ? `${query}&` : "?"}restore=1#${routes.onboarding.path}`;
+}
+
 export function Component() {
-  const { state, dispatch } = useExtension();
+  const { state } = useExtension();
   const { pathname } = useLocation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
@@ -113,7 +119,9 @@ export function Component() {
   const [moved, setMoved] = useState("");
   const toggle = useRef<HTMLButtonElement>(null);
   const main = useRef<HTMLElement>(null);
-  const first = useRef(true);
+  // The path the focus last moved for. Compared, not flagged, so StrictMode's
+  // second effect run on the first load sees the same path and does nothing.
+  const last = useRef(pathname);
   const { title, page } = titleFor(pathname);
 
   // Any navigation closes the phone menu, moves the focus to the new page's
@@ -122,10 +130,8 @@ export function Component() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the trigger.
   useEffect(() => {
     setOpen(false);
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (last.current === pathname) return;
+    last.current = pathname;
     const target = main.current?.querySelector("h1") ?? main.current;
     if (target) {
       if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
@@ -147,13 +153,11 @@ export function Component() {
   }, [open]);
 
   // Forgot the passphrase: the confirm said the wallet is wiped, so wipe it
-  // and open restore, as the popup does. Never the unlock path.
+  // and open restore, as the popup does. Never the unlock path. The store
+  // lives only in memory and the reload rebuilds it from the URL, so the URL
+  // carries the empty wallet the reset leaves, plus the reachability preview.
   const reset = () => {
-    const query = scenarioQuery(state.scenario);
-    dispatch({ type: "reset" });
-    location.assign(
-      `${location.pathname}${query ? `${query}&` : "?"}restore=1#${routes.onboarding.path}`,
-    );
+    location.assign(resetHref(location.pathname, state.reachable));
   };
 
   if (locked) {

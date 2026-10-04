@@ -1,4 +1,5 @@
 import { x402 } from "@baret/content";
+import { fill } from "@baret/web-ui/lib/util";
 import { describe, expect, it } from "vitest";
 import type { Payment } from "../../../data/types.js";
 import { readDraft, spentWithin } from "./x402-money.js";
@@ -70,6 +71,27 @@ describe("spentWithin", () => {
       payment("2026-09-01T11:00:00Z", "9"),
     ];
     expect(spentWithin(list, 1, at)).toBe("1.50 USDC + 2.00 USDT");
+  });
+
+  // An amount with more decimals than USDC has cannot be read; the total must
+  // not quietly drop it and show less than was spent.
+  it("marks an asset's total unavailable when an amount cannot be read", () => {
+    const list = [
+      payment("2026-10-04T10:00:00Z", "1"),
+      payment("2026-10-04T11:00:00Z", "0.1234567"),
+      payment("2026-10-04T11:30:00Z", "2", "USDT"),
+    ];
+    expect(spentWithin(list, 1, at)).toBe(
+      `${fill(x402.summary.unavailable, { asset: "USDC" })} + 2.00 USDT`,
+    );
+  });
+
+  it("ignores an unreadable amount outside the window", () => {
+    const list = [
+      payment("2026-09-01T10:00:00Z", "0.1234567"),
+      payment("2026-10-04T10:00:00Z", "1"),
+    ];
+    expect(spentWithin(list, 1, at)).toBe("1.00 USDC");
   });
 
   it("reads 0 when the ledger is empty", () => {

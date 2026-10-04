@@ -25,6 +25,8 @@ export const x402 = {
     merchants: "Merchants with caps",
     declined: "Declined",
     attention: "Needs a look",
+    /** A total with a payment whose amount could not be read. */
+    unavailable: "{asset} total unavailable",
   },
 
   ticker: {
