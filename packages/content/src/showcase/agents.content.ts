@@ -86,12 +86,12 @@ export const agents = {
       },
       {
         title: "The guarded signer",
-        body: "Your agent keeps its key, wrapped. The signer asks Baret first and signs only when the answer is allow. On block it throws and the key never runs.",
+        body: "Planned. Not published yet. The signer will ask Baret first and sign only on allow. Today your agent calls the HTTP API and signs only when the answer is allow.",
         points: [
-          "TypeScript SDK",
-          "CLI for any language",
-          "MCP tools for agent frameworks",
-          "Agent wallets from Dynamic",
+          "HTTP API, works today",
+          "TypeScript SDK, planned",
+          "CLI and MCP tools, planned",
+          "Agent wallets from Dynamic, planned",
         ],
       },
       {
@@ -105,7 +105,7 @@ export const agents = {
         ],
       },
     ],
-    note: "Skip the SDK and the vault still says no. A payment over a cap, or from a revoked key, reverts in the contract.",
+    note: "Skip the check and the vault still says no. A payment over a cap, or from a revoked key, reverts in the contract.",
   },
 
   /** Who decides what. A control table earns more trust than a page of
@@ -553,7 +553,7 @@ export const agents = {
       {
         question: "What if the agent ignores the answer?",
         answer:
-          "With the guarded signer it cannot, because the signer refuses. If you call evaluate and sign anyway, the vault still enforces its caps. They live in the contract, not in your code.",
+          "Today nothing in your code stops it, so sign only when the HTTP API answers allow. The planned guarded signer will refuse on its own. Either way, the vault still enforces its caps in the contract.",
       },
       {
         question: "What if the agent key leaks?",
@@ -568,7 +568,7 @@ export const agents = {
       {
         question: "Should my agent retry a blocked transaction?",
         answer:
-          "No. A block is the answer, not a glitch. Retry only on exit code 2 or a thrown error, when the check itself did not finish.",
+          "No. A block is the answer, not a glitch. Retry only when /v1/analyze does not answer or answers with an error, because then the check did not finish.",
       },
       {
         question: "How fast is it?",
@@ -578,7 +578,7 @@ export const agents = {
       {
         question: "Can I use it without the vault?",
         answer:
-          "Yes. The guarded signer works on its own and is the smaller change. The vault is what limits the damage when the key itself leaks.",
+          "Yes. Calling the HTTP API before each signature works on its own and is the smaller change. The vault is what limits the damage when the key itself leaks.",
       },
       {
         question: "Which policy should an agent start with?",
@@ -588,7 +588,7 @@ export const agents = {
       {
         question: "Do I need an account?",
         answer:
-          "Not for the playground. A server you run yourself can require an API key, an x402 payment per check, or both. You set it with BARET_AUTH_MODE.",
+          "Not for the playground. A server you run yourself can require an API key: list the keys in BARET_API_KEYS and send one in the x-api-key header.",
       },
     ],
   },
