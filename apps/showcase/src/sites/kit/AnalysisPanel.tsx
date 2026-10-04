@@ -160,6 +160,8 @@ export function AnalysisPanel({
                   asset={image}
                   ratio="16/10"
                   fit="contain"
+                  // The sheet is the full width on phones and 520 px from 640 px.
+                  sizes="(min-width: 640px) 480px, 100vw"
                   className="border border-[color:var(--rule)]"
                 />
               ) : null}

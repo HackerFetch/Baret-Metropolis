@@ -40,15 +40,17 @@ export function ClaimHubSite(): JSX.Element {
   const page = site.pages.views.find((v) => v.id === view);
 
   /** The page's eligibility check: any address, or the sample wallet when left empty. */
-  function checkEligibility(): void {
+  /** False when the address is refused, so the card can move focus to it. */
+  function checkEligibility(): boolean {
     const next = walletFor(address, SAMPLE.wallet);
     if (next === null) {
       setError(site.panel.errors.invalid);
-      return;
+      return false;
     }
     setError(null);
     if (address.trim() === "") setConnected(true);
     setWallet(next);
+    return true;
   }
 
   function runCheck(version: DemoMode): void {
@@ -112,9 +114,9 @@ export function ClaimHubSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="claimhub-faq" />
+            <Faq items={site.faq} name="claimhub-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>

@@ -2,7 +2,7 @@ import { claimhub } from "@baret/content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import { type JSX, useId } from "react";
+import { type JSX, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 
 /**
@@ -32,12 +32,14 @@ export function ClaimCard({
   error: string | null;
   /** True once a wallet has been checked: the allocation and the claim show. */
   checked: boolean;
-  onCheck: () => void;
+  /** False when the address is refused, so the card can move focus to it. */
+  onCheck: () => boolean;
   onClaim: () => void;
 }): JSX.Element {
   const inputId = useId();
   const hintId = useId();
   const errorId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const danger = mode === "danger";
 
   return (
@@ -48,7 +50,8 @@ export function ClaimCard({
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          onCheck();
+          // A refused address moves focus to the input, which reads out its error.
+          if (!onCheck()) inputRef.current?.focus();
         }}
         className="grid gap-3"
       >
@@ -57,6 +60,7 @@ export function ClaimCard({
             {panel.label}
           </label>
           <input
+            ref={inputRef}
             id={inputId}
             value={address}
             onChange={(event) => onAddress(event.target.value)}
@@ -65,10 +69,14 @@ export function ClaimCard({
             autoComplete="off"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-            className="w-full border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 font-mono text-sm text-[color:var(--fg)] placeholder:font-sans placeholder:text-base placeholder:text-[color:var(--fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]"
+            className="w-full border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 font-mono text-sm text-[color:var(--fg)] placeholder:font-sans placeholder:text-base placeholder:text-[color:var(--fg-muted)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]"
           />
           <p id={hintId} className={T.small}>
             {panel.hint}
+          </p>
+          {/* Mounted from the start, so the error is spoken when it appears; sr-only takes no grid row. */}
+          <p aria-live="assertive" className="sr-only">
+            {error ?? ""}
           </p>
           {error ? (
             <p id={errorId} className="text-sm font-medium text-[color:var(--blocked)]">

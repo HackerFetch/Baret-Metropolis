@@ -79,7 +79,7 @@ export function SwapCard({
             onChange={(event) => onAmount(event.target.value)}
             aria-invalid={error ? true : undefined}
             {...(error ? { "aria-describedby": errorId } : {})}
-            className="w-0 min-w-0 flex-1 bg-transparent px-4 py-4 font-display text-3xl font-extrabold tabular-nums text-[color:var(--fg)] outline-none placeholder:text-base placeholder:font-sans placeholder:font-normal placeholder:text-[color:var(--fg-faint)]"
+            className="w-0 min-w-0 flex-1 bg-transparent px-4 py-4 font-display text-3xl font-extrabold tabular-nums text-[color:var(--fg)] outline-none placeholder:text-base placeholder:font-sans placeholder:font-normal placeholder:text-[color:var(--fg-muted)]"
           />
           {live ? null : (
             <button

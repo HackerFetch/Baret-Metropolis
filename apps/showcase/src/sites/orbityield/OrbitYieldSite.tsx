@@ -50,18 +50,20 @@ export function OrbitYieldSite(): JSX.Element {
     check.start({ mode: version, amount: value });
   }
 
-  function stake(): void {
+  /** False when the amount is refused, so the card can move focus to it. */
+  function stake(): boolean {
     const value = parseAmount(amount);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     if (value > SAMPLE.mon) {
       setError(site.panel.errors.tooHigh);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -116,9 +118,9 @@ export function OrbitYieldSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="orbityield-faq" />
+            <Faq items={site.faq} name="orbityield-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>

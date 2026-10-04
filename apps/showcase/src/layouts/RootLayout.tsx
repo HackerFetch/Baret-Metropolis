@@ -1,4 +1,4 @@
-import { common, home } from "@baret/content";
+import { common, home, hub } from "@baret/content";
 import { navRoutes } from "@baret/routes";
 import { Mark } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
@@ -521,6 +521,8 @@ function DemoRibbon() {
       <Link
         to={routes.showcase.path}
         viewTransition
+        // The name starts with the visible tag (WCAG 2.5.3) and says where it goes.
+        aria-label={`${common.demo.ribbon}: ${hub.frame.back.label}`}
         className="pointer-events-auto inline-flex min-h-11 min-w-11 items-center justify-center"
       >
         <Tag tone="brand" size="sm">

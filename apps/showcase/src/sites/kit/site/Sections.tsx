@@ -95,7 +95,7 @@ export function Features({
           {blocks.map((block) => (
             <Reveal
               key={block.title}
-              className="grid gap-3 border-t-2 border-[color:var(--accent)] pt-5"
+              className="grid gap-3 border-t-2 border-[color:var(--accent-mark)] pt-5"
             >
               <h2 className={`${T.h3} text-[color:var(--fg)]`}>{block.title}</h2>
               <p className={T.body}>{block.body}</p>
@@ -121,7 +121,7 @@ export function FaqList({ items, name }: { items: readonly Faq[]; name: string }
             {item.question}
             <span
               aria-hidden="true"
-              className="font-mono text-xl text-[color:var(--accent)] transition-transform duration-150 group-open:rotate-45"
+              className="font-mono text-xl text-[color:var(--accent-mark)] transition-transform duration-150 group-open:rotate-45"
             >
               +
             </span>

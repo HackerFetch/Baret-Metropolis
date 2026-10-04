@@ -97,7 +97,7 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent)] hover:text-[color:var(--fg)]"
+                  className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent-mark)] hover:text-[color:var(--fg)]"
                 >
                   {section.title}
                 </a>
@@ -110,7 +110,7 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
         {view.sections.map((section) => (
           <Reveal
             key={section.id}
-            className="grid min-w-0 scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent)] pt-5"
+            className="grid min-w-0 scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent-mark)] pt-5"
           >
             <h2 id={section.id} className={`${T.h3} text-[color:var(--fg)]`}>
               {section.title}
@@ -124,7 +124,7 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
                   tabIndex={0}
                   role="region"
                   aria-label={section.title}
-                  className="overflow-x-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm"
+                  className="overflow-x-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent-mark)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm"
                 >
                   <code>{section.code}</code>
                 </pre>
@@ -159,10 +159,10 @@ function ListView({ view }: { view: Of<"list"> }): JSX.Element {
 
 /** Each share's fill, in order: the accent first, then quieter inks. */
 const SHARE_FILL = [
-  "bg-[color:var(--accent)]",
+  "bg-[color:var(--accent-mark)]",
   "bg-[color:var(--fg)]",
   "bg-[color:var(--fg-muted)]",
-  "bg-[color:var(--rule-strong)]",
+  "bg-[color:var(--fg-faint)]",
 ] as const;
 
 function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {

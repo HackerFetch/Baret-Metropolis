@@ -153,6 +153,8 @@ export const hub = {
     pill: "Simulated site",
     notice: "A simulation on Monad testnet. Tokens here have no value.",
     back: { label: "Back to the showcase", href: "/showcase" },
+    // Screen-reader headings for a demo home's figures and FAQ.
+    site: { statsTitle: "Figures", faqTitle: "Questions" },
 
     toggle: {
       legend: "Which version to build",

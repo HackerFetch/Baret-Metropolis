@@ -49,19 +49,21 @@ export function LaunchPadSite(): JSX.Element {
     check.start({ mode: version, amount: value });
   }
 
-  function contribute(): void {
+  /** False when the amount is refused, so the card can move focus to it. */
+  function contribute(): boolean {
     const value = parseAmount(amount);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     const broken = limitOf(value);
     if (broken) {
       setError(site.panel.errors[broken]);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -116,9 +118,9 @@ export function LaunchPadSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} portrait />
-            <Faq items={site.faq} name="launchpad-faq" />
+            <Faq items={site.faq} name="launchpad-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>

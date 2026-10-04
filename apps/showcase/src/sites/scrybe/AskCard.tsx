@@ -20,7 +20,7 @@ const { panel, attack } = scrybe.site;
 const { watch } = scrybe.analysis;
 
 const FIELD =
-  "w-full resize-y border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 text-lg text-[color:var(--fg)] placeholder:text-[color:var(--fg-faint)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]";
+  "w-full resize-y border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 text-lg text-[color:var(--fg)] placeholder:text-[color:var(--fg-muted)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]";
 
 export function AskCard({
   mode,

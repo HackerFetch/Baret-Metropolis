@@ -140,9 +140,9 @@ export function NovaSwapSite(): JSX.Element {
               }
             />
 
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.routes} blocks={site.sections} />
-            <Faq items={site.faq} name="novaswap-faq" />
+            <Faq items={site.faq} name="novaswap-faq" title={hub.frame.site.faqTitle} />
           </>
         ) : null}
       </main>

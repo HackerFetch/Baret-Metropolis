@@ -230,7 +230,7 @@ export function BarChart({
                 aria-label={`${labels[i]}: ${value} ${unit}`}
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: a bar takes focus so a keyboard reader can see its value.
                 tabIndex={0}
-                className="group relative flex h-full flex-1 items-end outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+                className="group relative flex h-full flex-1 items-end outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent-mark)]"
               >
                 <span
                   aria-hidden="true"
@@ -241,7 +241,7 @@ export function BarChart({
                 </span>
                 <Fill
                   axis="y"
-                  className={`w-full ${i === last ? "bg-[color:var(--accent)]" : "bg-[color:var(--rule-strong)] group-hover:bg-[color:var(--accent)] group-focus-visible:bg-[color:var(--accent)]"} transition-colors forced-colors:bg-[CanvasText] forced-colors:group-focus-visible:bg-[Highlight]`}
+                  className={`w-full ${i === last ? "bg-[color:var(--accent-mark)]" : "bg-[color:var(--fg-faint)] group-hover:bg-[color:var(--accent-mark)] group-focus-visible:bg-[color:var(--accent-mark)]"} transition-colors forced-colors:bg-[CanvasText] forced-colors:group-focus-visible:bg-[Highlight]`}
                   size={`${pct}%`}
                 />
               </div>

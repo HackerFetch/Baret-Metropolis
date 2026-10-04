@@ -32,7 +32,8 @@ export function StakeCard({
   amount: string;
   onAmount: (value: string) => void;
   error: string | null;
-  onStake: () => void;
+  /** False when the amount is refused, so the card can move focus to it. */
+  onStake: () => boolean;
 }): JSX.Element {
   const danger = mode === "danger";
   const value = parseAmount(amount);
@@ -43,7 +44,8 @@ export function StakeCard({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        onStake();
+        // A refused amount moves focus to the input, which reads out its error.
+        if (!onStake()) event.currentTarget.querySelector("input")?.focus();
       }}
       className="grid gap-5 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-6 md:p-8"
     >

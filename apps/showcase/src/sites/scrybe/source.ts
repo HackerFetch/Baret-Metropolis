@@ -16,4 +16,7 @@ export interface AskInput {
   readonly cap: bigint;
 }
 
+/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
+export const LIVE = false;
+
 export const SOURCE: CheckSource<AskInput> = async (input) => sampleCheck(input.mode, input.cap);

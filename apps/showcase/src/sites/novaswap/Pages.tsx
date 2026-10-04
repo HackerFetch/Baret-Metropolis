@@ -114,7 +114,7 @@ export function DocsPage(): JSX.Element {
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent)] hover:text-[color:var(--fg)]"
+                    className="-ml-px block border-l-2 border-transparent py-2 pl-4 text-sm text-[color:var(--fg-muted)] hover:border-[color:var(--accent-mark)] hover:text-[color:var(--fg)]"
                   >
                     {section.title}
                   </a>
@@ -135,7 +135,7 @@ export function DocsPage(): JSX.Element {
           {docs.sections.map((section) => (
             <Reveal
               key={section.id}
-              className="grid scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent)] pt-5"
+              className="grid scroll-mt-24 gap-3 border-t-2 border-[color:var(--accent-mark)] pt-5"
             >
               <h2 id={section.id} className={`${T.h3} text-[color:var(--fg)]`}>
                 {section.title}

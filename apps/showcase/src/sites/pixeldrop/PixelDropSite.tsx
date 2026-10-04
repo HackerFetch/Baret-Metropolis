@@ -48,18 +48,20 @@ export function PixelDropSite(): JSX.Element {
     check.start({ mode: version, count: pieces });
   }
 
-  function mint(): void {
+  /** False when the quantity is refused, so the card can move focus to it. */
+  function mint(): boolean {
     const value = parseQuantity(quantity);
     if (value === null) {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     if (value > SAMPLE.perWallet) {
       setError(site.panel.errors.tooHigh);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, value);
+    return true;
   }
 
   function tryOther(): void {
@@ -122,9 +124,9 @@ export function PixelDropSite(): JSX.Element {
                 />
               }
             />
-            <Stats items={site.stats} />
+            <Stats items={site.stats} title={hub.frame.site.statsTitle} />
             <Features image={ART.hero} blocks={site.sections} />
-            <Faq items={site.faq} name="pixeldrop-faq" />
+            <Faq items={site.faq} name="pixeldrop-faq" title={hub.frame.site.faqTitle} />
           </>
         )}
       </main>
