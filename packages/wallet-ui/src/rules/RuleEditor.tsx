@@ -143,15 +143,36 @@ function ListField({
 export function RuleEditor({
   draft,
   onChange,
+  only,
+  query,
 }: {
   draft: GuardPolicy;
   onChange: (next: GuardPolicy) => void;
-}): JSX.Element {
+  /** One group alone (the options page's category filter). */
+  only?: keyof typeof policy.groups | null;
+  /** Rules whose label or hint holds this text (the options page's search). */
+  query?: string;
+}): JSX.Element | null {
   const set = <F extends GuardPolicyField>(field: F, value: GuardPolicy[F]) =>
     onChange({ ...draft, [field]: value });
+  const needle = (query ?? "").trim().toLowerCase();
+  const shown = groupsOf()
+    .filter(({ group }) => !only || group === only)
+    .map(({ group, fields }) => ({
+      group,
+      fields: needle
+        ? fields.filter((field) =>
+            `${policy.fields[field].label} ${policy.fields[field].hint}`
+              .toLowerCase()
+              .includes(needle),
+          )
+        : fields,
+    }))
+    .filter(({ fields }) => fields.length > 0);
+  if (shown.length === 0) return null;
   return (
     <div className="grid gap-10">
-      {groupsOf().map(({ group, fields }) => (
+      {shown.map(({ group, fields }) => (
         <section
           key={group}
           aria-labelledby={`group-${group}`}

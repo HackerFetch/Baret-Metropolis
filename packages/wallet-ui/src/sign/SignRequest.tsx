@@ -463,7 +463,7 @@ export function SignRequest({
 
           <Section title={sign.raw.title}>
             <details className="group">
-              <summary className="flex w-max cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
+              <summary className="flex w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
                 <span
                   aria-hidden="true"
                   className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"

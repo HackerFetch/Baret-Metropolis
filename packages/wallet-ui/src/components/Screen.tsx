@@ -15,12 +15,15 @@ export function Screen({
   title,
   body,
   picture,
+  picturePosition,
   actions,
   children,
 }: {
   title: string;
   body?: string;
   picture?: ImgAsset;
+  /** object-position for a picture whose subject sits off centre. */
+  picturePosition?: string;
   actions?: ReactNode;
   children?: ReactNode;
 }): JSX.Element {
@@ -46,6 +49,7 @@ export function Screen({
             asset={picture}
             ratio="4/3"
             dim
+            {...(picturePosition ? { position: picturePosition } : {})}
             sizes="(min-width: 1024px) 380px, 40vw"
             className="hidden border border-[color:var(--rule)] md:col-span-5 md:block"
           />

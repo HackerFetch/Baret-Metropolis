@@ -138,7 +138,7 @@ export interface Preview {
  * that were blocked would now go through.
  */
 export function preview(
-  activity: readonly ActivityItem[],
+  activity: readonly Pick<ActivityItem, "verdict" | "findings">[],
   saved: GuardPolicy,
   draft: GuardPolicy,
 ): Preview {

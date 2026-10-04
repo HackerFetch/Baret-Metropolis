@@ -1,14 +1,24 @@
+import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
+import { ExtensionProvider } from "../../data/store.js";
+import { readStart } from "../../lib/start.js";
 import { router } from "./router.js";
 import "../../styles.css";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root.");
 
+// The sample wallet the page starts from: options.html?sample=empty for a new one.
+const start = readStart(location.search, "ready");
+
 createRoot(container).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <LandingMotion>
+      <ExtensionProvider start={{ scenario: start.scenario }}>
+        <RouterProvider router={router} />
+      </ExtensionProvider>
+    </LandingMotion>
   </StrictMode>,
 );

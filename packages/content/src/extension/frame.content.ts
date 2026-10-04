@@ -72,11 +72,10 @@ export const extFrame = {
   account: { label: "Account", copy: "Copy the address", copied: "Copied" },
   lock: { label: "Lock now" },
 
+  /** The options page's 404, under the shared title (common.notFound). */
   notFound: {
-    tag: "404",
-    title: "Nothing at this address",
     body: "This page isn't part of Baret's settings. The overview is one step away.",
-    back: "Back to the overview",
+    back: { label: "Back to the overview", href: "/" },
   },
 
   /** Values the sample wallet starts with: its accounts' names and a watched address. */

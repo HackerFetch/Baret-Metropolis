@@ -178,3 +178,10 @@ export function matchesPopupFilter(item: Activity, filter: PopupFilter): boolean
       return item.kind === "alert";
   }
 }
+
+const DAY = 86_400_000;
+
+/** Unused for 30 days: nothing spent under it, or granted, in the last 30 days. */
+export function unusedFor30Days(p: Permission, at: string = now()): boolean {
+  return Date.parse(at) - Date.parse(p.lastUsed ?? p.granted) > 30 * DAY;
+}

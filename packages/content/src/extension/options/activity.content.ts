@@ -76,6 +76,7 @@ export const optionsActivity = {
 
   bulk: {
     selected: "{count} selected",
+    selectAll: "Select all shown",
     recheck: {
       label: "Check again with my current rules",
       body: "Runs your current rules over {count} past requests to show the verdict each would get today. Nothing is signed and nothing changes on-chain.",

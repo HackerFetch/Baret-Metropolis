@@ -115,21 +115,30 @@ export const optionsAllowances = {
   bulk: {
     title: "Clean up",
     selected: "{count} selected",
+    /** Each line has its singular twin (labelOne, bodyOne) for a count of 1. */
     revokeSelected: {
       label: "Revoke {count} permissions",
+      labelOne: "Revoke 1 permission",
       body: "This sends {count} transactions, one per permission. You sign each one, and each costs a network fee.",
+      bodyOne: "This sends 1 transaction. You sign it, and it costs a network fee.",
     },
     unused: {
       label: "Revoke {count} unused permissions",
+      labelOne: "Revoke 1 unused permission",
       body: "{count} permissions have not been used in 30 days.",
+      bodyOne: "1 permission has not been used in 30 days.",
     },
     unlimited: {
       label: "Set limits on {count} allowances",
+      labelOne: "Set a limit on 1 allowance",
       body: "{count} allowances have no limit. You choose a limit for each, then sign one transaction per allowance.",
+      bodyOne: "1 allowance has no limit. You choose its limit, then sign one transaction.",
     },
     all: {
       label: "Revoke all {count}",
+      labelOne: "Revoke the 1 permission",
       body: "Every site and agent loses access. This sends {count} transactions, one network fee each.",
+      bodyOne: "The site or agent loses access. This sends 1 transaction with its network fee.",
     },
     progress: "Revoked {count} of {total}",
     export: { label: "Export as CSV", note: "Saved on this device." },

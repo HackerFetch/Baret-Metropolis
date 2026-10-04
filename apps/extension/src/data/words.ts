@@ -1,10 +1,10 @@
-import { alerts, optionsAllowances, policy, popupActivity } from "@baret/content";
+import { alerts, optionsAllowances, optionsHome, policy, popupActivity } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
 import { amount, when } from "@baret/wallet-ui/data/format";
 import { fillParts, type Part } from "@baret/wallet-ui/lib/parts";
 import { fill } from "@baret/web-ui/lib/util";
-import { ago, dayGroup, now } from "./derive.js";
-import type { Activity, Alert, GuardPolicyField, Permission } from "./types.js";
+import { ago, dayGroup, leftToday, now } from "./derive.js";
+import type { Activity, Alert, Asset, GuardPolicyField, Permission } from "./types.js";
 
 /**
  * The sentences the screens print from the data, all from content: a log
@@ -95,4 +95,26 @@ export function holderOf(p: Permission): string {
   if (p.kind === "allowance") return short(p.spender);
   if (p.kind === "operator") return short(p.operator);
   return p.merchant;
+}
+
+/**
+ * What a permission can take right now, in a few words: the exposure column.
+ * An allowance with no limit counts as the whole balance of its token, when
+ * the wallet holds any; otherwise it reads "No limit".
+ */
+export function exposureText(p: Permission, assets: readonly Asset[] = []): string {
+  if (p.kind === "allowance") {
+    if (p.amount !== null) return `${amount(p.amount, 6)} ${p.asset}`;
+    const held = assets.find((a) => a.symbol === p.asset);
+    return held
+      ? `${amount(held.balance, held.decimals)} ${p.asset}`
+      : optionsHome.permissions.unlimited;
+  }
+  if (p.kind === "operator") return p.contract;
+  return `${leftToday(p)} ${p.asset}`;
+}
+
+/** The singular twin of a counted line when the count is 1. */
+export function counted(count: number, many: string, one: string): string {
+  return count === 1 ? one : fill(many, { count: String(count) });
 }
