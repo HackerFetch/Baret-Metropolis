@@ -1,7 +1,8 @@
 import "lenis/dist/lenis.css";
 import Lenis from "lenis";
 import { cancelFrame, frame } from "motion/react";
-import { useEffect } from "react";
+import { type JSX, useEffect, useLayoutEffect, useRef } from "react";
+import { useInRouterContext, useLocation } from "react-router";
 import { useFinePointer } from "../lib/useFinePointer.js";
 import { useReduce } from "../lib/useReduce.js";
 
@@ -52,6 +53,35 @@ function preventSmooth(node: HTMLElement): boolean {
 }
 
 /** The same-page hash a click went to, or null. Modified clicks are left alone. */
+/** The running instance, so a route change can drop an unfinished glide. */
+let running: Lenis | null = null;
+
+/**
+ * A new page must not inherit the last page's glide. The layout stays
+ * mounted across routes, so a wheel glide still running when a link is
+ * followed would carry the new page past the position ScrollRestoration
+ * gives it. Stopping and restarting Lenis ends the glide at the real
+ * position; the first render (a fresh load) needs nothing.
+ */
+function RouteReset(): null {
+  const { pathname } = useLocation();
+  const first = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs on every route change by design
+  useLayoutEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const lenis = running;
+    if (!lenis) return;
+    // stop() and start() each reset Lenis to the real position; a modal that
+    // still locks the page keeps it stopped (see syncLock).
+    lenis.stop();
+    if (!document.body.hasAttribute("data-scroll-locked")) lenis.start();
+  }, [pathname]);
+  return null;
+}
+
 function sameDocumentHash(e: MouseEvent): string | null {
   if (e.defaultPrevented || e.button !== 0) return null;
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
@@ -65,7 +95,8 @@ function sameDocumentHash(e: MouseEvent): string | null {
   return url.hash;
 }
 
-export function SmoothScroll(): null {
+export function SmoothScroll(): JSX.Element | null {
+  const inRouter = useInRouterContext();
   const reduce = useReduce();
   const fine = useFinePointer();
   const on = fine && !reduce;
@@ -81,6 +112,7 @@ export function SmoothScroll(): null {
       prevent: preventSmooth,
       allowNestedScroll: true,
     });
+    running = lenis;
 
     // Follow the body scroll lock a modal dialog sets and clears.
     const syncLock = (): void => {
@@ -138,9 +170,10 @@ export function SmoothScroll(): null {
       window.removeEventListener("click", onClick);
       window.removeEventListener("wheel", arm);
       disarm();
+      if (running === lenis) running = null;
       lenis.destroy();
     };
   }, [on]);
 
-  return null;
+  return inRouter ? <RouteReset /> : null;
 }
