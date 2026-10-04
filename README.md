@@ -6,7 +6,7 @@ This repository and this document set are meant for **live** tracking. They were
 
 ---
 
-## Status Summary (last updated: 2026-10-01)
+## Status Summary (last updated: 2026-10-04)
 
 | Area | Status |
 |---|---|
@@ -15,7 +15,7 @@ This repository and this document set are meant for **live** tracking. They were
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 46 files in `packages/content`, one per page or frame, complete |
 | Design system | 37 components in `packages/ui`; the web signature layer in `packages/web-ui` (type scale, motion, reveals, the eyelet cursor); the wallet pieces both wallets share in `packages/wallet-ui` (sign request, rule editor, findings, QR) |
-| Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
+| Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Frontend audit (2026-10-04, branch `frontend-audit`): the landing is prerendered (LCP on a throttled phone 2.74 s to 1.88 s), every route has its own head and preloads, no console warnings on any surface, WCAG AA contrast in both themes and all six demo palettes, fail-closed gaps closed (locked request windows, permits, reachability), copy that claims nothing the product cannot back. Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
 | Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
 | Contract deploy | Monad testnet, 2026-10-02: PaymentGuard `0x0A82671420114E47c672D5e8e23017DdCE850A35`, ReputationRegistry `0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411` (source verified) — `docs/CONTRACTS.md` |
 | Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |

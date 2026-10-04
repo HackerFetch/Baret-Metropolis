@@ -10,7 +10,7 @@ This archive is the source of the Baret browser extension, taken from the root o
 
 ## Steps
 
-From the root of the unpacked archive:
+From the root of the unpacked archive, or of a clone of the repository (https://github.com/HackerFetch/Baret-Metropolis, the same steps work there):
 
 ```sh
 corepack enable
@@ -25,5 +25,7 @@ For Chrome, run `pnpm --filter @baret/extension build`; the output lands in `app
 ## What the build does
 
 WXT (Vite under the hood) bundles and minifies the TypeScript and React sources, compiles Tailwind CSS, and copies `apps/extension/public/` (icons, pictures, fonts) as is. No code is downloaded or generated at runtime, and the manifest's content security policy allows only the extension's own scripts.
+
+To try the build in a browser: in Chrome open `chrome://extensions`, turn on Developer mode and load `apps/extension/.output/chrome-mv3/` unpacked; in Firefox open `about:debugging#/runtime/this-firefox` and load `apps/extension/.output/firefox-mv3/manifest.json` as a temporary add-on.
 
 This rebuild was checked on 2026-10-04: a build from the unpacked source matched the submitted package file for file.
