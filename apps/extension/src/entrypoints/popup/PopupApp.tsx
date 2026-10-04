@@ -59,6 +59,9 @@ export function PopupApp({
   // A transfer from the Send form becomes the request the signing phase shows.
   const [own, setOwn] = useState<ReturnType<typeof queueOf> | null>(null);
   const query = scenarioQuery(state.scenario, start.reachable);
+  // Restore and the forgot-passphrase reset start from an empty wallet, never
+  // the sample this popup shows.
+  const restore = `${scenarioQuery("empty", start.reachable)}&restore=1`;
   const account = activeAccount(state);
   const alertsUnread = unread(state.alerts);
 
@@ -70,9 +73,7 @@ export function PopupApp({
     body = (
       <Uninitialized
         onSetup={() => openOptions("onboarding", query)}
-        onRestore={() =>
-          openOptionsPath("/onboarding", query ? `${query}&restore=1` : "?restore=1")
-        }
+        onRestore={() => openOptionsPath("/onboarding", restore)}
       />
     );
   } else if (nav.phase === "locked") {
@@ -81,7 +82,7 @@ export function PopupApp({
         reason={lockReason}
         values={{ count: String(state.settings.lockMinutes), origin: "" }}
         onOpen={ready}
-        onReset={() => openOptionsPath("/onboarding", query ? `${query}&restore=1` : "?restore=1")}
+        onReset={() => openOptionsPath("/onboarding", restore)}
       />
     );
   } else if (nav.phase === "signing") {

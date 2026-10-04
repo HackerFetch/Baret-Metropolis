@@ -173,6 +173,23 @@ function fromPayment(
   };
 }
 
+/**
+ * The request as the popup may act on it. While Baret is unreachable, or its
+ * reach is still unknown, every verdict counts as Can't reach Baret and a
+ * payment counts as not checked, so no one-click Sign or pay is offered.
+ */
+export function asChecked(request: PopupRequest, reachable: boolean | null): PopupRequest {
+  if (reachable === true) return request;
+  if (request.kind === "transaction") {
+    return { ...request, request: { ...request.request, verdict: "unreachable" } };
+  }
+  if (request.kind === "typedData") return { ...request, verdict: "unreachable" };
+  if (request.kind === "payment" && (request.state === "first" || request.state === "auto")) {
+    return { ...request, state: "notChecked" };
+  }
+  return request;
+}
+
 export function SignPhase({
   queue,
   onFinished,
@@ -184,18 +201,20 @@ export function SignPhase({
   const account = activeAccount(state)?.id ?? state.active;
   const query = scenarioQuery(state.scenario);
   const [index, setIndex] = useState(0);
-  const current = queue[index];
+  const waiting = queue[index];
+  const current = waiting ? asChecked(waiting, state.reachable) : undefined;
   const more = index + 1 < queue.length;
   const next = () => (more ? setIndex(index + 1) : onFinished());
 
   if (!current) return null;
 
   function declineAll(): void {
-    for (const request of queue.slice(index)) {
+    const rest = queue.slice(index).map((request) => asChecked(request, state.reachable));
+    for (const request of rest) {
       if (request.kind === "transaction") continue;
       dispatch({ type: "log", item: fromOther(request, "declined", account) });
     }
-    for (const request of queue.slice(index)) {
+    for (const request of rest) {
       if (request.kind !== "transaction") continue;
       const at = new Date().toISOString();
       dispatch({

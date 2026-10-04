@@ -419,7 +419,9 @@ function capsError(amount: string, caps: CapsText): string | null {
   const hour = read(caps.hour);
   const dayCap = read(caps.day);
   if (perPayment === null || hour === null || dayCap === null) return errors.empty;
-  if (perPayment < (toUnits(amount, CAP_DECIMALS) ?? 0n)) return errors.belowPayment;
+  // An amount that cannot be read counts as over every cap: it is not sent.
+  const need = toUnits(amount, CAP_DECIMALS);
+  if (need === null || perPayment < need) return errors.belowPayment;
   if (hour < perPayment) return errors.hour;
   if (hour > dayCap) return errors.order;
   return null;

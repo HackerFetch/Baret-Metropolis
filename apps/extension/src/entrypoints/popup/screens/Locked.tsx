@@ -22,8 +22,10 @@ import { Confirm } from "../frame/Sheet.js";
  * recover it, and only the recovery phrase brings the wallet back.
  *
  * The screen asks the store to open the wallet: the passphrase check, the
- * count of wrong tries and the pause live behind that seam (the keystore
- * later), so reopening the popup does not end a pause. The pause is
+ * count of wrong tries and the pause live behind that seam, so leaving and
+ * returning to this screen does not end a pause. The sample store keeps them
+ * only while the popup is open; the keystore will keep them across reopens.
+ * The pause is
  * announced once; its countdown is shown, not read, and its end is said once.
  */
 

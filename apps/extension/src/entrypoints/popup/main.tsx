@@ -11,8 +11,10 @@ if (!container) throw new Error("Missing #root.");
 
 // Opened as a page rather than as the toolbar popup (a preview, a review), the
 // window is wider than the popup: centre the 360 by 600 frame on the ground.
-// On a phone the browser opens the popup full screen: fill it instead.
-if (window.matchMedia("(pointer: coarse)").matches) document.documentElement.dataset.view = "full";
+// On Android the browser opens the popup full screen: fill it instead. The
+// platform decides, not the pointer, so a touch-first desktop keeps the
+// fixed toolbar popup.
+if (/Android/i.test(navigator.userAgent)) document.documentElement.dataset.view = "full";
 else if (window.innerWidth > 420) document.documentElement.dataset.view = "tab";
 
 /** The sample state in the address bar, so a reload or a shared link keeps it. */

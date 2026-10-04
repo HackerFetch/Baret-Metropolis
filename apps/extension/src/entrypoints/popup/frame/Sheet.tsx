@@ -18,13 +18,20 @@ import { type JSX, type ReactNode, useEffect, useId, useRef } from "react";
  * Confirm: a decision that cannot be undone or that costs a fee (revoke,
  * reset, revoke all). A native modal dialog at the foot of the window, so the
  * focus stays inside it and Escape cancels; it says every consequence before
- * the button. While `busy` (the action is running) Escape does nothing and the
- * dialog stays open, so it never closes out of step with the state.
+ * the button. While `busy` (the action is running) Escape and Cancel do nothing
+ * and the dialog stays open, so it never closes out of step with the state.
  */
 
 /** BRAND sheet slide: 260 ms on the soft ease, a 6 px product rise. */
 const SHEET = { duration: 0.26, ease: EASE_OUT_SOFT } as const;
 const SHEET_RISE = 6;
+
+/**
+ * Each open sheet's opener. A sheet opened from inside another sheet (Send's
+ * Receive link) takes over the first sheet's opener, since the link that
+ * opened it leaves with the first sheet.
+ */
+const OPENERS = new WeakMap<Element, Element>();
 
 export function Sheet({
   title,
@@ -37,10 +44,14 @@ export function Sheet({
 }): JSX.Element {
   const id = useId();
   const back = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLElement>(null);
   const reduce = useReduce();
 
   useEffect(() => {
-    const opener = document.activeElement;
+    const active = document.activeElement;
+    const parent = active?.closest("[data-sheet]");
+    const opener = (parent && OPENERS.get(parent)) ?? active;
+    if (root.current && opener) OPENERS.set(root.current, opener);
     back.current?.focus();
     return () => {
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
@@ -49,6 +60,8 @@ export function Sheet({
 
   return (
     <m.section
+      ref={root}
+      data-sheet=""
       aria-labelledby={id}
       initial={reduce ? false : { opacity: 0, y: SHEET_RISE }}
       animate={{ opacity: 1, y: 0 }}
@@ -144,7 +157,7 @@ export function Confirm({
         </h2>
         <div className="grid gap-3">{children}</div>
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>
             {cancel}
           </Button>
           <Button
