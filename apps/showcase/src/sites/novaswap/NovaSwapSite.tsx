@@ -36,6 +36,9 @@ const START: Record<DemoMode, string> = { safe: "2.5", danger: "20" };
 /** Chosen once: the page either always asks Baret or always shows the sample. */
 const SOURCE = sourceFor(DEMO_FROM);
 const FROM = DEMO_FROM ?? SAMPLE.wallet;
+const LIVE = DEMO_FROM !== null;
+/** Live mode labels the address as a test address, never as the sample wallet. */
+const CONNECT = LIVE ? { ...site.connect, connected: novaswap.live.wallet } : site.connect;
 
 export function NovaSwapSite(): JSX.Element {
   const [mode, setModeState] = useState<DemoMode>("safe");
@@ -63,19 +66,22 @@ export function NovaSwapSite(): JSX.Element {
     check.start({ mode: version, amount: value, from: FROM });
   }
 
-  function review(): void {
+  /** False when the amount is refused, so the card can move focus to it. */
+  function review(): boolean {
     const errors = mode === "safe" ? site.panel.errors : site.attack.errors;
     const value = parseAmount(amount);
     if (value === null) {
       setError(errors?.empty ?? null);
-      return;
+      return false;
     }
-    if (value > balanceOf(mode)) {
+    // Live mode has no balance to read yet, so only the sample checks it.
+    if (!LIVE && value > balanceOf(mode)) {
       setError(errors?.tooHigh ?? null);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode, amount);
+    return true;
   }
 
   function tryOther(): void {
@@ -101,7 +107,7 @@ export function NovaSwapSite(): JSX.Element {
         views={VIEWS}
         view={view}
         onView={go}
-        connect={site.connect}
+        connect={CONNECT}
         connected={connected}
         wallet={FROM}
         onConnect={() => setConnected(true)}
@@ -116,6 +122,7 @@ export function NovaSwapSite(): JSX.Element {
             <SiteHero
               badge={site.hero.badge}
               title={site.hero.title}
+              keepCase={["dUSDC"]}
               body={site.hero.body}
               card={
                 <SwapCard
@@ -128,6 +135,7 @@ export function NovaSwapSite(): JSX.Element {
                   }}
                   error={error}
                   onReview={review}
+                  live={LIVE}
                 />
               }
             />
@@ -143,9 +151,13 @@ export function NovaSwapSite(): JSX.Element {
 
       <AnalysisPanel
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Closing the panel cancels a check that is still running.
+          if (!next) check.reset();
+        }}
         state={check.state}
-        live={DEMO_FROM !== null}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

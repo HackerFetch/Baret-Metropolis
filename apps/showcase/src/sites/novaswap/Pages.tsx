@@ -52,9 +52,10 @@ export function PoolsPage({ onSwap }: { onSwap: () => void }): JSX.Element {
                 key={pool.pair}
                 className="border-b border-[color:var(--rule)] transition-colors hover:bg-[color:var(--surface)]"
               >
+                {/* Symbols keep their own case (dUSDC, shMON), so no uppercase here. */}
                 <th
                   scope="row"
-                  className="py-4 pr-4 text-left font-display text-xl font-bold uppercase text-[color:var(--fg)] md:text-2xl"
+                  className="py-4 pr-4 text-left font-display text-xl font-bold text-[color:var(--fg)] md:text-2xl"
                 >
                   {pool.pair}
                 </th>

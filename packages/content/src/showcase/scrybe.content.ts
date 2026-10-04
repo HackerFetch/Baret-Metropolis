@@ -293,6 +293,9 @@ export const scrybe = {
     body: "Your agent pays from a PaymentGuard vault with a cap per payment and a daily cap per merchant. You can revoke its key at any time.",
     action: { label: "Read the agent docs", href: "/agents" },
   },
-} as const satisfies ScenarioSite;
+
+  /** An amount with its unit, for the cap choices and the agent's run. */
+  amount: "{amount} USDC",
+} as const satisfies ScenarioSite & { amount: string };
 
 export type ScrybeContent = typeof scrybe;

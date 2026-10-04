@@ -50,13 +50,15 @@ export function ScrybeSite(): JSX.Element {
     check.start({ mode: version, cap });
   }
 
-  function ask(): void {
+  /** False when the question is missing, so the card can move focus to it. */
+  function ask(): boolean {
     if (mode === "safe" && question.trim() === "") {
       setError(site.panel.errors.empty);
-      return;
+      return false;
     }
     setError(null);
     runCheck(mode);
+    return true;
   }
 
   function tryOther(): void {
@@ -125,7 +127,11 @@ export function ScrybeSite(): JSX.Element {
 
       <AnalysisPanel
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Closing the panel cancels a check that is still running.
+          if (!next) check.reset();
+        }}
         state={check.state}
         live={false}
         mode={checked}

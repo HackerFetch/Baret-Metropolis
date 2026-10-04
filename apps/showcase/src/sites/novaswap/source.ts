@@ -1,7 +1,7 @@
 import { NOVASWAP, novaswap } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import { type Address, isAddress, parseEther } from "viem";
-import { analyzeCall, type DemoCall } from "../kit/live.js";
+import type { DemoCall } from "../kit/live.js";
 import { sampleCheck } from "./sample.js";
 
 /**
@@ -46,8 +46,11 @@ export function contractOf(mode: DemoMode): Address {
 const sampleSource: CheckSource<SwapInput> = async (input) =>
   sampleCheck(input.mode, Number(input.amount.replace(",", ".")));
 
-const liveSource: CheckSource<SwapInput> = (input, signal) =>
-  analyzeCall(buildRequest(input), signal);
+/** The live path loads only when a check runs, so the sample page never fetches it. */
+const liveSource: CheckSource<SwapInput> = async (input, signal) => {
+  const { analyzeCall } = await import("../kit/live.js");
+  return analyzeCall(buildRequest(input), signal);
+};
 
 /** Live with a wallet to simulate from, the sample without. */
 export function sourceFor(from: Address | null): CheckSource<SwapInput> {

@@ -15,6 +15,13 @@ describe("NovaSwap amount", () => {
     for (const raw of ["", "0", "-1", "abc", "1e400"]) expect(parseAmount(raw)).toBeNull();
   });
 
+  it("refuses what parseEther would throw on: exponents, hex, two decimal marks", () => {
+    expect(parseAmount(".5")).toBe(0.5);
+    for (const raw of ["1e3", ".5e1", "0x5", "1.2.3", "1.0000000000000000001", "Infinity"]) {
+      expect(parseAmount(raw)).toBeNull();
+    }
+  });
+
   it("quotes both ways at the router's fixed rate, to the cent", () => {
     expect(quote(2.5)).toBe(8);
     expect(format(quote(1.11))).toBe("3.55");

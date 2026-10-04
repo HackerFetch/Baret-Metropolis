@@ -39,7 +39,7 @@ export const novaswap = {
     slug: "novaswap",
     name: "NovaSwap",
     category: "Exchange",
-    tagline: "Swap MON for USDC in one step",
+    tagline: "Swap MON for dUSDC in one step",
     summary:
       'A clean swap page. In the attack version, "enable trading" is an unlimited dUSDC allowance to a look-alike router that can empty your balance.',
     watchFor: [
@@ -62,7 +62,7 @@ export const novaswap = {
     connect: { label: "Connect wallet", connected: "Sample wallet" },
     hero: {
       badge: "No allowance needed for MON",
-      title: "Swap MON for USDC in one step",
+      title: "Swap MON for dUSDC in one step",
       body: "Pay in MON, receive dUSDC, settle in a single transaction. No account, and no allowance to manage.",
       cta: "Swap",
     },
@@ -146,11 +146,11 @@ export const novaswap = {
         columns: { pair: "Pool", tvl: "Liquidity", volume: "24h volume", fee: "Fee" },
         action: "Swap",
         items: [
-          { pair: "MON / USDC", tvl: "$1.84M", volume: "$2.31M", fee: "0.05%" },
-          { pair: "MON / WETH", tvl: "$962K", volume: "$648K", fee: "0.30%" },
-          { pair: "USDC / USDT", tvl: "$1.12M", volume: "$540K", fee: "0.01%" },
-          { pair: "MON / WBTC", tvl: "$488K", volume: "$312K", fee: "0.30%" },
-          { pair: "WETH / USDC", tvl: "$406K", volume: "$221K", fee: "0.05%" },
+          { pair: "MON / dUSDC", tvl: "$1.84M", volume: "$2.31M", fee: "0.05%" },
+          { pair: "MON / WMON", tvl: "$962K", volume: "$648K", fee: "0.30%" },
+          { pair: "dUSDC / WMON", tvl: "$1.12M", volume: "$540K", fee: "0.01%" },
+          { pair: "shMON / dUSDC", tvl: "$488K", volume: "$312K", fee: "0.30%" },
+          { pair: "WMON / shMON", tvl: "$406K", volume: "$221K", fee: "0.05%" },
           { pair: "MON / shMON", tvl: "$274K", volume: "$96K", fee: "0.01%" },
         ],
       },
@@ -260,6 +260,16 @@ export const novaswap = {
       body: "An unlimited allowance lets the spender take everything, later, without asking again. Approve the amount you sell, to the contract you meant.",
     },
   },
-} as const satisfies ScenarioSite;
+
+  /**
+   * Live mode only (a developer set VITE_BARET_DEMO_FROM): the page has an
+   * address to simulate from but no wallet to read, so it never shows the
+   * sample balance as that address's.
+   */
+  live: {
+    wallet: "Test address",
+    balance: "Balance shows once a wallet connects",
+  },
+} as const satisfies ScenarioSite & { live: { wallet: string; balance: string } };
 
 export type NovaswapContent = typeof novaswap;
