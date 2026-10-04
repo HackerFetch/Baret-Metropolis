@@ -7,8 +7,9 @@ import { Segment } from "@baret/web-ui/components/Segment";
 import { staggerDelay } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId, useState } from "react";
+import { useSearchParams } from "react-router";
 import { HUB_ART } from "../shared/assets.js";
-import { type FilterId, filterScenarios, filterStatus } from "./hub.js";
+import { FILTER_PARAM, filterScenarios, filterStatus, parseFilter } from "./hub.js";
 import { ScenarioCard } from "./ScenarioCard.js";
 
 /**
@@ -17,6 +18,11 @@ import { ScenarioCard } from "./ScenarioCard.js";
  * picture and its one sentence. Cards that do not match leave the DOM, and
  * one status region says how many are shown. No timers, nothing moves on
  * its own; a card that appears rises once like every surface.
+ *
+ * The filter lives in the URL (`?filter=drainer`), one history entry per
+ * pick, so a link opens on it and Back/Forward bring it back with the list
+ * that ScrollRestoration's saved position was measured on. "All" drops the
+ * query. A pick never scrolls the page.
  */
 
 const ID = "scenarios";
@@ -31,14 +37,23 @@ const PICTURE = {
 
 export function Scenarios(): JSX.Element {
   const name = useId();
-  const [filter, setFilter] = useState<FilterId>("all");
+  const [params, setParams] = useSearchParams();
+  const filter = parseFilter(params.get(FILTER_PARAM));
   const [said, setSaid] = useState("");
   const shown = filterScenarios(filter);
   const current = filters.items.find((f) => f.id === filter) ?? filters.items[0];
 
   const pick = (value: string): void => {
-    const next = value as FilterId;
-    setFilter(next);
+    const next = parseFilter(value);
+    setParams(
+      (prev) => {
+        const out = new URLSearchParams(prev);
+        if (next === "all") out.delete(FILTER_PARAM);
+        else out.set(FILTER_PARAM, next);
+        return out;
+      },
+      { preventScrollReset: true },
+    );
     setSaid(filterStatus(filterScenarios(next).length));
   };
 

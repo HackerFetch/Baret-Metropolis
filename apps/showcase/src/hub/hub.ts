@@ -9,6 +9,14 @@ import { SCENARIOS, type Scenario } from "../sites/scenarios.js";
 
 export type FilterId = (typeof hub.filters.items)[number]["id"];
 
+/** The URL query key that holds the filter (`/showcase?filter=drainer`). */
+export const FILTER_PARAM = "filter";
+
+/** A query value read back as a filter id; anything unknown is "all". */
+export function parseFilter(value: string | null): FilterId {
+  return hub.filters.items.find((f) => f.id === value)?.id ?? "all";
+}
+
 /** The six sites, or the ones whose `threatClass` matches. */
 export function filterScenarios(
   id: FilterId,

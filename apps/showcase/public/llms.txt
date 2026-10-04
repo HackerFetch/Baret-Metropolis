@@ -12,4 +12,4 @@
 
 ## Notes
 
-- The six demo sites under /showcase imitate real products on purpose. They are not real services.
+- The six demo sites live at /scrybe, /novaswap, /pixeldrop, /orbityield, /claimhub and /launchpad, and are linked from /showcase. They imitate real products on purpose. They are not real services.

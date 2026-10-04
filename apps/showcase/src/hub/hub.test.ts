@@ -5,6 +5,7 @@ import {
   filterScenarios,
   filterStatus,
   PANEL_LEFT,
+  parseFilter,
   STEP_PANEL,
   STRIP_FRAME,
   stripShift,
@@ -20,6 +21,13 @@ describe("the hub filter", () => {
     const total = classes.reduce((n, id) => n + filterScenarios(id).length, 0);
     expect(total).toBe(SCENARIOS.length);
     for (const id of classes) expect(filterScenarios(id).length).toBeGreaterThan(0);
+  });
+
+  it("reads the filter back from the URL query, unknown values as all", () => {
+    for (const { id } of hub.filters.items) expect(parseFilter(id)).toBe(id);
+    expect(parseFilter(null)).toBe("all");
+    expect(parseFilter("drainers")).toBe("all");
+    expect(parseFilter("")).toBe("all");
   });
 
   it("keeps NovaSwap with the drainers (D-018)", () => {

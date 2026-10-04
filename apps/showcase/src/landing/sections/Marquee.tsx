@@ -26,7 +26,7 @@ function StaticList({ items }: { items: readonly string[] }): JSX.Element {
 
 /**
  * The checks under the hero: one heading, then the checks in rows that move
- * only while the reader scrolls, and a closed "See all 17 checks" disclosure
+ * only while the reader scrolls, and a closed "See the 17 checks" disclosure
  * that shows every check as static text. Reduced motion: a static list
  * (already complete, so no disclosure).
  */
