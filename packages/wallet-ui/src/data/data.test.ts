@@ -176,7 +176,7 @@ describe("the activity log", () => {
   });
 
   it("writes each row's sentence with short addresses and the rule's own label", () => {
-    expect(rowText(row(2))).toBe("Sent 2.50 MON to 0x4b1d\u20260c0d");
+    expect(rowText(row(2))).toBe("Sent 2.50 MON to 0x4b1d...0c0d");
     expect(rowText(row(6))).toBe("Signed with an override of Largest loss per request");
   });
 

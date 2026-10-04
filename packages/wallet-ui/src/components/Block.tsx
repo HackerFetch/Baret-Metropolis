@@ -1,3 +1,4 @@
+import { Reveal } from "@baret/web-ui/components/Reveal";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, type ReactNode, useId } from "react";
 
@@ -6,6 +7,10 @@ import { type JSX, type ReactNode, useId } from "react";
  * titled block on a strong hairline, rows of label and value on hairlines,
  * an empty state in a dashed frame, and a problem stated plainly (what
  * happened, what you can do). No boxes around running copy.
+ *
+ * A block's content rises once as it scrolls into view, the landing's surface
+ * enter (CSS Reveal: 460 ms, BRAND ease, off under reduced motion). The
+ * hairline stays put, so the page never shifts.
  */
 
 export function Block({
@@ -24,15 +29,17 @@ export function Block({
   return (
     <section
       aria-labelledby={id}
-      className={`grid content-start gap-5 border-t border-[color:var(--rule-strong)] pt-5 ${className ?? ""}`}
+      className={`grid content-start border-t border-[color:var(--rule-strong)] pt-5 ${className ?? ""}`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h2 id={id} className={`${T.h3} text-[color:var(--fg)]`}>
-          {title}
-        </h2>
-        {aside}
-      </div>
-      {children}
+      <Reveal className="grid content-start gap-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+          <h2 id={id} className={`${T.h3} text-[color:var(--fg)]`}>
+            {title}
+          </h2>
+          {aside}
+        </div>
+        {children}
+      </Reveal>
     </section>
   );
 }

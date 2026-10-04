@@ -1,4 +1,9 @@
-import { claimhub, launchpad, novaswap, orbityield } from "@baret/content";
+// Each demo site's content by file, not through the @baret/content barrel:
+// the store chunk loads on every wallet route and needs only the claims.
+import { claimhub } from "@baret/content/showcase/claimhub.content";
+import { launchpad } from "@baret/content/showcase/launchpad.content";
+import { novaswap } from "@baret/content/showcase/novaswap.content";
+import { orbityield } from "@baret/content/showcase/orbityield.content";
 // By file, not through the @baret/guard barrel: this module imports types
 // only, so zod stays out of the wallet's first chunk.
 import { BALANCED_POLICY } from "../../../guard/src/policy-templates.js";
@@ -194,7 +199,8 @@ export const PERMISSIONS: readonly Permission[] = [
     kind: "allowance",
     values: { spender: ADDRESS.novaswapRouter, amount: "50", asset: "USDC" },
   },
-  { id: "p3", kind: "agent", values: { count: "2" } },
+  // The count is filled from the vault's active merchants by the store.
+  { id: "p3", kind: "agent", values: {} },
   { id: "p4", kind: "site", values: { origin: "novaswap.example" } },
 ];
 
@@ -206,6 +212,9 @@ export const ALERTS: readonly Alert[] = [
   },
   { id: "al2", kind: "unlimitedOpen", values: { spender: ADDRESS.oldSpender, asset: "USDC" } },
 ];
+
+/** The alert the drift sample adds: something left the account unsigned. */
+export const DRIFT_ALERT: Alert = { id: "al-drift", kind: "drift", values: {} };
 
 export const VAULT: Vault = {
   address: ADDRESS.vault,
@@ -240,6 +249,15 @@ export const AGENT_PAYMENTS: readonly AgentPayment[] = [
   { id: "ap3", at: "2026-10-03T12:20:00Z", merchant: "scrybe.example", amount: "0.40" },
   { id: "ap4", at: "2026-10-03T10:07:00Z", merchant: "scrybe.example", amount: "0.50" },
 ];
+
+/** The empty sample's vault: deployed, with nothing in it and no agent key. */
+export const EMPTY_VAULT: Vault = {
+  address: ADDRESS.vault,
+  asset: "USDC",
+  balance: "0.00",
+  merchants: [],
+  agent: null,
+};
 
 /**
  * The four sample sign requests, one per verdict, each from one of the
