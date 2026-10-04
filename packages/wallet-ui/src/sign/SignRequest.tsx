@@ -31,8 +31,21 @@ import {
  * reach Baret, is the override, press and hold, written to the activity log.
  * The result replaces the whole screen.
  *
- * Sample requests run on timers that stand in for the server and the chain:
- * a short check, then the signing steps. Nothing is sent anywhere.
+ * The seam a live surface drives, every prop optional so the samples keep
+ * working as they are:
+ * - `pending`: true while Baret's answer is on its way. The screen shows
+ *   Checking with every decision button disabled; when it turns false the
+ *   verdict in `request` is shown and announced. Left out, a short timer
+ *   stands in for the check.
+ * - `onCheckAgain()`: Check again, under Can't reach Baret. It resolves with
+ *   the new request (data/analyze.ts `fromAnalyze`), which replaces the shown
+ *   one. Null, an unreachable request or a rejection keep the screen on
+ *   Can't reach Baret (fail-closed). Left out, the sample server stays down.
+ * - `onSign(outcome, sending)`: signs and sends once the reader decides
+ *   (after the passkey, when asked for). It calls `sending()` when the signed
+ *   transaction leaves, and resolves with its hash and block, which the
+ *   result and the log show. A rejection goes back to the decision. Left
+ *   out, timers stand in and the sample block is shown. Nothing is sent.
  */
 
 type Phase =
@@ -45,7 +58,13 @@ type Phase =
       readonly step: "passkey" | "signing" | "sending";
       readonly outcome: Outcome;
     }
-  | { readonly kind: "result"; readonly outcome: Outcome };
+  | { readonly kind: "result"; readonly outcome: Outcome; readonly block: string };
+
+/** What a live signature returns: the transaction and the block that took it. */
+export interface SignReceipt {
+  readonly hash: string;
+  readonly block: string;
+}
 
 /** The sample confirmation, as a block number. */
 const SAMPLE_BLOCK = "48212045";
@@ -67,7 +86,7 @@ const FOCUS_TARGET = "outline-none";
 
 /** The rules link's look, handed to whichever surface draws the link. */
 const RULES_LINK =
-  "w-max text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+  "inline-flex min-h-11 w-max items-center text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
 
 function Section({
   title,
@@ -162,10 +181,12 @@ function Verdict({
 
 function Result({
   outcome,
+  block,
   onAgain,
   againLabel,
 }: {
   outcome: Outcome;
+  block: string;
   onAgain?: () => void;
   againLabel: string;
 }): JSX.Element {
@@ -184,7 +205,7 @@ function Result({
       >
         {words.title}
       </p>
-      <p className={T.body}>{fill(words.body, { block: SAMPLE_BLOCK })}</p>
+      <p className={T.body}>{fill(words.body, { block })}</p>
       {onAgain ? (
         <div className="flex pt-2">
           <Button type="button" variant="ghost" onClick={onAgain}>
@@ -197,7 +218,10 @@ function Result({
 }
 
 export function SignRequest({
-  request,
+  request: given,
+  pending,
+  onCheckAgain,
+  onSign,
   onLog,
   onDone,
   onAgain,
@@ -212,6 +236,12 @@ export function SignRequest({
   compact = false,
 }: {
   request: Request;
+  /** True while Baret's answer is on its way; left out, a sample timer stands in. */
+  pending?: boolean;
+  /** Check again under Can't reach Baret: the new request, or null while still down. */
+  onCheckAgain?: () => Promise<Request | null>;
+  /** Signs and sends; calls `sending` when the transaction leaves. */
+  onSign?: (outcome: "sent" | "overridden", sending: () => void) => Promise<SignReceipt>;
   /** Writes the outcome to the account's log (Send also moves the balances). */
   onLog: (item: ActivityItem) => void;
   /** Called once with the outcome, after it is logged. */
@@ -242,6 +272,17 @@ export function SignRequest({
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
+  // A fresh answer from Check again replaces the request the surface passed.
+  const [fresh, setFresh] = useState<Request | null>(null);
+  const request = fresh ?? given;
+  // Live answers land after a wait: drop them once the screen is gone.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [stillDown, setStillDown] = useState(false);
   const [left, setLeft] = useState(request.expires);
@@ -282,38 +323,67 @@ export function SignRequest({
     return () => observer.disconnect();
   }, [compact]);
 
-  function finish(outcome: Outcome): void {
+  function finish(outcome: Outcome, receipt?: SignReceipt): void {
     if (outcome === "declined" && onDecline) {
       onDecline();
       return;
     }
-    onLog(logFor(request, outcome, new Date().toISOString(), SAMPLE_BLOCK));
-    setPhase({ kind: "result", outcome });
+    const block = receipt?.block ?? SAMPLE_BLOCK;
+    const item = logFor(request, outcome, new Date().toISOString(), block);
+    onLog(receipt ? { ...item, hash: receipt.hash } : item);
+    setPhase({ kind: "result", outcome, block });
     setSaid(sign.result[outcome].title);
     onDone?.(outcome);
   }
 
-  // The stand-in check: a short pause, then the verdict, announced once.
+  // The check: the surface's answer when it says so, else a short stand-in
+  // pause. Then the verdict, announced once.
   useEffect(() => {
-    if (phase.kind !== "checking") return;
-    const id = window.setTimeout(
-      () => {
-        setPhase({ kind: "review" });
-        setSaid(common.verdicts[request.verdict].aria);
-      },
-      reduce ? 0 : 700,
-    );
+    if (phase.kind !== "checking" || pending === true) return;
+    const reveal = () => {
+      setPhase({ kind: "review" });
+      setSaid(common.verdicts[request.verdict].aria);
+    };
+    if (pending === false) {
+      reveal();
+      return;
+    }
+    const id = window.setTimeout(reveal, reduce ? 0 : 700);
     return () => window.clearTimeout(id);
-  }, [phase, reduce, request.verdict]);
+  }, [phase, pending, reduce, request.verdict]);
 
-  // Check again, for Can't reach Baret: the sample server stays down.
+  function stayDown(): void {
+    setStillDown(true);
+    setPhase({ kind: "review" });
+    setSaid(sign.offline.stillDown);
+  }
+
+  // Check again, for Can't reach Baret: the surface's new answer, or the
+  // sample server that stays down. Anything but an answer stays down.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per retry.
   useEffect(() => {
     if (phase.kind !== "retrying") return;
-    const id = window.setTimeout(() => {
-      setStillDown(true);
-      setPhase({ kind: "review" });
-      setSaid(sign.offline.stillDown);
-    }, 900);
+    if (onCheckAgain) {
+      onCheckAgain().then(
+        (next) => {
+          if (!alive.current) return;
+          if (!next || next.verdict === "unreachable") {
+            stayDown();
+            return;
+          }
+          setFresh(next);
+          setLeft(next.expires);
+          setStillDown(false);
+          setPhase({ kind: "review" });
+          setSaid(common.verdicts[next.verdict].aria);
+        },
+        () => {
+          if (alive.current) stayDown();
+        },
+      );
+      return;
+    }
+    const id = window.setTimeout(stayDown, 900);
     return () => window.clearTimeout(id);
   }, [phase]);
 
@@ -321,6 +391,23 @@ export function SignRequest({
   // biome-ignore lint/correctness/useExhaustiveDependencies: finish reads the latest request.
   useEffect(() => {
     if (phase.kind !== "signing") return;
+    if (onSign && phase.step !== "passkey") {
+      // Live: the surface signs and sends; `sending` moves the status on.
+      if (phase.step !== "signing") return;
+      const outcome = phase.outcome;
+      if (outcome !== "sent" && outcome !== "overridden") return;
+      onSign(outcome, () => {
+        if (alive.current) setPhase({ kind: "signing", step: "sending", outcome });
+      }).then(
+        (receipt) => {
+          if (alive.current) finish(outcome, receipt);
+        },
+        () => {
+          if (alive.current) setPhase({ kind: "review" });
+        },
+      );
+      return;
+    }
     const next =
       phase.step === "passkey"
         ? () => setPhase({ ...phase, step: "signing" })
@@ -428,6 +515,7 @@ export function SignRequest({
           </h1>
           <Result
             outcome={phase.outcome}
+            block={phase.block}
             againLabel={againLabel ?? common.actions.back}
             {...(onAgain ? { onAgain } : {})}
           />
@@ -610,7 +698,7 @@ export function SignRequest({
 
               <Section title={sign.raw.title}>
                 <details className="group">
-                  <summary className="flex w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-11 w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
                     <span
                       aria-hidden="true"
                       className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"
