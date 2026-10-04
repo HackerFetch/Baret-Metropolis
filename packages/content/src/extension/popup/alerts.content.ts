@@ -59,6 +59,8 @@ export const alerts = {
   },
 
   actions: { markAllRead: "Mark all read", dismiss: "Dismiss" },
+  /** Read out before an alert that has not been seen yet. */
+  unread: "New",
 
   empty: {
     title: "No alerts",

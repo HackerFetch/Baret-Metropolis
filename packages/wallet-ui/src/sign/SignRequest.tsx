@@ -117,7 +117,15 @@ function Verdict({ request, checking }: { request: Request; checking: boolean })
   );
 }
 
-function Result({ outcome, onAgain }: { outcome: Outcome; onAgain?: () => void }): JSX.Element {
+function Result({
+  outcome,
+  onAgain,
+  againLabel,
+}: {
+  outcome: Outcome;
+  onAgain?: () => void;
+  againLabel: string;
+}): JSX.Element {
   const words = sign.result[outcome];
   return (
     <div className="grid gap-4 px-5 py-8 md:px-6">
@@ -128,7 +136,7 @@ function Result({ outcome, onAgain }: { outcome: Outcome; onAgain?: () => void }
       {onAgain ? (
         <div className="flex pt-2">
           <Button type="button" variant="ghost" onClick={onAgain}>
-            {common.actions.back}
+            {againLabel}
           </Button>
         </div>
       ) : null}
@@ -141,6 +149,7 @@ export function SignRequest({
   onLog,
   onDone,
   onAgain,
+  againLabel,
   onDecline,
   passkey = false,
   editRules,
@@ -157,6 +166,8 @@ export function SignRequest({
   onDone?: (outcome: Outcome) => void;
   /** Shown on the result: back to the form or the sample picker. */
   onAgain?: () => void;
+  /** The result's button; "Back" unless the surface has a better word (the next request). */
+  againLabel?: string;
   /** Decline without a result: the account's own transfer goes back to its form. */
   onDecline?: () => void;
   /** The wallet asks for the passkey before every signature when its setting says so. */
@@ -273,7 +284,11 @@ export function SignRequest({
         <p role="status" className="sr-only">
           {said}
         </p>
-        <Result outcome={phase.outcome} {...(onAgain ? { onAgain } : {})} />
+        <Result
+          outcome={phase.outcome}
+          againLabel={againLabel ?? common.actions.back}
+          {...(onAgain ? { onAgain } : {})}
+        />
       </article>
     );
   }
@@ -500,7 +515,7 @@ export function SignRequest({
       <footer
         className={
           compact
-            ? "sticky bottom-0 z-10 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-4 pb-5"
+            ? "sticky bottom-0 z-10 grid gap-2.5 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-3 pb-3"
             : "grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6"
         }
       >
@@ -626,7 +641,10 @@ export function SignRequest({
         )}
         {waiting ? (
           <div className="grid gap-1">
-            <p className={`font-mono text-sm text-[color:var(--fg)] ${T.num}`} aria-hidden="true">
+            <p
+              className={`font-mono ${compact ? "text-xs" : "text-sm"} text-[color:var(--fg)] ${T.num}`}
+              aria-hidden="true"
+            >
               {fill(sign.countdown.label, { seconds: String(left) })}
             </p>
             <p className={compact ? "sr-only" : T.small}>{sign.countdown.note}</p>

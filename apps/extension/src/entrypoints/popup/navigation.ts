@@ -21,8 +21,12 @@ export type Phase = "uninitialized" | "locked" | "ready" | "signing" | "connecti
 export const TABS = ["home", "activity", "allowances", "settings"] as const;
 export type Tab = (typeof TABS)[number];
 
-/** Screens that cover the tab content but keep the tab bar underneath. */
-export type Overlay = "send" | "receive" | "accounts" | null;
+/**
+ * Screens that cover the tab content but keep the tab bar underneath: the
+ * three from Home (send, receive, swap), the account switcher and the alerts,
+ * both opened from the top strip.
+ */
+export type Overlay = "send" | "receive" | "swap" | "accounts" | "alerts" | null;
 
 export interface PopupState {
   readonly phase: Phase;
@@ -99,7 +103,23 @@ export const OPTIONS_LINKS = {
 
 export type OptionsLink = keyof typeof OPTIONS_LINKS;
 
-/** Opens an options page route in a tab. The popup closes as it loses focus. */
-export function openOptions(link: OptionsLink): void {
-  void browser.tabs.create({ url: browser.runtime.getURL(`/${OPTIONS_LINKS[link]}`) });
+/**
+ * Opens an options page route in a tab. The popup closes as it loses focus.
+ * Outside the extension (the popup opened as a page for a preview) there is
+ * no tabs API, so the same page opens with window.open. `query` carries the
+ * sample scenario across (lib/start.ts).
+ */
+export function openOptions(link: OptionsLink, query = ""): void {
+  openOptionsPath(OPTIONS_LINKS[link].replace("options.html#", ""), query);
+}
+
+/** The same, for a route with a parameter: options.html#/sites/<origin>. */
+export function openOptionsPath(path: string, query = ""): void {
+  const target = `/options.html${query}#${path}`;
+  const api = typeof browser === "undefined" ? undefined : browser;
+  if (api?.tabs?.create && api.runtime?.getURL) {
+    void api.tabs.create({ url: api.runtime.getURL(target as "/options.html") });
+    return;
+  }
+  window.open(target, "_blank", "noopener");
 }
