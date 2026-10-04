@@ -33,7 +33,8 @@ export const IMG = {
     src: "/assets/landing/l-01.webp",
     width: 1536,
     height: 768,
-    avifSrcSet: avif("/assets/landing/l-01.webp"),
+    srcSet: widths("/assets/landing/l-01.webp", 1536, [768, 1024]),
+    avifSrcSet: avif(widths("/assets/landing/l-01.webp", 1536, [768, 1024])),
   },
   l06: {
     src: "/assets/landing/l-06.webp",
@@ -53,7 +54,8 @@ export const IMG = {
     width: 1536,
     height: 1024,
     ground: "#121212",
-    avifSrcSet: avif("/assets/landing/l-09.webp"),
+    srcSet: widths("/assets/landing/l-09.webp", 1536, [768, 1024]),
+    avifSrcSet: avif(widths("/assets/landing/l-09.webp", 1536, [768, 1024])),
   },
   /** Pillar 1, Pre-sign Guard: the site office (FILE l-12, chalk line art). */
   l12: {
@@ -133,9 +135,27 @@ export const IMG = {
  */
 export const SITE_ART = {
   novaswap: {
-    routes: { src: "/assets/showcase/s-04.webp", width: 1536, height: 864 },
-    safe: { src: "/assets/showcase/s-05.webp", width: 1536, height: 1024, ground: "#cfd0cb" },
-    danger: { src: "/assets/showcase/s-06.webp", width: 1536, height: 953, ground: "#f4f1e7" },
+    routes: {
+      src: "/assets/showcase/s-04.webp",
+      width: 1536,
+      height: 864,
+      ground: "#A39D92",
+      srcSet: widths("/assets/showcase/s-04.webp", 1536, [480, 768, 1024]),
+    },
+    safe: {
+      src: "/assets/showcase/s-05.webp",
+      width: 1536,
+      height: 1024,
+      ground: "#cfd0cb",
+      srcSet: widths("/assets/showcase/s-05.webp", 1536, [480, 768, 1024]),
+    },
+    danger: {
+      src: "/assets/showcase/s-06.webp",
+      width: 1536,
+      height: 953,
+      ground: "#f4f1e7",
+      srcSet: widths("/assets/showcase/s-06.webp", 1536, [480, 768, 1024]),
+    },
   },
   scrybe: {
     hero: {
@@ -143,21 +163,21 @@ export const SITE_ART = {
       width: 1536,
       height: 864,
       ground: "#080715",
-      srcSet: widths("/assets/showcase/s-01.webp", 1536, [480, 768]),
+      srcSet: widths("/assets/showcase/s-01.webp", 1536, [480, 768, 1024]),
     },
     safe: {
       src: "/assets/showcase/s-02.webp",
       width: 1536,
       height: 864,
       ground: "#1D1C1C",
-      srcSet: widths("/assets/showcase/s-02.webp", 1536, [480, 768]),
+      srcSet: widths("/assets/showcase/s-02.webp", 1536, [480, 768, 1024]),
     },
     danger: {
       src: "/assets/showcase/s-03.webp",
       width: 1536,
       height: 864,
       ground: "#161617",
-      srcSet: widths("/assets/showcase/s-03.webp", 1536, [480, 768]),
+      srcSet: widths("/assets/showcase/s-03.webp", 1536, [480, 768, 1024]),
     },
   },
   pixeldrop: {
@@ -166,7 +186,7 @@ export const SITE_ART = {
       width: 1536,
       height: 864,
       ground: "#0D0B19",
-      srcSet: widths("/assets/showcase/s-07.webp", 1536, [480, 768]),
+      srcSet: widths("/assets/showcase/s-07.webp", 1536, [480, 768, 1024]),
     },
     safe: {
       src: "/assets/showcase/s-08.webp",
@@ -180,7 +200,7 @@ export const SITE_ART = {
       width: 1254,
       height: 1254,
       ground: "#CDCAC3",
-      srcSet: widths("/assets/showcase/s-09.webp", 1254, [480, 768]),
+      srcSet: widths("/assets/showcase/s-09.webp", 1254, [480, 768, 1024]),
     },
   },
   orbityield: {
@@ -219,14 +239,14 @@ export const SITE_ART = {
       width: 1536,
       height: 1024,
       ground: "#E1DBD1",
-      srcSet: widths("/assets/showcase/s-14.webp", 1536, [480, 768]),
+      srcSet: widths("/assets/showcase/s-14.webp", 1536, [480, 768, 1024]),
     },
     danger: {
       src: "/assets/showcase/s-15.webp",
       width: 1254,
       height: 1254,
       ground: "#C8C5BD",
-      srcSet: widths("/assets/showcase/s-15.webp", 1254, [480, 768]),
+      srcSet: widths("/assets/showcase/s-15.webp", 1254, [480, 768, 1024]),
     },
   },
   launchpad: {
@@ -242,14 +262,14 @@ export const SITE_ART = {
       width: 1254,
       height: 1254,
       ground: "#CBC7BC",
-      srcSet: widths("/assets/showcase/s-17.webp", 1254, [480, 768]),
+      srcSet: widths("/assets/showcase/s-17.webp", 1254, [480, 768, 1024]),
     },
     danger: {
       src: "/assets/showcase/s-18.webp",
       width: 1254,
       height: 1254,
       ground: "#A3A19C",
-      srcSet: widths("/assets/showcase/s-18.webp", 1254, [480, 768]),
+      srcSet: widths("/assets/showcase/s-18.webp", 1254, [480, 768, 1024]),
     },
   },
 } as const satisfies Record<string, Record<string, ImgAsset>>;
@@ -264,7 +284,7 @@ export const HUB_ART = {
     width: 1254,
     height: 1254,
     ground: "#C9C4BB",
-    srcSet: widths("/assets/showcase/h-01.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/showcase/h-01.webp", 1254, [480, 768, 1024]),
   },
   /** A grid of squares with a few marked orange: many requests, a few flagged (FILE h-06). The filter's All six. */
   all: {
@@ -272,7 +292,7 @@ export const HUB_ART = {
     width: 1536,
     height: 864,
     ground: "#FBFBF8",
-    srcSet: widths("/assets/showcase/h-06.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/showcase/h-06.webp", 1536, [480, 768, 1024]),
   },
   /** Water running into a drain ringed in orange (FILE h-02). The filter's Drainers. */
   drainer: {
@@ -280,7 +300,7 @@ export const HUB_ART = {
     width: 1254,
     height: 1254,
     ground: "#ABA497",
-    srcSet: widths("/assets/showcase/h-02.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/showcase/h-02.webp", 1254, [480, 768, 1024]),
   },
   /** A tag beside a floor hatch (FILE h-03). The filter's Trust traps. */
   trap: {
@@ -288,7 +308,7 @@ export const HUB_ART = {
     width: 1448,
     height: 1086,
     ground: "#A39C90",
-    srcSet: widths("/assets/showcase/h-03.webp", 1448, [480, 768]),
+    srcSet: widths("/assets/showcase/h-03.webp", 1448, [480, 768, 1024]),
   },
   /** A drum counter with an orange pointer (FILE h-04). The filter's Silent agents. */
   agent: {
@@ -296,7 +316,7 @@ export const HUB_ART = {
     width: 1448,
     height: 1086,
     ground: "#A49E96",
-    srcSet: widths("/assets/showcase/h-04.webp", 1448, [480, 768]),
+    srcSet: widths("/assets/showcase/h-04.webp", 1448, [480, 768, 1024]),
   },
   /** Four line-art panels in one strip: plug, press, tag, frame (FILE h-05). Cropped one panel per step. */
   steps: { src: "/assets/showcase/h-05.webp", width: 1536, height: 864, ground: "#FCFAF8" },
@@ -306,7 +326,7 @@ export const HUB_ART = {
     width: 1536,
     height: 1024,
     ground: "#151415",
-    srcSet: widths("/assets/landing/l-17.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/landing/l-17.webp", 1536, [480, 768, 1024]),
   },
 } as const satisfies Record<string, ImgAsset>;
 
@@ -321,7 +341,7 @@ export const DOCS_ART = {
     width: 1254,
     height: 1254,
     ground: "#DFDCD2",
-    srcSet: widths("/assets/landing/l-33.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/landing/l-33.webp", 1254, [480, 768, 1024]),
   },
   /** Tags on a wire at a site, one fallen to the ground (FILE l-18). */
   limitations: {
@@ -329,7 +349,7 @@ export const DOCS_ART = {
     width: 1536,
     height: 1024,
     ground: "#B0AAA4",
-    srcSet: widths("/assets/landing/l-18.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/landing/l-18.webp", 1536, [480, 768, 1024]),
   },
   /** A site office window at night: plans on the desk, the crane outside (FILE d-04). */
   cta: {
@@ -349,7 +369,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1254,
     height: 1254,
     ground: "#F4F2EE",
-    srcSet: widths("/assets/docs/d-02a.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/docs/d-02a.webp", 1254, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02a.webp", 1254, [480, 768, 1024])),
   },
   /** Architecture: a tower in section. */
   "docs/ARCHITECTURE.md": {
@@ -358,6 +379,7 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     height: 1536,
     ground: "#F3F2EE",
     srcSet: widths("/assets/docs/d-02b.webp", 1024, [480, 768]),
+    avifSrcSet: avif(widths("/assets/docs/d-02b.webp", 1024, [480, 768])),
   },
   /** Wallet spec: a lockbox. */
   "docs/WALLET.md": {
@@ -365,7 +387,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EDEBE7",
-    srcSet: widths("/assets/docs/d-02c.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02c.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02c.webp", 1536, [480, 768, 1024])),
   },
   /** Frontend content: a shopfront. */
   "docs/FRONTEND.md": {
@@ -373,7 +396,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EEECE8",
-    srcSet: widths("/assets/docs/d-02d.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02d.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02d.webp", 1536, [480, 768, 1024])),
   },
   /** Contracts: a bolted plate. */
   "docs/CONTRACTS.md": {
@@ -381,7 +405,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EEECE8",
-    srcSet: widths("/assets/docs/d-02e.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02e.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02e.webp", 1536, [480, 768, 1024])),
   },
   /** x402 payments: a parking meter. */
   "docs/X402_FACILITATOR.md": {
@@ -389,7 +414,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EFEDE9",
-    srcSet: widths("/assets/docs/d-02f.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02f.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02f.webp", 1536, [480, 768, 1024])),
   },
   /** Resources: a toolbox. */
   "docs/RESOURCES.md": {
@@ -397,7 +423,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EEEDE9",
-    srcSet: widths("/assets/docs/d-02g.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02g.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02g.webp", 1536, [480, 768, 1024])),
   },
   /** Bounties and tracks: a rosette. */
   "docs/BOUNTIES_AND_TRACKS.md": {
@@ -406,6 +433,7 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     height: 1536,
     ground: "#EEECE8",
     srcSet: widths("/assets/docs/d-02h.webp", 1024, [480, 768]),
+    avifSrcSet: avif(widths("/assets/docs/d-02h.webp", 1024, [480, 768])),
   },
   /** Roadmap: a wall calendar. */
   "docs/ROADMAP.md": {
@@ -413,7 +441,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#F0EEEA",
-    srcSet: widths("/assets/docs/d-02i.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02i.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02i.webp", 1536, [480, 768, 1024])),
   },
   /** Decision log: a rubber stamp. */
   "docs/DECISIONS.md": {
@@ -421,7 +450,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1536,
     height: 1024,
     ground: "#EEECE8",
-    srcSet: widths("/assets/docs/d-02j.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/docs/d-02j.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02j.webp", 1536, [480, 768, 1024])),
   },
   /** Brand: a swatch fan. */
   "docs/BRAND.md": {
@@ -429,7 +459,8 @@ export const DOCS_CARD_ART: Readonly<Record<string, ImgAsset>> = {
     width: 1254,
     height: 1254,
     ground: "#EAE8E4",
-    srcSet: widths("/assets/docs/d-02k.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/docs/d-02k.webp", 1254, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/docs/d-02k.webp", 1254, [480, 768, 1024])),
   },
 };
 
@@ -444,6 +475,7 @@ export const INSTALL_ART = {
     height: 1024,
     ground: "#D6D7D8",
     srcSet: widths("/assets/install/i-01.webp", 1536, [768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-01.webp", 1536, [768, 1024])),
   },
   /** A crate opened on a hard hat: extract the zip (FILE i-03). */
   extract: {
@@ -451,7 +483,8 @@ export const INSTALL_ART = {
     width: 1536,
     height: 1024,
     ground: "#E6E4E1",
-    srcSet: widths("/assets/install/i-03.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/install/i-03.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-03.webp", 1536, [480, 768, 1024])),
   },
   /** A fence gate swung open: open the extensions page (FILE i-04). */
   open: {
@@ -459,7 +492,8 @@ export const INSTALL_ART = {
     width: 1536,
     height: 1024,
     ground: "#E3E1DA",
-    srcSet: widths("/assets/install/i-04.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/install/i-04.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-04.webp", 1536, [480, 768, 1024])),
   },
   /** A hand hanging a hard hat on a hook rail: load it and pin it (FILE i-05). */
   load: {
@@ -467,7 +501,8 @@ export const INSTALL_ART = {
     width: 1536,
     height: 1024,
     ground: "#DEDACF",
-    srcSet: widths("/assets/install/i-05.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/install/i-05.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-05.webp", 1536, [480, 768, 1024])),
   },
   /** Cutters taking a tag off its wire: when something goes wrong (FILE i-06). */
   help: {
@@ -475,7 +510,8 @@ export const INSTALL_ART = {
     width: 1536,
     height: 1024,
     ground: "#6D6258",
-    srcSet: widths("/assets/install/i-06.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/install/i-06.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-06.webp", 1536, [480, 768, 1024])),
   },
   /** A blank tag on black (FILE i-02). */
   cta: {
@@ -483,7 +519,8 @@ export const INSTALL_ART = {
     width: 1536,
     height: 1024,
     ground: "#1C1C1B",
-    srcSet: widths("/assets/install/i-02.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/install/i-02.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/install/i-02.webp", 1536, [480, 768, 1024])),
   },
 } as const satisfies Record<string, ImgAsset>;
 
@@ -498,6 +535,7 @@ export const AGENTS_ART = {
     height: 1024,
     ground: "#2F275B",
     srcSet: widths("/assets/agents/a-01.webp", 1536, [768, 1024]),
+    avifSrcSet: avif(widths("/assets/agents/a-01.webp", 1536, [768, 1024])),
   },
   /** A press drawn as a plan, a gauge on its line: measured before it acts (FILE a-05). */
   check: {
@@ -505,7 +543,8 @@ export const AGENTS_ART = {
     width: 1536,
     height: 1024,
     ground: "#F1F0EC",
-    srcSet: widths("/assets/agents/a-05.webp", 1536, [480, 768]),
+    srcSet: widths("/assets/agents/a-05.webp", 1536, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/agents/a-05.webp", 1536, [480, 768, 1024])),
   },
   /** An open toolbox with a hard hat inside: the kit that wraps the signer (FILE a-02). */
   signer: {
@@ -513,7 +552,8 @@ export const AGENTS_ART = {
     width: 1254,
     height: 1254,
     ground: "#C9C6BC",
-    srcSet: widths("/assets/agents/a-02.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/agents/a-02.webp", 1254, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/agents/a-02.webp", 1254, [480, 768, 1024])),
   },
   /** A covered switch with a tag: caps and the kill switch (FILE a-04). */
   vault: {
@@ -521,7 +561,8 @@ export const AGENTS_ART = {
     width: 1254,
     height: 1254,
     ground: "#CFCBC3",
-    srcSet: widths("/assets/agents/a-04.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/agents/a-04.webp", 1254, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/agents/a-04.webp", 1254, [480, 768, 1024])),
   },
   /** A gloved hand picking one of three tags: pick a starting policy (FILE a-03). */
   policy: {
@@ -529,7 +570,8 @@ export const AGENTS_ART = {
     width: 1254,
     height: 1254,
     ground: "#C9C6BC",
-    srcSet: widths("/assets/agents/a-03.webp", 1254, [480, 768]),
+    srcSet: widths("/assets/agents/a-03.webp", 1254, [480, 768, 1024]),
+    avifSrcSet: avif(widths("/assets/agents/a-03.webp", 1254, [480, 768, 1024])),
   },
   /** A tag on a closed shutter: no answer, no signature (FILE a-06). */
   cta: {
@@ -538,6 +580,7 @@ export const AGENTS_ART = {
     height: 1536,
     ground: "#2D2D2D",
     srcSet: widths("/assets/agents/a-06.webp", 1024, [480, 768]),
+    avifSrcSet: avif(widths("/assets/agents/a-06.webp", 1024, [480, 768])),
   },
 } as const satisfies Record<string, ImgAsset>;
 

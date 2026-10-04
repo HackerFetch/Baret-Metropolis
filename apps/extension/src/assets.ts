@@ -8,8 +8,11 @@
  * in @baret/web-ui (lib/img).
  *
  * The smaller copies were made from assets-raw with `cwebp -q 82 -resize
- * <width> 0`: 480 and 768 px for every picture, and 160, 320 and 480 px for
- * the four verdict tags, which the popup shows small.
+ * <width> 0`: 480, 768 and 1152 px for every picture, and 160, 320 and 480 px
+ * for the four verdict tags, which the popup shows small.
+ *
+ * The widest well is 380 px, so a DPR 3 screen needs 1152 px at most: the
+ * 1152 copy stands in for the 1536 px original, which no page asks for.
  */
 
 import { type ImgAsset, widths } from "@baret/web-ui/lib/img";
@@ -18,15 +21,25 @@ export type { ImgAsset } from "@baret/web-ui/lib/img";
 
 const E = "/assets/extension/";
 
+/** The widest copy a well needs (380 px at DPR 3). */
+const TOP = 1152;
+
 function art(
   id: string,
   width: number,
   height: number,
   ground: string,
-  sizes: readonly number[] = [480, 768],
+  sizes?: readonly number[],
 ): ImgAsset {
-  const src = `${E}${id}.webp`;
-  return { src, width, height, ground, srcSet: widths(src, width, sizes) };
+  // The verdict tags pass their own small sizes and keep the 1024 px original.
+  if (sizes) {
+    const src = `${E}${id}.webp`;
+    return { src, width, height, ground, srcSet: widths(src, width, sizes) };
+  }
+  const copies = [480, 768].map((w) => `${E}${id}-w${w}.webp ${w}w`).join(", ");
+  const src = `${E}${id}-w${TOP}.webp`;
+  const scaled = Math.round((height * TOP) / width);
+  return { src, width: TOP, height: scaled, ground, srcSet: `${copies}, ${src} ${TOP}w` };
 }
 
 /** Setup, one picture per step (FILE e-01 to e-08). */
