@@ -73,15 +73,24 @@ describe("buildHref", () => {
   });
 });
 
+/**
+ * One test per route, each with its own budget. A single test that imported
+ * every page cold (guard, zod, the content, every demo site) ran close to the
+ * default 5 s timeout and failed now and then on a busy machine (K7).
+ */
+const LOAD_TIMEOUT = 30_000;
+
 describe("page modules", () => {
-  it("every route loads", async () => {
-    for (const [key, route] of Object.entries(routes)) {
+  it.each(Object.entries(routes))(
+    "%s loads and exports a Component",
+    async (key, route) => {
       const module = await route.load();
       expect(module, `${key} exported nothing`).toBeTruthy();
       expect(
         (module as { Component?: unknown }).Component,
         `${key} has no Component export, so the router cannot render it`,
       ).toBeTypeOf("function");
-    }
-  });
+    },
+    LOAD_TIMEOUT,
+  );
 });
