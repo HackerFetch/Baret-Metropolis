@@ -1,11 +1,12 @@
-import { common, walletFrame } from "@baret/content";
-import { Tag } from "@baret/ui/primitives/Tag";
-import { WalletProvider } from "@baret/wallet-ui/data/store";
+import { walletFrame } from "@baret/content";
+import { useWallet, WalletProvider } from "@baret/wallet-ui/data/store";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
-import { T } from "@baret/web-ui/lib/type";
-import { Link, Outlet, ScrollRestoration, useLocation, useRouteError } from "react-router";
+import type { JSX } from "react";
+import { Outlet, ScrollRestoration, useLocation, useMatches } from "react-router";
 import { routes } from "../routes.js";
+import * as AppLayout from "./AppLayout.js";
+import { Locked } from "./Locked.js";
 
 /**
  * The shell around every wallet screen, the request windows and setup
@@ -13,51 +14,86 @@ import { routes } from "../routes.js";
  * the reduced-motion switch), scroll restoration, the signature layer shared
  * with the showcase (packages/web-ui), and the wallet's state (data/store).
  *
- * The eyelet cursor runs everywhere. Lenis smooths the wheel everywhere
- * except the two request windows, /sign and /connect: there the reader has to
- * land exactly on a finding or on Decline, so the native scroll stays.
- * Keyed by path, so each screen starts it fresh. Under reduced motion,
- * neither runs (Signature checks the media queries itself).
+ * The eyelet cursor and Lenis run on every screen except the two request
+ * windows, /sign and /connect: there the reader has to land exactly on a
+ * finding or on Decline, with the platform's own pointer and scroll
+ * (Signature's `quiet`). Signature is mounted once, never keyed by path, so a
+ * navigation does not tear the cursor down. Under reduced motion, neither
+ * runs (Signature checks the media queries itself).
+ *
+ * A locked wallet answers a request window with the lock screen, never the
+ * request: fail-closed. Unlocking shows the request; declining needs no unlock.
  */
 
-/** The request windows a site opens. They keep the platform's own scroll. */
+/** The request windows a site opens. */
 const REQUEST_PATHS: ReadonlySet<string> = new Set([routes.sign.path, routes.connect.path]);
 
-export function Component() {
+/** The screens that render outside the sidebar layout (router.tsx). */
+const STANDALONE_PATHS: ReadonlySet<string> = new Set(
+  Object.values(routes)
+    .filter((route) => route.group === "popup" || route.group === "setup")
+    .map((route) => route.path),
+);
+
+/** The path without a trailing slash, so /send/ reads as /send. */
+function clean(pathname: string): string {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+}
+
+/** The title the deepest matched route carries in its handle (router.tsx). */
+function useTitle(): string {
+  const matches = useMatches();
+  for (let i = matches.length - 1; i >= 0; i -= 1) {
+    const handle = matches[i]?.handle as { title?: string } | undefined;
+    if (handle?.title) return handle.title;
+  }
+  return routes.home.title;
+}
+
+/** A request window behind the lock shows the lock screen instead. */
+function Gate({ request }: { request: boolean }): JSX.Element {
+  const { state, dispatch } = useWallet();
+  if (request && state.locked) {
+    return <Locked request onUnlock={() => dispatch({ type: "unlock" })} />;
+  }
+  return <Outlet />;
+}
+
+export function Component(): JSX.Element {
   const { pathname } = useLocation();
-  // React 19 hoists a <title> rendered anywhere into the head.
-  const match = Object.values(routes).find((route) => route.path === pathname);
+  const request = REQUEST_PATHS.has(clean(pathname));
+  const title = useTitle();
   return (
     <LandingMotion>
-      <title>{match?.title ?? routes.notFound.title}</title>
+      {/* React 19 hoists a <title> rendered anywhere into the head. */}
+      <title>{title}</title>
       <ScrollRestoration />
-      <Signature key={pathname} smoothScroll={!REQUEST_PATHS.has(pathname)} />
+      <Signature quiet={request} />
       {/* The account and everything done with it, shared by every screen (data/store). */}
       <WalletProvider name={walletFrame.sampleData.accountName}>
-        <Outlet />
+        <Gate request={request} />
       </WalletProvider>
     </LandingMotion>
   );
 }
 
-/** A screen that failed to load: what happened, then the way back. */
-export function ErrorBoundary() {
-  const error = useRouteError();
-  const { unknown } = common.errors;
+/**
+ * What paints while the first screen's chunk loads: the app frame (sidebar or
+ * top bar, and the sample notice) on an app screen, the bare ground on a
+ * request or setup screen. AppLayout is imported statically for this, so the
+ * frame arrives with the entry instead of one lazy hop later.
+ */
+export function HydrateFallback(): JSX.Element {
+  const path = clean(useLocation().pathname);
+  const match = Object.values(routes).find((route) => route.path === path);
   return (
-    <main className="mx-auto grid min-h-dvh max-w-[640px] content-center gap-4 px-4 py-24 md:px-8">
-      <title>{unknown.title}</title>
-      <div className="flex">
-        <Tag tone="blocked">{unknown.tag}</Tag>
-      </div>
-      <h1 className={`${T.h2} text-[color:var(--fg)]`}>{unknown.heading}</h1>
-      <p className={T.body}>{error instanceof Error ? error.message : unknown.body}</p>
-      <Link
-        to={routes.home.path}
-        className="chamfer-sm inline-flex h-11 w-max items-center border border-[color:var(--fg)] px-4 font-display text-base font-extrabold uppercase tracking-[0.08em] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
-      >
-        {unknown.back}
-      </Link>
-    </main>
+    <LandingMotion>
+      <title>{match?.title ?? routes.notFound.title}</title>
+      <WalletProvider name={walletFrame.sampleData.accountName}>
+        {STANDALONE_PATHS.has(path) ? null : <AppLayout.Component />}
+      </WalletProvider>
+    </LandingMotion>
   );
 }
+
+export { ErrorBoundary } from "./RouteError.js";

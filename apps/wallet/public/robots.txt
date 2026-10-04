@@ -1,0 +1,3 @@
+# The wallet is an app, not a site: nothing here belongs in search.
+User-agent: *
+Disallow: /

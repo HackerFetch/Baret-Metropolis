@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Baret Wallet</title>
+    <!-- An app, not a site: kept out of search, like public/robots.txt. -->
+    <meta name="robots" content="noindex, nofollow" />
     <meta name="description" content="A Monad wallet that reads every transaction before you sign it. No recovery phrase, just a passkey." />
     <!--
       The ground before the first CSS byte, so no white frame flashes:
@@ -26,7 +28,9 @@
         }
       }
     </style>
-    <meta name="theme-color" content="#17181b" />
+    <!-- The browser bar follows the ground: graphite, or concrete in light. -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#17181b" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e6e6e1" />
     <link rel="icon" type="image/svg+xml" href="/mark.svg" />
     <!--
       Self-hosted faces, shared with the showcase (packages/web-ui, served at
@@ -44,7 +48,12 @@
     <script>
       try {
         const stored = localStorage.getItem("baret.theme");
-        if (stored === "dark" || stored === "light") document.documentElement.dataset.theme = stored;
+        if (stored === "dark" || stored === "light") {
+          document.documentElement.dataset.theme = stored;
+          // A chosen theme wins over the system one in the browser bar too.
+          const color = stored === "light" ? "#e6e6e1" : "#17181b";
+          for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.content = color;
+        }
       } catch {}
     </script>
   </head>

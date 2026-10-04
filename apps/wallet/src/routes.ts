@@ -1,4 +1,8 @@
+import { walletFrame } from "@baret/content";
 import { defineRoutes } from "@baret/routes";
+
+const { titles } = walletFrame.meta;
+const { labels } = walletFrame.nav;
 
 /**
  * Every screen the standalone wallet serves.
@@ -7,61 +11,63 @@ import { defineRoutes } from "@baret/routes";
  *   app      inside the sidebar layout, and listed in the sidebar
  *   popup    opened in its own window by a dApp, so no sidebar and no nav
  *   setup    full screen, one step at a time, no way out until it is done
+ *
+ * Titles and labels are copy, so they live in packages/content (walletFrame).
  */
 export const routes = defineRoutes({
   home: {
     path: "/",
-    title: "Baret Wallet",
-    label: "Home",
+    title: titles.home,
+    label: labels.home,
     group: "app",
     load: () => import("./pages/HomePage.js"),
   },
   send: {
     path: "/send",
-    title: "Send",
-    label: "Send",
+    title: titles.send,
+    label: labels.send,
     group: "app",
     load: () => import("./pages/SendPage.js"),
   },
   receive: {
     path: "/receive",
-    title: "Receive",
-    label: "Receive",
+    title: titles.receive,
+    label: labels.receive,
     group: "app",
     load: () => import("./pages/ReceivePage.js"),
   },
   history: {
     path: "/history",
-    title: "Activity",
-    label: "Activity",
+    title: titles.history,
+    label: labels.history,
     group: "app",
     load: () => import("./pages/HistoryPage.js"),
   },
   policies: {
     path: "/policies",
-    title: "Your rules",
-    label: "Rules",
+    title: titles.policies,
+    label: labels.policies,
     group: "app",
     load: () => import("./pages/PoliciesPage.js"),
   },
   delegation: {
     path: "/agents",
-    title: "Agent delegation",
-    label: "Agents",
+    title: titles.delegation,
+    label: labels.delegation,
     group: "app",
     load: () => import("./pages/DelegationPage.js"),
   },
   settings: {
     path: "/settings",
-    title: "Settings",
-    label: "Settings",
+    title: titles.settings,
+    label: labels.settings,
     group: "app",
     load: () => import("./pages/SettingsPage.js"),
   },
 
   onboarding: {
     path: "/onboarding",
-    title: "Set up your wallet",
+    title: titles.onboarding,
     group: "setup",
     hidden: true,
     load: () => import("./pages/OnboardingPage.js"),
@@ -69,14 +75,14 @@ export const routes = defineRoutes({
 
   connect: {
     path: "/connect",
-    title: "Connection request",
+    title: titles.connect,
     group: "popup",
     hidden: true,
     load: () => import("./pages/ConnectPage.js"),
   },
   sign: {
     path: "/sign",
-    title: "Sign request",
+    title: titles.sign,
     group: "popup",
     hidden: true,
     load: () => import("./pages/SignPage.js"),
@@ -84,7 +90,7 @@ export const routes = defineRoutes({
 
   notFound: {
     path: "/*",
-    title: "Not found",
+    title: titles.notFound,
     hidden: true,
     load: () => import("./pages/NotFoundPage.js"),
   },
