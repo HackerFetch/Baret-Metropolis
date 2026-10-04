@@ -4,6 +4,7 @@ import { Brand } from "@baret/wallet-ui/components/Brand";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, type ReactNode, useId } from "react";
+import { useLocation } from "react-router";
 import { SampleNotice } from "../components/SampleNotice.js";
 
 /**
@@ -28,6 +29,8 @@ export function SamplePicker<V extends string>({
   onChange: (value: V) => void;
 }): JSX.Element {
   const name = useId();
+  // The connect picker samples sites, not verdicts, so it gets its own note.
+  const connect = useLocation().pathname.replace(/\/+$/, "").endsWith("/connect");
   return (
     <fieldset className="grid gap-3">
       <legend className={T.label}>{walletFrame.samples.legend}</legend>
@@ -46,7 +49,9 @@ export function SamplePicker<V extends string>({
           />
         ))}
       </div>
-      <p className={T.small}>{walletFrame.samples.note}</p>
+      <p className={T.small}>
+        {connect ? walletFrame.samples.noteConnect : walletFrame.samples.note}
+      </p>
     </fieldset>
   );
 }

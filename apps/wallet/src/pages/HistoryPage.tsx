@@ -38,6 +38,9 @@ function download(csv: string): void {
 /** The explorer's base address, for a transaction hash. */
 const EXPLORER = walletFrame.links.explorer;
 
+/** Only a full transaction hash gets an explorer link; anything else would open a dead page. */
+const TX_HASH = /^0x[0-9a-fA-F]{64}$/;
+
 /** A rule's value when the item happened: the earliest later change holds what it was. */
 function valueAt(
   field: GuardPolicyField,
@@ -70,14 +73,16 @@ function Details({
             value: (
               <span className="inline-flex flex-wrap items-center gap-x-4">
                 <code className="font-mono">{truncateAddress(item.hash)}</code>
-                <a
-                  href={`${EXPLORER}/tx/${item.hash}`}
-                  rel="noreferrer"
-                  target="_blank"
-                  className="inline-flex min-h-11 items-center underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
-                >
-                  {history.detail.explorer}
-                </a>
+                {TX_HASH.test(item.hash) ? (
+                  <a
+                    href={`${EXPLORER}/tx/${item.hash}`}
+                    rel="noreferrer"
+                    target="_blank"
+                    className="inline-flex min-h-11 items-center underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
+                  >
+                    {history.detail.explorer}
+                  </a>
+                ) : null}
               </span>
             ),
           },

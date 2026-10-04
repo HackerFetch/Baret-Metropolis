@@ -173,7 +173,7 @@ export function Component() {
               {(["form", "json"] as const).map((id) => (
                 <label
                   key={id}
-                  className="relative flex h-11 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)]"
+                  className="relative flex h-11 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] forced-color-adjust-none forced-colors:text-[CanvasText] forced-colors:has-[:checked]:bg-[Highlight] forced-colors:has-[:checked]:text-[HighlightText] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)]"
                 >
                   <input
                     type="radio"
