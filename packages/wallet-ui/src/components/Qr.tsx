@@ -7,6 +7,13 @@ import { encode } from "../lib/qr.js";
  * modules on light, and an inverted code fails on many of them. Decorative
  * for assistive tech: the text it encodes sits right beside it.
  */
+/**
+ * The light plate, as its own literal: a class glued to a template
+ * placeholder ("...]${") is invisible to Tailwind's scanner, and the plate
+ * then never paints, which leaves a dark code on the dark theme's ground.
+ */
+const PLATE = "block bg-[#f4f2ec]";
+
 export function Qr({ text, className }: { text: string; className?: string }): JSX.Element | null {
   const code = encode(text);
   if (!code) return null;
@@ -23,7 +30,7 @@ export function Qr({ text, className }: { text: string; className?: string }): J
       aria-hidden="true"
       viewBox={`0 0 ${view} ${view}`}
       shapeRendering="crispEdges"
-      className={`block bg-[#f4f2ec]${className ? ` ${className}` : ""}`}
+      className={className ? `${PLATE} ${className}` : PLATE}
     >
       <path d={d} fill="#16171a" />
     </svg>

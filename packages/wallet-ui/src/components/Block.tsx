@@ -24,7 +24,7 @@ export function Block({
   return (
     <section
       aria-labelledby={id}
-      className={`grid content-start gap-5 border-t border-[color:var(--rule-strong)] pt-5${className ? ` ${className}` : ""}`}
+      className={`grid content-start gap-5 border-t border-[color:var(--rule-strong)] pt-5 ${className ?? ""}`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 id={id} className={`${T.h3} text-[color:var(--fg)]`}>
