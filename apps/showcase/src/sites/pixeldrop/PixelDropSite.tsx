@@ -101,7 +101,7 @@ export function PixelDropSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {page ? (
           <SiteViewPage view={page} note={site.pages.sampleNote} faqName="pixeldrop-page-faq" />
         ) : (

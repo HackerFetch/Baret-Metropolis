@@ -113,7 +113,7 @@ export function NovaSwapSite(): JSX.Element {
         onConnect={() => setConnected(true)}
       />
 
-      <main key={view}>
+      <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
         {view === "pools" ? <PoolsPage onSwap={() => go("swap")} /> : null}
         {view === "stats" ? <StatsPage /> : null}
         {view === "docs" ? <DocsPage /> : null}

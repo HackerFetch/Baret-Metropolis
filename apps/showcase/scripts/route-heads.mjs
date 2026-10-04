@@ -52,6 +52,12 @@ export function unlistedRoutes(source) {
     .map(({ key, path, title, module }) => ({ key, path, title, module }));
 }
 
+/** The manifest key of a route's content file (router.tsx HEAD): the hub's is hub. */
+function contentKey(routeKey) {
+  const name = routeKey === "showcase" ? "hub" : routeKey;
+  return `../../packages/content/src/showcase/${name}.content.ts`;
+}
+
 /** Every manifest key `key` reaches through static imports, itself included. */
 function closure(manifest, key, seen = new Set()) {
   if (seen.has(key) || !manifest[key]) return seen;
@@ -66,12 +72,17 @@ function closure(manifest, key, seen = new Set()) {
  * round trip after another on a slow phone. The entry's own chunks are
  * already in the shell, so they are left out.
  */
-function chunkPreloads(manifest, module) {
+function chunkPreloads(manifest, module, routeKey) {
   const key = ["tsx", "ts"].map((ext) => `src/${module}.${ext}`).find((k) => manifest[k]);
   if (!key) throw new Error(`route-heads: src/${module} is not in the build manifest`);
   const entry = Object.keys(manifest).find((k) => manifest[k].isEntry);
   const shell = closure(manifest, entry);
-  const own = [...closure(manifest, key)].filter((k) => !shell.has(k));
+  // router.tsx loads the page's head (its content file) next to the page
+  // and waits for both, so that chunk is preloaded too when it has one.
+  const reach = closure(manifest, key);
+  const content = manifest[contentKey(routeKey)] ? contentKey(routeKey) : null;
+  if (content) closure(manifest, content, reach);
+  const own = [...reach].filter((k) => !shell.has(k));
   const shellCss = new Set([...shell].flatMap((k) => manifest[k].css ?? []));
   const css = [...new Set(own.flatMap((k) => manifest[k].css ?? []))].filter(
     (f) => !shellCss.has(f),
@@ -125,11 +136,11 @@ export async function writeRouteHeads({
   };
   for (const route of routes) {
     const own = descriptions?.[route.key] ?? description;
-    const preload = chunkPreloads(manifest, route.module);
+    const preload = chunkPreloads(manifest, route.module, route.key);
     await write(route, headFor({ ...route, description: own, site, preload }));
   }
   for (const route of unlistedRoutes(source)) {
-    const preload = chunkPreloads(manifest, route.module);
+    const preload = chunkPreloads(manifest, route.module, route.key);
     const own = heads?.[route.key] ?? { title: route.title, description };
     await write(route, headFor({ ...route, ...own, site, noindex: true, preload }));
   }

@@ -179,25 +179,27 @@ function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {
       </Fill>
       <dl className="grid border-t border-[color:var(--rule-strong)] md:grid-cols-2">
         {view.items.map((item, i) => (
+          // A group holds only its dt and dd (valid HTML for a dl): the swatch
+          // sits inside the dt, and the dd is indented to the label.
           <div
             key={item.label}
-            className={`grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-b border-[color:var(--rule)] py-5 ${i % 2 === 1 ? "md:border-l md:pl-6" : "md:pr-6"}`}
+            className={`grid gap-y-1 border-b border-[color:var(--rule)] py-5 ${i % 2 === 1 ? "md:border-l md:pl-6" : "md:pr-6"}`}
           >
-            <span
-              aria-hidden="true"
-              className={`mt-2 size-3 ${SHARE_FILL[i % SHARE_FILL.length]}`}
-            />
-            <div className="grid gap-1">
-              <dt className="flex items-baseline justify-between gap-4">
+            <dt className="flex items-baseline gap-4">
+              <span
+                aria-hidden="true"
+                className={`size-3 shrink-0 self-start mt-2 ${SHARE_FILL[i % SHARE_FILL.length]}`}
+              />
+              <span className="flex flex-1 items-baseline justify-between gap-4">
                 <span className={`${T.h3} text-[color:var(--fg)]`}>{item.label}</span>
                 <span
                   className={`${T.num} font-display text-2xl font-extrabold text-[color:var(--fg)]`}
                 >
                   {item.value}%
                 </span>
-              </dt>
-              <dd className={T.body}>{item.body}</dd>
-            </div>
+              </span>
+            </dt>
+            <dd className={`${T.body} pl-7`}>{item.body}</dd>
           </div>
         ))}
       </dl>

@@ -130,7 +130,8 @@ export function SiteHeader<V extends string>({
       <p aria-live="polite" className="sr-only">
         {said}
       </p>
-      <div className={`${FRAME} flex h-16 items-center justify-between gap-6`}>
+      {/* The smaller gap below 360 px keeps the brand and Connect wallet on one 320 px row. */}
+      <div className={`${FRAME} flex h-16 items-center justify-between gap-3 min-[360px]:gap-6`}>
         <Link
           to={{ pathname, search: "" }}
           onClick={(event) => {
