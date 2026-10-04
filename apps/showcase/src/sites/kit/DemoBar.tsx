@@ -35,24 +35,29 @@ export function DemoBar({
       className="border-b border-[color:var(--rule)] bg-[color:var(--surface)] text-[color:var(--fg)]"
     >
       <div className="mx-auto flex w-full max-w-[1276px] flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 md:px-8 lg:px-12">
-        <Link to={frame.back.href} className="shrink-0" aria-label={frame.back.label}>
+        {/* The visible pill starts the link's name (label in name), and the
+            hidden rest says where it goes. */}
+        <Link to={frame.back.href} className="inline-flex min-h-11 shrink-0 items-center">
           <Tag tone="brand" size="sm">
             {frame.pill}
           </Tag>
+          <span className="sr-only">{`, ${frame.back.label}`}</span>
         </Link>
 
         <fieldset className="flex shrink-0 border border-[color:var(--control-edge)]">
           <legend className="sr-only">{frame.toggle.legend}</legend>
           {(["safe", "danger"] as const).map((value) => {
             const on = mode === value;
+            // The ink shades keep the light label at 4.5:1 or more on the
+            // fill; in dark they equal the state colours.
             const tone =
               value === "safe"
-                ? "has-[:checked]:bg-[color:var(--safe)]"
-                : "has-[:checked]:bg-[color:var(--blocked)]";
+                ? "has-[:checked]:bg-[color:var(--safe-ink)]"
+                : "has-[:checked]:bg-[color:var(--blocked-ink)]";
             return (
               <label
                 key={value}
-                className={`relative flex h-10 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] has-[:checked]:text-[color:var(--surface)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)] ${tone} ${on ? "" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`}
+                className={`relative flex h-11 cursor-pointer items-center px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] has-[:checked]:text-[color:var(--surface)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)] forced-colors:forced-color-adjust-none forced-colors:bg-[Canvas] forced-colors:text-[CanvasText] forced-colors:has-[:checked]:bg-[Highlight] forced-colors:has-[:checked]:text-[HighlightText] forced-colors:has-[:focus-visible]:outline-[CanvasText] ${tone} ${on ? "" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`}
               >
                 <input
                   type="radio"

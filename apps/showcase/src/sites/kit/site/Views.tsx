@@ -3,7 +3,7 @@ import { Reveal } from "@baret/web-ui/components/Reveal";
 import { GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
-import { BarChart, PageFrame, PageHead, Totals } from "./Page.js";
+import { BarChart, Fill, PageFrame, PageHead, Totals } from "./Page.js";
 import { FaqList } from "./Sections.js";
 
 /**
@@ -117,9 +117,18 @@ function DocsView({ view }: { view: Of<"docs"> }): JSX.Element {
             </h2>
             <p className={`${T.body} max-w-[64ch]`}>{section.body}</p>
             {section.code ? (
-              <pre className="overflow-x-auto border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm">
-                <code>{section.code}</code>
-              </pre>
+              <>
+                {/* biome-ignore lint/a11y/useSemanticElements: the code box is a named region and keeps pre whitespace. */}
+                <pre
+                  // biome-ignore lint/a11y/noNoninteractiveTabindex: the code scrolls sideways, so the keyboard must reach it.
+                  tabIndex={0}
+                  role="region"
+                  aria-label={section.title}
+                  className="overflow-x-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-4 py-3 font-mono text-[13px] leading-relaxed text-[color:var(--fg)] md:text-sm"
+                >
+                  <code>{section.code}</code>
+                </pre>
+              </>
             ) : null}
           </Reveal>
         ))}
@@ -159,7 +168,7 @@ const SHARE_FILL = [
 function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {
   return (
     <Reveal className="grid gap-8">
-      <div aria-hidden="true" className="flex h-12 gap-0.5 md:h-16">
+      <Fill axis="x" aria-hidden className="flex h-12 gap-0.5 md:h-16">
         {view.items.map((item, i) => (
           <span
             key={item.label}
@@ -167,7 +176,7 @@ function SharesView({ view }: { view: Of<"shares"> }): JSX.Element {
             style={{ width: `${item.value}%` }}
           />
         ))}
-      </div>
+      </Fill>
       <dl className="grid border-t border-[color:var(--rule-strong)] md:grid-cols-2">
         {view.items.map((item, i) => (
           <div

@@ -1,12 +1,30 @@
+import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 
 /**
  * Which of a demo dApp's pages is open. The page lives in `?view=`, so Back
  * works and a page can be linked; the first view is the home page and has no
- * parameter. An unknown value falls back to the home page.
+ * parameter. An unknown value falls back to the home page and is dropped
+ * from the URL.
+ *
+ * Scroll is left to RootLayout's ScrollRestoration: a new view starts at the
+ * top, and Back or Forward returns to where the visitor was. Scrolling here
+ * as well would run before the router saves the page being left, so every
+ * entry would be saved at 0.
  */
 export function viewFrom<V extends string>(views: readonly V[], raw: string | null): V | undefined {
   return views.find((v) => v === raw) ?? views[0];
+}
+
+/**
+ * Stops a wheel glide that is still in flight. Lenis (SmoothScroll) keeps
+ * writing its old target for half a second, which would override the
+ * router's reset to the top of the new view. Lenis listens on the window and
+ * drops its glide on a middle-button press; nothing else listens there.
+ */
+function stopGlide(): void {
+  if (typeof PointerEvent === "undefined") return;
+  window.dispatchEvent(new PointerEvent("pointerdown", { button: 1 }));
 }
 
 export function useSiteView<V extends string>(
@@ -14,11 +32,27 @@ export function useSiteView<V extends string>(
 ): { view: V; go: (next: V) => void } {
   const [params, setParams] = useSearchParams();
   const home = views[0];
-  const view = viewFrom(views, params.get("view")) ?? home;
+  const raw = params.get("view");
+  const view = viewFrom(views, raw) ?? home;
+
+  // A stale or mistyped ?view= (or ?view= naming the home page) is replaced
+  // by the clean URL, so it is not shared onwards.
+  const stray = raw !== null && (raw === home || !views.includes(raw as V));
+  useEffect(() => {
+    if (stray) setParams({}, { replace: true, preventScrollReset: true });
+  }, [stray, setParams]);
+
+  // Back and Forward restore a saved position; a glide must not override it.
+  useEffect(() => {
+    window.addEventListener("popstate", stopGlide);
+    return () => window.removeEventListener("popstate", stopGlide);
+  }, []);
 
   function go(next: V): void {
+    // The current view is not pushed again, so the forward stack survives.
+    if (next === view) return;
+    stopGlide();
     setParams(next === home ? {} : { view: next });
-    window.scrollTo({ top: 0 });
   }
 
   return { view, go };

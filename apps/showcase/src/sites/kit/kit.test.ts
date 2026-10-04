@@ -3,7 +3,7 @@ import { type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
 import { FAILED, runCheck } from "@baret/web-ui/lib/check";
 import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { analyzeCall, displayAmount, fromAnalyzeResponse } from "./live.js";
+import { analyzeCall, displayAmount, fromAnalyzeResponse, shortAddress } from "./live.js";
 import { advance, type CheckState, settle } from "./useCheck.js";
 
 const WALLET = "0x7a3f9e21c84b5d06f13a2e9b7c40d58e6f21c21e";
@@ -146,6 +146,28 @@ describe("live answer", () => {
     expect(displayAmount(2_500_000_000_000_000_000n, 18)).toBe("2.5");
     expect(displayAmount(8_000_000n, 6)).toBe("8");
     expect(displayAmount(1_234_567n, 6)).toBe("1.2345");
+  });
+
+  it("formats base units with BigInt maths only", () => {
+    expect(displayAmount(0n, 18)).toBe("0");
+    expect(displayAmount(1n, 18)).toBe("0");
+    expect(displayAmount(999_999n, 6)).toBe("0.9999");
+    expect(displayAmount(1_000_100n, 6)).toBe("1.0001");
+    expect(displayAmount(42n, 0)).toBe("42");
+    expect(displayAmount(-2_500_000n, 6)).toBe("-2.5");
+    expect(displayAmount(123_456_789_012_345_678_901_234_567n, 18)).toBe("123456789.0123");
+    expect(() => displayAmount(1n, -1)).toThrow();
+    expect(() => displayAmount(1n, 1.5)).toThrow();
+  });
+
+  it("names a token with no symbol by its shortened contract", () => {
+    expect(shortAddress(SPENDER)).toBe(`${SPENDER.slice(0, 6)}...${SPENDER.slice(-4)}`);
+    const base = response();
+    const approvals = base.approvals.map((a) => ({ ...a, symbol: null }));
+    const result = fromAnalyzeResponse({ ...base, approvals }, WALLET);
+    const contract = base.approvals[0]?.contract ?? "";
+    expect(result.approvals[0]?.unit).toBe(shortAddress(contract));
+    expect(result.approvals[0]?.unit).not.toBe("");
   });
 
   it("keeps the visitor's own changes and allowances, whatever the address case", () => {

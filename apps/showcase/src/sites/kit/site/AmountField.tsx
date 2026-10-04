@@ -61,6 +61,10 @@ export function AmountField({
           {unit}
         </span>
       </div>
+      {/* Mounted from the start, so the error is spoken when it appears; sr-only takes no grid row. */}
+      <p aria-live="assertive" className="sr-only">
+        {error ?? ""}
+      </p>
       {error ? (
         <p id={errorId} className="text-sm font-medium text-[color:var(--blocked)]">
           {error}
