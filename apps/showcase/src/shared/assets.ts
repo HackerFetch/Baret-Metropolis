@@ -126,8 +126,10 @@ export const IMG = {
 /**
  * The demo dApps' pictures, by site, under their canonical file names
  * (public/assets/showcase). Each site has a hero and the two versions
- * (NovaSwap's hero slot is its route picture). Checked one by one: the
- * ClaimHub danger picture (s-15) carries a green tag where orange was meant.
+ * (NovaSwap's hero slot is its route picture). Checked one by one. The
+ * ClaimHub danger picture (s-15) came with a green tag, the safe colour, on
+ * the trap; its tag was recoloured to orange in place (only the green
+ * pixels, from assets-raw/s-15.png) and the three copies re-encoded.
  */
 export const SITE_ART = {
   novaswap: {
