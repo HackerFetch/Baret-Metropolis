@@ -63,7 +63,7 @@ function NavItems<V extends string>({
               event.preventDefault();
               onView(key);
             }}
-            className={`inline-flex min-h-11 shrink-0 items-center border-b-2 text-sm transition-colors ${active ? "border-[color:var(--accent-mark)] font-medium text-[color:var(--fg)]" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`}
+            className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-b-2 text-sm transition-colors ${active ? "border-[color:var(--accent-mark)] font-medium text-[color:var(--fg)]" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`}
           >
             {item}
           </Link>

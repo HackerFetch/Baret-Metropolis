@@ -402,7 +402,7 @@ function HeaderAction({ dark, current }: { dark: boolean; current: boolean }) {
  */
 function navClass(active: boolean, dark: boolean): string {
   const base =
-    "inline-flex min-h-11 items-center border-b-2 px-1 font-mono min-[390px]:px-1.5 min-[420px]:px-2 text-[12px] uppercase tracking-[0.04em] transition-[color,border-color,background-color] duration-150 hover:border-[color:var(--accent)] focus-visible:outline-offset-0 md:px-3 md:tracking-[0.06em]";
+    "inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 px-1 font-mono min-[390px]:px-1.5 min-[420px]:px-2 text-[12px] uppercase tracking-[0.04em] transition-[color,border-color,background-color] duration-150 hover:border-[color:var(--accent)] focus-visible:outline-offset-0 md:px-3 md:tracking-[0.06em]";
   if (active) {
     return `${base} ${dark ? "border-chalk text-chalk" : "border-[color:var(--fg)] text-[color:var(--fg)]"}`;
   }

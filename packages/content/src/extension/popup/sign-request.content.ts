@@ -37,6 +37,8 @@ export const signRequest = {
     body: "Signing sends no transaction. Sites often use it to confirm this address is yours.",
     check: "A message can't be simulated. Baret shows it exactly as the site sent it.",
     contentLabel: "The message",
+    /** The scrollable text itself; its own name, so it is not a second "The message" region. */
+    textLabel: "Message text",
     unreadable: {
       title: "This isn't readable text",
       body: "It's raw data, and it can authorize things you can't see. Sign only if you started this.",

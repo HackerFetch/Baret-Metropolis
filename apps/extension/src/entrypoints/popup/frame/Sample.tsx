@@ -27,7 +27,7 @@ export function SampleStrip({ onOpen }: { onOpen: () => void }): JSX.Element {
   return (
     <aside
       aria-label={sample.tag}
-      className="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-[color:var(--rule)] bg-[color:var(--ground-deep)] pr-2 pl-3"
+      className="flex h-9 shrink-0 items-center justify-between gap-2 bg-[color:var(--ground-deep)] pr-2 pl-3 shadow-[inset_0_-1px_0_var(--rule)]"
     >
       <span className="flex min-w-0 items-center gap-2">
         <Tag tone="neutral" size="sm">

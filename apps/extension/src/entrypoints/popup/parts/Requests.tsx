@@ -217,7 +217,7 @@ export function MessageView({
         {/* biome-ignore lint/a11y/useSemanticElements: the message is a named region and keeps pre whitespace. */}
         <pre
           role="region"
-          aria-label={message.contentLabel}
+          aria-label={message.textLabel}
           // biome-ignore lint/a11y/noNoninteractiveTabindex: a long message scrolls, so it takes focus to scroll by keyboard.
           tabIndex={0}
           className="max-h-56 overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] border border-[color:var(--rule)] bg-[color:var(--ground-deep)] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-[color:var(--fg)] [overflow-wrap:anywhere]"

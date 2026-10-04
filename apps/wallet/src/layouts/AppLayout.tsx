@@ -110,7 +110,7 @@ export function Component() {
     <div className="min-h-dvh lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
       <a
         href="#main"
-        className="sr-only z-50 bg-[color:var(--ground-deep)] px-4 py-3 font-display text-base font-bold uppercase tracking-[0.04em] text-[color:var(--fg)] focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
+        className="sr-only z-50 bg-[color:var(--ground-deep)] font-display text-base font-bold uppercase tracking-[0.04em] text-[color:var(--fg)] focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:inline-flex focus:min-h-11 focus:items-center focus:px-4 focus:py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
       >
         {walletFrame.skip}
       </a>

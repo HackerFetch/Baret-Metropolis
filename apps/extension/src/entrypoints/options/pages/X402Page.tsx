@@ -789,7 +789,7 @@ function Receipts(): JSX.Element {
                       href={`${extFrame.links.explorer}/tx/${p.hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className={`${OUT} justify-end font-mono`}
+                      className={`${OUT} min-w-11 justify-end font-mono`}
                     >
                       <span className="hidden sm:inline">{truncateAddress(p.hash)}</span>
                       <span className="sr-only">{receipts.explorer}</span>
