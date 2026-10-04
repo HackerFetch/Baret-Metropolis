@@ -13,9 +13,9 @@ This repository and this document set are meant for **live** tracking. They were
 | Phase | Frontend scaffolded. Backend core on the `backend` branch: `packages/guard` (schemas, templates, client), `apps/server` `/v1/analyze` with all 9 detectors and the policy engine, both contracts tested |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
-| Copy | 44 files in `packages/content`, one per page, complete |
-| Design system | 37 components in `packages/ui` |
-| Apps | `showcase`, `wallet`, `extension` build. Pages render copy; most are not designed |
+| Copy | 46 files in `packages/content`, one per page or frame, complete |
+| Design system | 37 components in `packages/ui`; the web signature layer in `packages/web-ui` (type scale, motion, reveals, the eyelet cursor); the wallet pieces both wallets share in `packages/wallet-ui` (sign request, rule editor, findings, QR) |
+| Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
 | Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
 | Contract deploy | Monad testnet, 2026-10-02: PaymentGuard `0x0A82671420114E47c672D5e8e23017DdCE850A35`, ReputationRegistry `0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411` (source verified) — `docs/CONTRACTS.md` |
 | Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |
