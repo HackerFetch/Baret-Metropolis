@@ -41,12 +41,23 @@ function permissionText(permission: Permission): string {
   return fill(permissions.rows[permission.kind], values);
 }
 
-/** The MON figure, counted up once on the first paint. */
+/**
+ * The MON figure, counted up once on the first paint. The final value sits
+ * invisible underneath and holds the width, so MON never moves, and the
+ * count is pinned to the left edge, which stays put (a moving left edge
+ * counts as a layout shift). Screen readers get the final value once.
+ */
 function MonFigure({ mon }: { mon: Asset }): JSX.Element {
-  const shown = useCountUp(amount(mon.balance, mon.decimals));
+  const value = amount(mon.balance, mon.decimals);
+  const shown = useCountUp(value);
   return (
     <p className="font-display text-[clamp(2rem,1.4rem+2.2vw,2.75rem)] font-extrabold uppercase leading-none tabular-nums text-[color:var(--fg)]">
-      {shown} MON
+      <span className="sr-only">{value} MON</span>
+      <span className="relative inline-block" aria-hidden="true">
+        <span className="invisible">{value}</span>
+        <span className="absolute inset-y-0 left-0">{shown}</span>
+      </span>
+      <span aria-hidden="true"> MON</span>
     </p>
   );
 }

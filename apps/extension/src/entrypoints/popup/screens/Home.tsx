@@ -34,18 +34,22 @@ import { ActivityLine } from "../parts/ActivityLine.js";
 export type BannerTarget = "alerts" | "allowances" | "payments" | "settings" | "retry";
 
 function Balance({ value }: { value: string }): JSX.Element {
-  const counted = useCountUp(value);
+  const final = amount(value);
+  const counted = useCountUp(final);
   const { balance } = popupHome;
   return (
     <div className="grid gap-1.5 px-4 pt-5 pb-4">
       <p className={T.label}>{balance.label}</p>
       <p className="flex items-baseline gap-2 text-[color:var(--fg)]">
-        <span className="sr-only">{`${amount(value)} MON`}</span>
+        <span className="sr-only">{`${final} MON`}</span>
+        {/* The final value holds the width underneath, so MON never moves while it counts;
+            the count is pinned left, since a moving left edge counts as a layout shift. */}
         <span
           aria-hidden="true"
-          className="font-display text-[3.25rem] font-extrabold leading-[0.9] tracking-[-0.01em] tabular-nums slashed-zero"
+          className="relative inline-block font-display text-[3.25rem] font-extrabold leading-[0.9] tracking-[-0.01em] tabular-nums slashed-zero"
         >
-          {counted}
+          <span className="invisible">{final}</span>
+          <span className="absolute inset-y-0 left-0">{counted}</span>
         </span>
         <span
           aria-hidden="true"

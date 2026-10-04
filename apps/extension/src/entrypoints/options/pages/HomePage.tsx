@@ -25,13 +25,21 @@ import { LINK, LogLine } from "../parts/kit.js";
 
 const { balance, status, assets, watched, permissions, sites, recent, health } = optionsHome;
 
-/** The total balance, counted up once on the first paint. */
+/**
+ * The total balance, counted up once on the first paint. The final value
+ * sits invisible underneath and holds the width, so the count never moves
+ * what follows it, and the count is pinned to the left edge, which stays
+ * put (a moving left edge counts as a layout shift).
+ */
 function Total({ value }: { value: string }): JSX.Element {
   const shown = useCountUp(value);
   return (
     <>
       <span className="sr-only">{value}</span>
-      <span aria-hidden="true">{shown}</span>
+      <span className="relative inline-block tabular-nums" aria-hidden="true">
+        <span className="invisible">{value}</span>
+        <span className="absolute inset-y-0 left-0">{shown}</span>
+      </span>
     </>
   );
 }

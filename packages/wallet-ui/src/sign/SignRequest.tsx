@@ -134,7 +134,9 @@ function verdictWords(request: Request): { title: string; summary: string } {
  */
 function VerdictLine({ request, checking }: { request: Request; checking: boolean }): JSX.Element {
   if (checking) {
-    return <p className={T.small}>{sign.verdict.checking.title}</p>;
+    // Two lines held, the height most verdicts take, so the answer arriving
+    // does not push the rest of the request down (layout shift).
+    return <p className={`${T.small} min-h-10`}>{sign.verdict.checking.title}</p>;
   }
   return (
     <div className="flex items-start gap-2">
