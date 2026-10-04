@@ -36,7 +36,7 @@ export function Welcome({
         <Button type="button" variant="primary" size="lg" onClick={onStart}>
           {welcome.action.label}
         </Button>
-        <button type="button" onClick={onRestore} className={`${LINK} min-h-11 text-left`}>
+        <button type="button" onClick={onRestore} className={`${LINK} text-left`}>
           {welcome.restore.label}
         </button>
       </div>

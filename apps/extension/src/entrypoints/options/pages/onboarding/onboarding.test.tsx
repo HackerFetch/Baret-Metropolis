@@ -5,7 +5,7 @@
  * outside links are stopped before the test document follows them.
  */
 
-import { extOnboarding } from "@baret/content";
+import { common, extOnboarding } from "@baret/content";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -118,6 +118,26 @@ describe("setup, a new account", () => {
     expect(heading().textContent).toContain(done.title);
     expect(document.activeElement).toBe(heading());
     expect(screen.getByRole("link", { name: done.action.label }).getAttribute("href")).toBe("/");
+  });
+});
+
+describe("setup, going back", () => {
+  it("returns from the passphrase to the welcome, and the welcome has no Back", () => {
+    setup();
+    expect(screen.queryByRole("button", { name: common.actions.back })).toBeNull();
+    press(welcome.action.label);
+    expect(heading().textContent).toContain(passphrase.title);
+    press(common.actions.back);
+    expect(heading().textContent).toContain(welcome.title);
+    expect(screen.queryByRole("button", { name: common.actions.back })).toBeNull();
+  });
+
+  it("offers no Back while the key is being made", () => {
+    setup();
+    press(welcome.action.label);
+    setPassphrase();
+    expect(heading().textContent).toContain(keys.title);
+    expect(screen.queryByRole("button", { name: common.actions.back })).toBeNull();
   });
 });
 
