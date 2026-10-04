@@ -178,7 +178,9 @@
 
   --fg: #121316;
   --fg-muted: rgb(18 19 22 / 0.72);
-  --fg-faint: rgb(18 19 22 / 0.52);
+  /* 0.62 keeps faint text at 4.5:1 or more on ground (4.80), ground-deep
+     (4.58) and surface (5.09), still a step below muted. */
+  --fg-faint: rgb(18 19 22 / 0.62);
   --fg-ghost: rgb(18 19 22 / 0.34);
 
   --rule: rgb(18 19 22 / 0.14);

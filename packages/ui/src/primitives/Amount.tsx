@@ -33,8 +33,10 @@ export function Amount({ value, unit, direction = "none", size = "md", className
       className={cn(
         "whitespace-nowrap font-mono",
         SIZE[size],
-        direction === "out" && "text-[color:var(--blocked)]",
-        direction === "in" && "text-[color:var(--safe)]",
+        // Text takes the state's ink: the state colours themselves stay under
+        // 4.5:1 on the light grounds (they are for fills and borders).
+        direction === "out" && "text-[color:var(--blocked-ink)]",
+        direction === "in" && "text-[color:var(--safe-ink)]",
         className,
       )}
     >

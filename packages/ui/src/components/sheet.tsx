@@ -20,6 +20,31 @@ function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Po
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
+/*
+ * Sheet motion. These keyframes live here, not in Tailwind utilities, because
+ * the animate-in plugin is not installed. Radix keeps the content mounted until
+ * its exit animation ends, so the fall-out plays too. BRAND timings from
+ * packages/web-ui/src/lib/motion.ts: 240 ms in, 160 ms out, the BRAND ease
+ * (--ease-count), no overshoot. Reduced motion turns it off.
+ */
+const SHEET_MOTION = `
+@keyframes baret-sheet-fade-in { from { opacity: 0; } }
+@keyframes baret-sheet-fade-out { to { opacity: 0; } }
+@keyframes baret-sheet-in { from { opacity: 0; translate: var(--baret-sheet-from); } }
+@keyframes baret-sheet-out { to { opacity: 0; translate: var(--baret-sheet-from); } }
+[data-slot="sheet-overlay"][data-state="open"] { animation: baret-sheet-fade-in 240ms var(--ease-count) both; }
+[data-slot="sheet-overlay"][data-state="closed"] { animation: baret-sheet-fade-out 160ms var(--ease-count) both; }
+[data-slot="sheet-content"] { --baret-sheet-from: 2.5rem 0; }
+[data-slot="sheet-content"][data-side="left"] { --baret-sheet-from: -2.5rem 0; }
+[data-slot="sheet-content"][data-side="top"] { --baret-sheet-from: 0 -2.5rem; }
+[data-slot="sheet-content"][data-side="bottom"] { --baret-sheet-from: 0 2.5rem; }
+[data-slot="sheet-content"][data-state="open"] { animation: baret-sheet-in 240ms var(--ease-count) both; }
+[data-slot="sheet-content"][data-state="closed"] { animation: baret-sheet-out 160ms var(--ease-count) both; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="sheet-overlay"], [data-slot="sheet-content"] { animation: none !important; }
+}
+`;
+
 function SheetOverlay({
   className,
   ...props
@@ -27,33 +52,42 @@ function SheetOverlay({
   return (
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
-      className={cn(
-        "fixed inset-0 z-50 bg-[rgb(18_19_22/0.45)] duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className,
-      )}
+      className={cn("fixed inset-0 z-50 bg-[rgb(18_19_22/0.45)]", className)}
       {...props}
     />
   );
 }
+
+/*
+ * The built-in close button needs a name, and copy lives in packages/content,
+ * so a caller that keeps the button must pass `closeLabel`. A caller that
+ * renders its own close sets `showCloseButton={false}` and passes nothing.
+ */
+type SheetCloseProps =
+  | { showCloseButton?: true; closeLabel: string }
+  | { showCloseButton: false; closeLabel?: never };
 
 function SheetContent({
   className,
   children,
   side = "right",
   showCloseButton = true,
+  closeLabel,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
-  showCloseButton?: boolean;
-}) {
+} & SheetCloseProps) {
   return (
     <SheetPortal>
+      <style href="baret-sheet-motion" precedence="default">
+        {SHEET_MOTION}
+      </style>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-none transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-closed:fade-out-0 data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
+          "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-none data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
           className,
         )}
         {...props}
@@ -61,9 +95,9 @@ function SheetContent({
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close data-slot="sheet-close" asChild>
-            <Button variant="ghost" className="absolute top-3 right-3" size="icon-sm">
-              <XIcon />
-              <span className="sr-only">Close</span>
+            <Button variant="ghost" className="absolute top-2 right-2" size="icon">
+              <XIcon aria-hidden="true" />
+              <span className="sr-only">{closeLabel}</span>
             </Button>
           </SheetPrimitive.Close>
         )}

@@ -1,3 +1,4 @@
+import { common } from "@baret/content";
 import {
   AddressChip,
   Amount,
@@ -129,7 +130,7 @@ export function Component() {
             <Finding
               severity="critical"
               title="This is an unlimited approval"
-              body="0x9f3a…c1d2 would be able to move all of your USDC, now and anything you receive later."
+              body="0x9f3a...c1d2 would be able to move all of your USDC, now and anything you receive later."
               why="This is the single most common way wallets get emptied. The signature looks like a normal approval and it never expires."
             />
             <Finding
@@ -176,7 +177,11 @@ export function Component() {
           <Panel>
             <Label>Values</Label>
             <KeyValue label="Address">
-              <AddressChip address="0x1e09E971c53bD59e481Ef02147C6CeeBf0B09717" />
+              <AddressChip
+                address="0x1e09E971c53bD59e481Ef02147C6CeeBf0B09717"
+                copyLabel={common.actions.copy}
+                copiedLabel={common.actions.copied}
+              />
             </KeyValue>
             <KeyValue label="Balance">
               <Amount value="1,240.50" unit="MON" />
