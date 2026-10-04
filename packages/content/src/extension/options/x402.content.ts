@@ -36,6 +36,8 @@ export const x402 = {
       verified: { label: "Verified", hint: "The facilitator confirmed the payment signature." },
       settled: { label: "Settled", hint: "The payment landed on Monad." },
     },
+    /** One payment in the timeline, read out in place of its squares. */
+    row: "{amount} to {merchant}, {stage}",
     empty: "No payments in the last 7 days.",
   },
 
@@ -53,6 +55,17 @@ export const x402 = {
     spent: "{spent} of {cap}",
     status: { active: "Active", paused: "Paused", revoked: "Revoked" },
     actions: { pause: "Pause", resume: "Resume", caps: "Change caps", revoke: "Revoke" },
+    /** The Change caps dialog. Its title is actions.caps. */
+    capsDialog: {
+      body: "Baret checks every payment {merchant} asks for against these caps, starting with the next one.",
+      hourHint: "Leave it empty for no hourly cap.",
+      action: "Save caps",
+      saved: "Caps saved for {merchant}.",
+      errors: {
+        amount: "Enter an amount above 0, such as 0.50.",
+        order: "The hourly cap can't be higher than the daily cap.",
+      },
+    },
     firstPayment: "The first payment to a new merchant always asks you.",
     empty: {
       title: "No merchants yet",
