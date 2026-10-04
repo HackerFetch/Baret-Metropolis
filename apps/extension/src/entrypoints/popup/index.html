@@ -8,6 +8,10 @@
       The ground before the first CSS byte, so the popup never flashes white:
       graphite, or concrete when the theme resolves to light. Opened as a page
       (data-view="tab", set in main.tsx), the 360 by 600 frame sits centred.
+      The body keeps the fixed 360 by 600, which is what sizes the toolbar
+      popup. The frame inside it shrinks to the viewport when that is smaller
+      (browser zoom, a narrow window), so the scroller and the action footer
+      always fit. On a phone (data-view="full") the popup fills the screen.
     -->
     <style>
       @layer theme, base, components, utilities;
@@ -19,6 +23,11 @@
           html {
             background: #e6e6e1;
           }
+        }
+        body {
+          width: 360px;
+          height: 600px;
+          overflow: hidden;
         }
         :root[data-view="tab"] {
           min-height: 100dvh;
@@ -34,6 +43,15 @@
         :root[data-view="tab"] body {
           outline: 1px solid #3a3b40;
         }
+        #root {
+          width: min(360px, 100vw);
+          height: min(600px, 100dvh);
+        }
+        :root[data-view="full"] body,
+        :root[data-view="full"] #root {
+          width: 100vw;
+          height: 100dvh;
+        }
       }
     </style>
     <link
@@ -44,8 +62,8 @@
       href="/fonts/big-shoulders-display-800.woff2"
     />
   </head>
-  <body class="h-[600px] w-[360px] overflow-hidden">
-    <div id="root" class="h-full"></div>
+  <body>
+    <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

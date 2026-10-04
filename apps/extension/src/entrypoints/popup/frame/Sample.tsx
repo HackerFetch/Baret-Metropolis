@@ -18,6 +18,8 @@ import { PHASES, type Start, type StartPhase } from "../../../lib/start.js";
  * The sample notice, at the top of every popup state: nothing here is
  * connected and nothing is sent. Its button opens the picker that stands in
  * for the background, which decides the popup's phase once it is wired.
+ * The strip is 36 px tall and its button fills that height (the popup target).
+ * PopupApp leaves it out on the request screens, which own the whole canvas.
  */
 
 export function SampleStrip({ onOpen }: { onOpen: () => void }): JSX.Element {
@@ -36,7 +38,7 @@ export function SampleStrip({ onOpen }: { onOpen: () => void }): JSX.Element {
       <button
         type="button"
         onClick={onOpen}
-        className="shrink-0 px-1.5 py-1 text-xs font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
+        className="flex h-full shrink-0 items-center px-2 text-xs font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
       >
         {sample.open}
       </button>

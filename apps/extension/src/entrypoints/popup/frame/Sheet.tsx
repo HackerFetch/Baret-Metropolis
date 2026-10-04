@@ -1,6 +1,8 @@
 import { common } from "@baret/content";
 import { Button } from "@baret/ui";
+import { EASE_OUT_SOFT } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
+import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { ArrowLeft } from "lucide-react";
 import { m } from "motion/react";
 import { type JSX, type ReactNode, useEffect, useId, useRef } from "react";
@@ -9,14 +11,20 @@ import { type JSX, type ReactNode, useEffect, useId, useRef } from "react";
  * The popup's two layers above a tab.
  *
  * Sheet: a screen that covers the tab's content and keeps the tab bar (send,
- * receive, swap, accounts, alerts). It rises 12 px as it opens, takes the
- * focus on its back button, and Escape closes it.
+ * receive, swap, accounts, alerts). It slides up 6 px over 260 ms (BRAND
+ * sheet slide) as it opens, takes the focus on its back button, and Escape
+ * closes it. On close the focus goes back to the control that opened it.
  *
  * Confirm: a decision that cannot be undone or that costs a fee (revoke,
  * reset, revoke all). A native modal dialog at the foot of the window, so the
  * focus stays inside it and Escape cancels; it says every consequence before
- * the button.
+ * the button. While `busy` (the action is running) Escape does nothing and the
+ * dialog stays open, so it never closes out of step with the state.
  */
+
+/** BRAND sheet slide: 260 ms on the soft ease, a 6 px product rise. */
+const SHEET = { duration: 0.26, ease: EASE_OUT_SOFT } as const;
+const SHEET_RISE = 6;
 
 export function Sheet({
   title,
@@ -29,18 +37,23 @@ export function Sheet({
 }): JSX.Element {
   const id = useId();
   const back = useRef<HTMLButtonElement>(null);
+  const reduce = useReduce();
 
   useEffect(() => {
+    const opener = document.activeElement;
     back.current?.focus();
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
   }, []);
 
   return (
     <m.section
       aria-labelledby={id}
-      initial={{ opacity: 0, y: 12 }}
+      initial={reduce ? false : { opacity: 0, y: SHEET_RISE }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 12 }}
-      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, y: SHEET_RISE }}
+      transition={SHEET}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
@@ -81,6 +94,7 @@ export function Confirm({
   onCancel,
   danger = true,
   disabled = false,
+  busy = false,
 }: {
   open: boolean;
   title: string;
@@ -91,9 +105,13 @@ export function Confirm({
   onCancel: () => void;
   danger?: boolean;
   disabled?: boolean;
+  busy?: boolean;
 }): JSX.Element {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  // The latest props, for the native close event.
+  const latest = useRef({ open, busy });
+  latest.current = { open, busy };
 
   useEffect(() => {
     const dialog = ref.current;
@@ -106,7 +124,18 @@ export function Confirm({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      onClose={onCancel}
+      onCancel={(event) => {
+        if (busy) event.preventDefault();
+      }}
+      onClose={() => {
+        // A close the browser forced through while busy: open it again.
+        const { open: wanted, busy: working } = latest.current;
+        if (wanted && working) {
+          ref.current?.showModal();
+          return;
+        }
+        onCancel();
+      }}
       className="m-0 mt-auto max-h-[88%] w-full max-w-full border-t border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-0 text-[color:var(--fg)] backdrop:bg-black/55"
     >
       <div className="grid gap-4 px-4 pt-5 pb-4">

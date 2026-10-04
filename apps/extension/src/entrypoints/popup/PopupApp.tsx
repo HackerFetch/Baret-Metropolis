@@ -1,3 +1,4 @@
+import { extFrame } from "@baret/content";
 import { AnimatePresence, m } from "motion/react";
 import { type JSX, useReducer, useState } from "react";
 import { unread } from "../../data/derive.js";
@@ -36,7 +37,8 @@ import { Uninitialized } from "./screens/Uninitialized.js";
  *
  * The phase comes from the background once it is wired. Until then the
  * sample picker under the notice at the top stands in for it, and the store
- * (data/store.tsx) holds the sample wallet.
+ * (data/store.tsx) holds the sample wallet. The picker's strip stays off the
+ * request screens (signing, connecting), which own the whole canvas.
  */
 
 export function PopupApp({
@@ -97,6 +99,7 @@ export function PopupApp({
   } else {
     body = (
       <div className="flex h-full flex-col">
+        <h1 className="sr-only">{extFrame.popup.title}</h1>
         <TopStrip
           account={account}
           unread={alertsUnread}
@@ -112,6 +115,8 @@ export function PopupApp({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16, ease: "easeOut" }}
+              // Covered by a sheet: out of the tab order and away from readers.
+              inert={nav.overlay !== null}
               className="absolute inset-0 overflow-y-auto overscroll-contain"
             >
               {nav.tab === "home" ? (
@@ -196,8 +201,10 @@ export function PopupApp({
 
   return (
     <div className="flex h-full flex-col bg-[color:var(--ground)] text-[color:var(--fg)]">
-      <SampleStrip onOpen={() => setPicker(true)} />
-      <div className="relative min-h-0 flex-1">{body}</div>
+      {nav.phase === "signing" || nav.phase === "connecting" ? null : (
+        <SampleStrip onOpen={() => setPicker(true)} />
+      )}
+      <main className="relative min-h-0 flex-1">{body}</main>
       <SamplePanel
         open={picker}
         start={start}
