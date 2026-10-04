@@ -9,6 +9,7 @@ import {
   fixFor,
   impactText,
   logFor,
+  overrideBody,
   ruleRows,
 } from "./sign.js";
 
@@ -22,9 +23,9 @@ const AT = "2026-10-03T16:00:00Z";
 
 describe("the request's words", () => {
   it("names the action with the address shortened, and keeps the address's case", () => {
-    expect(actionText(sample("safe"))).toBe("Send 0.50 MON to 0x5b0e…e2f4");
+    expect(actionText(sample("safe"))).toBe("Send 0.50 MON to 0x5b0e...e2f4");
     const kept = actionParts(sample("blocked")).filter((part) => part.keep);
-    expect(kept.map((part) => part.text)).toEqual(["0xa61f…7f30"]);
+    expect(kept.map((part) => part.text)).toEqual(["0xa61f...7f30"]);
   });
 
   it("says what moves if you sign, with the address whole", () => {
@@ -38,12 +39,28 @@ describe("the request's words", () => {
 
   it("sums up a block by its first rule and counts the rest", () => {
     expect(blockedSummary(sample("blocked"))).toBe(
-      "Block unlimited allowances and 1 more rules stopped this request. Nothing was signed.",
+      "Block unlimited allowances and 1 more rule stopped this request. Nothing was signed.",
     );
     expect(ruleRows(sample("blocked")).map((row) => row.label)).toEqual([
       "Block unlimited allowances",
       "Block listed addresses",
     ]);
+  });
+
+  it("counts three or more fired rules in the plural", () => {
+    const blocked = sample("blocked");
+    const first = blocked.rules[0];
+    if (!first) throw new Error("no rule");
+    expect(blockedSummary({ ...blocked, rules: [first, first, first] })).toBe(
+      "Block unlimited allowances and 2 more rules stopped this request. Nothing was signed.",
+    );
+  });
+
+  it("never prints an empty rule when a block has no fired rule", () => {
+    const blocked = { ...sample("blocked"), rules: [] };
+    expect(blockedSummary(blocked)).toBe("A check stopped this request. Nothing was signed.");
+    expect(overrideBody(blocked)).toMatch(/^Your rules stay on\./);
+    expect(overrideBody(sample("blocked"))).toMatch(/^Block unlimited allowances stays on\./);
   });
 
   it("suggests the fallback fix when the allowance carries no amount", () => {

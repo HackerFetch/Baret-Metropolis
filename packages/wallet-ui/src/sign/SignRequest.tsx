@@ -4,8 +4,8 @@ import { Tag } from "@baret/ui/primitives/Tag";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
-import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, type ReactNode, useEffect, useId, useState } from "react";
+import { counted, cx, fill } from "@baret/web-ui/lib/util";
+import { type JSX, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Findings } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
@@ -18,6 +18,7 @@ import {
   impactText,
   logFor,
   type Outcome,
+  overrideBody,
   ruleRows,
 } from "./sign.js";
 
@@ -54,6 +55,16 @@ function compactGrid(verdict: Request["verdict"]): string {
   return verdict === "blocked" ? "grid gap-2" : "grid grid-cols-2 gap-2";
 }
 
+/**
+ * Compact only: whatever takes focus in the scroller stops above the pinned
+ * footer, whose height the component writes into --sign-foot.
+ */
+const CLEAR_FOOT =
+  "[&>:not(footer)_:is(a,button,summary,h2,p)]:scroll-mb-[calc(var(--sign-foot,0px)+0.75rem)]";
+
+/** A heading that takes focus by script only, never by Tab. */
+const FOCUS_TARGET = "outline-none";
+
 /** The rules link's look, handed to whichever surface draws the link. */
 const RULES_LINK =
   "w-max text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
@@ -84,7 +95,44 @@ function Section({
   );
 }
 
-function Verdict({ request, checking }: { request: Request; checking: boolean }): JSX.Element {
+/** The verdict's title and one-line summary, for whichever verdict came back. */
+function verdictWords(request: Request): { title: string; summary: string } {
+  const { verdict } = sign;
+  return request.verdict === "safe"
+    ? { title: verdict.safe.title, summary: verdict.safe.summary }
+    : request.verdict === "caution"
+      ? { title: verdict.caution.title, summary: verdict.caution.summary }
+      : request.verdict === "blocked"
+        ? { title: verdict.blocked.title, summary: blockedSummary(request) }
+        : { title: verdict.unreachable.title, summary: verdict.unreachable.summary };
+}
+
+/**
+ * Compact only: the verdict in one line under the heading, so Baret's answer
+ * is read before the site's claim and above the pinned footer.
+ */
+function VerdictLine({ request, checking }: { request: Request; checking: boolean }): JSX.Element {
+  if (checking) {
+    return <p className={T.small}>{sign.verdict.checking.title}</p>;
+  }
+  return (
+    <div className="flex items-start gap-2">
+      <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
+      <p className="text-sm text-[color:var(--fg)]">{verdictWords(request).summary}</p>
+    </div>
+  );
+}
+
+function Verdict({
+  request,
+  checking,
+  short = false,
+}: {
+  request: Request;
+  checking: boolean;
+  /** The tag and summary already sit under the heading: the title only. */
+  short?: boolean;
+}): JSX.Element {
   const { verdict } = sign;
   if (checking) {
     return (
@@ -96,23 +144,18 @@ function Verdict({ request, checking }: { request: Request; checking: boolean })
       </div>
     );
   }
-  const words =
-    request.verdict === "safe"
-      ? { title: verdict.safe.title, summary: verdict.safe.summary }
-      : request.verdict === "caution"
-        ? { title: verdict.caution.title, summary: verdict.caution.summary }
-        : request.verdict === "blocked"
-          ? { title: verdict.blocked.title, summary: blockedSummary(request) }
-          : { title: verdict.unreachable.title, summary: verdict.unreachable.summary };
+  const words = verdictWords(request);
   return (
     <div className="grid gap-3">
-      <div className="flex">
-        <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
-      </div>
+      {short ? null : (
+        <div className="flex">
+          <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
+        </div>
+      )}
       <p className="font-display text-2xl font-extrabold uppercase leading-tight text-[color:var(--fg)]">
         {words.title}
       </p>
-      <p className={T.body}>{words.summary}</p>
+      {short ? null : <p className={T.body}>{words.summary}</p>}
     </div>
   );
 }
@@ -127,9 +170,18 @@ function Result({
   againLabel: string;
 }): JSX.Element {
   const words = sign.result[outcome];
+  const title = useRef<HTMLParagraphElement>(null);
+  // The pressed button is gone: focus moves to the outcome.
+  useEffect(() => {
+    title.current?.focus();
+  }, []);
   return (
     <div className="grid gap-4 px-5 py-8 md:px-6">
-      <p className="font-display text-3xl font-extrabold uppercase text-[color:var(--fg)]">
+      <p
+        ref={title}
+        tabIndex={-1}
+        className={`font-display text-3xl font-extrabold uppercase text-[color:var(--fg)] ${FOCUS_TARGET}`}
+      >
         {words.title}
       </p>
       <p className={T.body}>{fill(words.body, { block: SAMPLE_BLOCK })}</p>
@@ -194,6 +246,41 @@ export function SignRequest({
   const [stillDown, setStillDown] = useState(false);
   const [left, setLeft] = useState(request.expires);
   const [said, setSaid] = useState("");
+  const article = useRef<HTMLElement>(null);
+  const foot = useRef<HTMLElement>(null);
+  const overrideTitle = useRef<HTMLParagraphElement>(null);
+  const overrideTrigger = useRef<HTMLButtonElement>(null);
+  // Where focus goes once the override opens or closes; null leaves it alone.
+  const [focusTo, setFocusTo] = useState<"override" | "trigger" | null>(null);
+
+  function openOverride(): void {
+    setPhase({ kind: "override" });
+    setFocusTo("override");
+  }
+
+  function closeOverride(): void {
+    setPhase({ kind: "review" });
+    setFocusTo("trigger");
+  }
+
+  // The pressed control is replaced: focus follows to its replacement.
+  useEffect(() => {
+    if (focusTo === null) return;
+    (focusTo === "override" ? overrideTitle : overrideTrigger).current?.focus();
+    setFocusTo(null);
+  }, [focusTo]);
+
+  // Compact: the pinned footer's height, so focused controls stop above it.
+  useEffect(() => {
+    const node = foot.current;
+    const host = article.current;
+    if (!compact || !node || !host || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      host.style.setProperty("--sign-foot", `${node.offsetHeight}px`);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [compact]);
 
   function finish(outcome: Outcome): void {
     if (outcome === "declined" && onDecline) {
@@ -275,383 +362,448 @@ export function SignRequest({
   const unreachable = request.verdict === "unreachable";
   const rows = ruleRows(request);
 
-  if (phase.kind === "result") {
-    return (
-      <article aria-labelledby={titleId} className={frame}>
-        <h1 id={titleId} className="sr-only">
-          {sign.header.title}
-        </h1>
-        <p role="status" className="sr-only">
-          {said}
-        </p>
-        <Result
-          outcome={phase.outcome}
-          againLabel={againLabel ?? common.actions.back}
-          {...(onAgain ? { onAgain } : {})}
-        />
-      </article>
-    );
-  }
+  const overridePanel = (
+    <div className="grid gap-4">
+      <p
+        ref={overrideTitle}
+        tabIndex={-1}
+        className={`font-display text-xl font-extrabold uppercase text-[color:var(--fg)] ${FOCUS_TARGET}`}
+      >
+        {unreachable ? sign.override.unreachable.title : sign.override.blocked.title}
+      </p>
+      <p className={T.body}>
+        {unreachable ? sign.override.unreachable.body : overrideBody(request)}
+      </p>
+      {compact ? null : <HoldButton onHeld={() => startSigning("overridden")} />}
+      <p className={T.small}>{sign.override.logged}</p>
+      <div className="flex">
+        <Button type="button" variant="ghost" size="sm" onClick={closeOverride}>
+          {sign.override.back}
+        </Button>
+      </div>
+    </div>
+  );
 
+  const noSignId = useId();
+  const declineBlocked = (
+    <Button
+      type="button"
+      variant="primary"
+      size={decisionSize}
+      disabled={checking}
+      onClick={() => finish("declined")}
+      {...(compact ? { "aria-describedby": noSignId } : {})}
+    >
+      {sign.verdict.blocked.primary}
+    </Button>
+  );
+  const overrideBlocked = (
+    <Button
+      ref={overrideTrigger}
+      type="button"
+      variant="ghost"
+      size={compact ? "sm" : decisionSize}
+      disabled={checking}
+      onClick={openOverride}
+      {...(compact ? { className: "justify-self-start" } : {})}
+    >
+      {sign.verdict.blocked.secondary}
+    </Button>
+  );
+
+  const countdown = counted(left, sign.countdown.label, sign.countdown.labelOne, {
+    seconds: String(left),
+  });
+
+  // One status region for the whole life of the request, so each change is spoken.
   return (
-    <article aria-labelledby={titleId} className={frame}>
+    <article ref={article} aria-labelledby={titleId} className={cx(frame, compact && CLEAR_FOOT)}>
       <p role="status" className="sr-only">
         {said}
       </p>
-      <header className="grid gap-3 px-5 pt-6 pb-5 md:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className={T.label}>{sign.header.title}</p>
-          <Tag tone="network" size="sm">
-            {common.networks.testnet.label}
-          </Tag>
-        </div>
-        <h1
-          id={titleId}
-          className="font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere]"
-        >
-          <Parts parts={actionParts(request)} />
-        </h1>
-        {request.origin ? (
-          <p className="text-sm text-[color:var(--fg)]">
-            <span className="font-mono">
-              {fill(sign.header.fromSite, { origin: request.origin })}
-            </span>
-            <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
-          </p>
-        ) : null}
-      </header>
-
-      {notice ? (
-        <div className="border-t border-[color:var(--rule)] px-5 py-5 md:px-6">{notice}</div>
-      ) : null}
-
-      {request.origin && request.claim ? (
-        <Section title={fill(sign.claim.label, { origin: request.origin })}>
-          <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
-            {request.claim}
-          </blockquote>
-          <p className={T.small}>
-            <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
-            {sign.claim.note}
-          </p>
-        </Section>
-      ) : null}
-
-      <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
-        {verdictArt && !checking ? (
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-            <Verdict request={request} checking={checking} />
-            {verdictArt}
-          </div>
-        ) : (
-          <Verdict request={request} checking={checking} />
-        )}
-        {!checking && !unreachable ? (
-          <div className="grid gap-1 border-t border-[color:var(--rule)] pt-3 text-sm">
-            <p>
-              <span className="text-[color:var(--fg-muted)]">{sign.verdict.checkedBy.label}: </span>
-              <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
-            </p>
-            <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
-            <ul className="grid gap-0.5">
-              {Object.values(sign.verdict.checkedBy.sources).map((source) => (
-                <li key={source} className={T.small}>
-                  {source}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-
-      {!checking && unreachable ? (
-        <Section title={sign.offline.title}>
-          <p className={T.body}>{sign.offline.body}</p>
-          <p className="text-sm text-[color:var(--fg)]">{sign.offline.reasons.server}</p>
-          {stillDown ? (
-            <p className="text-sm text-[color:var(--fg)]">{sign.offline.stillDown}</p>
-          ) : null}
-          <p className={T.small}>{sign.offline.note}</p>
-        </Section>
-      ) : null}
-
-      {!checking ? (
+      {phase.kind === "result" ? (
         <>
-          <Section title={sign.impact.label}>
-            <p className="text-base text-[color:var(--fg)] [overflow-wrap:anywhere]">
-              {impactText(request)}
-            </p>
-          </Section>
-
-          <Section title={sign.changes.title}>
-            {unreachable ? (
-              <p className={T.body}>{sign.changes.unknown}</p>
-            ) : (
-              <div className="grid gap-2">
-                {request.changes.length === 0 && request.approvals.length === 0 ? (
-                  <p className={T.body}>{sign.changes.none}</p>
-                ) : null}
-                {request.changes.map((change) => (
-                  <ChangeRow
-                    key={`${change.direction}-${change.unit}`}
-                    label={change.direction === "out" ? sign.changes.out : sign.changes.in}
-                    value={change.value}
-                    unit={change.unit}
-                    direction={change.direction}
-                  />
-                ))}
-                {request.approvals.map((approval) => (
-                  <div key={`${approval.unit}-${approval.spender}`}>
-                    <ChangeRow
-                      label={sign.changes.allow}
-                      value={
-                        approval.unlimited || approval.amount === null
-                          ? sign.changes.unlimited
-                          : approval.amount
-                      }
-                      unit={approval.unit}
-                    />
-                    <p className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                      {approval.spender}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-            <ChangeRow label={sign.changes.fee} value={amount(request.fee)} unit="MON" />
-            <p className={T.small}>{sign.changes.disclaimer}</p>
-          </Section>
-
-          {!unreachable ? (
-            <Section
-              title={sign.findings.title}
-              aside={
-                request.findings.length > 0 ? (
-                  <span className={`${T.label} ${T.num}`}>
-                    {fill(sign.findings.count, { count: String(request.findings.length) })}
-                  </span>
-                ) : null
-              }
+          <h1 id={titleId} className="sr-only">
+            {sign.header.title}
+          </h1>
+          <Result
+            outcome={phase.outcome}
+            againLabel={againLabel ?? common.actions.back}
+            {...(onAgain ? { onAgain } : {})}
+          />
+        </>
+      ) : (
+        <>
+          <header className="grid gap-3 px-5 pt-6 pb-5 md:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className={T.label}>{sign.header.title}</p>
+              <Tag tone="network" size="sm">
+                {common.networks.testnet.label}
+              </Tag>
+            </div>
+            <h1
+              id={titleId}
+              className="font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere]"
             >
-              <Findings items={request.findings} />
+              <Parts parts={actionParts(request)} />
+            </h1>
+            {request.origin ? (
+              <p className="text-sm text-[color:var(--fg)]">
+                <span className="font-mono">
+                  {fill(sign.header.fromSite, { origin: request.origin })}
+                </span>
+                <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
+              </p>
+            ) : null}
+            {compact ? <VerdictLine request={request} checking={checking} /> : null}
+          </header>
+
+          {compact && phase.kind === "override" ? (
+            <div className="border-t border-[color:var(--rule-strong)] px-5 py-5">
+              {overridePanel}
+            </div>
+          ) : null}
+
+          {notice ? (
+            <div className="border-t border-[color:var(--rule)] px-5 py-5 md:px-6">{notice}</div>
+          ) : null}
+
+          {request.origin && request.claim ? (
+            <Section title={fill(sign.claim.label, { origin: request.origin })}>
+              <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
+                {request.claim}
+              </blockquote>
+              <p className={T.small}>
+                <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
+                {sign.claim.note}
+              </p>
             </Section>
           ) : null}
 
-          {!unreachable ? (
-            <Section title={sign.rules.title}>
-              {rows.length === 0 ? (
-                <p className={T.body}>{sign.rules.none}</p>
-              ) : (
-                <ul className="grid gap-3">
-                  {rows.map((row) => (
-                    <li key={row.label} className="grid gap-1">
-                      <p className="text-base font-medium text-[color:var(--fg)]">{row.label}</p>
-                      {row.detail ? <p className={T.small}>{row.detail}</p> : null}
+          <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
+            {verdictArt && !checking ? (
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+                <Verdict request={request} checking={checking} short={compact} />
+                {verdictArt}
+              </div>
+            ) : (
+              <Verdict request={request} checking={checking} short={compact} />
+            )}
+            {!checking && !unreachable ? (
+              <div className="grid gap-1 border-t border-[color:var(--rule)] pt-3 text-sm">
+                <p>
+                  <span className="text-[color:var(--fg-muted)]">
+                    {sign.verdict.checkedBy.label}:{" "}
+                  </span>
+                  <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
+                </p>
+                <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
+                <ul className="grid gap-0.5">
+                  {Object.values(sign.verdict.checkedBy.sources).map((source) => (
+                    <li key={source} className={T.small}>
+                      {source}
                     </li>
                   ))}
                 </ul>
-              )}
-              {rows.length > 0 && editRules ? editRules(sign.rules.edit, RULES_LINK) : null}
-            </Section>
-          ) : null}
-
-          {blocked ? (
-            <Section title={sign.verdict.blocked.fix.title}>
-              <p className="text-base text-[color:var(--fg)]">{fixFor(request)}</p>
-            </Section>
-          ) : null}
-
-          <Section title={sign.raw.title}>
-            <details className="group">
-              <summary className="flex w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
-                <span
-                  aria-hidden="true"
-                  className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"
-                >
-                  +
-                </span>
-                {sign.raw.hint}
-              </summary>
-              <dl className="mt-4 grid gap-3 text-sm">
-                <div className="grid gap-1">
-                  <dt className={T.label}>{sign.raw.decoded}</dt>
-                  <dd className="font-mono text-[color:var(--fg)]">
-                    {request.raw.decoded ?? sign.raw.notDecoded}
-                  </dd>
-                </div>
-                <div className="grid gap-1">
-                  <dt className={T.label}>{sign.raw.to}</dt>
-                  <dd className="font-mono text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                    {request.raw.to}
-                  </dd>
-                </div>
-                <div className="grid gap-1">
-                  <dt className={T.label}>{sign.raw.value}</dt>
-                  <dd className={`font-mono text-[color:var(--fg)] ${T.num}`}>
-                    {request.raw.value}
-                  </dd>
-                </div>
-                <div className="grid gap-1">
-                  <dt className={T.label}>{sign.raw.calldata}</dt>
-                  <dd className="grid gap-1">
-                    <code className="block max-h-32 overflow-y-auto font-mono text-xs text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                      {request.raw.data}
-                    </code>
-                    <span className="-ml-2 flex">
-                      <CopyButton
-                        text={request.raw.data}
-                        label={sign.raw.copy}
-                        done={sign.raw.copied}
-                      />
-                    </span>
-                  </dd>
-                </div>
-              </dl>
-            </details>
-          </Section>
-        </>
-      ) : null}
-
-      <footer
-        className={
-          compact
-            ? "sticky bottom-0 z-10 grid gap-2.5 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-3 pb-3"
-            : "grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6"
-        }
-      >
-        {phase.kind === "signing" ? (
-          <p className="font-display text-xl font-extrabold uppercase text-[color:var(--fg)]">
-            {phase.step === "passkey"
-              ? sign.status.passkey
-              : phase.step === "signing"
-                ? sign.status.signing
-                : sign.status.sending}
-          </p>
-        ) : phase.kind === "override" ? (
-          <div className="grid gap-4">
-            <p className="font-display text-xl font-extrabold uppercase text-[color:var(--fg)]">
-              {unreachable ? sign.override.unreachable.title : sign.override.blocked.title}
-            </p>
-            <p className={T.body}>
-              {unreachable
-                ? sign.override.unreachable.body
-                : fill(sign.override.blocked.body, { rule: ruleRows(request)[0]?.label ?? "" })}
-            </p>
-            <HoldButton onHeld={() => startSigning("overridden")} />
-            <p className={T.small}>{sign.override.logged}</p>
-            <div className="flex">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setPhase({ kind: "review" })}
-              >
-                {sign.override.back}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {blocked ? <p className={T.small}>{sign.verdict.blocked.noSign}</p> : null}
-            <div className={decisionGrid}>
-              {request.verdict === "safe" || request.verdict === "caution" ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size={decisionSize}
-                    disabled={checking}
-                    onClick={() => finish("declined")}
-                  >
-                    {sign.verdict.safe.secondary}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size={decisionSize}
-                    disabled={checking}
-                    onClick={() => startSigning("sent")}
-                  >
-                    {sign.verdict.safe.primary}
-                  </Button>
-                </>
-              ) : blocked ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size={compact ? "sm" : decisionSize}
-                    disabled={checking}
-                    onClick={() => setPhase({ kind: "override" })}
-                    {...(compact ? { className: "order-last justify-self-start" } : {})}
-                  >
-                    {sign.verdict.blocked.secondary}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size={decisionSize}
-                    disabled={checking}
-                    onClick={() => finish("declined")}
-                  >
-                    {sign.verdict.blocked.primary}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size={decisionSize}
-                    disabled={checking}
-                    onClick={() => finish("declined")}
-                  >
-                    {sign.verdict.unreachable.secondary}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size={decisionSize}
-                    disabled={checking || phase.kind === "retrying"}
-                    onClick={() => {
-                      setPhase({ kind: "retrying" });
-                      setSaid(sign.offline.retrying);
-                    }}
-                  >
-                    {phase.kind === "retrying"
-                      ? sign.offline.retrying
-                      : sign.verdict.unreachable.primary}
-                  </Button>
-                </>
-              )}
-            </div>
-            {unreachable && phase.kind !== "retrying" && !checking ? (
-              <div className="flex">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPhase({ kind: "override" })}
-                >
-                  {sign.verdict.unreachable.override}
-                </Button>
               </div>
             ) : null}
-          </>
-        )}
-        {waiting ? (
-          <div className="grid gap-1">
-            <p
-              className={`font-mono ${compact ? "text-xs" : "text-sm"} text-[color:var(--fg)] ${T.num}`}
-              aria-hidden="true"
-            >
-              {fill(sign.countdown.label, { seconds: String(left) })}
-            </p>
-            <p className={compact ? "sr-only" : T.small}>{sign.countdown.note}</p>
           </div>
-        ) : null}
-        {footnote}
-      </footer>
+
+          {!checking && unreachable ? (
+            <Section title={sign.offline.title}>
+              <p className={T.body}>{sign.offline.body}</p>
+              <p className="text-sm text-[color:var(--fg)]">{sign.offline.reasons.server}</p>
+              {stillDown ? (
+                <p className="text-sm text-[color:var(--fg)]">{sign.offline.stillDown}</p>
+              ) : null}
+              <p className={T.small}>{sign.offline.note}</p>
+            </Section>
+          ) : null}
+
+          {!checking ? (
+            <>
+              <Section title={sign.impact.label}>
+                <p className="text-base text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                  {impactText(request)}
+                </p>
+              </Section>
+
+              <Section title={sign.changes.title}>
+                {unreachable ? (
+                  <p className={T.body}>{sign.changes.unknown}</p>
+                ) : (
+                  <div className="grid gap-2">
+                    {request.changes.length === 0 && request.approvals.length === 0 ? (
+                      <p className={T.body}>{sign.changes.none}</p>
+                    ) : null}
+                    {request.changes.map((change) => (
+                      <ChangeRow
+                        key={`${change.direction}-${change.unit}`}
+                        label={change.direction === "out" ? sign.changes.out : sign.changes.in}
+                        value={change.value}
+                        unit={change.unit}
+                        direction={change.direction}
+                      />
+                    ))}
+                    {request.approvals.map((approval) => (
+                      <div key={`${approval.unit}-${approval.spender}`}>
+                        <ChangeRow
+                          label={sign.changes.allow}
+                          value={
+                            approval.unlimited || approval.amount === null
+                              ? sign.changes.unlimited
+                              : approval.amount
+                          }
+                          unit={approval.unit}
+                        />
+                        <p className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                          {approval.spender}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <ChangeRow label={sign.changes.fee} value={amount(request.fee)} unit="MON" />
+                <p className={T.small}>{sign.changes.disclaimer}</p>
+              </Section>
+
+              {!unreachable ? (
+                <Section
+                  title={sign.findings.title}
+                  aside={
+                    request.findings.length > 0 ? (
+                      <span className={`${T.label} ${T.num}`}>
+                        {fill(sign.findings.count, { count: String(request.findings.length) })}
+                      </span>
+                    ) : null
+                  }
+                >
+                  <Findings items={request.findings} />
+                </Section>
+              ) : null}
+
+              {!unreachable ? (
+                <Section title={sign.rules.title}>
+                  {rows.length === 0 ? (
+                    <p className={T.body}>{sign.rules.none}</p>
+                  ) : (
+                    <ul className="grid gap-3">
+                      {rows.map((row) => (
+                        <li key={row.label} className="grid gap-1">
+                          <p className="text-base font-medium text-[color:var(--fg)]">
+                            {row.label}
+                          </p>
+                          {row.detail ? <p className={T.small}>{row.detail}</p> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {rows.length > 0 && editRules ? editRules(sign.rules.edit, RULES_LINK) : null}
+                </Section>
+              ) : null}
+
+              {blocked ? (
+                <Section title={sign.verdict.blocked.fix.title}>
+                  <p className="text-base text-[color:var(--fg)]">{fixFor(request)}</p>
+                </Section>
+              ) : null}
+
+              <Section title={sign.raw.title}>
+                <details className="group">
+                  <summary className="flex w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
+                    <span
+                      aria-hidden="true"
+                      className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"
+                    >
+                      +
+                    </span>
+                    {sign.raw.hint}
+                  </summary>
+                  <dl className="mt-4 grid gap-3 text-sm">
+                    <div className="grid gap-1">
+                      <dt className={T.label}>{sign.raw.decoded}</dt>
+                      <dd className="font-mono text-[color:var(--fg)]">
+                        {request.raw.decoded ?? sign.raw.notDecoded}
+                      </dd>
+                    </div>
+                    <div className="grid gap-1">
+                      <dt className={T.label}>{sign.raw.to}</dt>
+                      <dd className="font-mono text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                        {request.raw.to}
+                      </dd>
+                    </div>
+                    <div className="grid gap-1">
+                      <dt className={T.label}>{sign.raw.value}</dt>
+                      <dd className={`font-mono text-[color:var(--fg)] ${T.num}`}>
+                        {request.raw.value}
+                      </dd>
+                    </div>
+                    <div className="grid gap-1">
+                      <dt className={T.label}>{sign.raw.calldata}</dt>
+                      <dd className="grid gap-1">
+                        <code className="block max-h-32 overflow-y-auto font-mono text-xs text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                          {request.raw.data}
+                        </code>
+                        <span className="-ml-2 flex">
+                          <CopyButton
+                            text={request.raw.data}
+                            label={sign.raw.copy}
+                            done={sign.raw.copied}
+                          />
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+                </details>
+              </Section>
+            </>
+          ) : null}
+
+          <footer
+            ref={foot}
+            className={
+              compact
+                ? "sticky bottom-0 z-10 grid gap-2.5 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-3 pb-3"
+                : "grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6"
+            }
+          >
+            {phase.kind === "signing" ? (
+              <p className="font-display text-xl font-extrabold uppercase text-[color:var(--fg)]">
+                {phase.step === "passkey"
+                  ? sign.status.passkey
+                  : phase.step === "signing"
+                    ? sign.status.signing
+                    : sign.status.sending}
+              </p>
+            ) : phase.kind === "override" ? (
+              // Compact: the explanation scrolls with the request; only the hold stays pinned.
+              compact ? (
+                <HoldButton onHeld={() => startSigning("overridden")} />
+              ) : (
+                overridePanel
+              )
+            ) : (
+              <>
+                {blocked ? (
+                  <p id={noSignId} className={compact ? "sr-only" : T.small}>
+                    {sign.verdict.blocked.noSign}
+                  </p>
+                ) : null}
+                <div className={decisionGrid}>
+                  {request.verdict === "safe" || request.verdict === "caution" ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size={decisionSize}
+                        disabled={checking}
+                        onClick={() => finish("declined")}
+                      >
+                        {sign.verdict.safe.secondary}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size={decisionSize}
+                        disabled={checking}
+                        onClick={() => startSigning("sent")}
+                      >
+                        {sign.verdict.safe.primary}
+                      </Button>
+                    </>
+                  ) : blocked ? (
+                    compact ? (
+                      // Compact: Decline first, in the tab order as on screen.
+                      <>
+                        {declineBlocked}
+                        {overrideBlocked}
+                      </>
+                    ) : (
+                      <>
+                        {overrideBlocked}
+                        {declineBlocked}
+                      </>
+                    )
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size={decisionSize}
+                        disabled={checking}
+                        onClick={() => finish("declined")}
+                      >
+                        {sign.verdict.unreachable.secondary}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size={decisionSize}
+                        disabled={checking || phase.kind === "retrying"}
+                        onClick={() => {
+                          setPhase({ kind: "retrying" });
+                          setSaid(sign.offline.retrying);
+                        }}
+                      >
+                        {phase.kind === "retrying"
+                          ? sign.offline.retrying
+                          : sign.verdict.unreachable.primary}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                {unreachable && phase.kind !== "retrying" && !checking ? (
+                  <div className="flex">
+                    <Button
+                      ref={overrideTrigger}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={openOverride}
+                    >
+                      {sign.verdict.unreachable.override}
+                    </Button>
+                  </div>
+                ) : null}
+              </>
+            )}
+            {compact ? (
+              // Compact: the countdown and the surface's note share one line.
+              waiting || footnote ? (
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  {waiting ? (
+                    <>
+                      <p
+                        className={`font-mono text-xs text-[color:var(--fg)] ${T.num}`}
+                        aria-hidden="true"
+                      >
+                        {countdown}
+                      </p>
+                      <p className="sr-only">{sign.countdown.note}</p>
+                    </>
+                  ) : null}
+                  {footnote}
+                </div>
+              ) : null
+            ) : (
+              <>
+                {waiting ? (
+                  <div className="grid gap-1">
+                    <p
+                      className={`font-mono text-sm text-[color:var(--fg)] ${T.num}`}
+                      aria-hidden="true"
+                    >
+                      {countdown}
+                    </p>
+                    <p className={T.small}>{sign.countdown.note}</p>
+                  </div>
+                ) : null}
+                {footnote}
+              </>
+            )}
+          </footer>
+        </>
+      )}
     </article>
   );
 }

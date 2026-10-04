@@ -81,6 +81,9 @@ export const sign = {
       title: "Blocked by your rules",
       summary: "{rule} stopped this request. Nothing was signed.",
       summaryMany: "{rule} and {count} more rules stopped this request. Nothing was signed.",
+      summaryManyOne: "{rule} and {count} more rule stopped this request. Nothing was signed.",
+      /** A block with no rule to name, such as a failed check that counts as Blocked. */
+      summaryNoRule: "A check stopped this request. Nothing was signed.",
       primary: "Decline",
       secondary: "Override this block",
       noSign: "There is no sign button on a blocked request.",
@@ -179,6 +182,7 @@ export const sign = {
 
   countdown: {
     label: "Declines on its own in {seconds} seconds",
+    labelOne: "Declines on its own in {seconds} second",
     note: "When time runs out, the request is declined and nothing is signed.",
   },
 
@@ -190,12 +194,17 @@ export const sign = {
     blocked: {
       title: "Sign against your rule",
       body: "{rule} stays on. Only this request goes through, exactly as it is. Once it is sent, it can't be undone.",
+      bodyNoRule:
+        "Your rules stay on. Only this request goes through, exactly as it is. Once it is sent, it can't be undone.",
     },
     unreachable: {
       title: "Sign while Baret is unreachable",
       body: "Nothing about this request was simulated or checked. If you sign, it goes out unchecked and can't be undone.",
     },
     hold: "Press and hold to sign",
+    /** Read by screen readers with the button. 1.5 s is HoldButton's HOLD_MS. */
+    holdHint:
+      "Hold Space or Enter, or keep pressing, for 1.5 seconds. Letting go early signs nothing.",
     holding: "Keep holding",
     released: "You let go. Nothing was signed.",
     back: "Back",

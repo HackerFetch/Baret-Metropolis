@@ -1,6 +1,6 @@
 import { policy, sign } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { amount } from "../data/format.js";
 import type { ActivityItem, SignRequest } from "../data/types.js";
 import { fillParts, type Part } from "../lib/parts.js";
@@ -54,13 +54,25 @@ export function impactText(request: SignRequest): string {
   return fill(sign.impact[request.impact], values(request));
 }
 
-/** The blocked verdict's summary: the first rule that fired, and how many more. */
+/**
+ * The blocked verdict's summary: the first rule that fired, and how many more.
+ * A block with no fired rule (a failed check counts as Blocked) names none.
+ */
 export function blockedSummary(request: SignRequest): string {
   const [first, ...rest] = request.rules;
-  const rule = first ? policy.fields[first.rule].label : "";
+  const { blocked } = sign.verdict;
+  if (!first) return blocked.summaryNoRule;
+  const rule = policy.fields[first.rule].label;
   return rest.length === 0
-    ? fill(sign.verdict.blocked.summary, { rule })
-    : fill(sign.verdict.blocked.summaryMany, { rule, count: String(rest.length) });
+    ? fill(blocked.summary, { rule })
+    : counted(rest.length, blocked.summaryMany, blocked.summaryManyOne, { rule });
+}
+
+/** The override's warning: the rule it goes past, or none when no rule fired. */
+export function overrideBody(request: SignRequest): string {
+  const { blocked } = sign.override;
+  const first = request.rules[0];
+  return first ? fill(blocked.body, { rule: policy.fields[first.rule].label }) : blocked.bodyNoRule;
 }
 
 /** One row per rule that fired: its label, and the request against the limit when known. */
