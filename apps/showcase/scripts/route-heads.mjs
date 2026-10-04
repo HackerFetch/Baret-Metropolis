@@ -8,7 +8,8 @@
  *   after this runs (prerender.mjs).
  * - The same file, marked noindex and left out of the sitemap, for the demo
  *   sites and the utility pages, so they never receive the landing's markup
- *   or its hero preload through the fallback.
+ *   or its hero preload through the fallback; and `dist/404.html`, the same
+ *   shell for unmatched paths on a host that serves a real 404.
  * - `dist/sitemap.xml` listing "/" and the marketing routes, and a Sitemap
  *   line appended to the robots.txt copied from public/. Both need absolute
  *   URLs, so they are written only when BARET_SITE_URL is set.
@@ -123,6 +124,13 @@ export async function writeRouteHeads({ outDir, routesFile, site, description, d
     const preload = chunkPreloads(manifest, route.module);
     await write(route, headFor({ ...route, description, site, noindex: true, preload }));
   }
+  // A real 404 for hosts that serve one for unmatched paths (Vercel serves
+  // dist/404.html with status 404 once no catch-all rewrite answers first):
+  // the empty shell, noindex, so the router renders the not-found page.
+  const notFound = source.match(/notFound: \{[^}]*title: "([^"]+)"/)?.[1];
+  if (!notFound) throw new Error("route-heads: no notFound route found");
+  const head404 = headFor({ path: "/404", title: notFound, description, site, noindex: true });
+  await writeFile(join(outDir, "404.html"), stripHeadMarks(replaceHead(shell, head404)));
   await writeFile(shellFile, stripHeadMarks(shell));
 
   if (!site) return;
