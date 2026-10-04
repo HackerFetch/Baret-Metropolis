@@ -14,7 +14,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { ContributeCard } from "./ContributeCard.js";
 import { LaunchGlyph, VIEWS } from "./Glyph.js";
 import { ART, limitOf, SAMPLE, saleOf } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * LaunchPad: a token sale page in its own plum palette, with Baret's strip
@@ -129,7 +129,7 @@ export function LaunchPadSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

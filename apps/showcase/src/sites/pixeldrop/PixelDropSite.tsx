@@ -13,7 +13,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { PixelGlyph, VIEWS } from "./Glyph.js";
 import { MintCard } from "./MintCard.js";
 import { ART, parseQuantity, priceOf, SAMPLE } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * PixelDrop: a mint page for the Night Shift collection in its own
@@ -135,7 +135,7 @@ export function PixelDropSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

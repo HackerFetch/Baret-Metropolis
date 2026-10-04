@@ -7,7 +7,7 @@ import { AttackSwitch } from "../kit/AttackSwitch.js";
 
 /**
  * The allocation box, ClaimHub's focal point, in two steps. First the
- * eligibility check: a wallet address, or none for the connected wallet.
+ * eligibility check: a wallet address, or none for the sample wallet.
  * Then the allocation rows and the claim button. The check is the page's own
  * theatre (every wallet is eligible); what the claim button asks for is the
  * whole scenario. The switch at the bottom stays in step with Baret's strip.

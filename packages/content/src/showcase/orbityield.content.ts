@@ -265,3 +265,6 @@ export const orbityield = {
 } as const satisfies ScenarioSite;
 
 export type OrbityieldContent = typeof orbityield;
+
+/** Token unit the stake box prints beside its figures. */
+export const orbityieldUnits = { stake: "MON" } as const;

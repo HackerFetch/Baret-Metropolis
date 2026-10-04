@@ -1,4 +1,5 @@
 import { launchpad } from "@baret/content";
+import { launchpadUnits } from "@baret/content/showcase/launchpad.content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
@@ -49,7 +50,7 @@ export function ContributeCard({
 
       <AmountField
         label={panel.input}
-        unit="MON"
+        unit={launchpadUnits.pay}
         value={amount}
         onChange={onAmount}
         error={error}
@@ -59,7 +60,8 @@ export function ContributeCard({
         <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--rule)] py-3">
           <dt className={T.small}>{panel.receive}</dt>
           <dd className="text-right font-display text-2xl font-extrabold tabular-nums text-[color:var(--fg)]">
-            {tokensFor(value ?? 0)} <span className="text-base font-bold">LNTL</span>
+            {tokensFor(value ?? 0)}{" "}
+            <span className="text-base font-bold">{launchpadUnits.receive}</span>
           </dd>
         </div>
         {panel.rows.map((row) => (
@@ -74,7 +76,10 @@ export function ContributeCard({
       </dl>
       {/* The "Raised" row as a bar; the row above already says it in words. */}
       <div aria-hidden="true" className="-mt-3 h-1.5 bg-[color:var(--rule)]">
-        <div className="h-full bg-[color:var(--accent)]" style={{ width: `${RAISED * 100}%` }} />
+        <div
+          className="h-full bg-[color:var(--accent-mark)]"
+          style={{ width: `${RAISED * 100}%` }}
+        />
       </div>
 
       <Button type="submit" variant="primary" size="lg" className="w-full">

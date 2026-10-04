@@ -82,7 +82,10 @@ export function MintCard({
       </dl>
       {/* The "Minted" row as a bar; the row above already says it in words. */}
       <div aria-hidden="true" className="-mt-3 h-1.5 bg-[color:var(--rule)]">
-        <div className="h-full bg-[color:var(--accent)]" style={{ width: `${MINTED * 100}%` }} />
+        <div
+          className="h-full bg-[color:var(--accent-mark)]"
+          style={{ width: `${MINTED * 100}%` }}
+        />
       </div>
 
       <Button type="submit" variant="primary" size="lg" className="w-full">

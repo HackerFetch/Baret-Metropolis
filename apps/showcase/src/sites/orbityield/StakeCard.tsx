@@ -1,4 +1,5 @@
 import { orbityield } from "@baret/content";
+import { orbityieldUnits } from "@baret/content/showcase/orbityield.content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
@@ -50,9 +51,9 @@ export function StakeCard({
 
       <AmountField
         label={stake?.label ?? panel.input}
-        balance={`${panel.balance} ${format(SAMPLE.mon)} MON`}
+        balance={`${panel.balance} ${format(SAMPLE.mon)} ${orbityieldUnits.stake}`}
         max={{ label: panel.max, onMax: () => onAmount(String(SAMPLE.mon)) }}
-        unit="MON"
+        unit={orbityieldUnits.stake}
         value={amount}
         onChange={onAmount}
         error={error}

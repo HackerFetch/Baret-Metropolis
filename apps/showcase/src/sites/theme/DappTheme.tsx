@@ -33,7 +33,25 @@ export function DappTheme({
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.dapp = name;
+
+    // The browser bar follows the dApp's ground, light or dark, and gets
+    // Baret's own value back when the page goes.
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const before = meta?.content;
+    const sync = () => {
+      const ground = getComputedStyle(root).getPropertyValue("--ground").trim();
+      if (meta && ground) meta.content = ground;
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    scheme.addEventListener("change", sync);
+
     return () => {
+      observer.disconnect();
+      scheme.removeEventListener("change", sync);
+      if (meta && before !== undefined) meta.content = before;
       if (root.dataset.dapp === name) delete root.dataset.dapp;
     };
   }, [name]);

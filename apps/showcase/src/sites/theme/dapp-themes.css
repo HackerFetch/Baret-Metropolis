@@ -9,6 +9,10 @@
  *
  * State colours (--safe, --caution, --blocked, --watching), --network and
  * --tag-paper are not re-themed: they are functional and family-wide.
+ * --accent fills buttons; --accent-mark draws marks that carry meaning (the
+ * highlighted bar, share fills, rules, the current-page underline) and keeps
+ * 3:1 on ground and surface where a light accent is too pale for that.
+ * --fg-faint keeps 4.5:1. themes.test.ts checks both ratios.
  * Values and their WCAG ratios: see the design note in docs/FRONTEND.md.
 */
 
@@ -20,12 +24,13 @@
   --surface: #f8f6ef;
   --fg: #17160f;
   --fg-muted: rgb(23 22 15 / 0.72);
-  --fg-faint: rgb(23 22 15 / 0.52);
+  --fg-faint: rgb(23 22 15 / 0.66);
   --fg-ghost: rgb(23 22 15 / 0.34);
   --rule: rgb(23 22 15 / 0.14);
   --rule-strong: rgb(23 22 15 / 0.28);
   --control-edge: rgb(23 22 15 / 0.55);
   --accent: #f0d417;
+  --accent-mark: #6e6200;
   --accent-deep: #dcc000;
   --accent-dim: rgb(240 212 23 / 0.1);
   --on-accent: #17160f;
@@ -47,6 +52,7 @@
     --rule-strong: rgb(238 236 225 / 0.26);
     --control-edge: rgb(238 236 225 / 0.55);
     --accent: #f2d930;
+    --accent-mark: #f2d930;
     --accent-deep: #ffe650;
     --accent-dim: rgb(242 217 48 / 0.14);
     --on-accent: #17160f;
@@ -68,6 +74,7 @@
   --rule-strong: rgb(238 236 225 / 0.26);
   --control-edge: rgb(238 236 225 / 0.55);
   --accent: #f2d930;
+  --accent-mark: #f2d930;
   --accent-deep: #ffe650;
   --accent-dim: rgb(242 217 48 / 0.14);
   --on-accent: #17160f;
@@ -84,12 +91,13 @@
   --surface: #f6f7fa;
   --fg: #0f1320;
   --fg-muted: rgb(15 19 32 / 0.72);
-  --fg-faint: rgb(15 19 32 / 0.52);
+  --fg-faint: rgb(15 19 32 / 0.66);
   --fg-ghost: rgb(15 19 32 / 0.34);
   --rule: rgb(15 19 32 / 0.14);
   --rule-strong: rgb(15 19 32 / 0.28);
   --control-edge: rgb(15 19 32 / 0.55);
   --accent: #2443d6;
+  --accent-mark: #2443d6;
   --accent-deep: #1a34b2;
   --accent-dim: rgb(36 67 214 / 0.1);
   --on-accent: #f6f7fa;
@@ -111,6 +119,7 @@
     --rule-strong: rgb(232 235 242 / 0.26);
     --control-edge: rgb(232 235 242 / 0.55);
     --accent: #7f95ff;
+    --accent-mark: #7f95ff;
     --accent-deep: #9cadff;
     --accent-dim: rgb(127 149 255 / 0.14);
     --on-accent: #0f1320;
@@ -132,6 +141,7 @@
   --rule-strong: rgb(232 235 242 / 0.26);
   --control-edge: rgb(232 235 242 / 0.55);
   --accent: #7f95ff;
+  --accent-mark: #7f95ff;
   --accent-deep: #9cadff;
   --accent-dim: rgb(127 149 255 / 0.14);
   --on-accent: #0f1320;
@@ -148,12 +158,13 @@
   --surface: #f8f5f8;
   --fg: #1a1220;
   --fg-muted: rgb(26 18 32 / 0.72);
-  --fg-faint: rgb(26 18 32 / 0.52);
+  --fg-faint: rgb(26 18 32 / 0.66);
   --fg-ghost: rgb(26 18 32 / 0.34);
   --rule: rgb(26 18 32 / 0.14);
   --rule-strong: rgb(26 18 32 / 0.28);
   --control-edge: rgb(26 18 32 / 0.55);
   --accent: #bd1a8e;
+  --accent-mark: #bd1a8e;
   --accent-deep: #9c1276;
   --accent-dim: rgb(189 26 142 / 0.1);
   --on-accent: #f8f5f8;
@@ -175,6 +186,7 @@
     --rule-strong: rgb(240 234 240 / 0.26);
     --control-edge: rgb(240 234 240 / 0.55);
     --accent: #f05bc4;
+    --accent-mark: #f05bc4;
     --accent-deep: #ff7ed4;
     --accent-dim: rgb(240 91 196 / 0.14);
     --on-accent: #1a1220;
@@ -196,6 +208,7 @@
   --rule-strong: rgb(240 234 240 / 0.26);
   --control-edge: rgb(240 234 240 / 0.55);
   --accent: #f05bc4;
+  --accent-mark: #f05bc4;
   --accent-deep: #ff7ed4;
   --accent-dim: rgb(240 91 196 / 0.14);
   --on-accent: #1a1220;
@@ -212,12 +225,13 @@
   --surface: #f5f7f4;
   --fg: #11150f;
   --fg-muted: rgb(17 21 15 / 0.72);
-  --fg-faint: rgb(17 21 15 / 0.52);
+  --fg-faint: rgb(17 21 15 / 0.66);
   --fg-ghost: rgb(17 21 15 / 0.34);
   --rule: rgb(17 21 15 / 0.14);
   --rule-strong: rgb(17 21 15 / 0.28);
   --control-edge: rgb(17 21 15 / 0.55);
   --accent: #a6c80c;
+  --accent-mark: #5d7500;
   --accent-deep: #93b300;
   --accent-dim: rgb(166 200 12 / 0.1);
   --on-accent: #11150f;
@@ -239,6 +253,7 @@
     --rule-strong: rgb(233 237 231 / 0.26);
     --control-edge: rgb(233 237 231 / 0.55);
     --accent: #b8db1f;
+    --accent-mark: #b8db1f;
     --accent-deep: #caea3e;
     --accent-dim: rgb(184 219 31 / 0.14);
     --on-accent: #11150f;
@@ -260,6 +275,7 @@
   --rule-strong: rgb(233 237 231 / 0.26);
   --control-edge: rgb(233 237 231 / 0.55);
   --accent: #b8db1f;
+  --accent-mark: #b8db1f;
   --accent-deep: #caea3e;
   --accent-dim: rgb(184 219 31 / 0.14);
   --on-accent: #11150f;
@@ -276,12 +292,13 @@
   --surface: #f5f1e8;
   --fg: #1a1610;
   --fg-muted: rgb(26 22 16 / 0.72);
-  --fg-faint: rgb(26 22 16 / 0.52);
+  --fg-faint: rgb(26 22 16 / 0.66);
   --fg-ghost: rgb(26 22 16 / 0.34);
   --rule: rgb(26 22 16 / 0.14);
   --rule-strong: rgb(26 22 16 / 0.28);
   --control-edge: rgb(26 22 16 / 0.55);
   --accent: #1a1610;
+  --accent-mark: #1a1610;
   --accent-deep: #3a3328;
   --accent-dim: rgb(26 22 16 / 0.1);
   --on-accent: #f5f1e8;
@@ -303,6 +320,7 @@
     --rule-strong: rgb(239 232 218 / 0.26);
     --control-edge: rgb(239 232 218 / 0.55);
     --accent: #e2d2ae;
+    --accent-mark: #e2d2ae;
     --accent-deep: #efe2c4;
     --accent-dim: rgb(226 210 174 / 0.14);
     --on-accent: #1a1610;
@@ -324,6 +342,7 @@
   --rule-strong: rgb(239 232 218 / 0.26);
   --control-edge: rgb(239 232 218 / 0.55);
   --accent: #e2d2ae;
+  --accent-mark: #e2d2ae;
   --accent-deep: #efe2c4;
   --accent-dim: rgb(226 210 174 / 0.14);
   --on-accent: #1a1610;
@@ -348,12 +367,13 @@
   --surface: #f7f6f9;
   --fg: #16121c;
   --fg-muted: rgb(22 18 28 / 0.72);
-  --fg-faint: rgb(22 18 28 / 0.52);
+  --fg-faint: rgb(22 18 28 / 0.66);
   --fg-ghost: rgb(22 18 28 / 0.34);
   --rule: rgb(22 18 28 / 0.14);
   --rule-strong: rgb(22 18 28 / 0.28);
   --control-edge: rgb(22 18 28 / 0.55);
   --accent: #6e2ba8;
+  --accent-mark: #6e2ba8;
   --accent-deep: #5a2190;
   --accent-dim: rgb(110 43 168 / 0.1);
   --on-accent: #f7f6f9;
@@ -375,6 +395,7 @@
     --rule-strong: rgb(236 232 242 / 0.26);
     --control-edge: rgb(236 232 242 / 0.55);
     --accent: #c58af0;
+    --accent-mark: #c58af0;
     --accent-deep: #d3a4f4;
     --accent-dim: rgb(197 138 240 / 0.14);
     --on-accent: #15121b;
@@ -396,6 +417,7 @@
   --rule-strong: rgb(236 232 242 / 0.26);
   --control-edge: rgb(236 232 242 / 0.55);
   --accent: #c58af0;
+  --accent-mark: #c58af0;
   --accent-deep: #d3a4f4;
   --accent-dim: rgb(197 138 240 / 0.14);
   --on-accent: #15121b;

@@ -255,3 +255,6 @@ export const launchpad = {
 } as const satisfies ScenarioSite;
 
 export type LaunchpadContent = typeof launchpad;
+
+/** Token units the contribution box prints beside its figures. */
+export const launchpadUnits = { pay: "MON", receive: "LNTL" } as const;

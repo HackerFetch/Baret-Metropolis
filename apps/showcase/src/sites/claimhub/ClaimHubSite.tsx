@@ -13,7 +13,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { ClaimCard } from "./ClaimCard.js";
 import { ClaimGlyph, VIEWS } from "./Glyph.js";
 import { ART, SAMPLE, walletFor } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * ClaimHub: an airdrop page in its own kraft palette, with Baret's strip on
@@ -39,7 +39,7 @@ export function ClaimHubSite(): JSX.Element {
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
-  /** The page's eligibility check: any address, or the connected wallet when left empty. */
+  /** The page's eligibility check: any address, or the sample wallet when left empty. */
   function checkEligibility(): void {
     const next = walletFor(address, SAMPLE.wallet);
     if (next === null) {
@@ -125,7 +125,7 @@ export function ClaimHubSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

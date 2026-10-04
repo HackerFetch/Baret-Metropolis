@@ -14,7 +14,7 @@ import { useCheck } from "../kit/useCheck.js";
 import { OrbitGlyph, VIEWS } from "./Glyph.js";
 import { StakeCard } from "./StakeCard.js";
 import { ART, overLimit, poolOf, SAMPLE } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { LIVE, SOURCE } from "./source.js";
 
 /**
  * OrbitYield: a liquid staking page in its own observatory palette, with
@@ -129,7 +129,7 @@ export function OrbitYieldSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={false}
+        live={LIVE}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{
