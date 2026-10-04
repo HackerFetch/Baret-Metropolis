@@ -9,14 +9,15 @@ import { staggerDelay } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId } from "react";
 import { INSTALL_ART } from "../shared/assets.js";
-import type { BuildId } from "./builds.js";
+import { BUILDS, type BuildId } from "./builds.js";
 
 /**
  * Three steps for the chosen browser, in one row: a drawing, the step, and
  * for the step that names a browser page, its address with a copy button (a
  * page cannot link to chrome:// or about:). The picker starts on the
  * visitor's browser. Under the row, the browser's own caveat: developer mode
- * for Chrome, temporary add-ons for Firefox.
+ * for Chrome, temporary add-ons for Firefox. While the chosen build is not
+ * published, step 1 builds the folder from source instead of extracting a zip.
  */
 
 const ID = "steps";
@@ -32,6 +33,8 @@ export function InstallSteps({
 }): JSX.Element {
   const name = useId();
   const chosen = browser === "firefox" ? steps.firefox : steps.chrome;
+  const first = browser === "firefox" ? steps.pending.firefox : steps.pending.chrome;
+  const items = BUILDS[browser].href === null ? [first, ...chosen.items.slice(1)] : chosen.items;
   const options = [
     { id: "chromium", label: steps.chrome.title },
     { id: "firefox", label: steps.firefox.title },
@@ -58,7 +61,7 @@ export function InstallSteps({
       </fieldset>
 
       <ol className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
-        {chosen.items.map((item, i) => (
+        {items.map((item, i) => (
           <Reveal as="li" key={`${browser}-${item.short}`} delay={staggerDelay(i)}>
             <ImgWell
               asset={ART[i] ?? INSTALL_ART.extract}

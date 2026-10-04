@@ -202,13 +202,15 @@ export function Component() {
               ["Block unlimited approvals", true],
               ["Block operator grants on collections", true],
               ["Block unknown contracts", false],
-            ].map(([label, on]) => (
+            ].map(([label, on], i) => (
               <div
                 key={String(label)}
                 className="flex items-start justify-between gap-4 border-b border-[color:var(--rule)] py-2.5 last:border-b-0"
               >
-                <span className="text-sm">{label}</span>
-                <Switch defaultChecked={on as boolean} />
+                <span id={`kit-rule-${i}`} className="text-sm">
+                  {label}
+                </span>
+                <Switch defaultChecked={on as boolean} aria-labelledby={`kit-rule-${i}`} />
               </div>
             ))}
             <StepIndicator

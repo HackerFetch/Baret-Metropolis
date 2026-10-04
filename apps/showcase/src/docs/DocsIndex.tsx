@@ -22,6 +22,17 @@ const COLS: Record<number, string> = {
   4: "lg:grid-cols-4",
 };
 
+/**
+ * The drawing's width per row: the 1180 px frame split into columns, less
+ * the gaps and the card's 16 px inset on each side.
+ */
+const PHONE_AND_TABLET = "(min-width: 768px) calc(50vw - 72px), calc(100vw - 64px)";
+const SIZES: Record<number, string> = {
+  2: `(min-width: 1024px) 546px, ${PHONE_AND_TABLET}`,
+  3: `(min-width: 1024px) 345px, ${PHONE_AND_TABLET}`,
+  4: `(min-width: 1024px) 245px, ${PHONE_AND_TABLET}`,
+};
+
 export function DocsIndex(): JSX.Element {
   return (
     <div
@@ -31,13 +42,18 @@ export function DocsIndex(): JSX.Element {
         {docs.groups.map((group) => {
           const id = slug(group.title);
           const cols = COLS[group.cards.length] ?? "lg:grid-cols-3";
+          const sizes = SIZES[group.cards.length] ?? SIZES[3];
           return (
             <section key={id} id={id} aria-labelledby={titleIdOf(id)}>
               <SectionHeader titleId={titleIdOf(id)} title={group.title} body={group.body} />
               <ul className={`mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6 ${cols}`}>
                 {group.cards.map((card, i) => (
                   <Reveal as="li" key={card.file} delay={staggerDelay(i % 4)}>
-                    <DocCard card={card} wide={group.cards.length === 2} />
+                    <DocCard
+                      card={card}
+                      wide={group.cards.length === 2}
+                      {...(sizes ? { sizes } : {})}
+                    />
                   </Reveal>
                 ))}
               </ul>

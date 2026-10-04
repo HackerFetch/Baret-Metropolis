@@ -60,7 +60,7 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
       actions={
         <>
           <p className={`${T.small} w-full min-h-[2lh] text-[color:var(--fg)] md:min-h-[1lh]`}>
-            {hero.detected[browser]}
+            {(published ? hero.detected : hero.detectedPending)[browser]}
           </p>
           {actions}
         </>
@@ -83,7 +83,9 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
               </a>
             </p>
           ) : (
-            <p className={`${T.small} max-w-[56ch]`}>{download.status}</p>
+            <p className={`${T.small} max-w-[56ch]`}>
+              {published ? download.status : download.statusPending}
+            </p>
           )}
         </div>
       }

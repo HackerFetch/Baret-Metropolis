@@ -21,7 +21,19 @@ const FOCUS =
 const PUSH =
   "transition-transform duration-[600ms] ease-out-soft group-hover/card:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover/card:scale-100";
 
-export function DocCard({ card, wide = false }: { card: Card; wide?: boolean }): JSX.Element {
+/** One card in a row of three from 1024 px, two from 768 px, one on phones. */
+const SIZES = "(min-width: 1024px) 345px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 64px)";
+
+export function DocCard({
+  card,
+  wide = false,
+  sizes = SIZES,
+}: {
+  card: Card;
+  wide?: boolean;
+  /** The drawing's rendered width, from the row the card sits in. */
+  sizes?: string;
+}): JSX.Element {
   const art = DOCS_CARD_ART[card.file];
   return (
     <article
@@ -36,7 +48,7 @@ export function DocCard({ card, wide = false }: { card: Card; wide?: boolean }):
             <Img
               asset={art}
               fit="contain"
-              sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw"
+              sizes={sizes}
               className="absolute inset-0 size-full p-4"
             />
           </div>

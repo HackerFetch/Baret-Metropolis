@@ -19,7 +19,6 @@
 
 export const install = {
   meta: {
-    title: "Install the extension · Baret",
     description:
       "Install the Baret extension for Chrome, Brave, Edge or Firefox. It is a Monad wallet that simulates every sign request and checks it before you sign.",
   },
@@ -39,6 +38,13 @@ export const install = {
       firefox: "You are on Firefox. This build is yours.",
       unknown: "Pick the build that matches your browser.",
     },
+    /** The detected line while no build is published: there is nothing to pick. */
+    detectedPending: {
+      chromium:
+        "You are on a Chromium browser, such as Chrome, Brave or Edge. Build Baret for it from the source.",
+      firefox: "You are on Firefox. Build Baret for it from the source.",
+      unknown: "Baret runs in Chrome, Brave, Edge and Firefox. Build it for yours from the source.",
+    },
   },
 
   download: {
@@ -46,19 +52,22 @@ export const install = {
     title: "Download the build",
     body: "A zip archive with the extension inside. Nothing installs on its own, and nothing runs until you load it.",
     builds: {
-      chromium: { title: "Baret for Chrome, Brave and Edge", requires: "Version 111 or later" },
-      firefox: { title: "Baret for Firefox", requires: "Version 128 or later" },
+      chromium: { title: "Baret for Chrome, Brave and Edge", requires: "Chrome 111 or later" },
+      firefox: { title: "Baret for Firefox", requires: "Firefox 128 or later" },
     },
     meta: { version: "Version", size: "Size", updated: "Updated", manifest: "Manifest V3" },
     other: "Also available for",
+    /** Under a published build. */
     status:
       "Not in the Chrome Web Store or Firefox Add-ons yet. Until it is, download it here or build it from source.",
+    /** Under the source link while no build is published. */
+    statusPending: "Not in the Chrome Web Store or Firefox Add-ons yet.",
     /** Shown in place of the download until a build is published. */
     pending: {
       body: "No downloadable build is published yet. Build it from source in a few minutes, then load the folder the same way.",
       action: {
         label: "Build it from source",
-        href: "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/DEPLOYMENT.md",
+        href: "https://github.com/HackerFetch/Baret-Metropolis/blob/main/apps/extension/SOURCE_BUILD.md",
       },
     },
   },
@@ -72,6 +81,20 @@ export const install = {
     /** A page cannot link to a browser's internal pages, so each address
      *  gets a copy button instead. */
     copy: { label: "Copy the address", done: "Copied" },
+    /** Step 1 while no build is published: build the folder instead of
+     *  extracting a zip. Folders come from apps/extension/SOURCE_BUILD.md. */
+    pending: {
+      chrome: {
+        short: "Build",
+        title: "Build it from source",
+        body: "Clone the repository, run pnpm install, then pnpm --filter @baret/extension build. The folder to load is apps/extension/.output/chrome-mv3.",
+      },
+      firefox: {
+        short: "Build",
+        title: "Build it from source",
+        body: "Clone the repository, run pnpm install, then pnpm --filter @baret/extension build:firefox. The folder to load is apps/extension/.output/firefox-mv3.",
+      },
+    },
     chrome: {
       title: "Chrome, Brave or Edge",
       items: [
@@ -89,7 +112,7 @@ export const install = {
         {
           short: "Load",
           title: "Load unpacked",
-          body: "Press Load unpacked and pick the folder you extracted. Pin Baret from the puzzle-piece icon in the toolbar, then click it to set up your wallet.",
+          body: "Press Load unpacked and pick the Baret folder from step 1. Pin Baret from the puzzle-piece icon in the toolbar, then click it to set up your wallet.",
         },
       ],
     },
@@ -110,7 +133,7 @@ export const install = {
         {
           short: "Load",
           title: "Load a temporary add-on",
-          body: "Press Load Temporary Add-on and pick manifest.json inside the folder you extracted. Firefox removes temporary add-ons when it quits, so load it again after each restart.",
+          body: "Press Load Temporary Add-on and pick manifest.json inside the Baret folder from step 1. Firefox removes temporary add-ons when it quits, so load it again after each restart.",
         },
       ],
       warning:
@@ -122,7 +145,7 @@ export const install = {
     title: "About developer mode",
     body: "Chrome loads an extension from a folder only when developer mode is on. It gives Baret no extra access and changes nothing about your other extensions.",
     warning:
-      "Developer mode lets any folder load as an extension. Load only a build you downloaded yourself, from a source you trust.",
+      "Developer mode lets any folder load as an extension. Load only a build you made or downloaded yourself, from a source you trust.",
     note: "Once Baret is in the store, install it from there instead.",
   },
 

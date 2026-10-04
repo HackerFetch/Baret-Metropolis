@@ -25,8 +25,8 @@ function Controls(): JSX.Element {
   const [picked, setPicked] = useState("a");
   const [on, setOn] = useState(true);
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <div className="grid content-start gap-4">
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="grid min-w-0 content-start gap-4">
         <p className={T.label}>Segment</p>
         <div className="grid grid-cols-2 gap-2">
           {["a", "b"].map((value) => (
@@ -44,7 +44,7 @@ function Controls(): JSX.Element {
         <RuleSwitch label="RuleSwitch" stateWord={on ? "On" : "Off"} on={on} onToggle={setOn} />
         <p className={T.label}>CopyButton</p>
         <div className="flex items-center gap-2 border border-[color:var(--rule-strong)] pl-3">
-          <code className="flex-1 font-mono text-sm">
+          <code className="min-w-0 flex-1 break-all py-2 font-mono text-sm">
             0x0A82671420114E47c672D5e8e23017DdCE850A35
           </code>
           <CopyButton
@@ -59,7 +59,7 @@ function Controls(): JSX.Element {
           <LinkButton href="#kit-web" label="ghost" />
         </div>
       </div>
-      <div className="grid content-start gap-4">
+      <div className="grid min-w-0 content-start gap-4">
         <p className={T.label}>Disclosures</p>
         <Disclosures name="kit-disclosures" items={SAMPLE} />
       </div>
