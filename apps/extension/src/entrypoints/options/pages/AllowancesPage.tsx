@@ -358,7 +358,7 @@ export function Component() {
     label: sort[value],
   }));
   const figures = [
-    split(summary.total, String(mine.length)),
+    split(mine.length === 1 ? summary.totalOne : summary.total, String(mine.length)),
     split(summary.unlimited, String(unlimited.length)),
     split(summary.paused, String(paused.length)),
     split(summary.spent24h, `${spent} USDC`),
@@ -492,7 +492,7 @@ export function Component() {
                               </span>
                             </span>
                             <span
-                              className={`font-display text-lg font-bold uppercase md:text-right ${noLimit ? "text-[color:var(--blocked)]" : "text-[color:var(--fg)]"} ${T.num}`}
+                              className={`font-display text-lg font-bold uppercase md:text-right ${noLimit ? "text-[color:var(--blocked-ink)]" : "text-[color:var(--fg)]"} ${T.num}`}
                             >
                               <span className="sr-only">{columns.exposure}: </span>
                               {exposureText(p, state.assets)}

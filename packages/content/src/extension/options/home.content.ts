@@ -12,7 +12,7 @@ export const optionsHome = {
   title: "Overview",
   lead: "What this wallet holds, who can spend from it, and whether Baret is checking your sign requests.",
 
-  balance: { label: "Total balance", usd: "Estimated in USD" },
+  balance: { label: "Total balance", usd: "Estimated in USD", unavailable: "Balance unavailable" },
 
   status: {
     title: "Baret status",
@@ -41,6 +41,7 @@ export const optionsHome = {
     columns: { address: "Address", name: "Name", lastMovement: "Last movement" },
     never: "No movement yet",
     alerts: "{count} movements you did not sign",
+    alertsOne: "1 movement you did not sign",
     action: { label: "See the alerts", href: "/activity" },
   },
 

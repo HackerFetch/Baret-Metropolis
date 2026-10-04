@@ -57,15 +57,23 @@ export const x402 = {
     actions: { pause: "Pause", resume: "Resume", caps: "Change caps", revoke: "Revoke" },
     /** The Change caps dialog. Its title is actions.caps. */
     capsDialog: {
-      body: "Baret checks every payment {merchant} asks for against these caps, starting with the next one.",
+      body: "Baret checks every payment {merchant} asks for against these caps.",
+      /** The on-chain fact, from PaymentGuard setMerchantCap. Owner to confirm. */
+      onchain:
+        "Saving sends one transaction to your PaymentGuard vault. You sign it and pay a network fee. The new caps apply once it lands on Monad.",
       hourHint: "Leave it empty for no hourly cap.",
-      action: "Save caps",
+      action: "Sign and save caps",
       saved: "Caps saved for {merchant}.",
       errors: {
         amount: "Enter an amount above 0, such as 0.50.",
         order: "The hourly cap can't be higher than the daily cap.",
+        dayBelowPayment: "The daily cap can't be lower than the per-payment cap.",
+        hourBelowPayment: "The hourly cap can't be lower than the per-payment cap.",
       },
     },
+    /** Under the Pause and Resume buttons, from PaymentGuard setMerchantPaused. Owner to confirm. */
+    pauseHint:
+      "Pause and Resume each send one transaction to your PaymentGuard vault and cost a network fee. Caps and history stay.",
     firstPayment: "The first payment to a new merchant always asks you.",
     empty: {
       title: "No merchants yet",
@@ -143,7 +151,7 @@ export const x402 = {
     },
     caps: {
       label: "Caps and allowed tokens",
-      hint: "Per payment, per hour and per day caps come from your rules.",
+      hint: "Your rules set the highest caps a merchant can get. Each merchant's own caps live in your PaymentGuard vault.",
       action: { label: "Edit them in Rules", href: "/rules" },
     },
   },

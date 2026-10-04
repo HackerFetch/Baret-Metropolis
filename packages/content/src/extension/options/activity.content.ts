@@ -80,7 +80,10 @@ export const optionsActivity = {
     recheck: {
       label: "Check again with my current rules",
       body: "Runs your current rules over {count} past requests to show the verdict each would get today. Nothing is signed and nothing changes on-chain.",
+      bodyOne:
+        "Runs your current rules over 1 past request to show the verdict it would get today. Nothing is signed and nothing changes on-chain.",
       working: "Checking {count} requests",
+      workingOne: "Checking 1 request",
       result: "{count} of {total} would be blocked under your current rules.",
     },
     export: {

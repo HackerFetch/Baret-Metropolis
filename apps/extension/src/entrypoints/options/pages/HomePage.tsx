@@ -6,7 +6,8 @@ import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, day } from "@baret/wallet-ui/data/format";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { useCountUp } from "@baret/web-ui/lib/useCountUp";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { OPTIONS_ART } from "../../../assets.js";
@@ -23,6 +24,17 @@ import { LINK, LogLine } from "../parts/kit.js";
  */
 
 const { balance, status, assets, watched, permissions, sites, recent, health } = optionsHome;
+
+/** The total balance, counted up once on the first paint. */
+function Total({ value }: { value: string }): JSX.Element {
+  const shown = useCountUp(value);
+  return (
+    <>
+      <span className="sr-only">{value}</span>
+      <span aria-hidden="true">{shown}</span>
+    </>
+  );
+}
 
 function checkup(state: ExtState) {
   const unlimited = state.permissions.filter(
@@ -83,6 +95,7 @@ export function Component() {
   const { state } = useExtension();
   const account = activeAccount(state);
   const mon = state.assets.find((a) => a.symbol === "MON");
+  const total = mon?.balance ?? account?.balance;
   const top = byExposure(state.permissions.filter((p) => p.account === state.active)).slice(0, 4);
   const log = state.activity.filter((a) => a.account === state.active).slice(0, 5);
   const connected = state.sites.filter((s) => s.status === "connected");
@@ -94,14 +107,21 @@ export function Component() {
         <div className="grid gap-8 md:grid-cols-12 md:items-end md:gap-8">
           <div className="grid gap-2 md:col-span-7">
             <p className={T.label}>{balance.label}</p>
-            <p className="flex items-baseline gap-3 text-[color:var(--fg)]">
-              <span className="font-display text-[clamp(3rem,2rem+3vw,4.5rem)] font-extrabold leading-[0.9] tabular-nums slashed-zero">
-                {amount(mon?.balance ?? account?.balance ?? "0")}
-              </span>
-              <span className="font-display text-2xl font-bold uppercase text-[color:var(--fg-muted)]">
-                MON
-              </span>
-            </p>
+            {total === undefined ? (
+              // An unread balance is not 0: say it is unavailable.
+              <p className="font-display text-2xl font-bold text-[color:var(--fg)]">
+                {balance.unavailable}
+              </p>
+            ) : (
+              <p className="flex items-baseline gap-3 text-[color:var(--fg)]">
+                <span className="font-display text-[clamp(3rem,2rem+3vw,4.5rem)] font-extrabold leading-[0.9] tabular-nums slashed-zero">
+                  <Total value={amount(total)} />
+                </span>
+                <span className="font-display text-2xl font-bold uppercase text-[color:var(--fg-muted)]">
+                  MON
+                </span>
+              </p>
+            )}
             <p className={T.small}>
               {balance.usd}: {popupHome.balance.unavailable}
             </p>
@@ -200,7 +220,7 @@ export function Component() {
                       {permissionLine(p)}
                     </span>
                     <span
-                      className={`font-display text-lg font-bold uppercase sm:text-right ${p.kind === "allowance" && p.amount === null ? "text-[color:var(--blocked)]" : "text-[color:var(--fg)]"} ${T.num}`}
+                      className={`font-display text-lg font-bold uppercase sm:text-right ${p.kind === "allowance" && p.amount === null ? "text-[color:var(--blocked-ink)]" : "text-[color:var(--fg)]"} ${T.num}`}
                     >
                       {exposureText(p, state.assets)}
                     </span>
@@ -311,7 +331,7 @@ export function Component() {
           <p className={`${T.body} max-w-[64ch]`}>{watched.body}</p>
           {unsigned > 0 ? (
             <p className="border-l-4 border-[color:var(--blocked)] pl-3 text-base font-medium text-[color:var(--fg)]">
-              {fill(watched.alerts, { count: String(unsigned) })}
+              {counted(unsigned, watched.alerts, watched.alertsOne)}
             </p>
           ) : null}
           <table className="w-full border-collapse">

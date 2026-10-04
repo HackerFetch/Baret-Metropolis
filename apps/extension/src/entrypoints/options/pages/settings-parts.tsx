@@ -3,7 +3,7 @@ import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { ExternalLink } from "lucide-react";
 import { type JSX, type ReactNode, type Ref, useEffect, useId, useRef, useState } from "react";
 import { Dialog, INPUT, Select } from "../parts/kit.js";
@@ -145,10 +145,10 @@ export function MinutesSelect({
   choices: readonly number[];
   onChange: (minutes: number) => void;
 }): JSX.Element {
-  const { minutes } = optionsSettings;
+  const { minutes, minutesOne } = optionsSettings;
   const options = choices.map((count) => ({
     value: String(count),
-    label: fill(count === 1 ? minutes.one : minutes.other, { count: String(count) }),
+    label: counted(count, minutes, minutesOne),
   }));
   return (
     <Select
@@ -161,9 +161,9 @@ export function MinutesSelect({
   );
 }
 
-type Answer = "idle" | "checking" | "ok" | "fail";
+type Answer = "idle" | "checking" | "sample" | "fail";
 
-/** The sample network: an https:// address answers, anything else does not. */
+/** Whether the address is a well-formed https:// URL. Nothing is contacted. */
 function answers(url: string): boolean {
   try {
     const parsed = new URL(url.trim());
@@ -175,19 +175,12 @@ function answers(url: string): boolean {
 
 /**
  * A node or a server of your own. "Use my own" reveals the address field,
- * the warning and the connection test. Nothing is called: after 700 ms an
- * https:// address answers as Monad testnet, chain 10143, and anything else
- * does not answer.
+ * the warning and the connection test. Until the settings seam carries these
+ * addresses they live on this page only, so nothing claims "Saved". Nothing
+ * is called either: an https:// address reads as not tested (never as
+ * connected), and anything else as no answer.
  */
-export function Endpoint({
-  label,
-  hint,
-  onSwitch,
-}: {
-  label: string;
-  hint: string;
-  onSwitch: () => void;
-}): JSX.Element {
+export function Endpoint({ label, hint }: { label: string; hint: string }): JSX.Element {
   const { custom } = network;
   const fieldId = useId();
   const [on, setOn] = useState(false);
@@ -206,16 +199,18 @@ export function Endpoint({
     window.clearTimeout(timer.current);
     setAnswer("checking");
     const ok = answers(url);
-    timer.current = window.setTimeout(() => setAnswer(ok ? "ok" : "fail"), ANSWER_MS);
+    timer.current = window.setTimeout(() => setAnswer(ok ? "sample" : "fail"), ANSWER_MS);
   }
 
   const result = {
     idle: "",
     checking: common.ui.checking,
-    ok: fill(custom.test.ok, { chainId: common.networks.testnet.chainId }),
+    sample: custom.test.sample,
     fail: custom.test.fail,
   }[answer];
-  const edge = { idle: "", checking: EDGE.neutral, ok: EDGE.safe, fail: EDGE.blocked }[answer];
+  const edge = { idle: "", checking: EDGE.neutral, sample: EDGE.neutral, fail: EDGE.blocked }[
+    answer
+  ];
 
   return (
     <SettingRow
@@ -230,7 +225,6 @@ export function Endpoint({
           onToggle={(next) => {
             setOn(next);
             forget();
-            onSwitch();
           }}
         />
       }
@@ -261,6 +255,7 @@ export function Endpoint({
             </div>
           </div>
           <Note tone="caution">{custom.warning}</Note>
+          <p className={T.small}>{custom.pageOnly}</p>
           <p
             role="status"
             className={`min-h-5 text-sm font-medium text-[color:var(--fg)] ${edge ? `border-l-4 pl-3 ${edge}` : ""}`}

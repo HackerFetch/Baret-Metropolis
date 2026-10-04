@@ -105,12 +105,18 @@ export const optionsSettings = {
       /** The address field's label: "Monad node URL". */
       field: "{name} URL",
       placeholder: "https://",
+      /** Until the settings seam stores these addresses. */
+      pageOnly:
+        "Kept on this page only for now. Baret keeps using its own node and server until this setting is wired.",
       test: {
         label: "Test the connection",
         ok: "Connected to Monad testnet, chain {chainId}.",
         wrongChain:
           "That node reports chain {chainId}. Baret runs only on Monad, so it will not use it.",
         fail: "No answer from that address. Check it and try again.",
+        /** Shown for a well-formed address while nothing is contacted. */
+        sample:
+          "Not tested. This preview does not contact the address, so Baret can't confirm it is a Monad node.",
       },
     },
   },
@@ -221,7 +227,8 @@ export const optionsSettings = {
   saved: "Saved.",
 
   /** The choices of Lock after inactivity and Request timeout. */
-  minutes: { one: "{count} minute", other: "{count} minutes" },
+  minutes: "{count} minutes",
+  minutesOne: "{count} minute",
 
   errors: {
     save: {

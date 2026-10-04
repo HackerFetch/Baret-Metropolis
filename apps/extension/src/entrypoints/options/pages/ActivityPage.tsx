@@ -13,7 +13,7 @@ import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, when } from "@baret/wallet-ui/data/format";
 import { decide } from "@baret/wallet-ui/data/rules";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { ExternalLink } from "lucide-react";
 import { type JSX, useEffect, useId, useState } from "react";
 import { OPTIONS_ART } from "../../../assets.js";
@@ -493,7 +493,7 @@ export function Component() {
                   }}
                 >
                   {checking
-                    ? fill(bulk.recheck.working, { count: String(checking.length) })
+                    ? counted(checking.length, bulk.recheck.working, bulk.recheck.workingOne)
                     : bulk.recheck.label}
                 </Button>
                 <Button
@@ -507,7 +507,7 @@ export function Component() {
                 </Button>
               </div>
               <p className={`${T.small} max-w-[72ch]`}>
-                {fill(bulk.recheck.body, { count: String(picked.length) })}
+                {counted(picked.length, bulk.recheck.body, bulk.recheck.bodyOne)}
               </p>
               <p role="status" className="text-sm font-medium text-[color:var(--fg)]">
                 {result
@@ -537,7 +537,7 @@ export function Component() {
                 <div className="grid">
                   <div
                     aria-hidden="true"
-                    className={`hidden grid-cols-[44px_8.5rem_8rem_minmax(0,1fr)_7rem_8rem_minmax(0,1fr)_7rem] items-center gap-x-3 border-b border-[color:var(--rule)] pb-2 lg:grid ${T.label}`}
+                    className={`hidden grid-cols-[44px_minmax(0,8.5rem)_minmax(0,8rem)_minmax(0,1fr)_minmax(0,7rem)_minmax(0,8rem)_minmax(0,1fr)_minmax(0,7rem)] items-center gap-x-3 border-b border-[color:var(--rule)] pb-2 lg:grid ${T.label}`}
                   >
                     <span />
                     <span>{columns.time}</span>
@@ -556,7 +556,7 @@ export function Component() {
                           key={item.id}
                           className={`border-b border-[color:var(--rule)] ${flagged ? "border-l-4 border-l-[color:var(--blocked)]" : ""}`}
                         >
-                          <div className="grid grid-cols-[44px_minmax(0,1fr)] items-start gap-x-3 lg:grid-cols-[44px_8.5rem_8rem_minmax(0,1fr)_7rem_8rem_minmax(0,1fr)_7rem] lg:items-center">
+                          <div className="grid grid-cols-[44px_minmax(0,1fr)] items-start gap-x-3 lg:grid-cols-[44px_minmax(0,8.5rem)_minmax(0,8rem)_minmax(0,1fr)_minmax(0,7rem)_minmax(0,8rem)_minmax(0,1fr)_minmax(0,7rem)] lg:items-center">
                             <Check
                               label={partyOf(item) || filters.type.options[typeOf(item)]}
                               checked={selected.has(item.id)}

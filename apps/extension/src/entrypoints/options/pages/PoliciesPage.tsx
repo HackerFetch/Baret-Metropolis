@@ -8,7 +8,7 @@ import { RuleEditor } from "@baret/wallet-ui/rules/RuleEditor";
 import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Link, useBlocker } from "react-router";
 import { OPTIONS_ART } from "../../../assets.js";
@@ -66,7 +66,7 @@ function ViewSwitch({
         {(["form", "json", "diff"] as const).map((id) => (
           <label
             key={id}
-            className="relative flex h-11 cursor-pointer items-center gap-2 px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)]"
+            className="relative flex h-11 cursor-pointer items-center gap-2 px-4 font-display text-sm font-extrabold uppercase tracking-[0.06em] text-[color:var(--fg-muted)] has-[:checked]:bg-[color:var(--fg)] has-[:checked]:text-[color:var(--ground)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-[color:var(--accent)] forced-colors:has-[:checked]:bg-[Highlight] forced-colors:has-[:checked]:text-[HighlightText] forced-colors:has-[:checked]:forced-color-adjust-none"
           >
             <input
               type="radio"
@@ -106,7 +106,12 @@ export function Component() {
   const [notice, setNotice] = useState<"saved" | "saveError" | "importError" | null>(null);
 
   const changes = diffFields(state.policy, draft);
-  const unsaved = changes.length > 0 || template !== state.template;
+  // JSON typed but not yet read back into the draft counts as unsaved too.
+  const jsonDirty = view === "json" && json !== JSON.stringify(draft, null, 2);
+  const unsaved = changes.length > 0 || template !== state.template || jsonDirty;
+  const pending = Math.max(changes.length, 1);
+  const showBar = unsaved || notice !== null || view === "diff";
+  const bar = useRef<HTMLDivElement>(null);
   const differs = changedFields(draft, template).length;
   const templateName = policy.templates[template].name;
   const blocker = useBlocker(unsaved);
@@ -138,8 +143,14 @@ export function Component() {
 
   async function save(): Promise<void> {
     // The server's own schema loads with the first save, so zod stays out of the first chunk.
-    const { guardPolicySchema } = await import("@baret/guard");
-    const checked = guardPolicySchema.safeParse(draft);
+    // A schema that fails to load saves nothing (fail-closed).
+    let checked: { success: true; data: GuardPolicy } | { success: false };
+    try {
+      const { guardPolicySchema } = await import("@baret/guard");
+      checked = guardPolicySchema.safeParse(draft);
+    } catch {
+      checked = { success: false };
+    }
     if (!checked.success) {
       setNotice("saveError");
       return;
@@ -160,6 +171,29 @@ export function Component() {
     setNotice(null);
     setView("diff");
   }
+
+  // Closing or reloading the tab with unsaved rules asks first, as leaving in the app does.
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
+
+  // While the save bar shows, focus scrolls clear of it (WCAG 2.4.11).
+  useEffect(() => {
+    const node = bar.current;
+    if (!showBar || !node) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      root.style.scrollPaddingBottom = `${node.offsetHeight}px`;
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      root.style.scrollPaddingBottom = "";
+    };
+  }, [showBar]);
 
   // The preview: the draft over recent requests, after a short wait.
   const runPreview = useLatest(() => setPreviewed(preview(requests, state.policy, draft)));
@@ -193,7 +227,9 @@ export function Component() {
             </p>
             {differs > 0 ? (
               <p className={T.small}>
-                {fill(P.templates.differs, { count: String(differs), template: templateName })}
+                {counted(differs, P.templates.differs, P.templates.differsOne, {
+                  template: templateName,
+                })}
               </p>
             ) : null}
             <p className={T.small}>{policy.intro.failClosed}</p>
@@ -207,198 +243,204 @@ export function Component() {
         <Block title={P.views.form}>
           <ViewSwitch view={view} onChange={changeView} changes={changes.length} />
 
-          {view === "form" ? (
-            <div className="grid gap-8">
-              <div className="grid gap-4 md:grid-cols-12 md:items-end">
-                <Select
-                  className="md:col-span-4"
-                  label={P.views.form}
-                  value={category}
-                  options={groupOptions}
-                  onChange={setCategory}
-                />
-                <div className="md:col-span-8">
-                  <Search
-                    label={P.search.placeholder}
-                    placeholder={P.search.placeholder}
-                    value={query}
-                    onChange={setQuery}
+          {/* Its own box, so the sticky save bar never slides over the view switch. */}
+          <div className="grid gap-6">
+            {view === "form" ? (
+              <div className="grid gap-8">
+                <div className="grid gap-4 md:grid-cols-12 md:items-end">
+                  <Select
+                    className="md:col-span-4"
+                    label={P.views.form}
+                    value={category}
+                    options={groupOptions}
+                    onChange={setCategory}
                   />
+                  <div className="md:col-span-8">
+                    <Search
+                      label={P.search.placeholder}
+                      placeholder={P.search.placeholder}
+                      value={query}
+                      onChange={setQuery}
+                    />
+                  </div>
                 </div>
-              </div>
-              <RuleEditor
-                key={editor}
-                draft={draft}
-                only={category === "all" ? null : category}
-                query={query}
-                onChange={(next) => {
-                  setDraft(next);
-                  setPreviewed(null);
-                  setNotice(null);
-                }}
-              />
-              {query.trim() &&
-              !Object.keys(policy.fields).some((field) =>
-                `${policy.fields[field as GuardPolicyField].label} ${policy.fields[field as GuardPolicyField].hint}`
-                  .toLowerCase()
-                  .includes(query.trim().toLowerCase()),
-              ) ? (
-                <p className={T.body}>{P.search.empty}</p>
-              ) : null}
-            </div>
-          ) : null}
-
-          {view === "json" ? (
-            <div className="grid gap-3">
-              <p className={`${T.small} max-w-[72ch]`}>{P.json.hint}</p>
-              <label htmlFor={jsonId} className="sr-only">
-                {P.views.json}
-              </label>
-              <textarea
-                id={jsonId}
-                rows={20}
-                spellCheck={false}
-                value={json}
-                aria-invalid={issue ? true : undefined}
-                aria-describedby={issue ? jsonErrorId : undefined}
-                onChange={(event) => {
-                  setJson(event.target.value);
-                  setIssue(null);
-                }}
-                className={`${INPUT} h-auto resize-y p-4 font-mono text-sm leading-relaxed`}
-              />
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const checked = checkJson(json);
-                    if (checked.ok) replace(checked.policy);
-                    else setIssue(checked.issue);
+                <RuleEditor
+                  key={editor}
+                  draft={draft}
+                  only={category === "all" ? null : category}
+                  query={query}
+                  onChange={(next) => {
+                    setDraft(next);
+                    setPreviewed(null);
+                    setNotice(null);
                   }}
-                >
-                  {P.json.format}
-                </Button>
-                <CopyButton text={json} label={P.json.copy} done={common.actions.copied} />
-              </div>
-              {issue ? (
-                <div id={jsonErrorId}>
-                  <Problem body={issueText(issue)} />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {view === "diff" ? (
-            <div className="grid gap-4">
-              <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
-                {P.diff.title}
-              </p>
-              <p className="text-base text-[color:var(--fg)]">
-                {changes.length === 0
-                  ? P.diff.none
-                  : changes.length === 1
-                    ? P.diff.summaryOne
-                    : fill(P.diff.summary, { count: String(changes.length) })}
-              </p>
-              {changes.length > 0 ? (
-                <ul className="grid border-t border-[color:var(--rule)]">
-                  {changes.map((field) => {
-                    const way = direction(field, state.policy[field], draft[field]);
-                    return (
-                      <li
-                        key={field}
-                        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-[color:var(--rule)] py-3.5"
-                      >
-                        <span className="min-w-0 flex-1 text-base text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                          {fill(P.diff.row, {
-                            rule: policy.fields[field].label,
-                            before: valueText(field, state.policy[field]),
-                            after: valueText(field, draft[field]),
-                          })}
-                        </span>
-                        <span className="flex items-center gap-3">
-                          {way ? (
-                            <Tag tone={way === "stricter" ? "safe" : "caution"} size="sm">
-                              {P.diff[way]}
-                            </Tag>
-                          ) : null}
-                          <Button
-                            type="button"
-                            variant="soft"
-                            size="sm"
-                            onClick={() => replace({ ...draft, [field]: state.policy[field] })}
-                          >
-                            {P.diff.revert}
-                          </Button>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-
-          {unsaved || notice !== null || view === "diff" ? (
-            <div className="sticky bottom-0 z-10 -mx-1 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-1 py-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {view === "diff" ? (
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="lg"
-                    disabled={!unsaved}
-                    onClick={() => void save()}
-                  >
-                    {changes.length === 1
-                      ? P.save.confirmOne
-                      : fill(P.save.confirm, { count: String(changes.length) })}
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="lg"
-                    disabled={!unsaved}
-                    onClick={() => changeView("diff")}
-                  >
-                    {P.save.review}
-                  </Button>
-                )}
-                {unsaved ? (
-                  <>
-                    <p className={`text-sm text-[color:var(--fg)] ${T.num}`}>
-                      {fill(P.save.unsaved, { count: String(Math.max(changes.length, 1)) })}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="soft"
-                      size="sm"
-                      onClick={() => {
-                        setTemplate(state.template);
-                        replace(state.policy);
-                      }}
-                    >
-                      {P.save.discard}
-                    </Button>
-                  </>
+                />
+                {query.trim() &&
+                !Object.keys(policy.fields).some((field) =>
+                  `${policy.fields[field as GuardPolicyField].label} ${policy.fields[field as GuardPolicyField].hint}`
+                    .toLowerCase()
+                    .includes(query.trim().toLowerCase()),
+                ) ? (
+                  <p className={T.body}>{P.search.empty}</p>
                 ) : null}
               </div>
-              <p role="status" className="text-sm text-[color:var(--fg)]">
-                {notice === "saved" ? P.save.saved : ""}
-              </p>
-              {notice === "saveError" ? (
-                <Problem title={P.errors.save.title} body={P.errors.save.body} />
-              ) : null}
-            </div>
-          ) : null}
+            ) : null}
+
+            {view === "json" ? (
+              <div className="grid gap-3">
+                <p className={`${T.small} max-w-[72ch]`}>{P.json.hint}</p>
+                <label htmlFor={jsonId} className="sr-only">
+                  {P.views.json}
+                </label>
+                <textarea
+                  id={jsonId}
+                  rows={20}
+                  spellCheck={false}
+                  value={json}
+                  aria-invalid={issue ? true : undefined}
+                  aria-describedby={issue ? jsonErrorId : undefined}
+                  onChange={(event) => {
+                    setJson(event.target.value);
+                    setIssue(null);
+                  }}
+                  className={`${INPUT} h-auto resize-y p-4 font-mono text-sm leading-relaxed`}
+                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const checked = checkJson(json);
+                      if (checked.ok) replace(checked.policy);
+                      else setIssue(checked.issue);
+                    }}
+                  >
+                    {P.json.format}
+                  </Button>
+                  <CopyButton text={json} label={P.json.copy} done={common.actions.copied} />
+                </div>
+                {issue ? (
+                  <div id={jsonErrorId}>
+                    <Problem body={issueText(issue)} />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {view === "diff" ? (
+              <div className="grid gap-4">
+                <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
+                  {P.diff.title}
+                </p>
+                <p className="text-base text-[color:var(--fg)]">
+                  {changes.length === 0
+                    ? P.diff.none
+                    : changes.length === 1
+                      ? P.diff.summaryOne
+                      : fill(P.diff.summary, { count: String(changes.length) })}
+                </p>
+                {changes.length > 0 ? (
+                  <ul className="grid border-t border-[color:var(--rule)]">
+                    {changes.map((field) => {
+                      const way = direction(field, state.policy[field], draft[field]);
+                      return (
+                        <li
+                          key={field}
+                          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-[color:var(--rule)] py-3.5"
+                        >
+                          <span className="min-w-0 flex-1 text-base text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                            {fill(P.diff.row, {
+                              rule: policy.fields[field].label,
+                              before: valueText(field, state.policy[field]),
+                              after: valueText(field, draft[field]),
+                            })}
+                          </span>
+                          <span className="flex items-center gap-3">
+                            {way ? (
+                              <Tag tone={way === "stricter" ? "safe" : "caution"} size="sm">
+                                {P.diff[way]}
+                              </Tag>
+                            ) : null}
+                            <Button
+                              type="button"
+                              variant="soft"
+                              size="sm"
+                              onClick={() => replace({ ...draft, [field]: state.policy[field] })}
+                            >
+                              {P.diff.revert}
+                            </Button>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+
+            {showBar ? (
+              <div
+                ref={bar}
+                className="sticky bottom-0 z-10 -mx-1 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-1 py-4"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  {view === "diff" ? (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="lg"
+                      disabled={!unsaved}
+                      onClick={() => void save()}
+                    >
+                      {changes.length === 1
+                        ? P.save.confirmOne
+                        : fill(P.save.confirm, { count: String(changes.length) })}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="lg"
+                      disabled={!unsaved}
+                      onClick={() => changeView("diff")}
+                    >
+                      {P.save.review}
+                    </Button>
+                  )}
+                  {unsaved ? (
+                    <span className="flex flex-nowrap items-center gap-3">
+                      <p className={`text-sm text-[color:var(--fg)] ${T.num}`}>
+                        {counted(pending, P.save.unsaved, P.save.unsavedOne)}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="soft"
+                        size="sm"
+                        onClick={() => {
+                          setTemplate(state.template);
+                          replace(state.policy);
+                        }}
+                      >
+                        {P.save.discard}
+                      </Button>
+                    </span>
+                  ) : null}
+                </div>
+                <p role="status" className="text-sm text-[color:var(--fg)]">
+                  {notice === "saved" ? P.save.saved : ""}
+                </p>
+                {notice === "saveError" ? (
+                  <Problem title={P.errors.save.title} body={P.errors.save.body} />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </Block>
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8">
           <Block title={P.preview.title}>
-            <p className={T.body}>{fill(P.preview.body, { count: String(requests.length) })}</p>
+            <p className={T.body}>{counted(requests.length, P.preview.body, P.preview.bodyOne)}</p>
             {requests.length === 0 ? (
               <p className={T.small}>{P.preview.empty}</p>
             ) : (
@@ -411,21 +453,33 @@ export function Component() {
                   onClick={() => setPreviewing(true)}
                 >
                   {previewing
-                    ? fill(P.preview.working, { count: String(requests.length) })
+                    ? counted(requests.length, P.preview.working, P.preview.workingOne)
                     : P.preview.action.label}
                 </Button>
               </div>
             )}
             <div role="status" className="grid gap-1 text-base text-[color:var(--fg)]">
               {previewed === null ? null : previewed.stricter === 0 && previewed.looser === 0 ? (
-                <p>{fill(P.preview.result.same, { count: String(previewed.count) })}</p>
+                <p>{counted(previewed.count, P.preview.result.same, P.preview.result.sameOne)}</p>
               ) : (
                 <>
                   {previewed.stricter > 0 ? (
-                    <p>{fill(P.preview.result.stricter, { count: String(previewed.stricter) })}</p>
+                    <p>
+                      {counted(
+                        previewed.stricter,
+                        P.preview.result.stricter,
+                        P.preview.result.stricterOne,
+                      )}
+                    </p>
                   ) : null}
                   {previewed.looser > 0 ? (
-                    <p>{fill(P.preview.result.looser, { count: String(previewed.looser) })}</p>
+                    <p>
+                      {counted(
+                        previewed.looser,
+                        P.preview.result.looser,
+                        P.preview.result.looserOne,
+                      )}
+                    </p>
                   ) : null}
                 </>
               )}
@@ -520,7 +574,7 @@ export function Component() {
         onConfirm={() => blocker.proceed?.()}
       >
         <p className="text-base text-[color:var(--fg)]">
-          {fill(P.save.leave.body, { count: String(Math.max(changes.length, 1)) })}
+          {counted(pending, P.save.leave.body, P.save.leave.bodyOne)}
         </p>
       </Dialog>
     </Screen>

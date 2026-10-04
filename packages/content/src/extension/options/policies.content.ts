@@ -16,6 +16,7 @@ export const optionsPolicies = {
     body: "Pick a set, then change any rule you like. The other rules stay as they are.",
     current: "{template} rules",
     differs: "{count} rules differ from {template}.",
+    differsOne: "1 rule differs from {template}.",
     switch: {
       title: "Switch to {template}?",
       body: "Every rule takes its {template} setting. You see each change before anything is saved.",
@@ -64,12 +65,18 @@ export const optionsPolicies = {
   preview: {
     title: "Try them on recent requests",
     body: "Runs the rules on screen over your last {count} sign requests. Nothing is signed and nothing changes on-chain.",
+    bodyOne:
+      "Runs the rules on screen over your last sign request. Nothing is signed and nothing changes on-chain.",
     action: { label: "Run the preview" },
     working: "Checking {count} requests",
+    workingOne: "Checking 1 request",
     result: {
       same: "No difference. The same {count} requests pass.",
+      sameOne: "No difference. The same request passes.",
       stricter: "{count} requests that passed would now be blocked.",
+      stricterOne: "1 request that passed would now be blocked.",
       looser: "{count} requests that were blocked would now pass.",
+      looserOne: "1 request that was blocked would now pass.",
     },
     view: "Show them",
     empty: "No recent sign requests to test against yet.",
@@ -81,10 +88,12 @@ export const optionsPolicies = {
     confirmOne: "Save 1 change",
     saved: "Saved. The next sign request uses these rules.",
     unsaved: "{count} unsaved changes",
+    unsavedOne: "1 unsaved change",
     discard: "Discard changes",
     leave: {
       title: "Leave without saving?",
       body: "Your {count} changes are lost. Your saved rules stay as they are.",
+      bodyOne: "Your change is lost. Your saved rules stay as they are.",
       action: "Discard and leave",
       cancel: "Stay here",
     },
