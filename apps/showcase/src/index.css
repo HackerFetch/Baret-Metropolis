@@ -9,3 +9,10 @@
    scan them for class names. */
 @source "../../../packages/ui/src";
 @source "../../../packages/web-ui/src";
+
+/* A demo site's Baret bar is fixed to the foot of the screen (48 px and the
+   safe area): anything scrolled or tabbed to stops above it, never under it
+   (WCAG 2.4.11). */
+html:has([data-demo-bar]) {
+  scroll-padding-bottom: calc(3rem + 1rem + env(safe-area-inset-bottom));
+}

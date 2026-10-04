@@ -211,7 +211,7 @@ function Chrome() {
         {/* The demo sites imitate products on purpose; keep them out of search (G4). */}
         <meta name="robots" content="noindex" />
         <SkipLink />
-        {/* Room at the end of the page for the fixed ribbon, so the site's
+        {/* Room at the end of the page for the fixed bar, so the site's
             footer can scroll clear of it (K5). */}
         <div className="pb-[calc(4rem+env(safe-area-inset-bottom))]">{outlet}</div>
         {outlet ? <DemoRibbon /> : null}
@@ -505,31 +505,36 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 }
 
 /**
- * Pinned to every demo site so nobody mistakes one for a real product. It
- * sits above the safe-area inset in its own landmark; only the link takes
- * taps (a 44 px target around the tag), and the demo layout reserves room
- * at the end of the page so the site's footer scrolls clear of it.
+ * Pinned to every demo site so nobody mistakes one for a real product: a
+ * slim Baret bar across the foot of the screen, in its own landmark. It is
+ * opaque, so the site scrolls under its edge instead of under a floating
+ * tag that covered whatever sat at the bottom of a phone screen (K5). The
+ * demo layout reserves room at the end of the page so the site's footer
+ * scrolls clear of it, and index.css keeps anything scrolled or tabbed to
+ * above it (WCAG 2.4.11). Sheets and dialogs (z-50) open over it.
  */
 function DemoRibbon() {
   return (
-    // data-scope="baret": the ribbon is Baret's, so it keeps Baret's palette
+    // data-scope="baret": the bar is Baret's, so it keeps Baret's palette
     // on top of a dApp theme (sites/theme).
     <aside
       aria-label={common.demo.label}
       data-scope="baret"
-      className="pointer-events-none fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2"
+      data-demo-bar=""
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--rule-strong)] bg-[color:var(--surface)] pb-[env(safe-area-inset-bottom)] text-[color:var(--fg)]"
     >
-      <Link
-        to={routes.showcase.path}
-        viewTransition
-        // The name starts with the visible tag (WCAG 2.5.3) and says where it goes.
-        aria-label={`${common.demo.ribbon}: ${hub.frame.back.label}`}
-        className="pointer-events-auto inline-flex min-h-11 min-w-11 items-center justify-center"
-      >
+      <div className="mx-auto flex h-12 w-full max-w-[1276px] items-center justify-between gap-4 px-4 md:px-8 lg:px-12">
         <Tag tone="brand" size="sm">
           {common.demo.ribbon}
         </Tag>
-      </Link>
+        <Link
+          to={routes.showcase.path}
+          viewTransition
+          className="inline-flex min-h-11 items-center text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
+        >
+          {hub.frame.back.label}
+        </Link>
+      </div>
     </aside>
   );
 }
