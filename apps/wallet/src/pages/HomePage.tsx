@@ -1,18 +1,18 @@
 import { common, history, walletHome } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { ActivityRow } from "@baret/wallet-ui/components/ActivityRow";
+import { Block, Empty } from "@baret/wallet-ui/components/Block";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { amount } from "@baret/wallet-ui/data/format";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import type { Permission } from "@baret/wallet-ui/data/types";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
-import { ActivityRow } from "../components/ActivityRow.js";
-import { Block, Empty } from "../components/Block.js";
-import { Screen } from "../components/Screen.js";
-import { amount } from "../data/format.js";
-import { useWallet } from "../data/store.js";
-import type { Permission } from "../data/types.js";
 import { routes } from "../routes.js";
 
 /**

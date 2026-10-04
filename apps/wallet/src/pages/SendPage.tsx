@@ -1,15 +1,10 @@
 import { send } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
-import { Segment } from "@baret/web-ui/components/Segment";
-import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId, useState } from "react";
-import { WALLET_ART } from "../assets.js";
-import { Block, Rows } from "../components/Block.js";
-import { Screen } from "../components/Screen.js";
-import { amount, fromUnits, toUnits } from "../data/format.js";
-import { useWallet } from "../data/store.js";
-import type { Asset, SignRequest as Request } from "../data/types.js";
+import { Block, Rows } from "@baret/wallet-ui/components/Block";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { amount, fromUnits, toUnits } from "@baret/wallet-ui/data/format";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import type { Asset, SignRequest as Request } from "@baret/wallet-ui/data/types";
 import {
   type AmountIssue,
   checkAmount,
@@ -19,8 +14,15 @@ import {
   maxOf,
   type RecipientIssue,
   transferRequest,
-} from "../send/send.js";
-import { SignRequest } from "../sign/SignRequest.js";
+} from "@baret/wallet-ui/send/send";
+import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
+import { Segment } from "@baret/web-ui/components/Segment";
+import { T } from "@baret/web-ui/lib/type";
+import { fill } from "@baret/web-ui/lib/util";
+import { type JSX, useId, useState } from "react";
+import { Link } from "react-router";
+import { WALLET_ART } from "../assets.js";
+import { routes } from "../routes.js";
 
 /**
  * Send: the asset, the recipient and the amount, a summary, and "Check and
@@ -139,6 +141,12 @@ export function Component() {
                 ? dispatch({ type: "send", asset: asset.symbol, amount: value, fee, item })
                 : dispatch({ type: "log", item })
             }
+            passkey={state.settings.passkeyEverySignature}
+            editRules={(label, className) => (
+              <Link to={routes.policies.path} className={className}>
+                {label}
+              </Link>
+            )}
           />
         </div>
       </Screen>

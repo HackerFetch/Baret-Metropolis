@@ -44,18 +44,30 @@ importers:
       '@baret/content':
         specifier: workspace:*
         version: link:../../packages/content
+      '@baret/guard':
+        specifier: workspace:*
+        version: link:../../packages/guard
       '@baret/routes':
         specifier: workspace:*
         version: link:../../packages/routes
       '@baret/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@baret/wallet-ui':
+        specifier: workspace:*
+        version: link:../../packages/wallet-ui
+      '@baret/web-ui':
+        specifier: workspace:*
+        version: link:../../packages/web-ui
       '@webext-core/messaging':
         specifier: 4.0.0
         version: 4.0.0
       lucide-react:
         specifier: 1.46.0
         version: 1.46.0(react@19.3.0)
+      motion:
+        specifier: 13.3.0
+        version: 13.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -215,6 +227,9 @@ importers:
       '@baret/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@baret/wallet-ui':
+        specifier: workspace:*
+        version: link:../../packages/wallet-ui
       '@baret/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui
@@ -338,6 +353,40 @@ importers:
       tailwind-merge:
         specifier: 3.7.0
         version: 3.7.0
+    devDependencies:
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  packages/wallet-ui:
+    dependencies:
+      '@baret/content':
+        specifier: workspace:*
+        version: link:../content
+      '@baret/guard':
+        specifier: workspace:*
+        version: link:../guard
+      '@baret/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@baret/web-ui':
+        specifier: workspace:*
+        version: link:../web-ui
+      motion:
+        specifier: 13.3.0
+        version: 13.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
     devDependencies:
       '@types/react':
         specifier: 19.3.0

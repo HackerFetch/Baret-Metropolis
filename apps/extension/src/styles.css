@@ -1,3 +1,7 @@
 @import "@baret/ui/tokens.css";
+/* The self-hosted faces, shared with the showcase and the wallet (packages/web-ui). */
+@import "@baret/web-ui/styles/fonts.css";
 @source "../../../packages/ui/src";
-@source "./entrypoints";
+@source "../../../packages/web-ui/src";
+@source "../../../packages/wallet-ui/src";
+@source ".";

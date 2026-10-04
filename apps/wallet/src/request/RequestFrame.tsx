@@ -1,9 +1,9 @@
 import { common, walletFrame } from "@baret/content";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Brand } from "@baret/wallet-ui/components/Brand";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, type ReactNode, useId } from "react";
-import { Brand } from "../components/Brand.js";
 import { SampleNotice } from "../components/SampleNotice.js";
 
 /**

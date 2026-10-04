@@ -1,3 +1,4 @@
+import { webUiFonts } from "@baret/web-ui/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
 
@@ -29,8 +30,10 @@ export default defineConfig({
 
   targetBrowsers: ["chrome", "firefox"],
 
+  // webUiFonts: the self-hosted faces at /fonts, shared with the showcase and
+  // the wallet, written to the build next to the pages that use them.
   vite: () => ({
-    plugins: [tailwindcss()],
+    plugins: [webUiFonts(), tailwindcss()],
   }),
 
   manifest: ({ browser }) => ({
@@ -91,7 +94,11 @@ export default defineConfig({
     includeSources: [
       "apps/extension/**",
       "packages/content/**",
+      "packages/guard/**",
+      "packages/routes/**",
       "packages/ui/**",
+      "packages/wallet-ui/**",
+      "packages/web-ui/**",
       "package.json",
       "pnpm-lock.yaml",
       "pnpm-workspace.yaml",

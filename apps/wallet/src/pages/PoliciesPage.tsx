@@ -1,19 +1,19 @@
 import { policies, policy } from "@baret/content";
 import { Button } from "@baret/ui";
+import { Block, Problem } from "@baret/wallet-ui/components/Block";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { when } from "@baret/wallet-ui/data/format";
+import { changedFields, diffFields, fromTemplate } from "@baret/wallet-ui/data/rules";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import type { GuardPolicy } from "@baret/wallet-ui/data/types";
+import { fromJson, type Preview, preview, valueText } from "@baret/wallet-ui/rules/fields";
+import { RuleEditor } from "@baret/wallet-ui/rules/RuleEditor";
+import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { useId, useRef, useState } from "react";
 import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-templates.js";
 import { WALLET_ART } from "../assets.js";
-import { Block, Problem } from "../components/Block.js";
-import { Screen } from "../components/Screen.js";
-import { when } from "../data/format.js";
-import { changedFields, diffFields, fromTemplate } from "../data/rules.js";
-import { useWallet } from "../data/store.js";
-import type { GuardPolicy } from "../data/types.js";
-import { fromJson, type Preview, preview, valueText } from "../rules/fields.js";
-import { RuleEditor } from "../rules/RuleEditor.js";
-import { TemplateCards } from "../rules/TemplateCards.js";
 
 /**
  * Your rules: where they stand (a template, or Custom with how many rules

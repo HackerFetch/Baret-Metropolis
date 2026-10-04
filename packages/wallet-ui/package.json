@@ -1,0 +1,38 @@
+{
+  "name": "@baret/wallet-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The wallet pieces shared by the web wallet and the extension: the sample account and its data seam, the sign request, findings, the rule editor, the send checks and the QR encoder. Consumed as TypeScript source, never built.",
+  "type": "module",
+  "exports": {
+    "./data/store": "./src/data/store.tsx",
+    "./data/*": "./src/data/*.ts",
+    "./lib/*": "./src/lib/*.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./sign/sign": "./src/sign/sign.ts",
+    "./sign/*": "./src/sign/*.tsx",
+    "./send/*": "./src/send/*.ts",
+    "./rules/fields": "./src/rules/fields.ts",
+    "./rules/*": "./src/rules/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@baret/content": "workspace:*",
+    "@baret/guard": "workspace:*",
+    "@baret/ui": "workspace:*",
+    "@baret/web-ui": "workspace:*",
+    "motion": "13.3.0"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3"
+  }
+}

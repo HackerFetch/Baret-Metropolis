@@ -22,6 +22,9 @@
     },
     {
       "path": "../../packages/web-ui"
+    },
+    {
+      "path": "../../packages/wallet-ui"
     }
   ]
 }

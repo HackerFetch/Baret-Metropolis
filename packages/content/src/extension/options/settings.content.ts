@@ -15,6 +15,8 @@ export const optionsSettings = {
       { label: "Address", hint: "Your Monad address. Share it to receive MON." },
       { label: "Accounts", hint: "All of them come from the same recovery phrase." },
     ],
+    /** Under the account name field when it is saved empty. */
+    nameEmpty: "Type a name for this account.",
   },
 
   security: {
@@ -42,6 +44,8 @@ export const optionsSettings = {
       action: "Change passphrase",
       done: "Changed. Use the new passphrase next time you open Baret.",
       wrong: "That is not your current passphrase.",
+      tooShort: "Use at least 12 characters.",
+      mismatch: "The two entries do not match. Type it again.",
     },
     reveal: {
       title: "Show your recovery phrase",
@@ -50,6 +54,26 @@ export const optionsSettings = {
       confirm: "Nobody can see my screen",
       action: "Show the words",
       wrong: "That passphrase is not right. Try again.",
+      /** Once the words show: marks the phrase as backed up. */
+      written: "I wrote them down, in order",
+      /**
+       * What the preview shows in place of a real phrase: twelve words that
+       * read as a sentence, so nobody takes them for a real one.
+       */
+      sample: [
+        "this",
+        "is",
+        "a",
+        "sample",
+        "phrase",
+        "for",
+        "the",
+        "preview",
+        "and",
+        "it",
+        "opens",
+        "nothing",
+      ],
     },
   },
 
@@ -78,6 +102,9 @@ export const optionsSettings = {
     custom: {
       label: "Use my own",
       warning: "A node you do not control can report a false balance or a false simulation result.",
+      /** The address field's label: "Monad node URL". */
+      field: "{name} URL",
+      placeholder: "https://",
       test: {
         label: "Test the connection",
         ok: "Connected to Monad testnet, chain {chainId}.",
@@ -126,13 +153,18 @@ export const optionsSettings = {
       { label: "Usage data", hint: "Not collected. There is no switch, because nothing is sent." },
       {
         label: "Export your data",
-        hint: "Activity, permissions and rules in one file, saved on this device.",
+        hint: "Activity, permissions, rules and sites in one file, saved on this device.",
       },
       {
         label: "Clear activity",
         hint: "Deletes the log on this device. On-chain history is public and stays public.",
       },
     ],
+    clear: {
+      title: "Clear the activity log? This cannot be undone.",
+      body: "Every entry in the log on this device is deleted, including blocked and declined requests. Your transactions stay on Monad, where anyone can read them. Export your data first if you want a copy.",
+      action: "Clear activity",
+    },
   },
 
   advanced: {
@@ -165,6 +197,8 @@ export const optionsSettings = {
       hint: "Deletes your key and everything Baret stored in this browser.",
       consequences: {
         title: "What a reset does",
+        /** Above the two lists, which carry the same weight. */
+        labels: { deleted: "Deleted", kept: "Kept" },
         deleted: [
           "Your encrypted key is deleted from this browser.",
           "Your activity log, rules and site list are deleted.",
@@ -185,6 +219,9 @@ export const optionsSettings = {
   },
 
   saved: "Saved.",
+
+  /** The choices of Lock after inactivity and Request timeout. */
+  minutes: { one: "{count} minute", other: "{count} minutes" },
 
   errors: {
     save: {

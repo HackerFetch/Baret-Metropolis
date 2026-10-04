@@ -4,9 +4,48 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Baret</title>
+    <!--
+      The ground before the first CSS byte, so the popup never flashes white:
+      graphite, or concrete when the theme resolves to light. Opened as a page
+      (data-view="tab", set in main.tsx), the 360 by 600 frame sits centred.
+    -->
+    <style>
+      @layer theme, base, components, utilities;
+      @layer base {
+        html {
+          background: #17181b;
+        }
+        @media (prefers-color-scheme: light) {
+          html {
+            background: #e6e6e1;
+          }
+        }
+        :root[data-view="tab"] {
+          min-height: 100dvh;
+          display: grid;
+          place-items: center;
+          background: #0f1012;
+        }
+        @media (prefers-color-scheme: light) {
+          :root[data-view="tab"] {
+            background: #d9d9d2;
+          }
+        }
+        :root[data-view="tab"] body {
+          outline: 1px solid #3a3b40;
+        }
+      }
+    </style>
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/big-shoulders-display-800.woff2"
+    />
   </head>
-  <body class="w-[360px] h-[600px] overflow-hidden">
-    <div id="root"></div>
+  <body class="h-[600px] w-[360px] overflow-hidden">
+    <div id="root" class="h-full"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

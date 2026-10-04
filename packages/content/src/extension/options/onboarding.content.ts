@@ -51,6 +51,8 @@ export const extOnboarding = {
       confirm: { label: "Type it again" },
     },
     strength: { weak: "Too easy to guess", fair: "Workable", good: "Good", strong: "Strong" },
+    /** Names the meter under the passphrase field. */
+    strengthLabel: "Strength",
     why: {
       title: "Why a sentence and not a PIN?",
       body: "Anyone who copies the encrypted file can try every short PIN until one works. A long sentence has far too many combinations to try.",

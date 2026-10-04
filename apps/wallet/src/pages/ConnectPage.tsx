@@ -1,14 +1,14 @@
 import { common, connect } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
+import { Parts } from "@baret/wallet-ui/components/Parts";
+import { CONNECT_REQUESTS } from "@baret/wallet-ui/data/sample";
+import { useWallet } from "@baret/wallet-ui/data/store";
+import type { ConnectRequest } from "@baret/wallet-ui/data/types";
+import { fillParts } from "@baret/wallet-ui/lib/parts";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { Check, X } from "lucide-react";
 import { type JSX, useId, useState } from "react";
-import { Parts } from "../components/Parts.js";
-import { CONNECT_REQUESTS } from "../data/sample.js";
-import { useWallet } from "../data/store.js";
-import type { ConnectRequest } from "../data/types.js";
-import { fillParts } from "../lib/parts.js";
 import { RequestFrame, SamplePicker } from "../request/RequestFrame.js";
 
 /**

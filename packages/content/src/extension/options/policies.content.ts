@@ -40,6 +40,14 @@ export const optionsPolicies = {
       invalidValue: "{key} must be {expected}.",
       missingKey: "{key} is missing. Add it, or set it in the Rules view.",
     },
+    /** What {expected} reads for each kind of rule. */
+    expected: {
+      switch: "true or false",
+      number: "a number, or null for no limit",
+      amount: 'an amount in quotes, such as "10.5", or null for no limit',
+      level: "one of new, established or identified",
+      list: "a list of text values in square brackets",
+    },
   },
 
   diff: {

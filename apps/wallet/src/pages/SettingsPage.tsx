@@ -1,16 +1,16 @@
 import { common, policies, policy, settings, walletFrame } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Block } from "@baret/wallet-ui/components/Block";
+import { Screen } from "@baret/wallet-ui/components/Screen";
+import { changedFields } from "@baret/wallet-ui/data/rules";
+import { useWallet } from "@baret/wallet-ui/data/store";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, type ReactNode, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
-import { Block } from "../components/Block.js";
-import { Screen } from "../components/Screen.js";
-import { changedFields } from "../data/rules.js";
-import { useWallet } from "../data/store.js";
 import { WALLET_VERSION } from "../lib/version.js";
 import { routes } from "../routes.js";
 

@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Baret settings</title>
+    <!--
+      The ground before the first CSS byte, so no white frame flashes:
+      graphite, or concrete when the theme resolves to light. Same rule as the
+      showcase and the wallet.
+    -->
+    <style>
+      @layer theme, base, components, utilities;
+      @layer base {
+        html {
+          background: #17181b;
+        }
+        @media (prefers-color-scheme: light) {
+          html {
+            background: #e6e6e1;
+          }
+        }
+      }
+    </style>
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/big-shoulders-display-800.woff2"
+    />
   </head>
   <body>
     <div id="root"></div>
