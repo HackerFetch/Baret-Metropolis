@@ -11,7 +11,7 @@ import { splitLead } from "./components/SectionHeader.js";
 import { avif } from "./lib/img.js";
 import { staggerDelay } from "./lib/motion.js";
 import { VERDICT_TONE } from "./lib/tone.js";
-import { fill } from "./lib/util.js";
+import { counted, fill } from "./lib/util.js";
 
 describe("web-ui helpers", () => {
   it("caps the stagger at five steps", () => {
@@ -61,6 +61,15 @@ describe("web-ui text helpers", () => {
     expect(fill("{origin} may spend {amount} {asset}.", { origin: "ClaimHub", amount: "25" })).toBe(
       "ClaimHub may spend 25 {asset}.",
     );
+  });
+
+  it("picks the singular twin at one and fills both forms", () => {
+    const many = "{count} sites on {network}";
+    const one = "One site on {network}";
+    expect(counted(1, many, one, { network: "testnet" })).toBe("One site on testnet");
+    expect(counted(3, many, one, { network: "testnet" })).toBe("3 sites on testnet");
+    expect(counted(0, many, one, { network: "testnet" })).toBe("0 sites on testnet");
+    expect(counted(1, "{count} items", "{count} item")).toBe("1 item");
   });
 
   it("splits an intro after its first sentence", () => {

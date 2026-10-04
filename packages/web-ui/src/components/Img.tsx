@@ -81,7 +81,8 @@ export function Img({
       width={asset.width}
       height={asset.height}
       alt=""
-      decoding="async"
+      // The LCP picture decodes in step with the paint, not after it.
+      decoding={loading === "priority" ? "auto" : "async"}
       loading={lazy ? "lazy" : "eager"}
       {...(loading === "priority" ? { fetchPriority: "high" as const } : {})}
       onLoad={() => setLoaded(true)}

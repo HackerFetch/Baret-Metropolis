@@ -16,11 +16,13 @@ import { useReduce } from "../lib/useReduce.js";
  * - Timing: 560 ms per word on the BRAND ease-out [0.22, 1, 0.36, 1], 45 ms
  *   apart, the stagger squeezed so the whole heading lands within 760 ms.
  *   No overshoot.
- * - Accessibility: the word pieces are aria-hidden and a visually hidden
- *   copy of the full text sits beside them, so every reader (browse mode
- *   included, on any role) reads it exactly once. That copy is `select-none`,
- *   so a selection copies the visible words once. Reduced motion: the plain
- *   text, no spans, no hidden copy.
+ * - One copy of the text: the moving words are the real text, joined by
+ *   real space text nodes, with no aria-hidden and no visually hidden twin.
+ *   Screen readers, the static (prerendered) HTML, textContent, innerText,
+ *   find-in-page, translation and copy-paste all get the sentence once.
+ *   Generated content (`attr()`) would drop it from copy, find and
+ *   translation, and aria-label is not allowed on the generic spans
+ *   RevealWords renders in. Reduced motion: the plain text, no spans.
  */
 
 const WORD_DUR = 0.56;
@@ -147,8 +149,8 @@ export interface RevealWordsProps {
 }
 
 /**
- * The aria-hidden word pieces plus their visually hidden accessible copy, with
- * no wrapping element: use it inside any element (LinePlate's list items).
+ * The word pieces, the only copy of the text, with no wrapping element: use
+ * it inside any element (LinePlate's list items).
  * Renders the plain text under reduced motion.
  */
 export function RevealWords({
@@ -203,19 +205,16 @@ export function RevealWords({
 
   const laid = layout(all, keepBeats, delay);
   return (
-    <>
-      <span className="sr-only select-none">{revealLabel(text)}</span>
-      <m.span aria-hidden="true" initial="hidden" {...trigger}>
-        {all.length === 1
-          ? laid.map(renderLine)
-          : laid.map((line) => (
-              <Fragment key={line.key}>
-                {line.lead ? " " : null}
-                <span className="block">{renderLine(line)}</span>
-              </Fragment>
-            ))}
-      </m.span>
-    </>
+    <m.span initial="hidden" {...trigger}>
+      {all.length === 1
+        ? laid.map(renderLine)
+        : laid.map((line) => (
+            <Fragment key={line.key}>
+              {line.lead ? " " : null}
+              <span className="block">{renderLine(line)}</span>
+            </Fragment>
+          ))}
+    </m.span>
   );
 }
 
@@ -244,8 +243,8 @@ export interface TextRevealProps extends RevealWordsProps {
 }
 
 /**
- * A heading whose words reveal once. Its content carries the full text once
- * (a visually hidden copy); the moving pieces are hidden from assistive tech.
+ * A heading whose words reveal once. The moving words are its only text, so
+ * its accessible name and its text content are the sentence, once.
  */
 export function TextReveal({
   as: Tag = "h2",

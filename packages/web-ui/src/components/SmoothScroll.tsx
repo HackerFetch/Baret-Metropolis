@@ -26,6 +26,11 @@ import { useReduce } from "../lib/useReduce.js";
  *   header), so the header never covers a heading. Cancelling the jump also
  *   cancels the browser's focus move, so focus is moved to the target here
  *   (tabindex -1 when it is not focusable): the skip link lands on <main>.
+ * - Inner scrollers keep the wheel: an open dialog or sheet, a textarea, a
+ *   `pre`, anything marked `data-lenis-prevent`, and any other element that
+ *   can still scroll (`allowNestedScroll`) scroll themselves, natively.
+ * - While a dialog locks the page (Radix sets `data-scroll-locked` on body),
+ *   Lenis is stopped, so the page under the overlay never moves.
  * - Reduced motion: no Lenis at all, the native scroll stays untouched. The
  *   preference is live, so switching it mid-visit tears Lenis down.
  * - Mounted once per route by Signature; leaving the route destroys it.
@@ -37,6 +42,13 @@ const ANCHOR_DURATION = 1.1;
 /** Expo-out: fast start, long soft landing, never past the target. */
 function expoOut(t: number): number {
   return t >= 1 ? 1 : 1 - 2 ** (-10 * t);
+}
+
+/** Wheel events that start inside these scroll natively, never through Lenis. */
+const NATIVE_SCROLL = "[role=dialog],[role=alertdialog],[data-lenis-prevent],textarea,pre";
+
+function preventSmooth(node: HTMLElement): boolean {
+  return node.closest(NATIVE_SCROLL) !== null;
 }
 
 /** The same-page hash a click went to, or null. Modified clicks are left alone. */
@@ -66,7 +78,18 @@ export function SmoothScroll(): null {
       syncTouch: false,
       autoRaf: false,
       anchors: false,
+      prevent: preventSmooth,
+      allowNestedScroll: true,
     });
+
+    // Follow the body scroll lock a modal dialog sets and clears.
+    const syncLock = (): void => {
+      if (document.body.hasAttribute("data-scroll-locked")) lenis.stop();
+      else lenis.start();
+    };
+    syncLock();
+    const lock = new MutationObserver(syncLock);
+    lock.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
 
     let armed = false;
     const tick = ({ timestamp }: { timestamp: number }): void => {
@@ -111,6 +134,7 @@ export function SmoothScroll(): null {
     window.addEventListener("click", onClick);
 
     return () => {
+      lock.disconnect();
       window.removeEventListener("click", onClick);
       window.removeEventListener("wheel", arm);
       disarm();

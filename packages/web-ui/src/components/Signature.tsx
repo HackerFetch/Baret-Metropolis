@@ -5,17 +5,16 @@ import { type JSX, lazy, Suspense, useEffect, useState } from "react";
  * (Lenis) and the eyelet cursor, off the critical path.
  *
  * Both live in their own lazy chunks, requested only when the browser is
- * idle after first paint AND the media queries say they will run: a fine,
- * hovering pointer with no reduced-motion preference (and, for the cursor,
- * no forced colours). Phones, tablets, reduced motion and High Contrast
- * never download either chunk. The queries are live, so docking a tablet to
+ * idle after first paint AND the media query says they will run: a fine,
+ * hovering pointer with no reduced-motion preference and no forced colours.
+ * Phones, tablets, reduced motion and High Contrast never download either
+ * chunk. The query is live, so docking a tablet to
  * a trackpad loads them later; the components re-check the same conditions
  * themselves and render nothing when they stop matching.
  */
 
-const SCROLL_QUERY =
-  "(pointer: fine) and (hover: hover) and (prefers-reduced-motion: no-preference)";
-const CURSOR_QUERY = `${SCROLL_QUERY} and (forced-colors: none)`;
+const QUERY =
+  "(pointer: fine) and (hover: hover) and (prefers-reduced-motion: no-preference) and (forced-colors: none)";
 
 const SmoothScroll = lazy(() =>
   import("./SmoothScroll.js").then((m) => ({ default: m.SmoothScroll })),
@@ -36,7 +35,11 @@ function useIdle(): boolean {
   return idle;
 }
 
-/** Live media-query match; false before the first effect. */
+/**
+ * Live media-query match; false before the first effect. Nothing renders
+ * before the idle gate opens anyway, so the server and the first client
+ * render agree.
+ */
 function useMatch(query: string): boolean {
   const [match, setMatch] = useState(false);
   useEffect(() => {
@@ -49,20 +52,31 @@ function useMatch(query: string): boolean {
   return match;
 }
 
-/**
- * `smoothScroll={false}` keeps the native scroll on a screen where a glide
- * would get in the way: the wallet's sign and connect requests, where the
- * reader has to land exactly on a finding or a button. The cursor stays.
- */
-export function Signature({ smoothScroll = true }: { smoothScroll?: boolean }): JSX.Element | null {
+export interface SignatureProps {
+  /**
+   * `false` keeps the native scroll on a screen where a glide would get in
+   * the way. The cursor stays.
+   */
+  readonly smoothScroll?: boolean;
+  /**
+   * Turns both pieces off, the smoothed scroll and the eyelet cursor: the
+   * wallet's sign and connect requests, where the reader has to land exactly
+   * on a finding or a decision button with the platform's own pointer.
+   */
+  readonly quiet?: boolean;
+}
+
+export function Signature({
+  smoothScroll = true,
+  quiet = false,
+}: SignatureProps): JSX.Element | null {
   const idle = useIdle();
-  const scroll = useMatch(SCROLL_QUERY);
-  const cursor = useMatch(CURSOR_QUERY);
-  if (!idle) return null;
+  const on = useMatch(QUERY);
+  if (!idle || !on || quiet) return null;
   return (
     <Suspense fallback={null}>
-      {scroll && smoothScroll ? <SmoothScroll /> : null}
-      {cursor ? <Cursor /> : null}
+      {smoothScroll ? <SmoothScroll /> : null}
+      <Cursor />
     </Suspense>
   );
 }
