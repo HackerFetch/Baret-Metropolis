@@ -6,7 +6,9 @@
 export const walletHome = {
   balance: {
     label: "Total balance",
-    subLabel: "Estimated in USD",
+    /** Under the MON figure: testnet tokens have no price, so no USD estimate is shown. */
+    monNote:
+      "Your MON on Monad testnet. Testnet tokens have no price, so there is no USD estimate.",
     unavailable: "Price unavailable",
     error: "Can't read your balance from Monad. Try again in a moment.",
   },
@@ -47,6 +49,7 @@ export const walletHome = {
       unlimited: "{spender} can spend all of your {asset}",
       operator: "{operator} can move every item in {asset}",
       agent: "Your agent can pay {count} merchants from your vault",
+      agentOne: "Your agent can pay {count} merchant from your vault",
       site: "{origin} is connected",
     },
     revoke: {

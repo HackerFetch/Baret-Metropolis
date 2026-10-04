@@ -1,14 +1,15 @@
-import { common, history, policy, sign } from "@baret/content";
+import { common, history, policy, sign, walletFrame } from "@baret/content";
 import { Button, ChangeRow, truncateAddress, VerdictTag } from "@baret/ui";
 import { ActivityRow } from "@baret/wallet-ui/components/ActivityRow";
-import { Block, Empty, Rows } from "@baret/wallet-ui/components/Block";
+import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Findings } from "@baret/wallet-ui/components/Findings";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { type FilterId, matches, toCsv } from "@baret/wallet-ui/data/activity";
 import { amount } from "@baret/wallet-ui/data/format";
 import { decide } from "@baret/wallet-ui/data/rules";
-import { useWallet } from "@baret/wallet-ui/data/store";
-import type { ActivityItem, GuardPolicy } from "@baret/wallet-ui/data/types";
+import { type RuleChange, ready, useWallet } from "@baret/wallet-ui/data/store";
+import type { ActivityItem, GuardPolicy, GuardPolicyField } from "@baret/wallet-ui/data/types";
+import { valueText } from "@baret/wallet-ui/rules/fields";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
@@ -34,7 +35,31 @@ function download(csv: string): void {
   URL.revokeObjectURL(url);
 }
 
-function Details({ item, rules }: { item: ActivityItem; rules: GuardPolicy }): JSX.Element {
+/** The explorer's base address, for a transaction hash. */
+const EXPLORER = walletFrame.links.explorer;
+
+/** A rule's value when the item happened: the earliest later change holds what it was. */
+function valueAt(
+  field: GuardPolicyField,
+  at: string,
+  rules: GuardPolicy,
+  changes: readonly RuleChange[],
+): GuardPolicy[GuardPolicyField] {
+  const later = changes
+    .filter((change) => change.field === field && change.at > at)
+    .sort((a, b) => a.at.localeCompare(b.at));
+  return later[0] ? later[0].previous : rules[field];
+}
+
+function Details({
+  item,
+  rules,
+  changes,
+}: {
+  item: ActivityItem;
+  rules: GuardPolicy;
+  changes: readonly RuleChange[];
+}): JSX.Element {
   const { detail } = history;
   const [recheck, setRecheck] = useState<ReturnType<typeof decide> | null>(null);
   const rows = [
@@ -42,7 +67,19 @@ function Details({ item, rules }: { item: ActivityItem; rules: GuardPolicy }): J
       ? [
           {
             label: detail.hash,
-            value: <code className="font-mono">{truncateAddress(item.hash)}</code>,
+            value: (
+              <span className="inline-flex flex-wrap items-center gap-x-4">
+                <code className="font-mono">{truncateAddress(item.hash)}</code>
+                <a
+                  href={`${EXPLORER}/tx/${item.hash}`}
+                  rel="noreferrer"
+                  target="_blank"
+                  className="inline-flex min-h-11 items-center underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
+                >
+                  {history.detail.explorer}
+                </a>
+              </span>
+            ),
           },
         ]
       : []),
@@ -80,6 +117,15 @@ function Details({ item, rules }: { item: ActivityItem; rules: GuardPolicy }): J
           <p className="text-sm text-[color:var(--fg)]">{policy.fields[item.rule].label}</p>
         </div>
       ) : null}
+      {item.rule ? (
+        <div className="grid gap-2">
+          <p className={T.label}>{detail.rulesInForce}</p>
+          <p className="text-sm text-[color:var(--fg)]">
+            {policy.fields[item.rule].label}:{" "}
+            {valueText(item.rule, valueAt(item.rule, item.at, rules, changes))}
+          </p>
+        </div>
+      ) : null}
       {item.kind === "overridden" && item.rule ? (
         <div className="grid gap-2">
           <p className={T.label}>{detail.override}</p>
@@ -109,7 +155,6 @@ function Details({ item, rules }: { item: ActivityItem; rules: GuardPolicy }): J
             <Button
               type="button"
               variant="ghost"
-              size="sm"
               onClick={() => setRecheck(decide(item.findings, rules))}
             >
               {detail.recheck}
@@ -134,6 +179,8 @@ function Details({ item, rules }: { item: ActivityItem; rules: GuardPolicy }): J
 
 export function Component() {
   const { state } = useWallet();
+  // Fail-closed: activity that did not load is an error, never an empty log.
+  const loaded = ready(state, "activity");
   const name = useId();
   const [filter, setFilter] = useState<FilterId>("all");
   const [open, setOpen] = useState<string | null>(null);
@@ -189,7 +236,17 @@ export function Component() {
           title={history.filters.find((f) => f.id === filter)?.label ?? history.title}
           aside={<span className={`${T.label} ${T.num}`}>{rows.length}</span>}
         >
-          {rows.length === 0 ? (
+          {!loaded ? (
+            <Problem
+              title={history.errors.load.title}
+              body={history.errors.load.body}
+              action={
+                <Button type="button" variant="ghost" onClick={() => window.location.reload()}>
+                  {history.errors.load.action.label}
+                </Button>
+              }
+            />
+          ) : rows.length === 0 ? (
             empty
           ) : (
             <ul className="grid border-t border-[color:var(--rule)]">
@@ -200,14 +257,16 @@ export function Component() {
                     open={open === item.id}
                     onOpen={() => setOpen((current) => (current === item.id ? null : item.id))}
                   />
-                  {open === item.id ? <Details item={item} rules={state.policy} /> : null}
+                  {open === item.id ? (
+                    <Details item={item} rules={state.policy} changes={state.ruleChanges} />
+                  ) : null}
                 </li>
               ))}
             </ul>
           )}
         </Block>
 
-        <div className="grid gap-2">
+        <div className={loaded ? "grid gap-2" : "hidden"}>
           <div className="flex">
             <Button type="button" variant="ghost" onClick={() => download(toCsv(state.activity))}>
               {history.export.label}

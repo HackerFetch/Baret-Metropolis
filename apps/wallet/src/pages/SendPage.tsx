@@ -1,9 +1,9 @@
 import { send } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
-import { Block, Rows } from "@baret/wallet-ui/components/Block";
+import { Block, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, fromUnits, toUnits } from "@baret/wallet-ui/data/format";
-import { useWallet } from "@baret/wallet-ui/data/store";
+import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { Asset, SignRequest as Request } from "@baret/wallet-ui/data/types";
 import {
   type AmountIssue,
@@ -23,6 +23,7 @@ import { type JSX, useId, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { routes } from "../routes.js";
+import { unchecked } from "./unchecked.js";
 
 /**
  * Send: the asset, the recipient and the amount, a summary, and "Check and
@@ -92,7 +93,15 @@ export function Component() {
   const [run, setRun] = useState(0);
 
   const asset = state.assets.find((a) => a.symbol === symbol) ?? state.assets[0];
-  if (!asset) return null;
+  // Fail-closed: no readable balance, or nothing held, means nothing to send.
+  if (!ready(state, "balances") || !asset) {
+    const reason = ready(state, "balances") ? send.errors.noAssets : send.errors.balance;
+    return (
+      <Screen title={send.title} body={send.body} picture={WALLET_ART.send}>
+        <Problem title={reason.title} body={reason.body} />
+      </Screen>
+    );
+  }
 
   const sentTo = state.activity
     .filter((item) => item.kind === "sent")
@@ -118,7 +127,9 @@ export function Component() {
   function check(): void {
     setTried(true);
     if (blocking || amountIssue || warnPoisoning || !asset) return;
-    setReview(transferRequest(asset, value, recipient.trim(), state.policy));
+    const request = transferRequest(asset, value, recipient.trim(), state.policy);
+    // Without Baret the transfer is not checked, so it reads as unreachable and is not sent.
+    setReview(ready(state, "analyzer") ? request : unchecked(request));
   }
 
   if (review) {

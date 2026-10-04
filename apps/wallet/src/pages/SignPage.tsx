@@ -1,12 +1,13 @@
 import { common } from "@baret/content";
 import { SIGN_REQUESTS } from "@baret/wallet-ui/data/sample";
-import { useWallet } from "@baret/wallet-ui/data/store";
+import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { SignRequest as Request } from "@baret/wallet-ui/data/types";
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { useState } from "react";
 import { Link } from "react-router";
 import { RequestFrame, SamplePicker } from "../request/RequestFrame.js";
 import { routes } from "../routes.js";
+import { unchecked } from "./unchecked.js";
 
 /**
  * /sign, the window a site opens to ask for a signature. Until the wallet is
@@ -17,14 +18,15 @@ import { routes } from "../routes.js";
 
 const OPTIONS = SIGN_REQUESTS.map((request) => ({
   value: request.id,
-  label: common.verdicts[request.id].label,
+  label: common.verdicts[request.verdict].label,
 }));
 
 export function Component() {
   const { state, dispatch } = useWallet();
   const [id, setId] = useState<Request["id"]>("safe");
   const [run, setRun] = useState(0);
-  const request = SIGN_REQUESTS.find((r) => r.id === id) ?? SIGN_REQUESTS[0];
+  const picked = SIGN_REQUESTS.find((r) => r.id === id) ?? SIGN_REQUESTS[0];
+  const request = picked && !ready(state, "analyzer") ? unchecked(picked) : picked;
   return (
     <RequestFrame picker={<SamplePicker options={OPTIONS} value={id} onChange={setId} />}>
       {request ? (

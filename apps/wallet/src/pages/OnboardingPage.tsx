@@ -1,6 +1,7 @@
 import { common, onboarding, walletFrame } from "@baret/content";
 import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
+import { Problem } from "@baret/wallet-ui/components/Block";
 import { Brand } from "@baret/wallet-ui/components/Brand";
 import { fromTemplate } from "@baret/wallet-ui/data/rules";
 import { useWallet } from "@baret/wallet-ui/data/store";
@@ -95,25 +96,33 @@ export function Component() {
   const { state, dispatch } = useWallet();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(0);
-  const [passkey, setPasskey] = useState<"idle" | "working" | "ready">("idle");
-  const [funds, setFunds] = useState<"idle" | "watching" | "arrived">("idle");
+  const [passkey, setPasskey] = useState<"idle" | "working" | "ready" | "failed">("idle");
+  const [funds, setFunds] = useState<"idle" | "watching" | "arrived" | "timeout">("idle");
+  // Settings sends a reset wallet here with ?reset=1; read once.
+  const [wasReset] = useState(
+    () => new URLSearchParams(window.location.search).get("reset") === "1",
+  );
   const [template, setTemplate] = useState<PolicyTemplateName>("balanced");
   const { welcome, fund, policy: rules, done } = onboarding;
   const words = onboarding.passkey;
 
   // The browser's passkey prompt, stood in for by a short wait.
+  // ?sample=passkey-error makes it fail, to show the error state.
   useEffect(() => {
     if (passkey !== "working") return;
-    const id = window.setTimeout(() => setPasskey("ready"), 1200);
+    const outcome = state.sample === "passkey-error" ? "failed" : "ready";
+    const id = window.setTimeout(() => setPasskey(outcome), 1200);
     return () => window.clearTimeout(id);
-  }, [passkey]);
+  }, [passkey, state.sample]);
 
   // The faucet's transfer, once the reader has opened the faucet.
+  // ?sample=fund-timeout makes the balance unreadable instead.
   useEffect(() => {
     if (funds !== "watching") return;
-    const id = window.setTimeout(() => setFunds("arrived"), 1600);
+    const outcome = state.sample === "fund-timeout" ? "timeout" : "arrived";
+    const id = window.setTimeout(() => setFunds(outcome), 1600);
     return () => window.clearTimeout(id);
-  }, [funds]);
+  }, [funds, state.sample]);
 
   const go = (next: Step) => {
     setStep(next);
@@ -132,6 +141,7 @@ export function Component() {
       </header>
       <main className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] gap-10 px-4 pt-6 pb-20 md:px-8 md:pt-8 lg:px-12">
         <SampleNotice />
+        {wasReset ? <p className={`${T.body} text-[color:var(--fg)]`}>{onboarding.reset}</p> : null}
         <Steps current={step} />
 
         {step === 0 ? (
@@ -170,6 +180,9 @@ export function Component() {
             <p role="status" className="text-sm text-[color:var(--fg)]">
               {passkey === "working" ? words.working : ""}
             </p>
+            {passkey === "failed" ? (
+              <Problem title={words.errors.failed.title} body={words.errors.failed.body} />
+            ) : null}
             <div className="flex">
               {passkey === "ready" ? (
                 <Button type="button" variant="primary" size="lg" onClick={() => go(2)}>
@@ -183,7 +196,7 @@ export function Component() {
                   disabled={passkey === "working"}
                   onClick={() => setPasskey("working")}
                 >
-                  {words.action.label}
+                  {passkey === "failed" ? words.errors.failed.action.label : words.action.label}
                 </Button>
               )}
             </div>
@@ -220,6 +233,17 @@ export function Component() {
                   ? fill(fund.arrived, { amount: FAUCET_AMOUNT })
                   : ""}
             </p>
+            {funds === "timeout" ? (
+              <Problem
+                title={fund.errors.balance.title}
+                body={fund.errors.balance.body}
+                action={
+                  <Button type="button" variant="ghost" onClick={() => setFunds("watching")}>
+                    {fund.errors.balance.action.label}
+                  </Button>
+                }
+              />
+            ) : null}
             <div className="flex flex-wrap gap-3">
               {funds === "arrived" ? (
                 <Button
@@ -295,7 +319,6 @@ export function Component() {
                           : walletFrame.links.showcase
                       }
                       label={suggestion.action.label}
-                      size="sm"
                       icon={"href" in suggestion.action ? "none" : "arrow-up-right"}
                     />
                   </div>

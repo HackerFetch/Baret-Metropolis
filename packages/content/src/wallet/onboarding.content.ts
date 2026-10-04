@@ -13,6 +13,9 @@
 export const onboarding = {
   steps: ["Welcome", "Passkey", "Funds", "Rules", "Done"],
 
+  /** Shown once after Settings reset the wallet. */
+  reset: "This wallet was reset. Its activity, rules and settings are gone. Set it up again below.",
+
   welcome: {
     title: "No recovery phrase. Your passkey is the key.",
     body: "Your Monad account is made from a passkey, the kind you open with Face ID, Touch ID, Windows Hello or a security key. There are no words to write down.",

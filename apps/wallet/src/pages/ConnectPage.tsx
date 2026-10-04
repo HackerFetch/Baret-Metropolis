@@ -23,7 +23,7 @@ const OPTIONS = [
   { value: "insecure", label: connect.warnings.insecure.title },
 ] as const satisfies readonly { value: ConnectRequest["id"]; label: string }[];
 
-type Result = "connected" | "declined";
+type Result = "connected" | "connectedOnce" | "declined";
 
 function Points({
   title,
@@ -73,19 +73,20 @@ function Request({
 
   function answer(next: Result): void {
     if (next === "connected") {
-      dispatch({
-        type: "connect",
-        origin,
-        item: {
-          id: `connect-${origin}-${Date.now()}`,
-          kind: "connect",
-          at: new Date().toISOString(),
-          values: { origin },
-          verdict: null,
-          findings: [],
-          changes: [],
-        },
-      });
+      const item = {
+        id: `connect-${origin}-${Date.now()}`,
+        kind: "connect" as const,
+        at: new Date().toISOString(),
+        values: { origin },
+        verdict: null,
+        findings: [],
+        changes: [],
+      };
+      // Only "Don't ask again" keeps the site as a permission; otherwise it is logged and asks next time.
+      if (remember) dispatch({ type: "connect", origin, item });
+      else dispatch({ type: "log", item });
+      setResult(remember ? "connected" : "connectedOnce");
+      return;
     }
     setResult(next);
   }

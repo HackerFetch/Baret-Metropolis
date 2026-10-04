@@ -1,11 +1,11 @@
 import { common, delegation, policies, send } from "@baret/content";
-import { Button, truncateAddress } from "@baret/ui";
+import { Button, Meter, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount, day, when } from "@baret/wallet-ui/data/format";
 import { ADDRESS } from "@baret/wallet-ui/data/sample";
-import { free, reserved, useWallet } from "@baret/wallet-ui/data/store";
+import { canDeposit, free, reserved, useWallet } from "@baret/wallet-ui/data/store";
 import type { Merchant } from "@baret/wallet-ui/data/types";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
@@ -83,7 +83,7 @@ function Field({
       {hint || error ? (
         <p
           id={hintId}
-          className={error ? "text-sm font-medium text-[color:var(--blocked)]" : T.small}
+          className={error ? "text-sm font-medium text-[color:var(--blocked-ink)]" : T.small}
         >
           {error ?? hint}
         </p>
@@ -126,11 +126,12 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
           </div>
         ))}
       </dl>
+      {/* Spent against the daily cap; the figures above say the same in words. */}
+      <Meter value={Number(merchant.spent) || 0} max={Number(merchant.perDay) || 0} />
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           variant="ghost"
-          size="sm"
           onClick={() =>
             dispatch({
               type: "merchantStatus",
@@ -144,7 +145,6 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
         <Button
           type="button"
           variant="danger"
-          size="sm"
           onClick={() =>
             dispatch({ type: "merchantStatus", address: merchant.address, status: "removed" })
           }
@@ -281,10 +281,11 @@ function AddMerchant({ onDone }: { onDone: () => void }): JSX.Element {
 export function Component() {
   const { state, dispatch } = useWallet();
   const amountId = useId();
+  const amountErrorId = useId();
   const dialogTitle = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [money, setMoney] = useState("");
-  const [moneyIssue, setMoneyIssue] = useState<"invalid" | "reserved" | null>(null);
+  const [moneyIssue, setMoneyIssue] = useState<"invalid" | "reserved" | "balance" | null>(null);
   const [adding, setAdding] = useState(false);
   const [keyPhase, setKeyPhase] = useState<"idle" | "creating" | "registering">("idle");
   const [revealed, setRevealed] = useState(false);
@@ -317,6 +318,11 @@ export function Component() {
     }
     if (kind === "withdraw" && withdrawable(vault, money) !== "ok") {
       setMoneyIssue("reserved");
+      return;
+    }
+    // Fail-closed: more than the account holds, or an unread balance, deposits nothing.
+    if (kind === "deposit" && !canDeposit(state, value)) {
+      setMoneyIssue("balance");
       return;
     }
     dispatch({ type: kind, amount: value });
@@ -426,6 +432,7 @@ export function Component() {
                   setMoneyIssue(null);
                 }}
                 aria-invalid={moneyIssue ? true : undefined}
+                aria-describedby={moneyIssue ? amountErrorId : undefined}
                 className={`${INPUT} min-w-[10rem] flex-1 font-mono tabular-nums`}
               />
               <Button type="button" variant="ghost" onClick={() => move("deposit")}>
@@ -435,20 +442,28 @@ export function Component() {
                 {vaultWords.withdraw.label}
               </Button>
             </div>
-            {moneyIssue === "invalid" ? (
-              <p className="text-sm font-medium text-[color:var(--blocked)]">
-                {send.errors.amountZero.title}
-              </p>
-            ) : null}
-            {moneyIssue === "reserved" ? (
-              <Problem
-                title={delegation.errors.reserved.title}
-                body={fill(delegation.errors.reserved.body, {
-                  amount: amount(reserved(vault), 6),
-                  asset: ASSET,
-                })}
-              />
-            ) : null}
+            <div id={amountErrorId}>
+              {moneyIssue === "invalid" ? (
+                <p role="alert" className="text-sm font-medium text-[color:var(--blocked-ink)]">
+                  {send.errors.amountZero.title}
+                </p>
+              ) : null}
+              {moneyIssue === "reserved" ? (
+                <Problem
+                  title={delegation.errors.reserved.title}
+                  body={fill(delegation.errors.reserved.body, {
+                    amount: amount(reserved(vault), 6),
+                    asset: ASSET,
+                  })}
+                />
+              ) : null}
+              {moneyIssue === "balance" ? (
+                <Problem
+                  title={delegation.errors.balance.title}
+                  body={fill(delegation.errors.balance.body, { asset: ASSET })}
+                />
+              ) : null}
+            </div>
           </div>
         </Block>
 
@@ -456,7 +471,7 @@ export function Component() {
           title={merchants.title}
           aside={
             adding ? null : (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
+              <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
                 {merchants.add}
               </Button>
             )
@@ -471,12 +486,7 @@ export function Component() {
                 ? {}
                 : {
                     action: (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setAdding(true)}
-                      >
+                      <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
                         {merchants.empty.action.label}
                       </Button>
                     ),
@@ -546,12 +556,7 @@ export function Component() {
                   </div>
                 ) : (
                   <div className="flex">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRevealed(true)}
-                    >
+                    <Button type="button" variant="ghost" onClick={() => setRevealed(true)}>
                       {agentKey.handover.reveal}
                     </Button>
                   </div>

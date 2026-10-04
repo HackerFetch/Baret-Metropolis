@@ -3,7 +3,7 @@ import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Problem } from "@baret/wallet-ui/components/Block";
 import { Qr } from "@baret/wallet-ui/components/Qr";
 import { Screen } from "@baret/wallet-ui/components/Screen";
-import { useWallet } from "@baret/wallet-ui/data/store";
+import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import { groups } from "@baret/wallet-ui/lib/address";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
@@ -49,13 +49,18 @@ export function Component() {
               </div>
               {copyFailed ? <Problem title={errors.copy.title} body={errors.copy.body} /> : null}
               <p className={`${T.body} max-w-[56ch]`}>{address.tokens}</p>
-              <p className="flex items-center gap-3 text-sm text-[color:var(--fg)]">
-                <span
-                  aria-hidden="true"
-                  className="size-2 rounded-full bg-[color:var(--fg-muted)]"
-                />
-                {watching.idle}
-              </p>
+              {/* Watching reads Monad RPC: when balances did not load, it says it can't watch. */}
+              {ready(state, "balances") ? (
+                <p className="flex items-center gap-3 text-sm text-[color:var(--fg)]">
+                  <span
+                    aria-hidden="true"
+                    className="size-2 rounded-full bg-[color:var(--fg-muted)]"
+                  />
+                  {watching.idle}
+                </p>
+              ) : (
+                <Problem title={errors.watching.title} body={errors.watching.body} />
+              )}
             </div>
           </div>
         </Block>

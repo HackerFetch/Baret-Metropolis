@@ -1,15 +1,16 @@
-import { common, history, walletHome } from "@baret/content";
+import { common, history, walletFrame, walletHome } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { ActivityRow } from "@baret/wallet-ui/components/ActivityRow";
-import { Block, Empty } from "@baret/wallet-ui/components/Block";
+import { Block, Empty, Problem } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount } from "@baret/wallet-ui/data/format";
-import { useWallet } from "@baret/wallet-ui/data/store";
-import type { Permission } from "@baret/wallet-ui/data/types";
+import { ready, useWallet } from "@baret/wallet-ui/data/store";
+import type { Asset, Permission } from "@baret/wallet-ui/data/types";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
-import { fill } from "@baret/web-ui/lib/util";
+import { useCountUp } from "@baret/web-ui/lib/useCountUp";
+import { counted, fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
@@ -33,24 +34,52 @@ function permissionText(permission: Permission): string {
     const value = values[key];
     if (value?.startsWith("0x")) values[key] = truncateAddress(value);
   }
+  if (permission.kind === "agent") {
+    const count = Number(values.count ?? "0");
+    return counted(count, permissions.rows.agent, permissions.rows.agentOne, values);
+  }
   return fill(permissions.rows[permission.kind], values);
 }
 
-function Balance(): JSX.Element {
+/** The MON figure, counted up once on the first paint. */
+function MonFigure({ mon }: { mon: Asset }): JSX.Element {
+  const shown = useCountUp(amount(mon.balance, mon.decimals));
+  return (
+    <p className="font-display text-[clamp(2rem,1.4rem+2.2vw,2.75rem)] font-extrabold uppercase leading-none tabular-nums text-[color:var(--fg)]">
+      {shown} MON
+    </p>
+  );
+}
+
+/** Fail-closed: a balance that did not load is said so, never shown as zero. */
+function Balance({ loaded, mon }: { loaded: boolean; mon: Asset | undefined }): JSX.Element {
   return (
     <div className="grid gap-2">
       <p className={T.label}>{balance.label}</p>
-      <p className="font-display text-[clamp(2rem,1.4rem+2.2vw,2.75rem)] font-extrabold uppercase leading-none text-[color:var(--fg-muted)]">
-        {balance.unavailable}
-      </p>
-      <p className={T.small}>{balance.subLabel}</p>
+      {loaded ? (
+        <>
+          <MonFigure mon={mon ?? { symbol: "MON", balance: "0", decimals: 18, contract: null }} />
+          <p className={T.small}>{balance.monNote}</p>
+        </>
+      ) : (
+        <Problem body={balance.error} />
+      )}
     </div>
   );
+}
+
+/** The faucet, for an account with nothing to pay a fee with. */
+function FaucetLink(): JSX.Element {
+  return <LinkButton href={walletFrame.links.faucet} label={assets.empty.action.label} />;
 }
 
 export function Component() {
   const { state, dispatch } = useWallet();
   const recent = state.activity.slice(0, 4);
+  const balancesReady = ready(state, "balances");
+  const analyzerReady = ready(state, "analyzer");
+  const mon = state.assets.find((asset) => asset.symbol === "MON");
+  const noFunds = balancesReady && (!mon || /^[0.]*$/.test(mon.balance));
 
   function revoke(permission: Permission): void {
     dispatch({
@@ -84,9 +113,16 @@ export function Component() {
       }
     >
       <div className="grid gap-12">
+        {/* One banner, the most urgent: Baret unreachable, then no MON for a fee. */}
+        {!analyzerReady ? (
+          <Problem body={banners.analyzerDown} />
+        ) : noFunds ? (
+          <Problem body={banners.noFunds} action={<FaucetLink />} />
+        ) : null}
+
         <div className="grid gap-6 md:grid-cols-12 md:items-end md:gap-8">
           <div className="md:col-span-7">
-            <Balance />
+            <Balance loaded={balancesReady} mon={mon} />
           </div>
           <p className="flex flex-wrap items-center gap-3 md:col-span-5">
             <Tag tone="network" size="sm">
@@ -97,8 +133,10 @@ export function Component() {
         </div>
 
         <Block title={assets.title}>
-          {state.assets.length === 0 ? (
-            <Empty title={assets.empty.title} body={assets.empty.body} />
+          {!balancesReady ? (
+            <Problem body={balance.error} />
+          ) : state.assets.length === 0 ? (
+            <Empty title={assets.empty.title} body={assets.empty.body} action={<FaucetLink />} />
           ) : (
             <table className="w-full border-collapse">
               <caption className="sr-only">{assets.title}</caption>
@@ -147,13 +185,15 @@ export function Component() {
             aside={
               <Link
                 to={activity.viewAll.href}
-                className="text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
               >
                 {activity.viewAll.label}
               </Link>
             }
           >
-            {recent.length === 0 ? (
+            {!ready(state, "activity") ? (
+              <Problem title={history.errors.load.title} body={history.errors.load.body} />
+            ) : recent.length === 0 ? (
               <Empty
                 title={activity.empty.title}
                 body={activity.empty.body}
@@ -223,13 +263,11 @@ export function Component() {
                     <LinkButton
                       href={permissions.manageAgent.href}
                       label={permissions.manageAgent.label}
-                      size="sm"
                     />
                   ) : (
                     <Button
                       type="button"
                       variant={permission.kind === "site" ? "ghost" : "danger"}
-                      size="sm"
                       onClick={() => revoke(permission)}
                     >
                       {permission.kind === "site"
