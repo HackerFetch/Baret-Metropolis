@@ -8,11 +8,14 @@
  * top of shared/findings.content.ts.
  */
 
+/** The brand line. The footer reads it from here so the two never drift. */
+const tagline = "Check it first. Then sign.";
+
 export const common = {
   brand: {
     name: "Baret",
     wordmark: "BARET",
-    tagline: "Read first. Then sign.",
+    tagline,
     oneLine: "The firewall for your signature on Monad.",
     description:
       "Baret reads every Monad transaction before you sign it. It simulates what the transaction will do, checks it against your rules and gives you a verdict with the reasons: Safe, Caution or Blocked.",
@@ -248,7 +251,7 @@ export const common = {
    * href twice.
    */
   footer: {
-    tagline: "Read first. Then sign.",
+    tagline,
     note: "Free and open source under the MIT licence. Running on Monad testnet.",
     groups: [
       {
