@@ -14,8 +14,10 @@ import type { JSX, ReactNode } from "react";
  * picture beside them. Then the screen's own blocks, on hairlines.
  *
  * Motion is the landing's, kept quiet: the title's word reveal, then the
- * lead, the actions and the picture rise once, a stagger step apart (CSS
- * Reveal, off under reduced motion, no layout shift).
+ * actions and the picture rise once, a stagger step apart (CSS Reveal, off
+ * under reduced motion, no layout shift). The lead paints at once: it is the
+ * screen's largest text, so a reveal would hold the first meaningful paint
+ * back (a throttled phone measured the LCP about 0.5 s later).
  */
 export function Screen({
   title,
@@ -44,11 +46,9 @@ export function Screen({
             className={`${T.h1Page} text-balance text-[color:var(--fg)]`}
           />
           {body ? (
-            <Reveal delay={staggerDelay(1)}>
-              <p className={`${T.lead} max-w-[56ch]`}>
-                <TwoToneText text={body} />
-              </p>
-            </Reveal>
+            <p className={`${T.lead} max-w-[56ch]`}>
+              <TwoToneText text={body} />
+            </p>
           ) : null}
           {actions ? (
             <Reveal delay={staggerDelay(2)} className="flex flex-wrap gap-3 pt-1">

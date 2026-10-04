@@ -1,4 +1,5 @@
-import { stopGlide } from "@baret/web-ui/components/SmoothScroll";
+// The glide registry alone, not SmoothScroll: Lenis stays off the first paint.
+import { stopGlide } from "@baret/web-ui/lib/glide";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 

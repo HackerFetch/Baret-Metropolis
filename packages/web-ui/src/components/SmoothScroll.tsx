@@ -3,6 +3,7 @@ import Lenis from "lenis";
 import { cancelFrame, frame } from "motion/react";
 import { type JSX, useEffect, useLayoutEffect, useRef } from "react";
 import { useInRouterContext, useLocation } from "react-router";
+import { currentGlide, registerGlide, stopGlide } from "../lib/glide.js";
 import { useFinePointer } from "../lib/useFinePointer.js";
 import { useReduce } from "../lib/useReduce.js";
 
@@ -52,21 +53,6 @@ const NATIVE_SCROLL = "[role=dialog],[role=alertdialog],[data-lenis-prevent],tex
 
 function preventSmooth(node: HTMLElement): boolean {
   return node.closest(NATIVE_SCROLL) !== null;
-}
-
-/** The running instance, so a route change can drop an unfinished glide. */
-let running: Lenis | null = null;
-
-/**
- * Ends a glide still in flight, at the real scroll position. stop() and
- * start() each reset Lenis; a modal that still locks the page keeps it
- * stopped (see syncLock). Does nothing when Lenis is not running.
- */
-export function stopGlide(): void {
-  const lenis = running;
-  if (!lenis) return;
-  lenis.stop();
-  if (!document.body.hasAttribute("data-scroll-locked")) lenis.start();
 }
 
 /**
@@ -121,7 +107,7 @@ export function SmoothScroll(): JSX.Element | null {
       prevent: preventSmooth,
       allowNestedScroll: true,
     });
-    running = lenis;
+    registerGlide(lenis);
 
     // Follow the body scroll lock a modal dialog sets and clears.
     const syncLock = (): void => {
@@ -179,7 +165,7 @@ export function SmoothScroll(): JSX.Element | null {
       window.removeEventListener("click", onClick);
       window.removeEventListener("wheel", arm);
       disarm();
-      if (running === lenis) running = null;
+      if (currentGlide() === lenis) registerGlide(null);
       lenis.destroy();
     };
   }, [on]);
