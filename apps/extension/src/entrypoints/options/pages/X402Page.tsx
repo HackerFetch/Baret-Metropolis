@@ -45,7 +45,7 @@ const DAY_NUMBER = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: 
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" });
 
 /** The outside link's look: the kit's link with room for its icon. */
-const OUT = `${LINK} inline-flex min-h-6 min-w-6 items-center gap-1.5`;
+const OUT = `${LINK} min-w-6 gap-1.5`;
 
 function num(text: string): number {
   const value = Number.parseFloat(text);
@@ -455,7 +455,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           onClick={() =>
                             dispatch({
@@ -470,7 +470,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="soft"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           onClick={() => openCaps(p)}
                         >
@@ -479,7 +479,7 @@ function Merchants(): JSX.Element {
                         <Button
                           type="button"
                           variant="danger"
-                          size="sm"
+                          size="md"
                           aria-describedby={nameId}
                           disabled={working}
                           onClick={() => openRevoke(p)}
@@ -693,7 +693,6 @@ function Problems(): JSX.Element {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
                         onClick={() => {
                           dispatch({ type: "permissionStatus", id: merchant.id, status: "paused" });
                           document.getElementById(dismissId(problem.id))?.focus();
@@ -706,7 +705,6 @@ function Problems(): JSX.Element {
                       id={dismissId(problem.id)}
                       type="button"
                       variant="soft"
-                      size="sm"
                       aria-describedby={titleId}
                       onClick={() => dismiss(index, problem.id)}
                     >

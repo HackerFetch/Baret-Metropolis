@@ -130,6 +130,7 @@ export function SettingsTab({
         action={working ? reset.working : reset.action}
         cancel={reset.cancel}
         disabled={!acknowledged || working}
+        busy={working}
         onCancel={() => {
           if (working) return;
           setConfirm(false);

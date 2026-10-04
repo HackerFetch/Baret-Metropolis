@@ -19,6 +19,8 @@ else if (window.innerWidth > 420) document.documentElement.dataset.view = "tab";
 function remember(start: Start): void {
   const params = new URLSearchParams();
   if (start.scenario === "empty") params.set("sample", "empty");
+  else if (start.reachable === null) params.set("sample", "loading");
+  if (start.reachable === false) params.set("offline", "1");
   params.set("phase", start.phase);
   if (start.phase === "signing") params.set("request", start.request);
   if (start.phase === "connecting") params.set("connect", start.connect);
@@ -32,7 +34,11 @@ function Root() {
     <LandingMotion>
       <ExtensionProvider
         key={run}
-        start={{ scenario: start.scenario, drift: start.phase === "alert" }}
+        start={{
+          scenario: start.scenario,
+          drift: start.phase === "alert",
+          reachable: start.reachable,
+        }}
       >
         <PopupApp
           key={run}

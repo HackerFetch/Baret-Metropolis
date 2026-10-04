@@ -48,7 +48,7 @@ export function PopupApp({
   start: Start;
   onRestart: (start: Start) => void;
 }): JSX.Element {
-  const { state, dispatch } = useExtension();
+  const { state, dispatch, check } = useExtension();
   const [nav, go] = useReducer(reducePopup, {
     phase: (start.phase === "alert" ? "alert" : start.phase) satisfies Phase,
     tab: "home",
@@ -58,7 +58,7 @@ export function PopupApp({
   const [lockReason, setLockReason] = useState<LockReason>("idle");
   // A transfer from the Send form becomes the request the signing phase shows.
   const [own, setOwn] = useState<ReturnType<typeof queueOf> | null>(null);
-  const query = scenarioQuery(state.scenario);
+  const query = scenarioQuery(state.scenario, start.reachable);
   const account = activeAccount(state);
   const alertsUnread = unread(state.alerts);
 
@@ -132,7 +132,8 @@ export function PopupApp({
                     else if (target === "allowances") go({ type: "tab", tab: "allowances" });
                     else if (target === "payments") openOptions("payments", query);
                     else if (target === "settings") openOptions("settings", query);
-                    else dispatch({ type: "reachable", value: true, at: new Date().toISOString() });
+                    // Retry asks again: Baret counts as unreachable until it answers.
+                    else check();
                   }}
                 />
               ) : nav.tab === "activity" ? (

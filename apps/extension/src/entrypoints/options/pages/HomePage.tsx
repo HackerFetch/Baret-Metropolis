@@ -11,7 +11,7 @@ import { counted, fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { OPTIONS_ART } from "../../../assets.js";
-import { byExposure, now, rulesTemplate, unusedFor30Days } from "../../../data/derive.js";
+import { byExposure, rulesTemplate, unusedFor30Days } from "../../../data/derive.js";
 import { activeAccount, type ExtState, useExtension } from "../../../data/store.js";
 import { exposureText, permissionLine, timeOf } from "../../../data/words.js";
 import { LINK, LogLine } from "../parts/kit.js";
@@ -53,7 +53,7 @@ function checkup(state: ExtState) {
 }
 
 function StatusPanel(): JSX.Element {
-  const { state, dispatch } = useExtension();
+  const { state, check } = useExtension();
   const template = rulesTemplate(state);
   return (
     <section
@@ -77,12 +77,7 @@ function StatusPanel(): JSX.Element {
       </p>
       {!state.reachable ? (
         <div className="flex pt-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => dispatch({ type: "reachable", value: true, at: now() })}
-          >
+          <Button type="button" variant="ghost" size="md" onClick={check}>
             {status.action.label}
           </Button>
         </div>

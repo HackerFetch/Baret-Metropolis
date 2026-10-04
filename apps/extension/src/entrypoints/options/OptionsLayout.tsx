@@ -45,7 +45,7 @@ function Nav(): JSX.Element {
               to={route.path}
               end={route.path === "/"}
               className={({ isActive }) =>
-                `-ml-px flex min-h-11 items-center border-l-2 pl-4 font-display text-lg font-bold uppercase tracking-[0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] ${isActive ? "border-[color:var(--fg)] text-[color:var(--fg)]" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`
+                `-ml-px flex min-h-11 items-center border-l-2 pl-4 font-display text-lg font-bold uppercase tracking-[0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] ${isActive ? "border-[color:var(--fg)] text-[color:var(--fg)] forced-colors:border-[Highlight] forced-colors:underline forced-colors:underline-offset-4" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] forced-colors:border-[Canvas]"}`
               }
             >
               {route.label}

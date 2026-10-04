@@ -16,7 +16,7 @@ import { checkJson, direction, type JsonIssue } from "../../../data/rules.js";
 import { type TemplateName, useExtension } from "../../../data/store.js";
 import type { GuardPolicy, GuardPolicyField } from "../../../data/types.js";
 import { useLatest } from "../../../lib/useLatest.js";
-import { Dialog, INPUT, LINK, Search, Select } from "../parts/kit.js";
+import { Dialog, INPUT, Search, Select, TEXT_LINK } from "../parts/kit.js";
 
 /**
  * Rules: the 25 rules Baret checks every sign request against. Start from a
@@ -533,7 +533,7 @@ export function Component() {
             ) : null}
             <p className={T.small}>
               {P.payments.body}{" "}
-              <Link to={P.payments.action.href} className={LINK}>
+              <Link to={P.payments.action.href} className={TEXT_LINK}>
                 {P.payments.action.label}
               </Link>
             </p>

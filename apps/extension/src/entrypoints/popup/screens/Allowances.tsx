@@ -429,6 +429,7 @@ export function AllowancesTab({
         action={working ? revoke.working : revoke.action}
         cancel={revoke.cancel}
         disabled={working}
+        busy={working}
         onCancel={() => {
           if (!working) setTarget(null);
         }}
@@ -452,6 +453,7 @@ export function AllowancesTab({
         action={working ? revoke.working : revokeAll.action}
         cancel={revokeAll.cancel}
         disabled={working}
+        busy={working}
         onCancel={() => {
           if (!working) setAll(false);
         }}
