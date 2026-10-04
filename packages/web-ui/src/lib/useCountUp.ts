@@ -16,7 +16,10 @@ export function useCountUp(value: string, duration = 600): string {
   const [done, setDone] = useState(reduce);
 
   useEffect(() => {
-    if (done) {
+    // `reduce` is read here as well as in the initial state: it can turn true
+    // after the first render (a setting changed mid-count, or a hydrated page
+    // whose first render used the server's "no preference").
+    if (done || reduce) {
       setShown(value);
       return;
     }
@@ -41,7 +44,7 @@ export function useCountUp(value: string, duration = 600): string {
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [value, duration, done]);
+  }, [value, duration, done, reduce]);
 
   return shown;
 }
