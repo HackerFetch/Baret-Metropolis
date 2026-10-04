@@ -169,7 +169,7 @@ RESPONSE { decision, findings, firedRules, suggestions, confidence, estimatedCha
 - `suggestions[]`: `{ code, values }`; today only `ERC20_APPROVAL_UNLIMITED` with the amount this same request spends.
 - `estimatedChanges[]`: the user's balance changes in base units (`before`, `after`, `delta`), MON includes the fee for the whole gas limit.
 - `sources[]`: `alchemy`, `nansen`, `reputation-registry`, `cleanverse`, each `ok`, `unavailable` or `skipped`.
-- RPC outage: HTTP 503 `rpc_unavailable`, never a verdict. The client shows "Can't reach Baret" (Blocked).
+- RPC outage, or an RPC on the wrong chain (read or trace node; checked once per process, `verifyChain`): HTTP 503 `rpc_unavailable`, never a verdict. The client shows "Can't reach Baret" (Blocked).
 
 ---
 

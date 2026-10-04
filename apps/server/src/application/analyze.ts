@@ -75,6 +75,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     req.policy ??
     createPolicy("balanced", { allowedAssets: network.usdcAddress ? [network.usdcAddress] : [] });
 
+  await rpc.verifyChain();
   const block = await rpc.getBlockNumber();
 
   // 1. Simulate, or read the signed message.

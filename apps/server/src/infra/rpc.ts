@@ -55,6 +55,12 @@ export class RpcUnavailableError extends Error {
  */
 export interface MonadRpc {
   getChainId(): Promise<number>;
+  /**
+   * Throws RpcUnavailableError unless every node this adapter uses (reads and
+   * traces) is on the expected chain. An answer about another chain's state
+   * is worse than no answer.
+   */
+  verifyChain(): Promise<void>;
   getBlockNumber(): Promise<bigint>;
   getGasPrice(): Promise<bigint>;
   getBalance(address: Address, block: bigint): Promise<bigint>;
@@ -92,6 +98,8 @@ function isRevert(err: unknown): boolean {
 export class ViemMonadRpc implements MonadRpc {
   private readonly client: PublicClient;
   private traceSupported: boolean | null = null;
+  private readonly expectedChainId: number;
+  private chainVerified = false;
 
   private readonly traceClient: PublicClient | null;
 
@@ -102,6 +110,7 @@ export class ViemMonadRpc implements MonadRpc {
    * debug_traceCall.
    */
   constructor(config: NetworkConfig, timeoutMs: number) {
+    this.expectedChainId = config.chainId;
     this.traceClient =
       config.traceRpcUrl === config.rpcUrl
         ? null
@@ -124,6 +133,21 @@ export class ViemMonadRpc implements MonadRpc {
 
   getChainId() {
     return this.guard("eth_chainId", () => this.client.getChainId());
+  }
+
+  async verifyChain(): Promise<void> {
+    if (this.chainVerified) return;
+    const clients = [this.client, ...(this.traceClient ? [this.traceClient] : [])];
+    const ids = await this.guard("eth_chainId", () =>
+      Promise.all(clients.map((c) => c.getChainId())),
+    );
+    const wrong = ids.find((id) => id !== this.expectedChainId);
+    if (wrong !== undefined) {
+      throw new RpcUnavailableError(
+        `RPC is on chain ${wrong}, expected Monad chain ${this.expectedChainId}`,
+      );
+    }
+    this.chainVerified = true;
   }
 
   getBlockNumber() {
