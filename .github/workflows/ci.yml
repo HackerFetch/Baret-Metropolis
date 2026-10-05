@@ -46,7 +46,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Zip the extension
-        run: pnpm --filter @baret/extension zip
+        run: |
+          pnpm --filter @baret/extension zip
+          pnpm --filter @baret/extension zip:firefox
       - uses: actions/upload-artifact@v4
         with:
           name: baret-extension-${{ github.sha }}
@@ -55,6 +57,37 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+
+  release-extension:
+    name: Publish the extension zips
+    # /install links to these: a CI artifact needs a GitHub login, a release
+    # asset does not. One rolling release, replaced on every push to main.
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: baret-extension-${{ github.sha }}
+          path: zips
+      - name: Give the zips stable names
+        run: |
+          cp zips/*-chrome.zip baret-chrome.zip
+          cp zips/*-firefox.zip baret-firefox.zip
+          ls -l baret-*.zip
+      - name: Replace the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete extension-latest --yes --cleanup-tag || true
+          gh release create extension-latest baret-chrome.zip baret-firefox.zip \
+            --target "${{ github.sha }}" --latest \
+            --title "Baret extension (latest build)" \
+            --notes "Built from ${{ github.sha }}. Chrome: load unpacked after unzipping. Firefox: about:debugging, Load Temporary Add-on."
 
   contracts:
     name: Contracts

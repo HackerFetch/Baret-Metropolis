@@ -127,6 +127,18 @@
 **Alternatives:** `packages/showcase-ui`, the name `CLAUDE.md` reserved — rejected, the wallet uses it too; folding it into `@baret/ui` — rejected, it would pull motion and Lenis into the extension; copying the files into the wallet — rejected, two implementations drift.
 **Status:** ✅ Final (Meriç, 2026-10-03)
 
+### D-019 — The agent's wallet comes from Dynamic; the vault owner authorises it with the Mera passkey
+**Date:** 2026-10-05
+**Decision:** The agent that calls `PaymentGuard.pay` holds a Dynamic server wallet. The vault's owner, a person on the Mera passkey wallet, authorises that address with `setAgentSigner` and can cut it off with `revokeAgentSigner`. A Mera PRF sub-key is the owner-side alternative for a self-hosted agent and stays a stretch goal.
+**Rationale:** The copy said both "agent wallets come from Dynamic" and "Mera derives the agent key". Each sponsor now has one job that is real: Dynamic runs the autonomous wallet, Mera is how a human grants and revokes its authority. Closes the open half of D-013.
+**Status:** ✅ Final
+
+### D-020 — Hackathon scope for the last eight days
+**Date:** 2026-10-05
+**Decision:** Submission closes 2026-10-13. Order: the five remaining demo sites live on testnet, agent-kit with Dynamic, the Mera wallet going live. Cut: the extension's live background (it stays on the sample wallet, labelled as a preview), Cleanverse (no API access), Chainlink CRE, the MetaMask plugin. Envio only if the Mera work finishes early.
+**Rationale:** Every screen the judges can click should be real before a second wallet surface is. The extension background is the largest single piece of work left and the standalone wallet covers the same story plus two Mera bounties.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

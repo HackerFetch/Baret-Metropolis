@@ -1,0 +1,22 @@
+name: Keep the API warm
+
+# Render's free plan sleeps a service after 15 minutes without traffic, and
+# the first request then takes close to a minute: longer than the 15 seconds
+# the demo sites wait before they fail closed. One request every 10 minutes
+# keeps the instance up.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ask the API if it is ready
+        run: |
+          curl --silent --show-error --fail --max-time 120 \
+            https://baret-monad-api.onrender.com/health/ready

@@ -3,6 +3,9 @@ import { MONAD_NETWORK_KEYS } from "./chains.js";
 import { FINDING_CODES, SEVERITIES } from "./findings.js";
 import { address, GUARD_POLICY_FIELDS, guardPolicySchema } from "./policy.js";
 
+/** The three starting rule sets, by name (values in policy-templates.ts). */
+export const POLICY_TEMPLATE_NAMES = ["strict", "balanced", "permissive"] as const;
+
 const hex = z.string().regex(/^0x[0-9a-fA-F]*$/, "must be 0x-prefixed hex");
 /** An integer in base units (wei, or a token's smallest unit), decimal or 0x hex. */
 const rawAmount = z.union([z.string().regex(/^\d+$/), z.string().regex(/^0x[0-9a-fA-F]+$/)]);
@@ -22,7 +25,10 @@ export const callRequestSchema = z
   })
   .strict();
 
-/** A signed, serialized transaction (`eth_sendRawTransaction` input). */
+/**
+ * A serialized transaction as hex. Signed: the sender is recovered from the
+ * signature. Unsigned: the sender is `userWallet`, which is then required.
+ */
 export const rawTransactionSchema = z.object({ raw: hex }).strict();
 
 /** An EIP-712 message, as a dApp hands it to `eth_signTypedData_v4`. */
@@ -73,14 +79,22 @@ export const analyzeRequestSchema = z
     typedData: typedDataSchema.optional(),
     /** Whose balances the loss rules protect. Defaults to the sender. */
     userWallet: address.optional(),
-    /** Defaults to the Balanced template with the network's USDC allowed. */
+    /** The full rules. Without them and without a template: Balanced. */
     policy: guardPolicySchema.optional(),
+    /**
+     * A template by name instead of full rules. The server fills in the
+     * network's own USDC as the allowed payment asset.
+     */
+    policyTemplate: z.enum(POLICY_TEMPLATE_NAMES).optional(),
     payment: paymentContextSchema.optional(),
     integratorRequestId: z.string().max(128).optional(),
   })
   .strict()
   .refine((r) => (r.transaction === undefined) !== (r.typedData === undefined), {
     message: "send exactly one of `transaction` or `typedData`",
+  })
+  .refine((r) => r.policy === undefined || r.policyTemplate === undefined, {
+    message: "send `policy` or `policyTemplate`, not both",
   });
 
 export type CallRequest = z.infer<typeof callRequestSchema>;

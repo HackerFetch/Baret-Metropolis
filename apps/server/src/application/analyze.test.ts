@@ -1,4 +1,10 @@
-import { type AnalyzeRequest, type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
+import {
+  type AnalyzeRequest,
+  type AnalyzeResponse,
+  analyzeRequestSchema,
+  FINDING_CODES,
+} from "@baret/guard";
+import { serializeTransaction } from "viem";
 import { afterAll, describe, expect, it } from "vitest";
 import { EIP1967_IMPLEMENTATION_SLOT, KNOWN_FUNCTIONS } from "../simulation/abi.js";
 import type { Sources } from "../sources/types.js";
@@ -164,6 +170,73 @@ describe("approvals", () => {
   });
 });
 
+describe("request shapes", () => {
+  const unsigned = (chainId = 10143) =>
+    serializeTransaction({
+      chainId,
+      type: "eip1559",
+      to: PEER,
+      value: 1n,
+      maxFeePerGas: 100n * 10n ** 9n,
+      gas: 21_000n,
+    });
+
+  it("takes an unsigned serialized transaction with userWallet as the sender", async () => {
+    const r = await run({
+      network: "testnet",
+      transaction: { raw: unsigned() },
+      userWallet: USER,
+      policy: policy(),
+    });
+    expect(r.estimatedChanges[0]?.account).toBe(USER);
+  });
+
+  it("refuses an unsigned transaction with no sender, and one for another chain", async () => {
+    await expect(
+      analyze({ network: "testnet", transaction: { raw: unsigned() } }, deps(new FakeRpc())),
+    ).rejects.toThrow(/userWallet/);
+    await expect(
+      analyze(
+        { network: "testnet", transaction: { raw: unsigned(1) }, userWallet: USER },
+        deps(new FakeRpc()),
+      ),
+    ).rejects.toThrow(/chain 1/);
+  });
+
+  it("applies a template by name with the network's USDC filled in", async () => {
+    // Strict turns every finding into a block; Permissive lets this one through.
+    const call = { ...tx({ to: USDC, data: approveData(DAPP, 3n * ONE_USDC) }), policy: undefined };
+    const strict = await run({ ...call, policyTemplate: "strict" });
+    const permissive = await run({ ...call, policyTemplate: "permissive" });
+    expect(strict.decision).toBe("blocked");
+    expect(permissive.decision).toBe("caution");
+    expect(analyzeRequestSchema.safeParse({ ...tx(), policyTemplate: "strict" }).success).toBe(
+      false,
+    );
+  });
+
+  it("names a collection in an operator approval", async () => {
+    const rpc = new FakeRpc();
+    rpc.meta.set(NFT, { symbol: "NIGHT", decimals: null as unknown as number });
+    rpc.frame = frame({
+      to: NFT,
+      logs: [
+        log(
+          NFT,
+          "ApprovalForAll",
+          { owner: USER, operator: DRAINER },
+          {
+            types: [{ type: "bool" }],
+            values: [true],
+          },
+        ),
+      ],
+    });
+    const r = await run(tx({ to: NFT }), rpc);
+    expect(r.approvals[0]).toMatchObject({ kind: "operator", symbol: "NIGHT", decimals: null });
+  });
+});
+
 describe("token metadata", () => {
   it("counts a token it cannot read in base units, named by its address", async () => {
     const rpc = new FakeRpc();
@@ -173,7 +246,7 @@ describe("token metadata", () => {
     expect(r.findings.find((f) => f.code === "ERC20_APPROVAL_GRANTED")?.values).toEqual({
       spender: DAPP,
       amount: "5000",
-      asset: "0xABcD…1234", // checksummed, like every address the server returns
+      asset: "0xABcD...1234", // checksummed, like every address the server returns
     });
   });
 });

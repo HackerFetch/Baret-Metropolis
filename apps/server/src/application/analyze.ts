@@ -73,7 +73,9 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
 
   const policy: GuardPolicy =
     req.policy ??
-    createPolicy("balanced", { allowedAssets: network.usdcAddress ? [network.usdcAddress] : [] });
+    createPolicy(req.policyTemplate ?? "balanced", {
+      allowedAssets: network.usdcAddress ? [network.usdcAddress] : [],
+    });
 
   await rpc.verifyChain();
   const block = await rpc.getBlockNumber();
@@ -94,7 +96,11 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
 
   if (req.transaction) {
     try {
-      tx = await decodeTransaction(req.transaction, network.chainId);
+      tx = await decodeTransaction(
+        req.transaction,
+        network.chainId,
+        req.userWallet ? getAddress(req.userWallet) : null,
+      );
     } catch (err) {
       throw new AnalyzeInputError(err instanceof Error ? err.message : String(err));
     }
@@ -151,8 +157,9 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     .filter((a) => a !== user)
     .slice(0, MAX_ADDRESSES);
 
+  // Collections are asked too: they have a symbol to show, though no decimals.
   const tokenAddresses = uniq([
-    ...effects.approvals.filter((a) => a.kind !== "operator").map((a) => a.contract),
+    ...effects.approvals.map((a) => a.contract),
     ...effects.transfers.map((t) => t.token),
     network.usdcAddress,
     payment ? getAddress(payment.asset) : null,
@@ -176,8 +183,10 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
 
   const contracts = candidates.filter((_, i) => (codes[i] ?? "0x") !== "0x");
   const tokens = new Map<Address, TokenMeta>();
+  const symbols = new Map<Address, string>();
   tokenAddresses.forEach((t, i) => {
     const m = metas[i];
+    if (m?.symbol) symbols.set(t, m.symbol);
     if (m?.symbol && m.decimals !== null) tokens.set(t, { symbol: m.symbol, decimals: m.decimals });
   });
   const delegateCalls: DelegateCall[] = delegateFrames.map((f, i) => {
@@ -249,7 +258,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
         owner: user,
         kind: a.kind,
         contract: a.contract,
-        symbol: tokens.get(a.contract)?.symbol ?? null,
+        symbol: symbols.get(a.contract) ?? null,
         decimals: tokens.get(a.contract)?.decimals ?? null,
         spender: a.spender,
         amount: a.amount?.toString() ?? null,

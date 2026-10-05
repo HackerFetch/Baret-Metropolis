@@ -76,6 +76,11 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --private-k
 ```
 Put the addresses into `docs/CONTRACTS.md` §2.6 / §3.4 and `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` / `MONAD_TESTNET_KNOWN_CONTRACTS` on Render. Contracts are not deployed from CI on purpose: a deployer key in GitHub secrets is a bigger risk than a manual step we run twice.
 
+### 3.5 What runs on its own
+- **Keep-warm** (`.github/workflows/keep-warm.yml`): asks `/health/ready` every 10 minutes so the free Render instance does not sleep (a sleeping instance needs close to a minute, the demo sites wait 15 seconds).
+- **Extension release** (`ci.yml` → `release-extension`): every push to `main` replaces the `extension-latest` GitHub release with `baret-chrome.zip` and `baret-firefox.zip`. `/install` links to `releases/latest/download/<name>.zip` through `VITE_BARET_EXTENSION_CHROMIUM_URL` and `VITE_BARET_EXTENSION_FIREFOX_URL` on the showcase project.
+- **Showcase 404s**: no catch-all rewrite; the build writes a file per route and `404.html`. The wallet keeps its single-page fallback.
+
 ## 4. Running the pipeline locally
 
 ```

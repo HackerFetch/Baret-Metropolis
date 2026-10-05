@@ -7,7 +7,7 @@ import type { AnalysisContext, TokenMeta } from "./context.js";
  * confident, wrong amount.
  */
 export function unknownToken(token: Address): TokenMeta {
-  return { symbol: `${token.slice(0, 6)}…${token.slice(-4)}`, decimals: 0 };
+  return { symbol: `${token.slice(0, 6)}...${token.slice(-4)}`, decimals: 0 };
 }
 
 export function tokenMeta(ctx: AnalysisContext, token: Address | null): TokenMeta {
