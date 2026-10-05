@@ -139,6 +139,12 @@
 **Rationale:** Every screen the judges can click should be real before a second wallet surface is. The extension background is the largest single piece of work left and the standalone wallet covers the same story plus two Mera bounties.
 **Status:** ✅ Final
 
+### D-021 — An exchange with a listed contract is not a loss; proxies older than EIP-1967 are standard proxies
+**Date:** 2026-10-05
+**Decision:** (1) The loss limit (`maxLossPercent`) is skipped when everything that leaves the user's account goes to contracts on Baret's own list and the user receives a token or a collectible in the same transaction (`isExchangeWithListed`). A payment to anything unlisted, or one that returns nothing, is still measured. (2) A delegatecall counts as a standard proxy when the target is stored in the EIP-1967 slot or in the older OpenZeppelin slot (`org.zeppelinos.proxy.implementation`); the implementation behind a standard proxy is not judged as an unknown contract on its own.
+**Rationale:** (1) Baret has no prices, so a stake that returns a receipt or a swap looked like a loss of the whole amount and was blocked above half the balance. Limiting the exception to listed contracts keeps a worthless-token scam measured. Answers the question in the 2026-10-03 demo-sites task. (2) Circle's USDC is such a proxy: every USDC transfer came back with a borrowed-code warning and an unknown contract, found while checking ClaimHub against the real token.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

@@ -17,6 +17,7 @@
     "viem": "2.56.5"
   },
   "devDependencies": {
+    "@baret/guard": "workspace:*",
     "typescript": "6.0.3"
   }
 }

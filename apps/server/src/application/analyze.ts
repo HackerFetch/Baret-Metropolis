@@ -24,7 +24,7 @@ import type { AppConfig, NetworkConfig } from "../config/env.js";
 import type { CallParams, MonadRpc } from "../infra/rpc.js";
 import { decide, netDelta, policyFindings } from "../policy/evaluate.js";
 import { runDetectors } from "../risk/index.js";
-import { EIP1967_IMPLEMENTATION_SLOT } from "../simulation/abi.js";
+import { PROXY_IMPLEMENTATION_SLOTS } from "../simulation/abi.js";
 import { decodeTransaction, type NormalizedTx } from "../simulation/decode.js";
 import { type CallTrace, parseCallTrace } from "../simulation/trace.js";
 import type { Sources } from "../sources/types.js";
@@ -175,7 +175,11 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     Promise.all(candidates.map((a) => rpc.getCode(a, block))),
     Promise.all(tokenAddresses.map((t) => rpc.erc20Meta(t))),
     Promise.all(
-      delegateFrames.map((f) => rpc.getStorageAt(f.from, EIP1967_IMPLEMENTATION_SLOT, block)),
+      delegateFrames.map((f) =>
+        Promise.all(
+          PROXY_IMPLEMENTATION_SLOTS.map((slot) => rpc.getStorageAt(f.from, slot, block)),
+        ),
+      ),
     ),
     rpc.getBalance(user, block).catch(() => null),
     Promise.all(balanceTokens.map((t) => rpc.erc20Balance(t, user, block))),
@@ -190,13 +194,11 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     if (m?.symbol && m.decimals !== null) tokens.set(t, { symbol: m.symbol, decimals: m.decimals });
   });
   const delegateCalls: DelegateCall[] = delegateFrames.map((f, i) => {
-    const slot = implSlots[i] ?? "0x";
-    const impl = slot.length >= 42 ? `0x${slot.slice(-40)}`.toLowerCase() : null;
-    return {
-      contract: f.from,
-      codeFrom: f.to as Address,
-      standardProxy: impl !== null && impl === f.to?.toLowerCase(),
-    };
+    const target = f.to?.toLowerCase();
+    const standardProxy = (implSlots[i] ?? []).some(
+      (slot) => slot.length >= 42 && `0x${slot.slice(-40)}`.toLowerCase() === target,
+    );
+    return { contract: f.from, codeFrom: f.to as Address, standardProxy };
   });
 
   // 3. Reputation and identity.
