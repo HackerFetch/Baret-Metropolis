@@ -1,0 +1,30 @@
+{
+  "name": "@baret/agent-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A guarded wallet for AI agents on Monad: every transaction is checked by Baret before it is signed.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "baret": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "baret": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@baret/guard": "workspace:*",
+    "@dynamic-labs-wallet/node-evm": "1.1.28",
+    "tsx": "4.23.15",
+    "viem": "2.56.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3"
+  }
+}

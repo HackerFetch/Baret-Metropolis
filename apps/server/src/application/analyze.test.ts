@@ -82,6 +82,14 @@ describe("simulation", () => {
     expect(r.confidence).toBe("low");
   });
 
+  it("does not add unmeasurable-loss findings to a request that would revert", async () => {
+    const rpc = new FakeRpc();
+    rpc.outcome = { ok: false, revertReason: "ExceedsPerTxCap", revertData: null };
+    rpc.estimate = null; // a revert has no gas estimate, so the fee is unknown
+    const r = await run(tx({ to: PEER, value: "1" }), rpc);
+    expect(codes(r)).toEqual(["SIMULATION_FAILED"]);
+  });
+
   it("says when there is no trace", async () => {
     const r = await run(tx({ to: PEER, value: "1" }));
     expect(codes(r)).toContain("LOW_CONFIDENCE_INCOMPLETE_DATA");

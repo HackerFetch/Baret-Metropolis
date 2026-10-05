@@ -33,6 +33,9 @@
     },
     {
       "path": "./packages/wallet-ui"
+    },
+    {
+      "path": "./packages/agent-kit"
     }
   ]
 }

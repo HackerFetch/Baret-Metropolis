@@ -145,6 +145,12 @@
 **Rationale:** (1) Baret has no prices, so a stake that returns a receipt or a swap looked like a loss of the whole amount and was blocked above half the balance. Limiting the exception to listed contracts keeps a worthless-token scam measured. Answers the question in the 2026-10-03 demo-sites task. (2) Circle's USDC is such a proxy: every USDC transfer came back with a borrowed-code warning and an unknown contract, found while checking ClaimHub against the real token.
 **Status:** ✅ Final
 
+### D-022 — agent-kit: a Caution is not signable, the signer is replaceable, a revert carries one finding
+**Date:** 2026-10-05
+**Decision:** (1) `AgentWallet` signs on Safe only; Caution needs an explicit `allowCaution`. (2) The key holder is an `AgentSigner` interface: Dynamic's server wallet in a deployed agent, a local key in tests. The Dynamic wallet is created two-of-two and its local share is stored in one owner-only file. (3) The CLI takes settings from the environment, never from flags. (4) In the engine, a request that would revert reports `SIMULATION_FAILED` alone: the loss and floor rules are skipped, since nothing moves and the fee of a reverting call cannot be estimated.
+**Rationale:** (1) A Caution is a finding for a person to read; an agent cannot read it. This is also where the x402 "paid the wrong address" warning (D-014) is stopped for agents. (2) Tests and the testnet demo must not depend on a third-party account. (3) A key or token passed as a flag ends up in shell history. (4) Found on the first over-cap payment: the verdict listed "could not measure the loss" next to the real reason.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

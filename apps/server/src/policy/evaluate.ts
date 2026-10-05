@@ -173,10 +173,17 @@ function paymentRules(ctx: AnalysisContext): FindingDraft[] {
 
 /** Codes only the engine can produce: they need the user's limits or spend history. */
 export function policyFindings(ctx: AnalysisContext): FindingDraft[] {
+  // A request that would revert moves nothing: SIMULATION_FAILED already says
+  // so, and "could not measure the loss" on top of it would be noise.
+  const reverts = ctx.simulation.ran && !ctx.simulation.ok;
   return [
-    ...lossRule(ctx),
-    ...floorRule(ctx, "minPostUsdcBalance"),
-    ...floorRule(ctx, "minPostNativeBalance"),
+    ...(reverts
+      ? []
+      : [
+          ...lossRule(ctx),
+          ...floorRule(ctx, "minPostUsdcBalance"),
+          ...floorRule(ctx, "minPostNativeBalance"),
+        ]),
     ...paymentRules(ctx),
   ];
 }
