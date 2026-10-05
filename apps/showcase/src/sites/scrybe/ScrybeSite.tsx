@@ -10,11 +10,12 @@ import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
+import { useDemoWallet } from "../kit/wallet/useDemoWallet.js";
 import { AskCard } from "./AskCard.js";
 import { ScrybeGlyph, VIEWS } from "./Glyph.js";
 import { AgentsBridge, Run } from "./Run.js";
 import { ART, type Cap, SAMPLE, START_CAP, usdc } from "./sample.js";
-import { LIVE, SOURCE } from "./source.js";
+import { LIVE_VALUES, SOURCE } from "./source.js";
 
 /**
  * Scrybe: a pay-per-answer service in its own highlighter palette, with
@@ -24,7 +25,9 @@ import { LIVE, SOURCE } from "./source.js";
  * small x402 payment, Safe. The agent loop pays question after question; the
  * payment that would take the hour over the visitor's cap is stopped. The
  * panel shows the run, the stop and the way to the same caps on /agents.
- * Prepared samples only, so nothing is sent (source.ts).
+ * With a wallet connected, Baret checks the real payment from that address
+ * under the visitor's cap; without one, the prepared sample (source.ts).
+ * Nothing is signed or sent.
  */
 
 const { site, analysis } = scrybe;
@@ -39,6 +42,7 @@ export function ScrybeSite(): JSX.Element {
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
+  const { from, live } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
@@ -47,7 +51,7 @@ export function ScrybeSite(): JSX.Element {
     setCheckedCap(cap);
     setConnected(true);
     setOpen(true);
-    check.start({ mode: version, cap });
+    check.start({ mode: version, cap, from });
   }
 
   /** False when the question is missing, so the card can move focus to it. */
@@ -68,7 +72,10 @@ export function ScrybeSite(): JSX.Element {
   }
 
   const copy = analysis.modes[checked];
-  const values = { amount: usdc(SAMPLE.price), merchant: SAMPLE.merchant };
+  const values = {
+    amount: usdc(SAMPLE.price),
+    merchant: live ? LIVE_VALUES.merchant : SAMPLE.merchant,
+  };
 
   return (
     <>
@@ -86,9 +93,7 @@ export function ScrybeSite(): JSX.Element {
         view={view}
         onView={go}
         connect={site.connect}
-        connected={connected}
-        wallet={SAMPLE.wallet}
-        onConnect={() => setConnected(true)}
+        sample={{ connected, address: SAMPLE.wallet, onUse: () => setConnected(true) }}
       />
 
       <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
@@ -133,7 +138,7 @@ export function ScrybeSite(): JSX.Element {
           if (!next) check.reset();
         }}
         state={check.state}
-        live={LIVE}
+        live={live}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

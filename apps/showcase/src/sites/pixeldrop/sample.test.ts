@@ -1,10 +1,12 @@
 import { findings, pixeldrop } from "@baret/content";
+import { DEMO } from "@baret/demo";
 import { hasValues } from "@baret/web-ui/components/CheckBlocks";
 import { fill } from "@baret/web-ui/lib/util";
+import { decodeFunctionData, parseAbi } from "viem";
 import { describe, expect, it } from "vitest";
 import { VIEWS } from "./Glyph.js";
 import { PIECE, parseQuantity, priceOf, SAMPLE, sampleCheck } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { buildRequest, costOf, LIVE_VALUES, SOURCE } from "./source.js";
 
 describe("PixelDrop quantity", () => {
   it("takes whole numbers from 1 up and refuses anything else", () => {
@@ -51,7 +53,10 @@ describe("PixelDrop sample", () => {
   });
 
   it("answers from the sample", async () => {
-    const result = await SOURCE({ mode: "safe", count: 2 }, new AbortController().signal);
+    const result = await SOURCE(
+      { mode: "safe", count: 2, from: null },
+      new AbortController().signal,
+    );
     expect(result).toEqual(sampleCheck("safe", 2));
   });
 });
@@ -70,5 +75,33 @@ describe("PixelDrop copy", () => {
   it("has one page per nav item after the first, in nav order", () => {
     expect(pixeldrop.site.nav).toHaveLength(VIEWS.length);
     expect(pixeldrop.site.pages.views.map((v) => v.id)).toEqual(VIEWS.slice(1));
+  });
+});
+
+describe("PixelDrop live request", () => {
+  const from = "0x1111111111111111111111111111111111111111" as const;
+  const abi = parseAbi([
+    "function mint(uint256 count) payable",
+    "function setApprovalForAll(address operator, bool approved)",
+  ]);
+
+  it("mints the pieces at their price when honest", () => {
+    const call = buildRequest("safe", 3, from);
+    expect(call.to).toBe(DEMO.pixeldrop.collection);
+    expect(call.value).toBe((3n * DEMO.pixeldrop.priceWei).toString());
+    const decoded = decodeFunctionData({ abi, data: call.data as `0x${string}` });
+    expect(decoded.functionName).toBe("mint");
+    expect(decoded.args).toEqual([3n]);
+    expect(costOf("safe", 3)).toBe(3n * DEMO.pixeldrop.priceWei);
+  });
+
+  it("hands the whole collection to the drainer in the attack, for nothing", () => {
+    const call = buildRequest("danger", 3, from);
+    expect(call.value).toBe("0");
+    const decoded = decodeFunctionData({ abi, data: call.data as `0x${string}` });
+    expect(decoded.functionName).toBe("setApprovalForAll");
+    expect(decoded.args).toEqual([DEMO.drainer, true]);
+    expect(costOf("danger", 3)).toBe(0n);
+    expect(LIVE_VALUES.operator).toBe(DEMO.drainer);
   });
 });

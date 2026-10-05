@@ -156,6 +156,65 @@ export const hub = {
     // Screen-reader headings for a demo home's figures and FAQ.
     site: { statsTitle: "Figures", faqTitle: "Questions" },
 
+    /**
+     * The wallet picker in a demo site's header and the connected wallet's
+     * menu. Wallets are found with EIP-6963; Baret's extension is listed
+     * first, found or not. {wallet} is a wallet's own name.
+     */
+    wallet: {
+      title: "Connect a wallet",
+      body: "Baret checks each request on this page from the address you connect. Nothing is signed or sent.",
+      looking: "Looking for wallets in this browser...",
+      baret: {
+        name: "Baret",
+        found: "Found in this browser",
+        missing: "Not found in this browser",
+        note: "The Baret extension is a preview and does not connect to sites yet. Any other wallet works here, and Baret still checks each request.",
+        install: { label: "Get the extension", href: "/install" },
+      },
+      others: "Wallets in this browser",
+      none: "No other wallet found in this browser.",
+      sample: {
+        label: "Use the sample wallet",
+        body: "Prepared answers, no wallet needed. Nothing leaves this page.",
+      },
+      /** The developer fallback address (VITE_BARET_DEMO_FROM), shown in place of a wallet. */
+      testAddress: "Test address",
+      connecting: "Confirm in {wallet}...",
+      errors: {
+        rejected: "You declined in {wallet}. Nothing was connected.",
+        pending: "{wallet} already has a request open. Finish it there, then try again.",
+        failed: "{wallet} did not connect. Try again, or pick another wallet.",
+      },
+      close: "Close",
+      account: {
+        title: "Your wallet",
+        /** The connected chip's accessible name. */
+        open: "{wallet}, {address}. Open the wallet menu",
+        live: "Baret checks each request on this page from this address, live.",
+        network: {
+          ok: "Monad testnet",
+          wrong: "Your wallet is on another network. Checks still run on Monad testnet.",
+        },
+        switch: {
+          label: "Switch to Monad testnet",
+          busy: "Switching...",
+          failed: "The wallet did not switch. Pick Monad testnet in the wallet itself.",
+        },
+        balance: "{amount} MON on Monad testnet",
+        empty: "No test MON in this wallet yet. A live check of a payment needs some.",
+        faucet: { label: "Get test MON", href: "https://faucet.monad.xyz" },
+        copy: { label: "Copy address", done: "Copied" },
+        disconnect: "Disconnect",
+      },
+      announce: {
+        connected: "{wallet} connected, {address}",
+        disconnected: "Wallet disconnected",
+      },
+      /** Under a card's amount when a live wallet holds less than it asks. */
+      short: "Your wallet holds {balance} MON on Monad testnet. Get test MON, or ask for less.",
+    },
+
     toggle: {
       legend: "Which version to build",
       hint: "Same page, different transaction. Switch versions, then press the site's main button.",
@@ -169,9 +228,9 @@ export const hub = {
 
     panel: {
       title: "Baret analysis",
-      /** Shown on every panel until the demo is wired to Baret's server. */
+      /** Shown on a prepared answer: no wallet is connected. */
       sample:
-        "A prepared sample of what Baret returns for this request. This demo is not connected to Baret's server yet.",
+        "A prepared sample of what Baret returns for this request. Connect a wallet to get Baret's live answer for your own address.",
       asks: "What the site asks for",
       call: "The call",
       expected: "Expected verdict",

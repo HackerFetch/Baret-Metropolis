@@ -1,22 +1,42 @@
+import { claimhub, DEMO } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
+import type { Address } from "viem";
+import type { DemoCall } from "../kit/live.js";
 import { sampleCheck } from "./sample.js";
 
 /**
- * Where ClaimHub's "Claim 2,410 HUB" goes. Prepared samples only, for now:
- * the honest `claim()` and the attack `approve(spender, unlimited)` on the
- * canonical test USDC need the demo distributor and builders in
- * `@baret/demo` (tasks/FOR_EZGIN.md), and the frontend never writes
- * calldata by hand. Once they ship, the live path is NovaSwap's: build the
- * call, `analyzeCall` it, fail closed.
+ * Where ClaimHub's "Claim 2,410 HUB" goes. The request comes from
+ * `@baret/demo`, so the frontend never writes calldata: honest is `claim()`
+ * on the distributor Baret knows, attack is "verify your wallet", an
+ * unlimited USDC allowance to a reported drainer.
+ *
+ * Live when there is an address to simulate from (a connected wallet, or
+ * VITE_BARET_DEMO_FROM): the request goes to Baret's server and fails
+ * closed. With no address, the prepared sample, and nothing is fetched.
  */
 
 export interface ClaimInput {
   readonly mode: DemoMode;
   /** The wallet the eligibility check read. */
   readonly wallet: string;
+  /** The address a live check simulates from (it signs the claim); null for the sample. */
+  readonly from: Address | null;
 }
 
-/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
-export const LIVE = false;
+/** The call each version asks the wallet to sign. */
+export function buildRequest(mode: DemoMode, from: Address): DemoCall {
+  return mode === "safe" ? claimhub.claim(from) : claimhub.attackApprove(from);
+}
 
-export const SOURCE: CheckSource<ClaimInput> = async (input) => sampleCheck(input.mode);
+/** The distributor and the spender a live request names, for the panel's copy. */
+export const LIVE_VALUES = {
+  contract: DEMO.claimhub.distributor,
+  spender: DEMO.drainer,
+} as const;
+
+/** The live path loads only when a live check runs, so the sample page never fetches it. */
+export const SOURCE: CheckSource<ClaimInput> = async (input, signal) => {
+  if (input.from === null) return sampleCheck(input.mode);
+  const { analyzeCall } = await import("../kit/live.js");
+  return analyzeCall(buildRequest(input.mode, input.from), signal);
+};

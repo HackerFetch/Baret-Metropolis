@@ -22,18 +22,53 @@ export interface DemoCall {
   readonly data: string;
 }
 
-export async function analyzeCall(call: DemoCall, signal: AbortSignal): Promise<CheckResult> {
+/**
+ * An x402 payment, as `@baret/demo` builds it: the EIP-712 message the
+ * wallet would sign and what the merchant's 402 asked for.
+ */
+export interface DemoPayment {
+  readonly typedData: { readonly signer: string } & Record<string, unknown>;
+  readonly payment: Record<string, unknown>;
+}
+
+/** One request to Baret, read back with the visitor's wallet as the one whose changes show. */
+async function analyze(
+  body: Record<string, unknown>,
+  wallet: string,
+  signal: AbortSignal,
+): Promise<CheckResult> {
   const res = await fetch(ANALYZE_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ network: "testnet", transaction: call, userWallet: call.from }),
+    body: JSON.stringify({ network: "testnet", ...body }),
     signal,
   });
   if (!res.ok) return FAILED;
   // The schema (and zod with it) loads only when a live check runs.
   const { analyzeResponseSchema } = await import("@baret/guard");
   const parsed = analyzeResponseSchema.safeParse(await res.json());
-  return parsed.success ? fromAnalyzeResponse(parsed.data, call.from) : FAILED;
+  return parsed.success ? fromAnalyzeResponse(parsed.data, wallet) : FAILED;
+}
+
+export function analyzeCall(call: DemoCall, signal: AbortSignal): Promise<CheckResult> {
+  return analyze({ transaction: call, userWallet: call.from }, call.from, signal);
+}
+
+/**
+ * An x402 payment, checked under `policy` (the visitor's caps live there).
+ * The signer is the wallet whose balances the loss rules protect, so no
+ * userWallet is sent.
+ */
+export function analyzePayment(
+  built: DemoPayment,
+  policy: Record<string, unknown>,
+  signal: AbortSignal,
+): Promise<CheckResult> {
+  return analyze(
+    { typedData: built.typedData, payment: built.payment, policy },
+    built.typedData.signer,
+    signal,
+  );
 }
 
 /**

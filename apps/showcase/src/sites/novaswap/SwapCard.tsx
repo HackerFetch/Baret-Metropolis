@@ -26,6 +26,8 @@ export function SwapCard({
   error,
   onReview,
   live = false,
+  liveBalance = null,
+  walletConnected = false,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -34,8 +36,12 @@ export function SwapCard({
   error: string | null;
   /** False when the amount is refused, so the card can move focus to it. */
   onReview: () => boolean;
-  /** Live mode: no wallet to read yet, so no balance and no Max. */
+  /** Live mode: Baret checks the real request, so no sample balance and no Max. */
   live?: boolean;
+  /** The connected wallet's MON, formatted, once read. */
+  liveBalance?: string | null;
+  /** A real wallet is connected (not the developer's test address). */
+  walletConnected?: boolean;
 }): JSX.Element {
   const inputId = useId();
   const errorId = useId();
@@ -46,6 +52,15 @@ export function SwapCard({
   const receive = value === null ? "0.00" : format(danger ? quoteBack(value) : quote(value));
   const balance = balanceOf(mode);
   const [pay, get, ...rest] = card.rows;
+  // Live, only MON is read: the honest side shows it; the attack sells
+  // dUSDC, whose balance is not read. With no wallet, say when it shows.
+  const balanceText = !live
+    ? `${panel.balance} ${format(balance)} ${pay?.value}`
+    : liveBalance !== null && !danger
+      ? `${panel.balance} ${liveBalance} ${pay?.value}`
+      : walletConnected
+        ? ""
+        : novaswap.live.balance;
 
   return (
     <form
@@ -64,9 +79,7 @@ export function SwapCard({
           <label htmlFor={inputId} className={T.label}>
             {pay?.label}
           </label>
-          <span className={T.small}>
-            {live ? novaswap.live.balance : `${panel.balance} ${format(balance)} ${pay?.value}`}
-          </span>
+          <span className={T.small}>{balanceText}</span>
         </div>
         <div className="flex items-stretch border border-[color:var(--control-edge)] bg-[color:var(--ground)] focus-within:outline-2 focus-within:outline-offset-[3px] focus-within:outline-solid focus-within:outline-[color:var(--focus)]">
           <input

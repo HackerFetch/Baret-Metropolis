@@ -24,6 +24,7 @@ export function ClaimCard({
   checked,
   onCheck,
   onClaim,
+  hint = panel.hint,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -35,6 +36,8 @@ export function ClaimCard({
   /** False when the address is refused, so the card can move focus to it. */
   onCheck: () => boolean;
   onClaim: () => void;
+  /** Under the field: which wallet an empty field checks. */
+  hint?: string;
 }): JSX.Element {
   const inputId = useId();
   const hintId = useId();
@@ -72,7 +75,7 @@ export function ClaimCard({
             className="w-full border border-[color:var(--control-edge)] bg-[color:var(--ground)] px-4 py-3 font-mono text-sm text-[color:var(--fg)] placeholder:font-sans placeholder:text-base placeholder:text-[color:var(--fg-muted)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]"
           />
           <p id={hintId} className={T.small}>
-            {panel.hint}
+            {hint}
           </p>
           {/* Mounted from the start, so the error is spoken when it appears; sr-only takes no grid row. */}
           <p aria-live="assertive" className="sr-only">

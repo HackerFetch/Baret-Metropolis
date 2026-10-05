@@ -2,9 +2,9 @@ import { findings } from "@baret/content";
 import { DEMO_USDC_ABI, NOVASWAP, NOVASWAP_ROUTER_ABI } from "@baret/demo";
 import { hasValues } from "@baret/web-ui/components/CheckBlocks";
 import { decodeFunctionData, maxUint256, parseEther } from "viem";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { balanceOf, format, parseAmount, quote, quoteBack, SAMPLE, sampleCheck } from "./sample.js";
-import { buildRequest, contractOf, sourceFor } from "./source.js";
+import { buildRequest, contractOf, SOURCE } from "./source.js";
 
 const from = SAMPLE.wallet;
 
@@ -75,7 +75,7 @@ describe("NovaSwap sample", () => {
 
 describe("NovaSwap request", () => {
   it("honest: swapMonForUsdc on the router, paying the MON typed", () => {
-    const call = buildRequest({ mode: "safe", amount: "2,5", from });
+    const call = buildRequest("safe", parseEther("2.5"), from);
     expect(call.to).toBe(NOVASWAP.router);
     expect(call.from).toBe(from);
     expect(call.value).toBe(parseEther("2.5").toString());
@@ -87,7 +87,7 @@ describe("NovaSwap request", () => {
   });
 
   it("attack: an unlimited dUSDC allowance to the look-alike, no MON", () => {
-    const call = buildRequest({ mode: "danger", amount: "20", from });
+    const call = buildRequest("danger", 0n, from);
     expect(call.to).toBe(NOVASWAP.usdc);
     expect(call.value).toBe("0");
     const decoded = decodeFunctionData({ abi: DEMO_USDC_ABI, data: call.data as `0x${string}` });
@@ -102,11 +102,14 @@ describe("NovaSwap request", () => {
   });
 
   it("answers from the sample when there is no wallet to simulate from", async () => {
-    const source = sourceFor(null);
-    const result = await source(
-      { mode: "safe", amount: "2.5", from },
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const result = await SOURCE(
+      { mode: "safe", amount: "2.5", wei: parseEther("2.5"), from: null },
       new AbortController().signal,
     );
     expect(result.source).toBe("sample");
+    expect(fetch).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

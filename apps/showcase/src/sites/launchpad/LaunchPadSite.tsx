@@ -3,7 +3,7 @@ import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
-import { parseAmount } from "../kit/amount.js";
+import { parseAmount, toWei } from "../kit/amount.js";
 import { DemoBar } from "../kit/DemoBar.js";
 import { SiteHero } from "../kit/site/Page.js";
 import { Faq, Features, SiteFooter, Stats } from "../kit/site/Sections.js";
@@ -11,10 +11,11 @@ import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
+import { exceeds, formatMon, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
 import { ContributeCard } from "./ContributeCard.js";
 import { LaunchGlyph, VIEWS } from "./Glyph.js";
 import { ART, limitOf, SAMPLE, saleOf } from "./sample.js";
-import { LIVE, SOURCE } from "./source.js";
+import { liveSaleOf, SOURCE } from "./source.js";
 
 /**
  * LaunchPad: a token sale page in its own plum palette, with Baret's strip
@@ -23,8 +24,9 @@ import { LIVE, SOURCE } from "./source.js";
  * The story (launchpad.content.ts): the tokens really arrive in both
  * versions. Honest, the contribution pays a plain sale with fixed code. In
  * the attack the same button pays a proxy whose code its deployer can
- * replace after the sale: Caution under Balanced. Prepared samples only, so
- * nothing is sent (source.ts).
+ * replace after the sale: Caution under Balanced. With a wallet connected,
+ * Baret checks the real request from that address; without one, the
+ * prepared sample (source.ts). Nothing is signed or sent.
  */
 
 const { site, analysis } = launchpad;
@@ -34,25 +36,29 @@ export function LaunchPadSite(): JSX.Element {
   const [checked, setChecked] = useState<DemoMode>("safe");
   const [amount, setAmount] = useState<string>(site.panel.start);
   const [paid, setPaid] = useState(Number(site.panel.start));
+  const [paidWei, setPaidWei] = useState(toWei(site.panel.start) ?? 0n);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
+  const { from, live, balance } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
-  function runCheck(version: DemoMode, value: number): void {
+  function runCheck(version: DemoMode, value: number, wei: bigint): void {
     setChecked(version);
     setPaid(value);
+    setPaidWei(wei);
     setConnected(true);
     setOpen(true);
-    check.start({ mode: version, amount: value });
+    check.start({ mode: version, amount: value, wei, from });
   }
 
   /** False when the amount is refused, so the card can move focus to it. */
   function contribute(): boolean {
     const value = parseAmount(amount);
-    if (value === null) {
+    const wei = toWei(amount);
+    if (value === null || wei === null) {
       setError(site.panel.errors.empty);
       return false;
     }
@@ -61,15 +67,20 @@ export function LaunchPadSite(): JSX.Element {
       setError(site.panel.errors[broken]);
       return false;
     }
+    // Live, the contribution is paid from the connected wallet.
+    if (live && balance !== null && exceeds(wei, balance)) {
+      setError(fill(hub.frame.wallet.short, { balance: formatMon(balance) }));
+      return false;
+    }
     setError(null);
-    runCheck(mode, value);
+    runCheck(mode, value, wei);
     return true;
   }
 
   function tryOther(): void {
     const next: DemoMode = checked === "safe" ? "danger" : "safe";
     setMode(next);
-    runCheck(next, paid);
+    runCheck(next, paid, paidWei);
   }
 
   const copy = analysis.modes[checked];
@@ -90,9 +101,7 @@ export function LaunchPadSite(): JSX.Element {
         view={view}
         onView={go}
         connect={site.connect}
-        connected={connected}
-        wallet={SAMPLE.wallet}
-        onConnect={() => setConnected(true)}
+        sample={{ connected, address: SAMPLE.wallet, onUse: () => setConnected(true) }}
       />
 
       <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
@@ -131,11 +140,11 @@ export function LaunchPadSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={LIVE}
+        live={live}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{
-          asks: fill(copy.asks, { contract: saleOf(checked) }),
+          asks: fill(copy.asks, { contract: live ? liveSaleOf(checked) : saleOf(checked) }),
           call: copy.call,
           expected: copy.expected,
           expectedBody: copy.expectedBody,

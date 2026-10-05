@@ -1,9 +1,11 @@
 import { findings, launchpad } from "@baret/content";
+import { DEMO } from "@baret/demo";
 import { hasValues } from "@baret/web-ui/components/CheckBlocks";
+import { decodeFunctionData, parseAbi } from "viem";
 import { describe, expect, it } from "vitest";
 import { VIEWS } from "./Glyph.js";
 import { limitOf, SAMPLE, saleOf, sampleCheck, tokensFor } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { buildRequest, liveSaleOf, SOURCE } from "./source.js";
 
 describe("LaunchPad contribution", () => {
   it("buys LNTL at 0.001 MON each, grouped", () => {
@@ -53,7 +55,10 @@ describe("LaunchPad sample", () => {
   });
 
   it("answers from the sample", async () => {
-    const result = await SOURCE({ mode: "danger", amount: 1 }, new AbortController().signal);
+    const result = await SOURCE(
+      { mode: "danger", amount: 1, wei: 10n ** 18n, from: null },
+      new AbortController().signal,
+    );
     expect(result).toEqual(sampleCheck("danger", 1));
   });
 });
@@ -69,5 +74,27 @@ describe("LaunchPad pages", () => {
     const total =
       tokenomics?.kind === "shares" ? tokenomics.items.reduce((sum, i) => sum + i.value, 0) : 0;
     expect(total).toBe(100);
+  });
+});
+
+describe("LaunchPad live request", () => {
+  const from = "0x1111111111111111111111111111111111111111" as const;
+  const abi = parseAbi(["function contribute() payable"]);
+  const wei = 5n * 10n ** 17n;
+
+  it("pays the plain sale when honest and the proxy sale in the attack, the same call", () => {
+    const honest = buildRequest("safe", wei, from);
+    const attack = buildRequest("danger", wei, from);
+    expect(honest.to).toBe(DEMO.launchpad.sale);
+    expect(attack.to).toBe(DEMO.launchpad.proxySale);
+    for (const call of [honest, attack]) {
+      expect(call.from).toBe(from);
+      expect(call.value).toBe(wei.toString());
+      expect(decodeFunctionData({ abi, data: call.data as `0x${string}` }).functionName).toBe(
+        "contribute",
+      );
+    }
+    expect(liveSaleOf("safe")).toBe(DEMO.launchpad.sale);
+    expect(liveSaleOf("danger")).toBe(DEMO.launchpad.proxySale);
   });
 });

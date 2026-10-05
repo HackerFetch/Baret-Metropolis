@@ -109,7 +109,9 @@ export function AnalysisPanel({
           </div>
           <SheetTitle className={`${T.h3} text-[color:var(--fg)]`}>{panel.title}</SheetTitle>
           <SheetDescription className={T.small}>
-            {live ? panel.liveNote : panel.sample}
+            {/* A shown answer says where it came from; a wallet connected
+                after a sample check does not relabel that sample. */}
+            {(result ? result.source !== "sample" : live) ? panel.liveNote : panel.sample}
           </SheetDescription>
         </header>
 
