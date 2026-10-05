@@ -8,6 +8,7 @@ import {
   type Hex,
   http,
   type PublicClient,
+  parseAbi,
 } from "viem";
 import type { NetworkConfig } from "../config/env.js";
 
@@ -72,7 +73,11 @@ export interface MonadRpc {
   traceCall(params: CallParams, block: bigint): Promise<RawCallFrame | null>;
   erc20Balance(token: Address, owner: Address, block: bigint): Promise<bigint | null>;
   erc20Meta(token: Address): Promise<{ symbol: string | null; decimals: number | null }>;
+  /** Which of `addresses` are vaults the PaymentGuardFactory deployed. A failed read is "no". */
+  factoryVaults(factory: Address, addresses: readonly Address[], block: bigint): Promise<Address[]>;
 }
+
+const FACTORY_ABI = parseAbi(["function isVault(address vault) view returns (bool)"]);
 
 const toHex = (n: bigint) => `0x${n.toString(16)}` as Hex;
 
@@ -266,6 +271,23 @@ export class ViemMonadRpc implements MonadRpc {
     } catch {
       return null;
     }
+  }
+
+  async factoryVaults(factory: Address, addresses: readonly Address[], block: bigint) {
+    const answers = await Promise.all(
+      addresses.map((a) =>
+        this.client
+          .readContract({
+            address: factory,
+            abi: FACTORY_ABI,
+            functionName: "isVault",
+            args: [a],
+            blockNumber: block,
+          })
+          .catch(() => false),
+      ),
+    );
+    return addresses.filter((_, i) => answers[i] === true);
   }
 
   async erc20Meta(token: Address) {

@@ -186,6 +186,21 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   ]);
 
   const contracts = candidates.filter((_, i) => (codes[i] ?? "0x") !== "0x");
+
+  // Vaults from Baret's own factory are known contracts, like the listed ones.
+  const factory = network.paymentGuardFactoryAddress;
+  const listed = new Set(network.knownContracts);
+  const vaults = factory
+    ? await rpc.factoryVaults(
+        factory,
+        contracts.filter((c) => !listed.has(c)),
+        block,
+      )
+    : [];
+  const knownNetwork: NetworkConfig =
+    factory === null
+      ? network
+      : { ...network, knownContracts: [...network.knownContracts, factory, ...vaults] };
   const tokens = new Map<Address, TokenMeta>();
   const symbols = new Map<Address, string>();
   tokenAddresses.forEach((t, i) => {
@@ -220,7 +235,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   ]);
 
   const ctx: AnalysisContext = {
-    network,
+    network: knownNetwork,
     policy,
     now,
     user,

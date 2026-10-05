@@ -37,6 +37,8 @@ services:
         sync: false
       - key: MONAD_TESTNET_KNOWN_CONTRACTS
         sync: false
+      - key: MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS
+        value: "0xDe897d4dF6E1c34aB868948dE035AE29D32eA822"
       - key: BARET_API_KEYS
         sync: false
       - key: BARET_CORS_ORIGINS

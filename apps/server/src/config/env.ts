@@ -46,12 +46,14 @@ const envSchema = z.object({
   MONAD_TESTNET_USDC_ADDRESS: optionalAddress,
   MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_TESTNET_KNOWN_CONTRACTS: addressList,
+  MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS: optionalAddress,
 
   MONAD_MAINNET_RPC_URL: z.string().url().optional(),
   MONAD_MAINNET_TRACE_RPC_URL: z.string().url().optional(),
   MONAD_MAINNET_USDC_ADDRESS: optionalAddress,
   MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_MAINNET_KNOWN_CONTRACTS: addressList,
+  MONAD_MAINNET_PAYMENT_GUARD_FACTORY_ADDRESS: optionalAddress,
 
   BARET_API_KEYS: csv,
   BARET_CORS_ORIGINS: csv,
@@ -80,6 +82,11 @@ export interface NetworkConfig {
   reputationRegistryAddress: `0x${string}` | null;
   /** Contracts Baret vouches for besides the ones Nansen identifies. */
   knownContracts: readonly `0x${string}`[];
+  /**
+   * contracts/src/PaymentGuardFactory.sol. Every vault it deployed counts as a
+   * known contract, so a wallet's own vault is not reported as unknown.
+   */
+  paymentGuardFactoryAddress: `0x${string}` | null;
 }
 
 export interface AppConfig {
@@ -114,6 +121,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       usdcAddress: e.MONAD_TESTNET_USDC_ADDRESS,
       reputationRegistryAddress: e.MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_TESTNET_KNOWN_CONTRACTS,
+      paymentGuardFactoryAddress: e.MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS,
     },
   };
   if (e.MONAD_MAINNET_RPC_URL) {
@@ -125,6 +133,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       usdcAddress: e.MONAD_MAINNET_USDC_ADDRESS,
       reputationRegistryAddress: e.MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_MAINNET_KNOWN_CONTRACTS,
+      paymentGuardFactoryAddress: e.MONAD_MAINNET_PAYMENT_GUARD_FACTORY_ADDRESS,
     };
   }
 
