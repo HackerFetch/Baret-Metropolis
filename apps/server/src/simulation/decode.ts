@@ -29,22 +29,40 @@ export class TxDecodeError extends Error {
 
 const big = (v: string | undefined): bigint | null => (v === undefined ? null : BigInt(v));
 
+/**
+ * @param sender who sends an unsigned serialized transaction (the request's
+ *   `userWallet`). A signed one names its own sender and ignores this.
+ */
 export async function decodeTransaction(
   input: CallRequest | RawTransaction,
   chainId: number,
+  sender: Address | null = null,
 ): Promise<NormalizedTx> {
   if ("raw" in input) {
     let parsed: ReturnType<typeof parseTransaction>;
-    let from: Address;
     try {
       parsed = parseTransaction(input.raw as TransactionSerialized);
-      from = await recoverTransactionAddress({
-        serializedTransaction: input.raw as TransactionSerialized,
-      });
     } catch (err) {
       throw new TxDecodeError(
-        `not a signed transaction: ${err instanceof Error ? err.message : String(err)}`,
+        `not a serialized transaction: ${err instanceof Error ? err.message : String(err)}`,
       );
+    }
+    const signed = parsed.r !== undefined && parsed.s !== undefined;
+    let from: Address;
+    if (signed) {
+      try {
+        from = await recoverTransactionAddress({
+          serializedTransaction: input.raw as TransactionSerialized,
+        });
+      } catch (err) {
+        throw new TxDecodeError(
+          `bad signature: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    } else if (sender) {
+      from = sender;
+    } else {
+      throw new TxDecodeError("an unsigned transaction needs `userWallet` as its sender");
     }
     if (parsed.chainId !== undefined && parsed.chainId !== chainId) {
       throw new TxDecodeError(`signed for chain ${parsed.chainId}, expected ${chainId}`);

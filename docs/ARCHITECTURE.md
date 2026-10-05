@@ -140,7 +140,8 @@ export const CHAINS = {
 
 - `transaction` is an unsigned call (`{ from, to, value, data, gas, ... }`) or a signed one (`{ raw }`).
 - `typedData` is an EIP-712 message (`eth_signTypedData_v4`): permits, Permit2, and EIP-3009 transfer authorisations (x402).
-- `policy` defaults to Balanced with the network's USDC as the only allowed payment asset.
+- `policy` is the full rules; `policyTemplate` (`strict`, `balanced`, `permissive`) names a template instead and the server fills in the network's USDC. Neither: Balanced.
+- `transaction.raw` may be signed (sender recovered) or unsigned (sender is `userWallet`).
 - `payment` is the x402 context: what the merchant's 402 asked for (`origin`, `payTo`, `asset`, `amount`, `memo`) and the `spendHistory` the hourly and daily caps need.
 
 ```
