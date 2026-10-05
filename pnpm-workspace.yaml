@@ -4,6 +4,8 @@ packages:
 # tsx (apps/server) runs on esbuild, whose install script checks its native binary.
 allowBuilds:
   esbuild: true
+  # A dependency of the Dynamic wallet SDK; its script only checks versions.
+  protobufjs: false
 minimumReleaseAgeExclude:
   - framer-motion@13.3.0
   - lucide-react@1.46.0

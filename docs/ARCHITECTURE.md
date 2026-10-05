@@ -267,7 +267,11 @@ MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explai
 `TransactionGuard.evaluate({ transaction, userWallet, policy })` → `{ decision, blockingReasons, analysis }`. **Never signs/submits** — only returns a decision.
 
 ### 8.6 `packages/agent-kit`
-`AgentWallet` class: `evaluate()`, `guardedSign()`, `guardedSubmit()`. Agent/server wallet creation and delegated permission management with the Dynamic SDK. CLI: `baret analyze | sign | submit | address | policy list`. Exit codes: `0` allow, `1` policy block, `2` error.
+An agent's wallet that cannot sign what Baret has not cleared (built 2026-10-05, checked on testnet).
+
+- `AgentWallet({ signer, baretUrl, rpcUrl, policyTemplate | policy, allowCaution? })`: `evaluate(call)`, `guardedSign(call)`, `guardedSubmit(call)`, `pay({ vault, merchant, amount, reference })` (a `PaymentGuard.pay`). Safe is signed; Blocked, an unreachable server or an answer off the contract throws (`GuardBlockedError`, `GuardUnreachableError`) and the signer never sees the transaction. Caution is not signed unless `allowCaution` is set: a Caution is for a person to read.
+- Signers (`AgentSigner`): `dynamicSigner` / `createDynamicWallet` — a Dynamic server wallet (MPC, two of two; the local share lives in one owner-only file), per D-019; `localSigner(privateKey)` for tests and local runs.
+- CLI `baret`: `address`, `analyze`, `submit`, `pay`, `wallet create`, `policy list`. Settings come from the environment only (`BARET_API_URL`, `MONAD_TESTNET_RPC_URL`, `BARET_POLICY_TEMPLATE`, `BARET_ALLOW_CAUTION`, and `DYNAMIC_ENVIRONMENT_ID` + `DYNAMIC_AUTH_TOKEN` or `BARET_AGENT_PRIVATE_KEY`). Exit codes: `0` cleared (and sent), `1` not cleared and nothing signed, `2` error.
 
 ### 8.7 `packages/metamask-plugin`
 A separate package that wraps Baret's guard/policy engine in the MetaMask Agent Wallet plugin manifest format. Limited to read-only + tx-request-proposing permissions; it cannot bypass the agent-wallet policy engine (a condition of the bounty).

@@ -72,6 +72,8 @@ The address passed to `setAgentSigner` is the address of a **sub-key** derived f
 
 ### 2.6 Deployment Table
 
+State of the testnet vault since 2026-10-05: 5 USDC deposited; agent signer `0xb05Ac3af10934D45C44e4fcbfD01aD856729266b` (a local test key until the Dynamic wallet replaces it with `setAgentSigner`); merchant `0x1365566191bAA9872A64AcDce963751d5343ff49` (the Scrybe demo merchant) with caps 0.50 per payment, 1 per hour, 2 per day. First agent payment through `baret pay`: tx `0x0b01928b2ec0edc8fa325a89c702cea78268582621c4db4f16a02df8de4e845b` (0.25 USDC); the same command above the cap is stopped by Baret before signing.
+
 The testnet vault is Baret's own demo and test vault: its owner is the deploy key, which lives only on Ezgin's machine (`~/.baret/deployer.key`, never committed). Users get their own vaults from the wallet app later; `owner` is immutable, so this instance never changes hands. The deploy record is `contracts/broadcast/Deploy.s.sol/10143/run-latest.json` (start blocks for the Envio indexer).
 
 
