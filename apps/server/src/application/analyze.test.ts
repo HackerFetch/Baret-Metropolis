@@ -6,13 +6,18 @@ import {
 } from "@baret/guard";
 import { serializeTransaction } from "viem";
 import { afterAll, describe, expect, it } from "vitest";
-import { EIP1967_IMPLEMENTATION_SLOT, KNOWN_FUNCTIONS } from "../simulation/abi.js";
+import {
+  EIP1967_IMPLEMENTATION_SLOT,
+  KNOWN_FUNCTIONS,
+  ZOS_IMPLEMENTATION_SLOT,
+} from "../simulation/abi.js";
 import type { Sources } from "../sources/types.js";
 import {
   approvalLog,
   approveData,
   calldata,
   cleanSources,
+  config,
   DAPP,
   DRAINER,
   deps,
@@ -25,6 +30,7 @@ import {
   maxUint256,
   NFT,
   NOW,
+  network,
   ONE_MON,
   ONE_USDC,
   PEER,
@@ -297,9 +303,22 @@ describe("contracts and dangerous calls", () => {
     const rpc = new FakeRpc();
     rpc.code.set(USDC, "0x60");
     rpc.storage.set(`${USDC}:${EIP1967_IMPLEMENTATION_SLOT}`, implSlotValue(IMPL));
+    rpc.code.set(IMPL, "0x60");
     rpc.frame = frame({ to: USDC, calls: [frame({ from: USDC, to: IMPL, type: "DELEGATECALL" })] });
     const r = await run(tx({ to: USDC }), rpc);
     expect(codes(r)).not.toContain("DELEGATECALL_DETECTED");
+    // The implementation is covered by the proxy: USDC is known, so nothing is unknown.
+    expect(r.findings).toEqual([]);
+  });
+
+  it("knows the proxies that predate EIP-1967, such as USDC's", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.code.set(IMPL, "0x60");
+    rpc.storage.set(`${USDC}:${ZOS_IMPLEMENTATION_SLOT}`, implSlotValue(IMPL));
+    rpc.frame = frame({ to: USDC, calls: [frame({ from: USDC, to: IMPL, type: "DELEGATECALL" })] });
+    const r = await run(tx({ to: USDC }), rpc);
+    expect(r.findings).toEqual([]);
   });
 
   it("flags deep nesting, many operations and a gas limit above the rule", async () => {
@@ -479,6 +498,44 @@ describe("loss limits", () => {
       "50%",
     );
     expect(r.decision).toBe("blocked");
+  });
+
+  it("does not count an exchange with a listed contract as a loss", async () => {
+    // 80 of 100 MON staked for a receipt token, minted to the user by the pool.
+    const stake = () => {
+      const rpc = new FakeRpc();
+      rpc.code.set(DAPP, "0x60");
+      rpc.frame = frame({
+        to: DAPP,
+        value: `0x${(80n * ONE_MON).toString(16)}`,
+        logs: [transferLog(NFT, "0x0000000000000000000000000000000000000000", USER, 80n * ONE_MON)],
+      });
+      return rpc;
+    };
+    const request = tx({ to: DAPP, value: (80n * ONE_MON).toString() });
+
+    const unlisted = await run(request, stake());
+    expect(codes(unlisted)).toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
+
+    const listed = {
+      ...deps(stake()),
+      config: { ...config, networks: { testnet: { ...network, knownContracts: [DAPP, NFT] } } },
+    };
+    const r = await analyze(request, listed);
+    expect(r.findings.map((f) => f.code)).not.toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
+    expect(r.decision).toBe("safe");
+  });
+
+  it("still measures a payment to a listed contract that returns nothing", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
+    rpc.frame = sendMon(DAPP, 80n * ONE_MON);
+    const listed = {
+      ...deps(rpc),
+      config: { ...config, networks: { testnet: { ...network, knownContracts: [DAPP] } } },
+    };
+    const r = await analyze(tx({ to: DAPP, value: (80n * ONE_MON).toString() }), listed);
+    expect(r.findings.map((f) => f.code)).toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
   });
 
   it("fails closed when the balance cannot be read", async () => {

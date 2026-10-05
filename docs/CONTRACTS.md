@@ -165,3 +165,29 @@ What Baret answers, checked live against testnet with the Balanced rules (2026-1
 | `swapMonForUsdc` on the router, 1 MON | Safe | none; changes: MON out (amount + fee for the whole gas limit), 3.2 dUSDC in |
 | `approve(lookalike, max)` on dUSDC | Blocked | `ERC20_APPROVAL_UNLIMITED`, `KNOWN_MALICIOUS_ADDRESS` |
 | `approve(router, 9.6 dUSDC)` | Caution | `ERC20_APPROVAL_GRANTED` |
+
+### 7.2 PixelDrop, OrbitYield, ClaimHub, LaunchPad, the agents playground
+
+Deployed 2026-10-05 with `script/DeployDemoSites.s.sol`, all source-verified (Sourcify exact match). "Listed" means the address is in `MONAD_TESTNET_KNOWN_CONTRACTS`.
+
+| Site | Contract | Address | Role |
+|---|---|---|---|
+| PixelDrop | `NightShift` (ERC-721 `NIGHT`) | `0xC3fAFF337A197d7BFa49bB3210C0C057dd188688` | Listed. `mint(count)` at 0.01 MON, ten per wallet |
+| OrbitYield | `OrbitPool` | `0x9dD3Bc0e343Bdc4AB2BCD4c96D01bc8500725f38` | Listed. `stake()` mints oMON one to one, `unstake` returns the MON |
+| OrbitYield | `DemoToken` oMON | `0xB789996F13551eC6f3DF93d54D4F04A1316C3A92` | Listed receipt token |
+| OrbitYield | `OrbitPoolSilent` | `0xb4cCbB7A8a0Ff5564115856C008eD9a46d306fa8` | Attack: keeps the MON, returns nothing. On no list, not reported |
+| ClaimHub | `ClaimHubDistributor` | `0x7cb4a1B209dF1beDEc7843d1bf20E5723BA6Cc2b` | Listed. `claim()` sends 2,410 HUB |
+| ClaimHub | `DemoToken` HUB | `0x26bC901B5489057F76D188631D6252779349684A` | Listed |
+| LaunchPad | `LaunchSale` | `0x7Dc38ed77388b1dacB4653b1681dC7FBF6Dc2aac` | Listed. `contribute()` 0.01 to 1 MON, 1,000 LNTL per MON |
+| LaunchPad | `DemoToken` LNTL | `0x45AF9aA34BC4CB4E91B56413f18A6D739254D959` | Listed |
+| LaunchPad | `LaunchSaleProxy` / `LaunchSaleLogic` | `0x9A217845d5C5b684EBD6BF7973Da8f69dE453439` / `0xc8b0f0aA28Bb9E25Cf9d27aff3E9BB059Cb1BCC1` | Proxy sale: delegatecall into logic its owner can replace (ordinary slot, not EIP-1967). On no list |
+| ClaimHub, PixelDrop | `DemoDrainer` | `0x8D42f14012426F6a844BF0f5E6ab7889F8Cd79Eb` | Attack spender/operator: `drainToken`, `drainCollection`. Reported at severity 4 (`DEMO_DRAINER`) |
+| all | Sink | `0xac9517a70c88480c9fA7E9a280DA485F7f552C29` | Reported at severity 4 (`DRAINER_SINK`): the "flagged wallet" of the playground |
+| Agents | `DemoToken` named `USDC` | `0x1486794fc4958686115c9797d21aAcE497326826` | A look-alike of USDC, on no list |
+| Scrybe, Agents | Merchant wallet | `0x1365566191bAA9872A64AcDce963751d5343ff49` | The `payTo` of the demo 402s. Its key is on Ezgin's machine |
+
+ClaimHub's attack is `approve(DemoDrainer, max)` on the real test USDC (`0x534b…43A3`).
+
+### 7.3 Checking every scenario
+
+`pnpm --filter @baret/server verify:demo -- --api <server> --from <wallet>` builds all eighteen requests with `@baret/demo`, sends them to `/v1/analyze` and compares the verdict and the finding codes with what each site expects; it exits 1 on any disagreement. `--from` is only simulated from (no key) and needs a few MON plus at least 1 real test USDC and 1 look-alike USDC. Result on 2026-10-05 against testnet: 14 of 18 agree; the four that need a real USDC balance (Scrybe twice, two playground payments) wait for the demo wallet to be funded from Circle's faucet.

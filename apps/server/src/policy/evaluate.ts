@@ -31,10 +31,25 @@ function before(ctx: AnalysisContext, token: Address | null): bigint | null {
     : (ctx.balancesBefore.tokens.get(token) ?? null);
 }
 
+/**
+ * An exchange with a listed contract: everything that leaves the user's
+ * account goes to contracts on Baret's own list, and the user receives a
+ * token or a collectible in the same transaction (a swap, a stake that
+ * returns a receipt, a mint). Baret cannot price the two sides against each
+ * other, so the loss limit does not apply; payments to anything unlisted, and
+ * payments that return nothing, are still measured (D-021).
+ */
+export function isExchangeWithListed(ctx: AnalysisContext): boolean {
+  const listed = new Set<Address>(ctx.network.knownContracts);
+  const out = ctx.effects.transfers.filter((t) => t.from === ctx.user && t.to !== ctx.user);
+  const receives = ctx.effects.transfers.some((t) => t.to === ctx.user && t.from !== ctx.user);
+  return receives && out.length > 0 && out.every((t) => listed.has(t.to));
+}
+
 /** Loss rule: the largest share of any one balance the request takes. */
 function lossRule(ctx: AnalysisContext): FindingDraft[] {
   const max = ctx.policy.maxLossPercent;
-  if (max === null) return [];
+  if (max === null || isExchangeWithListed(ctx)) return [];
   const assets = new Set<Address | null>([null]);
   for (const t of ctx.effects.transfers) if (!t.nft) assets.add(t.token);
 

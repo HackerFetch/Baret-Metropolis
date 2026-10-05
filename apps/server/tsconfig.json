@@ -4,10 +4,17 @@
     "lib": ["ES2023"],
     "types": ["node"],
     "outDir": "./dist-types",
-    "rootDir": "./src",
+    "rootDir": ".",
     "noEmit": false,
     "emitDeclarationOnly": true
   },
-  "include": ["src"],
-  "references": [{ "path": "../../packages/guard" }]
+  "include": ["src", "scripts"],
+  "references": [
+    {
+      "path": "../../packages/guard"
+    },
+    {
+      "path": "../../packages/demo"
+    }
+  ]
 }

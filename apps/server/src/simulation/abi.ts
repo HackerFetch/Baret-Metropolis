@@ -33,6 +33,20 @@ export const UNLIMITED_THRESHOLD = 2n ** 255n;
 export const EIP1967_IMPLEMENTATION_SLOT =
   "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc" as Hex;
 
+/**
+ * keccak256("org.zeppelinos.proxy.implementation"): where the OpenZeppelin
+ * proxies that predate EIP-1967 keep their implementation. Circle's USDC is
+ * one of them.
+ */
+export const ZOS_IMPLEMENTATION_SLOT =
+  "0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3" as Hex;
+
+/** The slots a standard upgradeable proxy keeps its implementation in. */
+export const PROXY_IMPLEMENTATION_SLOTS = [
+  EIP1967_IMPLEMENTATION_SLOT,
+  ZOS_IMPLEMENTATION_SLOT,
+] as const;
+
 export type KnownCall = ReturnType<typeof decodeFunctionData<typeof KNOWN_FUNCTIONS>>;
 
 export function selectorOf(data: string | undefined | null): Hex | null {
