@@ -16,8 +16,9 @@
  * in shell history: BARET_API_URL, BARET_NETWORK, MONAD_TESTNET_RPC_URL,
  * BARET_POLICY_TEMPLATE, BARET_ALLOW_CAUTION=1, and one signer:
  *   BARET_AGENT_PRIVATE_KEY                      a local key (tests, local runs)
- *   DYNAMIC_ENVIRONMENT_ID + DYNAMIC_AUTH_TOKEN  a Dynamic server wallet, kept
- *     in BARET_AGENT_WALLET_FILE (default ~/.baret/agent-wallet.json)
+ *   DYNAMIC_ENVIRONMENT_ID + DYNAMIC_AUTH_TOKEN + BARET_AGENT_WALLET_PASSWORD
+ *     a Dynamic server wallet, kept in BARET_AGENT_WALLET_FILE
+ *     (default ~/.baret/agent-wallet.json)
  */
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -39,7 +40,13 @@ const walletFile = () =>
 const dynamicEnv = () => {
   const environmentId = env.DYNAMIC_ENVIRONMENT_ID;
   const authToken = env.DYNAMIC_AUTH_TOKEN;
-  return environmentId && authToken ? { environmentId, authToken } : null;
+  const password = env.BARET_AGENT_WALLET_PASSWORD;
+  if (environmentId && authToken && !password) {
+    throw new UsageError(
+      "BARET_AGENT_WALLET_PASSWORD is not set: Dynamic needs it to create and to use the wallet",
+    );
+  }
+  return environmentId && authToken && password ? { environmentId, authToken, password } : null;
 };
 
 async function signer(): Promise<AgentSigner> {

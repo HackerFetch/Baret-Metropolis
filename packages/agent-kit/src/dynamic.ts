@@ -30,6 +30,11 @@ export interface DynamicCredentials {
   environmentId: string;
   /** A server API token. Never ship it to a browser. */
   authToken: string;
+  /**
+   * Encrypts the wallet's backup at Dynamic. Dynamic requires one to create a
+   * wallet, and the same one to sign with it.
+   */
+  password: string;
 }
 
 async function connect(c: DynamicCredentials): Promise<DynamicEvmWalletClient> {
@@ -53,6 +58,7 @@ export async function createDynamicWallet(
   const created = await client.createWalletAccount({
     thresholdSignatureScheme: "TWO_OF_TWO" as CreateArgs["thresholdSignatureScheme"],
     backUpToDynamic: true,
+    password: options.password,
     onError: (error) => {
       failure = error;
     },
@@ -83,6 +89,7 @@ export function dynamicSigner(
       const signed = await (await client).signTransaction({
         walletMetadata: wallet.walletMetadata,
         externalServerKeyShares: wallet.externalServerKeyShares,
+        password: credentials.password,
         transaction,
       });
       return signed as Hex;
