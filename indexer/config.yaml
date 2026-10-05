@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: baret-indexer
+description: Baret on Monad - PaymentGuard vaults, agent payments and the reputation registry
+contracts:
+  # contracts/src/PaymentGuardFactory.sol: every vault it deploys is indexed from its first block.
+  - name: PaymentGuardFactory
+    events:
+      - event: VaultCreated(address indexed owner, address indexed token, address vault)
+  # contracts/src/PaymentGuard.sol
+  - name: PaymentGuard
+    events:
+      - event: Deposited(address indexed token, uint256 amount)
+      - event: Withdrawn(address indexed token, uint256 amount)
+      - event: MerchantCapSet(address indexed merchant, uint256 perTxCap, uint256 hourlyCap, uint256 dailyCap)
+      - event: MerchantPausedSet(address indexed merchant, bool paused)
+      - event: MerchantRevoked(address indexed merchant)
+      - event: AgentSignerSet(address indexed agent)
+      - event: AgentSignerRevoked(address indexed agent)
+      - event: Paid(address indexed merchant, address indexed agent, uint256 amount, bytes32 indexed ref, uint256 timestamp)
+  # contracts/src/ReputationRegistry.sol
+  - name: ReputationRegistry
+    events:
+      - event: ReputationFlagged(address indexed target, uint8 severity, string reasonCode, uint256 timestamp)
+      - event: ReputationCleared(address indexed target)
+chains:
+  - id: 10143 # Monad testnet
+    # The block PaymentGuard and ReputationRegistry were deployed in (docs/CONTRACTS.md).
+    start_block: 67604750
+    contracts:
+      - name: PaymentGuardFactory
+        address:
+          - 0xDe897d4dF6E1c34aB868948dE035AE29D32eA822
+      - name: PaymentGuard
+        # Baret's own demo vault, deployed before the factory existed.
+        address:
+          - 0x0A82671420114E47c672D5e8e23017DdCE850A35
+      - name: ReputationRegistry
+        address:
+          - 0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411

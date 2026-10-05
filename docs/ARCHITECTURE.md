@@ -243,7 +243,7 @@ The entire analysis engine lives here. Endpoints:
 | GET/POST | `/mcp/tools`, `/mcp/call` | AI agent tools |
 | GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
 
-Implemented: `/health`, `/health/ready`, `/v1/analyze`. The other routes are not started.
+Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8). Batch, stream, replay, MCP and the demo paywall are not built.
 
 MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM-backed plain-language explanation — KIMI/Qwen).
 
@@ -281,6 +281,15 @@ A separate package that wraps Baret's guard/policy engine in the MetaMask Agent 
 
 ---
 
+### 8.8 `indexer/` and the audit routes
+An Envio HyperIndex project (v3) over Monad testnet, from the block the contracts were deployed in (D-024):
+
+- **Sources:** `PaymentGuardFactory` (`VaultCreated` registers each new vault for indexing), every `PaymentGuard` (the demo vault by address, factory vaults dynamically) and `ReputationRegistry`.
+- **Entities** (`indexer/schema.graphql`): `Vault`, `Merchant`, `Payment`, `VaultActivity` (a vault's feed: created, deposited, withdrawn, merchant cap/pause/resume/revoke, agent set/revoke, paid), `ReputationEntry` (current flag), `ReputationChange` (history).
+- **Server:** `ENVIO_ENDPOINT` is the indexer's GraphQL URL. `GET /v1/audit/recent`, `/v1/audit/vault/:address`, `/v1/audit/owner/:address`, `/v1/audit/reputation/:address` read from it. No indexer, or no answer: 503, never an empty history.
+- **Why an indexer:** a vault cannot list its merchants or payments, and a free RPC plan answers `eth_getLogs` for ten blocks at a time.
+- `pnpm --filter @baret/indexer typecheck` runs in CI; `test:chain` replays real blocks through the handlers and needs `ENVIO_API_TOKEN`.
+
 ## 9. Environment Variables
 
 The authoritative list is `apps/server/.env.example`, validated by `apps/server/src/config/env.ts` at start-up.
@@ -299,7 +308,8 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `BARET_RATE_LIMIT_PER_MINUTE` / `BARET_REQUEST_TIMEOUT_MS` / `BARET_VERDICT_TTL_SECONDS` | No | 120 / 8000 / 30 |
 | `NANSEN_API_KEY` / `NANSEN_MODE` | For the trust-level rule; adds to the blocklist | `sources/nansen.ts` (D-016, D-017). `funder` (default): `profiler/address/first-funder`, 1 credit per wallet. `labels`: `profiler/address/labels`, 100 credits. Unset: only `minNansenTrustLevel` above `new` fails closed |
 | `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
-| `X402_*`, `ENVIO_ENDPOINT`, `DYNAMIC_ENVIRONMENT_ID`, `MERA_*`, `QWEN_API_KEY`, `KIMI_API_KEY` | Later | Added when their module is built |
+| `ENVIO_ENDPOINT` | For `/v1/audit/*` | GraphQL endpoint of the deployed indexer |
+| `X402_*`, `DYNAMIC_ENVIRONMENT_ID`, `MERA_*`, `QWEN_API_KEY`, `KIMI_API_KEY` | Later | Added when their module is built |
 
 Contracts deploy (`contracts/script/Deploy.s.sol`): `BARET_OWNER`, `BARET_CRE_FORWARDER`, `MONAD_TESTNET_USDC_ADDRESS`, deployer key passed on the command line, never stored.
 
