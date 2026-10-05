@@ -72,7 +72,7 @@ The address passed to `setAgentSigner` is the address of a **sub-key** derived f
 
 ### 2.6 Deployment Table
 
-State of the testnet vault since 2026-10-05: 5 USDC deposited; agent signer `0xb05Ac3af10934D45C44e4fcbfD01aD856729266b` (a local test key until the Dynamic wallet replaces it with `setAgentSigner`); merchant `0x1365566191bAA9872A64AcDce963751d5343ff49` (the Scrybe demo merchant) with caps 0.50 per payment, 1 per hour, 2 per day. First agent payment through `baret pay`: tx `0x0b01928b2ec0edc8fa325a89c702cea78268582621c4db4f16a02df8de4e845b` (0.25 USDC); the same command above the cap is stopped by Baret before signing.
+State of the testnet vault since 2026-10-05: 5 USDC deposited; agent signer `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`, a Dynamic server wallet (D-019); merchant `0x1365566191bAA9872A64AcDce963751d5343ff49` (the Scrybe demo merchant) with caps 0.50 per payment, 1 per hour, 2 per day. Payments through `baret pay`: `0x0b01928b2ec0edc8fa325a89c702cea78268582621c4db4f16a02df8de4e845b` (0.25 USDC, local test key, before the handover) and `0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3` (0.25 USDC, signed by the Dynamic wallet). The same command above the cap, a send to the flagged wallet, and a payment from the replaced test key are each stopped by Baret before anything is signed.
 
 The testnet vault is Baret's own demo and test vault: its owner is the deploy key, which lives only on Ezgin's machine (`~/.baret/deployer.key`, never committed). Users get their own vaults from the wallet app later; `owner` is immutable, so this instance never changes hands. The deploy record is `contracts/broadcast/Deploy.s.sol/10143/run-latest.json` (start blocks for the Envio indexer).
 
