@@ -247,11 +247,14 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`. The other routes are not
 
 MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM-backed plain-language explanation — KIMI/Qwen).
 
-### 8.2 `apps/wallet` — Mera-powered standalone wallet
-- Account creation with a passkey (no seed phrase).
-- Flow for deriving an agent sub-key from Mera's PRF-derived key material.
-- Visual policy editor (`Policies` page) — pick a template, then adjust each rule individually.
-- Analysis via `@baret/guard` before every signature.
+### 8.2 `apps/wallet` and `packages/wallet-core`
+`apps/wallet` is the screens (wallet-ui store, today on sample data). `packages/wallet-core` is everything behind them, with no UI (D-023):
+
+- `createWallet` / `unlockWallet` → `WalletSession`: the Mera passkey account (`address`, `account` for viem signing, `lock()`), plus `agentKey(n)` / `agentAddress(n)` for keys an agent can be handed.
+- `createWalletChain({ rpcUrl })`: balances, `findVault(owner)`, `vault(address, merchants)`, `prepare`, `send`, `wait`.
+- `transfers.*` and `vault.*`: every call the wallet signs (MON and token transfers; open a vault, deposit as exact allowance + deposit, withdraw, merchant cap / pause / revoke, agent set / revoke).
+- `Wallet`: `check(call)` → the server's `AnalyzeResponse` with the owner's rules as the policy; `sign(call, verdict, { acknowledged })`; `checkAndSign`.
+- Passkeys need HTTPS (or localhost) and a provider with the PRF extension (iCloud Keychain, Google Password Manager, 1Password); a passkey belongs to the domain it was made on.
 
 ### 8.3 `apps/extension` — Chrome MV3
 - EIP-1193 / EIP-6963 provider.
@@ -288,6 +291,7 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `MONAD_TESTNET_TRACE_RPC_URL` | No | Node for `debug_traceCall` when the main RPC lacks it (Alchemy's free tier does): the public `https://testnet-rpc.monad.xyz`. Unset: the main RPC traces |
 | `MONAD_TESTNET_USDC_ADDRESS` | For USDC rules and x402 | Canonical USDC, verified on the explorer. Unset: USDC floor fails closed, default policy allows no payment asset |
 | `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` | For reputation rules | Deployed `ReputationRegistry`. Unset: rules that need it fail closed |
+| `MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS` | No | `PaymentGuardFactory`. The factory and every vault it deployed count as known contracts |
 | `MONAD_TESTNET_KNOWN_CONTRACTS` | No | Comma-separated contracts Baret vouches for (PaymentGuard, showcase contracts) |
 | `MONAD_MAINNET_*` | No | Same four for mainnet; mainnet is served only when its RPC URL is set |
 | `BARET_API_KEYS` | No | Comma-separated keys for `/v1` (`x-api-key`). Empty: open, development only |

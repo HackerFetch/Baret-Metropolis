@@ -36,6 +36,9 @@
     },
     {
       "path": "./packages/agent-kit"
+    },
+    {
+      "path": "./packages/wallet-core"
     }
   ]
 }

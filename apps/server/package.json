@@ -9,7 +9,8 @@
     "start": "tsx --env-file-if-exists=.env src/main.ts",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "verify:demo": "tsx scripts/verify-demo.ts"
+    "verify:demo": "tsx scripts/verify-demo.ts",
+    "verify:wallet": "tsx scripts/verify-wallet.ts"
   },
   "dependencies": {
     "@baret/guard": "workspace:*",
@@ -21,7 +22,9 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@baret/agent-kit": "workspace:*",
     "@baret/demo": "workspace:*",
+    "@baret/wallet-core": "workspace:*",
     "@types/node": "24.10.1",
     "typescript": "6.0.3"
   },

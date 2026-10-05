@@ -307,6 +307,28 @@ describe("contracts and dangerous calls", () => {
     expect(r.decision).toBe("blocked");
   });
 
+  it("knows a vault the PaymentGuard factory deployed, and only with a factory configured", async () => {
+    const vault = () => {
+      const rpc = new FakeRpc();
+      rpc.code.set(DAPP, "0x60");
+      rpc.vaults.add(DAPP);
+      rpc.frame = frame({ to: DAPP });
+      return rpc;
+    };
+    const plain = await run(tx({ to: DAPP }), vault());
+    expect(codes(plain)).toContain("UNKNOWN_CONTRACT_EXPOSURE");
+
+    const withFactory = {
+      ...deps(vault()),
+      config: {
+        ...config,
+        networks: { testnet: { ...network, paymentGuardFactoryAddress: IMPL } },
+      },
+    };
+    const r = await analyze(tx({ to: DAPP }), withFactory);
+    expect(r.findings).toEqual([]);
+  });
+
   it("does not report a standard proxy calling its own implementation", async () => {
     const rpc = new FakeRpc();
     rpc.code.set(USDC, "0x60");

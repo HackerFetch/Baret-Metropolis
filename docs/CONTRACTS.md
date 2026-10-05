@@ -82,6 +82,18 @@ The testnet vault is Baret's own demo and test vault: its owner is the deploy ke
 | Monad testnet (10143) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) | USDC `0x534b2f3A21130d7a60830c2Df862319e593943A3` (6 decimals, checked on-chain) | `0x5aE13F1028144842f0384d09091067D6184F8197` (deployer) | 2026-10-02, block 67604750 | `0x5aE13F1028144842f0384d09091067D6184F8197` |
 | Monad mainnet (143) | _(empty)_ | _(empty)_ | _(empty)_ | — | — |
 
+### 2.7 `PaymentGuardFactory.sol` — a vault for every owner
+
+A vault's owner is fixed at deployment, so each account needs its own. `createVault(token)` deploys a `PaymentGuard` with the caller as owner; `latestVault(owner)` / `vaultsOf(owner)` let a wallet find its vaults from the owner's address alone; `isVault(address)` lets anyone, the Baret server included, check that an address is a vault this factory deployed. The factory holds no funds and has no owner. 3 forge tests.
+
+| Network | Address | Deploy date |
+|---|---|---|
+| Monad testnet (10143) | [`0xDe897d4dF6E1c34aB868948dE035AE29D32eA822`](https://testnet.monadexplorer.com/address/0xDe897d4dF6E1c34aB868948dE035AE29D32eA822) (source verified) | 2026-10-05, block 68468744 |
+
+The server treats the factory and every vault it deployed as known contracts (`MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS`), so a wallet's calls to its own vault are not reported as an unknown contract. An earlier factory without `isVault` at `0xb77b35a7Ac932952d4E9545193e5435049d1b1b3` is unused.
+
+Checked end to end on 2026-10-05 with `pnpm --filter @baret/server verify:wallet` (real transactions, `@baret/wallet-core`): open a vault, fund it, authorise an agent key derived from the passkey, cap a merchant, the agent pays, an over-cap payment is stopped, revoke, the revoked agent is stopped. Test vault `0xE0B411E9F1f48194A9Aa426B2F955e16B4b8a8Bd`.
+
 ---
 
 ## 3. `ReputationRegistry.sol` — On-chain Reputation Registry (new)

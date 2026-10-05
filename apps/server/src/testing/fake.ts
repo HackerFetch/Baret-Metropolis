@@ -41,6 +41,7 @@ export const network: NetworkConfig = {
   usdcAddress: USDC,
   reputationRegistryAddress: null,
   knownContracts: [],
+  paymentGuardFactoryAddress: null,
 };
 
 export const config: AppConfig = {
@@ -115,6 +116,10 @@ export class FakeRpc implements MonadRpc {
   }
   async erc20Balance(token: Address, owner: Address) {
     return this.erc20.get(`${token}:${owner}`) ?? 0n;
+  }
+  vaults = new Set<Address>();
+  async factoryVaults(_factory: Address, addresses: readonly Address[]) {
+    return addresses.filter((a) => this.vaults.has(a));
   }
   async erc20Meta(token: Address) {
     return this.meta.get(token) ?? { symbol: null, decimals: null };

@@ -151,6 +151,13 @@
 **Rationale:** (1) A Caution is a finding for a person to read; an agent cannot read it. This is also where the x402 "paid the wrong address" warning (D-014) is stopped for agents. (2) Tests and the testnet demo must not depend on a third-party account. (3) A key or token passed as a flag ends up in shell history. (4) Found on the first over-cap payment: the verdict listed "could not measure the loss" next to the real reason.
 **Status:** ✅ Final
 
+### D-023 — The wallet's live side: a Mera passkey account, agent keys on their own branch, check before every signature
+**Date:** 2026-10-05
+**Decision:** `packages/wallet-core` is the wallet without its screens. (1) The account comes from a Mera passkey: the PRF output is turned into a BIP-39 seed and the wallet is `m/44'/60'/0'/0/0`, an ordinary Monad account. Nothing is stored but the credential id. (2) Agent keys come from the same passkey on a separate branch, `m/44'/60'/1'/0/n`: the owner can hand one to an agent, authorise it on a vault and derive it again at any time to audit or revoke it. (3) `Wallet.check` asks Baret; `Wallet.sign` signs Safe, signs Caution only with the owner's explicit acknowledgement, never signs Blocked, and refuses an expired verdict. (4) Each account opens its own vault through `PaymentGuardFactory`; the server treats factory vaults as known contracts. (5) The contract cannot list its merchants, so the wallet remembers the addresses it added and reads their state from the chain.
+**Rationale:** Mera needs no server and no API key, so the whole account layer is a library. The agent branch is the "one passkey, many keys" use: no key file to back up, and the owner never loses the ability to name or revoke an agent. D-019 stays: a hosted agent uses a Dynamic wallet; the passkey-derived key is for an agent the owner runs themselves, and both are authorised with the same `setAgentSigner`.
+**Known limit:** a deposit into the owner's own vault counts toward the loss limit like any transfer out, so depositing more than half of a token balance in one step is Blocked under Balanced. Deposit in smaller steps until the engine reads the vault's owner.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

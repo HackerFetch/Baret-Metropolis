@@ -15,6 +15,7 @@ function configured(n: NetworkConfig, config: AnalyzeDeps["config"]) {
     usdc: n.usdcAddress !== null,
     reputationRegistry: n.reputationRegistryAddress !== null,
     knownContracts: n.knownContracts.length,
+    paymentGuardFactory: n.paymentGuardFactoryAddress !== null,
   };
 }
 
