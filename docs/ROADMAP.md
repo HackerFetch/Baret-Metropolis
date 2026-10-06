@@ -2,7 +2,7 @@
 
 > This file is a **live checklist**. At the end of every week the boxes are ticked, and slips/delays are written into the "Notes" line. The status table in `README.md` is kept in sync with this file.
 
-Last updated: 2026-10-01 · Currently: **Week 3** (backend caught up to the end of Week 2)
+Last updated: 2026-10-06 · Currently: **Week 3** (backend caught up to the end of Week 2) · **Submission closes 2026-10-13.** The day-by-day plan for the last week (testing, videos, forms) is `docs/QA_AND_DELIVERY.md` §9; Hale joined on 2026-10-06 for QA and delivery and brings the boxes below up to date
 
 ---
 

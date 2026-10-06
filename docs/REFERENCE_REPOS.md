@@ -139,7 +139,7 @@ Last updated: 2026-09-15 · Reviewed by: Meriç + Claude
 - **Wallet spec** is already in `docs/WALLET.md`; Stellar's `docs/wallet-spec.md`, `extension-architecture.md`, `policy-dsl.md`, `x402-defense.md` can be read as templates (baret-repos/Baret-Stellar/docs/).
 - **From Midnight:** the `blind-sign` idea (unknown contract/selector → critical), running the engine in the browser on the `/demo` page.
 
-### 4.3 QA (Meriç) — direct takeaways for the test plan
+### 4.3 QA (Hale since 2026-10-06, Meriç before) — direct takeaways for the test plan
 - At least one positive test for every finding code (dead code ban).
 - For every policy field, a "does the decision change when the toggle changes" test.
 - Extension: block → no sign button; analyzer down → explicit "unprotected" label; x402 auto-approve also goes through analysis.
