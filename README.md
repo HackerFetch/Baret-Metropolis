@@ -41,6 +41,8 @@ Update this table at every major phase transition (when the repo is created, on 
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architecture/scope decisions taken and their rationale (ADR log) | Check here first before taking a new decision, then add it |
 | [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Comparative review of the 5 previous Baret versions (EVM, Stellar, Casper, Midnight, OKX): what gets reused, which mistakes are not repeated | Read the relevant section before starting to write a module |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel (showcase, wallet) + Render (API) setup, the CI/CD pipeline, running it locally | Before touching `ci.yml`, `render.yaml`, `vercel.json` or deploying |
+| [`docs/QA_AND_DELIVERY.md`](docs/QA_AND_DELIVERY.md) | How Baret is tested, the bug report format, the submission checklist and tracker, the day-by-day plan to the 2026-10-13 deadline (Hale's working document) | Before testing, filing a bug, recording a video or filling in a submission form |
+| [`docs/QA_LOG.md`](docs/QA_LOG.md) | Hale's running record, one entry per session: what was done piece by piece, how each thing works, every problem and its solution, where QA and delivery stand today | To see what has been tested and what is open; Hale's agent reads it first and updates it in every session |
 | [`docs/BRAND.md`](docs/BRAND.md) | Brand spec BK-001 Rev 02: lockout/tagout identity, mark, tag device, palette, type, imagery brief, voice | Before touching any UI, marketing page or generated asset |
 
 ---

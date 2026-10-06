@@ -1,0 +1,47 @@
+# Tasks for Hale
+
+> Work left by Ezgin (backend + contracts + system) and Meriç (frontend) for Hale (QA + delivery). Format and rules: `CLAUDE.md` → "Task handoff". New tasks are added at the top. Method, bug format and the day-by-day plan: `docs/QA_AND_DELIVERY.md`. Running record of what was done: `docs/QA_LOG.md`. Submission closes **2026-10-13**.
+
+## Open
+
+Ordered by the plan in `docs/QA_AND_DELIVERY.md` §9: do them top to bottom unless a P0 interrupts.
+
+### First session — setup (Wed 7 Oct)
+
+- [ ] **Start here: the first session** — Hale's agent walks Hale through `docs/QA_AND_DELIVERY.md` §0: what Baret is, what the role is, the machine check, the `qa` branch, what to ask Ezgin for. From this session on, everything done is recorded in `docs/QA_LOG.md` (its rules are at the top of that file). Left by: Ezgin · Date: 2026-10-07
+- [ ] **Set up the machine and prove it works** — Tools, install, `pnpm check` and `pnpm contracts:test` green on a clean clone of `main`, as in `docs/QA_AND_DELIVERY.md` §3. A failure on a clean clone is your first 🐛. Depends on: repo access from Ezgin. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Write your git identity into `CLAUDE.md`** — Team table, Hale's row: replace "to be filled in" with your `git config user.name`, email and GitHub user, in your first commit on the `qa` branch. Without it the next agent session cannot tell who it is working with. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Create a test wallet and get it funded** — A fresh key used for nothing else, kept in a local `.env` (never committed). Send the address to Ezgin for testnet MON and test USDC; take dUSDC yourself from `DemoUSDC.faucet()` (`docs/CONTRACTS.md` §7.1). Depends on: Ezgin's transfer. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Read the product** — `README.md`, `docs/PROJECT_OVERVIEW.md`, `docs/ARCHITECTURE.md` §5 to §7, `docs/FRONTEND.md` §2.3, `docs/CONTRACTS.md` §2 and §7, `docs/BOUNTIES_AND_TRACKS.md`. Write every sentence you find that contradicts another doc or the live product as a 🐛 for its owner. Left by: Ezgin · Date: 2026-10-06
+
+### The demo path (Wed 7 Oct, after setup)
+
+- [ ] **Walk the six demo sites on the live URL** — `docs/QA_AND_DELIVERY.md` §5.2: honest action and attack switch on `/novaswap`, `/scrybe`, `/pixeldrop`, `/orbityield`, `/claimhub`, `/launchpad` at `https://baret-metropolis.vercel.app`, with your wallet connected. Compare the verdict and finding codes with `docs/FRONTEND.md` §2.3 and `docs/CONTRACTS.md` §7. Also: no wallet installed, a rejected signature, the API unreachable (must never show Safe). This is the path the demo video follows, so it comes first. Depends on: funded test wallet. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Run `verify:demo` against the live API** — `pnpm --filter @baret/server verify:demo -- --api https://baret-monad-api.onrender.com --from <test wallet>`. It exits 1 when a scenario disagrees with what the site expects; each disagreement is a 🐛 (engine → Ezgin, the site's expectation → Meriç). Left by: Ezgin · Date: 2026-10-06
+- [ ] **Read the submission requirements on the platform** — The exact closing hour and time zone, the required fields, and the review criteria of every bounty in `docs/BOUNTIES_AND_TRACKS.md` §2. Copy them into `docs/QA_AND_DELIVERY.md` §8 and refine `docs/BOUNTIES_AND_TRACKS.md` §5 with what the sponsors really ask. Confirm all three of us are on the team and check "Best Community Team Project" eligibility (row 9). Depends on: platform access from Ezgin. Left by: Ezgin · Date: 2026-10-06
+
+### Day 3 — backend, contracts, agent (Thu 8 Oct)
+
+- [ ] **QA: the backend test suites** (moved from `tasks/FOR_MERIC.md`, left there 2026-10-01) — `pnpm exec vitest run --project guard --project server` and `cd contracts && forge test`. Add the cases from the test plan in `docs/REFERENCE_REPOS.md` §4.3: one positive test per finding code, a verdict change per `GuardPolicy` field, and for the contracts cap overflow, `pay` after revoke, window rollover with `vm.warp`, the withdraw reserve and fuzz on the cap math (the open box in `docs/CONTRACTS.md` §6: tick it when the fuzz test exists). File 🐛 in `tasks/FOR_EZGIN.md`; a test that fails on a real bug is committed with `it.fails`, not red. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Contracts are live on Monad testnet: check them** (moved from `tasks/FOR_MERIC.md`, left there 2026-10-02) — PaymentGuard `0x0A82671420114E47c672D5e8e23017DdCE850A35`, ReputationRegistry `0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`, both source-verified. Read calls work for anyone: `cast call 0x0A82671420114E47c672D5e8e23017DdCE850A35 "merchant(address)(uint256,uint256,uint256,bool,bool)" <addr> --rpc-url https://testnet-rpc.monad.xyz`, `cast call 0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411 "isFlagged(address)(bool,uint8,string)" <addr> --rpc-url https://testnet-rpc.monad.xyz`. Check every address in `docs/CONTRACTS.md` §2.6, §3.4 and §7 has code and verified source on the explorer, and that the reported addresses (`DemoDrainer`, the sink) answer flagged. State-changing calls on the shared demo vault go through Ezgin. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Agent and x402: the four scenarios** — `docs/X402_FACILITATOR.md` §5 with the `baret` CLI (`pnpm --filter @baret/agent-kit baret analyze|pay|submit`): a payment within the cap passes, an asset outside the allowlist, a destination mismatch, the hourly cap overflowing. Tick each box in that section with the transaction hash or the refusal. Signing needs `BARET_AGENT_PRIVATE_KEY` (a key of your own) or Ezgin running the Dynamic wallet. Depends on: an agent authorised on a vault (ask Ezgin, or use your own vault after the wallet task). Left by: Ezgin · Date: 2026-10-06
+- [ ] **Demo video: script and shot list** — One page: second by second, which URL, which click, which sentence. The magic moment of `docs/PROJECT_OVERVIEW.md` §7 inside the first 30 seconds; every Tier S integration (`docs/BOUNTIES_AND_TRACKS.md` §2) on screen at least once; the four x402 scenarios shown (`docs/X402_FACILITATOR.md` §5). Send it to Ezgin and Meriç for review before recording. Use only flows that passed your walkthrough. Left by: Ezgin · Date: 2026-10-06
+
+### Day 4 — wallet and strangers (Fri 9 Oct)
+
+- [ ] **Wallet, end to end, on the live URL** — `docs/QA_AND_DELIVERY.md` §5.3 on `https://baret-wallet.vercel.app`: passkey account → vault → deposit → merchant caps → agent → pay → pause → revoke → refused, then the unhappy paths (no PRF, dismissed prompt, expired verdict, history unavailable). Until Meriç's wiring is merged, run the same life from the terminal: `BARET_WALLET_TEST_PRF=<64 hex> pnpm --filter @baret/server verify:wallet -- --api <api>`. Depends on: "The wallet can go live" in `tasks/FOR_MERIC.md`. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Cross-browser and phone pass** — Landing, `/showcase`, one demo site and the wallet's setup on Chrome, Firefox, Safari and a real phone. Layout breaks and dead buttons are 🐛 for Meriç. Left by: Ezgin · Date: 2026-10-06
+- [ ] **One real user test** — ROADMAP Week 5. Somebody who has never seen Baret, the showcase, no explanation. Write where they stopped and what they said into `docs/QA_AND_DELIVERY.md`, and turn each stop into a task for the owner. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Claim the sponsor perks** — Tenderly, QuickNode, Zerion in `docs/RESOURCES.md` §1 (links in `Resources.txt`). Claim, or mark "not needed" with the reason, and update the table. Keys go to Ezgin privately, never into the repo. Left by: Ezgin · Date: 2026-10-06
+
+### Day 5 to 8 — regression and hand-in (Sat 10 to Tue 13 Oct)
+
+- [ ] **Re-test every fixed bug** — For each 🐛 the owner marked `[x]`: re-test on the live URL, add `Verified by Hale, <date>, commit <sha>` under it or reopen it. Then a second full walkthrough of the demo path. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Bring the status documents up to date** — `README.md` status table (it still says Week 3 and "not started" for work that is merged), `docs/ROADMAP.md` boxes and notes, `docs/BOUNTIES_AND_TRACKS.md` Status column, `docs/DEPLOYMENT.md` §5. State only what you saw working; ask the owner when unsure. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Write the submission text for every bounty** — One per row of `docs/QA_AND_DELIVERY.md` §8, each naming where that sponsor's tool does real work and linking the evidence (URL, transaction, file). A bounty whose integration is not working live by Sun 11 Oct is dropped, with the reason in `docs/BOUNTIES_AND_TRACKS.md`. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Record the demo video and the pitch video** — Sun 11 Oct, after the feature freeze at noon, on the live URLs with the API warmed up (open `/health` first; ask Ezgin whether Render is on the Starter plan for the recording, `docs/DEPLOYMENT.md` §3.2). Depends on: approved script. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Final regression and submit** — Mon 12 Oct: the whole demo path once more from a clean browser profile, the commit from `/health` written down, every form in §8 filled in, submitted at least 12 hours before the deadline, the confirmation saved. Tue 13 Oct is buffer: final mentor update, nothing new. Left by: Ezgin · Date: 2026-10-06
+
+## Done
+
+_(none yet)_

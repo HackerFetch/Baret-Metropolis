@@ -1,8 +1,10 @@
 # Tasks for Ezgin
 
-> Work left by Meriç (frontend + QA) for Ezgin (backend + contracts + system). Format and rules: `CLAUDE.md` → "Task handoff". New tasks are added at the top. Bugs start with 🐛.
+> Work left by Meriç (frontend) and Hale (QA + delivery) for Ezgin (backend + contracts + system). Format and rules: `CLAUDE.md` → "Task handoff". New tasks are added at the top. Bugs start with 🐛.
 
 ## Open
+
+- [ ] **Onboard Hale (QA + delivery), who is blocked until these are done** — (1) Write access to `HackerFetch/Baret-Metropolis`. (2) Add Hale to the team on the hackathon platform and check the team-size rule while there. (3) Fund Hale's test wallet with testnet MON and test USDC when the address arrives. (4) Authorise an agent on a vault Hale can test against, or say that Hale should open one. (5) Tell Meriç about the role change and agree the feature freeze (proposed: Sun 11 Oct, noon) with both. (6) Put Render on the Starter plan before the videos are recorded on Sun 11 Oct (`docs/DEPLOYMENT.md` §3.2). (7) Review Hale's demo video script when it arrives (Thu 8 Oct). Hale's plan: `docs/QA_AND_DELIVERY.md` §9. Left by: Ezgin · Date: 2026-10-06
 
 - [ ] **If the extension gets a provider: announce it as `app.vercel.baret-metropolis`** — The six demo sites now connect real wallets over EIP-6963 (branch `demo-wallet-connect`, `apps/showcase/src/sites/kit/wallet/`). The picker lists Baret first and marks it found when a wallet announces the rdns `app.vercel.baret-metropolis` (the showcase domain reversed); until then it says the extension is a preview that does not connect to sites, which matches your cut for the hackathon. If a provider lands, announce `{ uuid, name: "Baret", icon: <data URI>, rdns: "app.vercel.baret-metropolis" }` on load and on every `eip6963:requestProvider`, and answer `eth_requestAccounts`, `eth_accounts`, `eth_chainId` and `wallet_switchEthereumChain` (4902 when Monad testnet is unknown); nothing else changes on the showcase. Also: viem 2.57.3 is out and the repo pins 2.56.5 in five packages; bump them together, never one alone, or the browser gets two copies. Left by: Meriç · Date: 2026-10-06
 

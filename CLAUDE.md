@@ -6,12 +6,15 @@ This file is loaded automatically at the start of every Claude Code session. Rea
 
 Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or AI agent signs a transaction: it simulates the transaction, runs it through risk detectors, applies the user's policy and returns a `Safe / Caution / Blocked` verdict with reasons. For agents it provides an on-chain spending-limited vault (PaymentGuard). Details: `docs/PROJECT_OVERVIEW.md`, architecture: `docs/ARCHITECTURE.md`.
 
-## Team and roles (2 people)
+## Team and roles (3 people)
 
 | Person | Git identity | Role | Owns |
 |---|---|---|---|
-| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer + QA/Tester** | All UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/web-ui`, brand / `docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. **Also testing of everything:** contracts, backend, SDK, end-to-end flows — writing tests, running tests and reporting bugs are Meriç's job. |
+| **Meriç** | `Meric` / mericcintosunn@gmail.com / GitHub `mericcintosun` | **Frontend Developer** | All UI/UX: `apps/extension`, `apps/wallet`, `apps/showcase`, `packages/ui`, `packages/web-ui`, brand / `docs/BRAND.md`, `docs/FRONTEND.md`, `docs/WALLET.md`. Tests of Meriç's own screens and components stay with Meriç. |
 | **Ezgin** | GitHub `Aeztrest` / ezgincapkan64@gmail.com (author of the five earlier Baret repos) | **Backend + Contracts + System Developer** | `apps/server` (analysis engine, detectors, policy engine, API), `contracts/` (PaymentGuard, ReputationRegistry, Foundry), `packages/guard`, `packages/agent-kit`, `indexer/` (Envio), `workflows/` (Chainlink CRE), x402/facilitator, sponsor API integrations (Nansen, Cleanverse, Dynamic, Alchemy), deploy/infra. |
+| **Hale** | to be filled in by Hale's agent in the first session (`git config user.name` / `user.email`, GitHub user) | **QA/Tester + Demo & Submission** (joined 2026-10-06) | **Testing of everything:** contracts, backend, SDK, the three apps, end-to-end flows on the live URLs — writing tests, running tests and reporting bugs. **Delivery:** demo video, pitch video, the submission form of every bounty, keeping the status tables in `README.md`, `docs/ROADMAP.md` and `docs/BOUNTIES_AND_TRACKS.md` true. Owns `docs/QA_AND_DELIVERY.md` and `docs/QA_LOG.md`. Writes test files anywhere; does **not** change product code or deploy config: a bug goes to its owner's task file. |
+
+An identity that matches none of the three rows: ask who it is before doing anything.
 
 ## At the start of every session (every agent, every time)
 
@@ -22,22 +25,29 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 1. Identify who you are working with via `git config user.name` / `user.email`. If unsure, ask.
 2. In your first message remind the person of their role and give a one-paragraph "where the project is right now" (`README.md` status table + the current week in `docs/ROADMAP.md`).
 3. Read the person's task file and summarise the open items:
-   - Working with Meriç → `tasks/FOR_MERIC.md` (work Ezgin left for Meriç)
-   - Working with Ezgin → `tasks/FOR_EZGIN.md` (work Meriç left for Ezgin)
+   - Working with Meriç → `tasks/FOR_MERIC.md` (work Ezgin and Hale left for Meriç)
+   - Working with Ezgin → `tasks/FOR_EZGIN.md` (work Meriç and Hale left for Ezgin)
+   - Working with Hale → `tasks/FOR_HALE.md` (work Ezgin and Meriç left for Hale), then `docs/QA_AND_DELIVERY.md` (the test plan, the bug format, the day-by-day plan to the deadline). **Before either, read `docs/QA_LOG.md`** §1 and its latest session entry, and tell Hale where the last session stopped. On Hale's first session follow `docs/QA_AND_DELIVERY.md` §0 step by step.
 4. Then move on to the user's request for the day.
 
 ## Task handoff (creating work for the other side)
 
-- When a piece of work is finished, or a dependency on the other side appears, add a task to the **other person's** file:
+- When a piece of work is finished, or a dependency on somebody else appears, add a task to the file of **the person who has to act**:
   - Meriç's agent → writes to `tasks/FOR_EZGIN.md` (e.g. "this endpoint must return field X", "contract is missing event Y", "test Z broke, root cause is in the backend").
-  - Ezgin's agent → writes to `tasks/FOR_MERIC.md` (e.g. "endpoint is ready, UI can connect", "contract deployed at address X, please test").
+  - Ezgin's agent → writes to `tasks/FOR_MERIC.md` (e.g. "endpoint is ready, UI can connect").
+  - Ezgin's or Meriç's agent → writes to `tasks/FOR_HALE.md` when something is ready to be tested or is needed for the submission (e.g. "contract deployed at address X, please test", "the wallet is live, run the end-to-end pass").
+  - Hale's agent → writes to the owner's file: backend, contracts, SDK, deploy → `tasks/FOR_EZGIN.md`; any screen or copy → `tasks/FOR_MERIC.md`.
 - Task format (one bullet per task, newest on top):
   ```
-  - [ ] **Short title** — what to do, why, which file/endpoint/contract. Depends on: (if any). Left by: Meriç/Ezgin · Date: YYYY-MM-DD
+  - [ ] **Short title** — what to do, why, which file/endpoint/contract. Depends on: (if any). Left by: Meriç/Ezgin/Hale · Date: YYYY-MM-DD
   ```
 - Do not delete completed tasks; mark them `[x]` and add a one-line result underneath. When the file gets long, the agent moves them to the "Done" section.
 - When you finish an item in your own task file, mark it `[x]` too.
-- Test findings (bugs) are written by Meriç into `tasks/FOR_EZGIN.md` with a 🐛 prefix: steps to reproduce, expected vs actual, related file.
+- Test findings (bugs) are written by Hale into the owner's file with a 🐛 prefix and a priority (`P0`/`P1`/`P2`): steps to reproduce, expected vs actual, where it was seen (URL or command, commit), related file. Full format: `docs/QA_AND_DELIVERY.md` §6. Meriç and Ezgin use the same format when they find a bug on the other side. The owner fixes and marks `[x]`; Hale re-tests and writes the verification line under it.
+
+## Hale's agent keeps a log (`docs/QA_LOG.md`)
+
+Every session with Hale is recorded in `docs/QA_LOG.md`, which is committed. The rules are at the top of that file; in short: one block per separate piece of work, written as soon as the piece is finished (what was done, how the thing works and how to run it again, the result, every problem with its cause and solution, bugs filed, files changed); the "How things work" section kept current; the "Where things stand" snapshot rewritten before the session ends. No secrets in it. A session whose work is not in the log is not finished.
 
 ## Git / PR rules
 
@@ -45,6 +55,7 @@ Baret is a security/policy layer on Monad that runs **before** a wallet, dApp or
 - Meriç's working branch: **`frontend`** (open PR: "frontend"). Meriç's agent commits to this branch and merges the PR **only when Meriç explicitly says "mergele" / "merge it"**. Never merge on your own initiative.
 - Ezgin opens their own branch/PR (suggested: `backend`, `contracts`). Same rule: merge only on explicit instruction.
 - Commit messages in English, short, describing what changed. End them with a `Co-Authored-By:` line naming the model you are actually running as, not a pinned one.
+- Hale's working branch: **`qa`** (tests, `docs/QA_AND_DELIVERY.md`, `docs/QA_LOG.md`, task files, status tables), kept small and merged often so the task files on `main` stay current. Same rule: merge only on explicit instruction.
 - Push only when the user asks, or as part of opening/updating a PR.
 
 ## Hard constraints (same as README, repeated on purpose)
@@ -62,4 +73,4 @@ The five previous Baret versions (EVM, Stellar, Casper, Midnight, OKX) live loca
 
 ## Language
 
-**Everything in the repository is English**: code, comments, commit messages, README, `docs/`, `tasks/`, UI copy. No Turkish text anywhere in files. The only exception: **talk to the user in Turkish** in the chat (Meriç asked for this explicitly).
+**Everything in the repository is English**: code, comments, commit messages, README, `docs/`, `tasks/`, UI copy. No Turkish text anywhere in files. The only exception: **talk to the user in Turkish** in the chat (Meriç asked for this explicitly; it holds for Ezgin and Hale too).
