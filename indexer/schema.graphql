@@ -1,0 +1,86 @@
+# One PaymentGuard vault.
+type Vault {
+  id: ID! # the vault's address, lowercase
+  # Null for the demo vault, which was not opened through the factory.
+  owner: String
+  token: String
+  # The key allowed to pay; null when none is authorised.
+  agent: String
+  deposited: BigInt!
+  withdrawn: BigInt!
+  paid: BigInt!
+  paymentCount: Int!
+  createdAtBlock: Int!
+  merchants: [Merchant!]! @derivedFrom(field: "vault")
+  payments: [Payment!]! @derivedFrom(field: "vault")
+  activity: [VaultActivity!]! @derivedFrom(field: "vault")
+}
+
+# A merchant's caps in one vault, in the vault token's base units.
+type Merchant {
+  id: ID! # <vault>-<merchant>
+  vault: Vault!
+  address: String! @index
+  perTxCap: BigInt!
+  # 0 means no hourly limit.
+  hourlyCap: BigInt!
+  dailyCap: BigInt!
+  paused: Boolean!
+  # False once the owner revoked the merchant.
+  active: Boolean!
+  paid: BigInt!
+  paymentCount: Int!
+}
+
+# One payment an agent made from a vault.
+type Payment {
+  id: ID! # <block>-<logIndex>
+  vault: Vault!
+  merchant: String! @index
+  agent: String! @index
+  amount: BigInt!
+  # The payment reference: an invoice id or x402 memo hash.
+  ref: String!
+  timestamp: Int! @index
+  block: Int!
+  txHash: String!
+}
+
+# Everything that happened to a vault, newest last: the wallet's activity feed.
+type VaultActivity {
+  id: ID! # <block>-<logIndex>
+  vault: Vault!
+  # created | deposited | withdrawn | merchantCapSet | merchantPaused |
+  # merchantResumed | merchantRevoked | agentSet | agentRevoked | paid
+  kind: String! @index
+  merchant: String
+  agent: String
+  amount: BigInt
+  timestamp: Int! @index
+  block: Int!
+  txHash: String!
+}
+
+# The current registry entry of an address. Removed when the flag is cleared.
+type ReputationEntry {
+  id: ID! # the flagged address, lowercase
+  # 1 low ... 4 critical; 3 and above is a blocklist entry.
+  severity: Int!
+  reasonCode: String!
+  flaggedAt: Int!
+  block: Int!
+  txHash: String!
+}
+
+# Every report and clear, kept for the audit trail.
+type ReputationChange {
+  id: ID! # <block>-<logIndex>
+  target: String! @index
+  # flagged | cleared
+  kind: String!
+  severity: Int
+  reasonCode: String
+  timestamp: Int! @index
+  block: Int!
+  txHash: String!
+}

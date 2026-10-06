@@ -158,6 +158,12 @@
 **Known limit:** a deposit into the owner's own vault counts toward the loss limit like any transfer out, so depositing more than half of a token balance in one step is Blocked under Balanced. Deposit in smaller steps until the engine reads the vault's owner.
 **Status:** ✅ Final
 
+### D-024 — The indexer: factory-registered vaults, one activity feed, audit routes that never invent an empty history
+**Date:** 2026-10-05
+**Decision:** `indexer/` is an Envio HyperIndex v3 project on Monad testnet. The factory's `VaultCreated` registers each new vault, so no vault address is configured by hand except the demo vault that predates the factory. Besides current state (`Vault`, `Merchant`, `ReputationEntry`) it keeps append-only rows (`Payment`, `VaultActivity`, `ReputationChange`). The server exposes them at `/v1/audit/*` through `ENVIO_ENDPOINT`; when the indexer is missing or silent the routes answer 503. The indexer is hosted on Envio's service, deployed from this repo.
+**Rationale:** Completes D-008 (no in-memory audit trail). The wallet's history and delegation screens need what the contract cannot enumerate, and the free RPC plan limits `eth_getLogs` to ten blocks. An audit view that shows "no payments" because its source is down would be a false statement, hence 503.
+**Status:** ✅ Final. Open: an API token and the hosted deployment (docs/DEPLOYMENT.md §3.6).
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

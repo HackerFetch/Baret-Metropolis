@@ -1,0 +1,25 @@
+{
+  "name": "@baret/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Envio HyperIndex for Baret on Monad: PaymentGuard vaults, their payments, and the reputation registry.",
+  "type": "module",
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start",
+    "typecheck": "envio codegen && tsc --noEmit",
+    "test:chain": "vitest run --test-timeout=60000"
+  },
+  "dependencies": {
+    "envio": "3.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

@@ -76,6 +76,11 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --private-k
 ```
 Put the addresses into `docs/CONTRACTS.md` §2.6 / §3.4 and `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` / `MONAD_TESTNET_KNOWN_CONTRACTS` on Render. Contracts are not deployed from CI on purpose: a deployer key in GitHub secrets is a bigger risk than a manual step we run twice.
 
+### 3.6 Envio (the indexer)
+1. envio.dev → sign in with GitHub → **API Tokens** → create one. It is `ENVIO_API_TOKEN` (HyperSync access): for local runs put it in `indexer/.env`, never in the repo.
+2. **Hosted Service → Add Indexer** → repository `HackerFetch/Baret-Metropolis`, branch `main`, **root directory `indexer`**, config file `config.yaml`. Add `ENVIO_API_TOKEN` to its environment if the service asks.
+3. When it has synced, copy its GraphQL endpoint into `ENVIO_ENDPOINT` on Render (`baret-monad-api`), "Save, rebuild, and deploy". `/health/ready` then shows `"indexer": true`, and `/v1/audit/recent` answers with the payments already made on testnet.
+
 ### 3.5 What runs on its own
 - **Keep-warm** (`.github/workflows/keep-warm.yml`): asks `/health/ready` every 10 minutes so the free Render instance does not sleep (a sleeping instance needs close to a minute, the demo sites wait 15 seconds).
 - **Extension release** (`ci.yml` → `release-extension`): every push to `main` replaces the `extension-latest` GitHub release with `baret-chrome.zip` and `baret-firefox.zip`. `/install` links to `releases/latest/download/<name>.zip` through `VITE_BARET_EXTENSION_CHROMIUM_URL` and `VITE_BARET_EXTENSION_FIREFOX_URL` on the showcase project.
@@ -106,4 +111,5 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | GitHub required checks | ⬜ After the first green run |
 | Render service | ✅ `baret-monad-api` live, traced analysis verified 2026-10-02 |
 | Vercel projects | ✅ `baret-metropolis` (showcase, main domain, canonical + sitemap verified) and `baret-wallet` live, `/api` rewrite verified 2026-10-02 |
+| Envio indexer (hosted) | ⬜ Project written and type-checked; needs an API token and the hosted deployment |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |

@@ -69,6 +69,9 @@ const envSchema = z.object({
   NANSEN_MODE: z.enum(["funder", "labels"]).default("funder"),
   CLEANVERSE_API_KEY: z.string().optional(),
   CLEANVERSE_API_URL: z.string().url().optional(),
+
+  /** The GraphQL endpoint of the deployed Envio indexer (indexer/). */
+  ENVIO_ENDPOINT: z.string().url().optional(),
 });
 
 export interface NetworkConfig {
@@ -102,6 +105,8 @@ export interface AppConfig {
   nansenApiKey: string | null;
   nansenMode: "funder" | "labels";
   cleanverse: { apiKey: string; apiUrl: string } | null;
+  /** Null: the audit routes answer 503. */
+  envioEndpoint: string | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -149,6 +154,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,
     nansenMode: e.NANSEN_MODE,
+    envioEndpoint: e.ENVIO_ENDPOINT ?? null,
     cleanverse:
       e.CLEANVERSE_API_KEY && e.CLEANVERSE_API_URL
         ? { apiKey: e.CLEANVERSE_API_KEY, apiUrl: e.CLEANVERSE_API_URL }
