@@ -10,10 +10,12 @@ import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
+import { addressOf } from "../kit/wallet/store.js";
+import { useDemoWallet } from "../kit/wallet/useDemoWallet.js";
 import { ClaimCard } from "./ClaimCard.js";
 import { ClaimGlyph, VIEWS } from "./Glyph.js";
 import { ART, SAMPLE, walletFor } from "./sample.js";
-import { LIVE, SOURCE } from "./source.js";
+import { LIVE_VALUES, SOURCE } from "./source.js";
 
 /**
  * ClaimHub: an airdrop page in its own kraft palette, with Baret's strip on
@@ -22,7 +24,9 @@ import { LIVE, SOURCE } from "./source.js";
  * The story (claimhub.content.ts): the eligibility check is theatre; every
  * wallet is eligible. Honest, the claim calls claim and HUB arrives. In the
  * attack the same button asks for an unlimited allowance on your USDC and
- * sends nothing. Prepared samples only, so nothing is sent (source.ts).
+ * sends nothing. With a wallet connected, Baret checks the real request
+ * from that address; without one, the prepared sample (source.ts). Nothing
+ * is signed or sent.
  */
 
 const { site, analysis } = claimhub;
@@ -36,19 +40,25 @@ export function ClaimHubSite(): JSX.Element {
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
+  const { wallet: demoWallet, from, live } = useDemoWallet();
+  // A real wallet, not the developer's test address: the field's hint names it.
+  const connectedWallet = addressOf(demoWallet);
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
-  /** The page's eligibility check: any address, or the sample wallet when left empty. */
-  /** False when the address is refused, so the card can move focus to it. */
+  /**
+   * The page's eligibility check: any address, or the connected wallet (the
+   * sample wallet with none) when left empty. False when the address is
+   * refused, so the card can move focus to it.
+   */
   function checkEligibility(): boolean {
-    const next = walletFor(address, SAMPLE.wallet);
+    const next = walletFor(address, connectedWallet ?? SAMPLE.wallet);
     if (next === null) {
       setError(site.panel.errors.invalid);
       return false;
     }
     setError(null);
-    if (address.trim() === "") setConnected(true);
+    if (address.trim() === "" && connectedWallet === null) setConnected(true);
     setWallet(next);
     return true;
   }
@@ -56,7 +66,7 @@ export function ClaimHubSite(): JSX.Element {
   function runCheck(version: DemoMode): void {
     setChecked(version);
     setOpen(true);
-    check.start({ mode: version, wallet: wallet ?? SAMPLE.wallet });
+    check.start({ mode: version, wallet: wallet ?? connectedWallet ?? SAMPLE.wallet, from });
   }
 
   function tryOther(): void {
@@ -66,7 +76,7 @@ export function ClaimHubSite(): JSX.Element {
   }
 
   const copy = analysis.modes[checked];
-  const values = { contract: SAMPLE.distributor, spender: SAMPLE.spender };
+  const values = live ? LIVE_VALUES : { contract: SAMPLE.distributor, spender: SAMPLE.spender };
 
   return (
     <>
@@ -84,9 +94,7 @@ export function ClaimHubSite(): JSX.Element {
         view={view}
         onView={go}
         connect={site.connect}
-        connected={connected}
-        wallet={SAMPLE.wallet}
-        onConnect={() => setConnected(true)}
+        sample={{ connected, address: SAMPLE.wallet, onUse: () => setConnected(true) }}
       />
 
       <main key={view} id="main" tabIndex={-1} className="focus:outline-none">
@@ -111,6 +119,7 @@ export function ClaimHubSite(): JSX.Element {
                   checked={wallet !== null}
                   onCheck={checkEligibility}
                   onClaim={() => runCheck(mode)}
+                  hint={connectedWallet ? site.panel.hintConnected : site.panel.hint}
                 />
               }
             />
@@ -127,7 +136,7 @@ export function ClaimHubSite(): JSX.Element {
         open={open}
         onOpenChange={setOpen}
         state={check.state}
-        live={LIVE}
+        live={live}
         mode={checked}
         image={checked === "safe" ? ART.safe : ART.danger}
         copy={{

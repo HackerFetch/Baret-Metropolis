@@ -1,26 +1,19 @@
-import { Button, truncateAddress } from "@baret/ui";
 import { FRAME } from "@baret/web-ui/lib/layout";
-import {
-  type JSX,
-  type MouseEvent,
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { type JSX, type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { WalletControl } from "../wallet/WalletControl.js";
 
 /**
  * A demo dApp's own header, in the site's palette: its glyph and name, a nav
- * that switches between the site's pages (`?view=`), and a wallet control
- * that never asks a real wallet (pressing it fills in the sample address).
- * On phones the nav drops to a row under the brand. Shared by the six sites;
- * each passes its own glyph, copy and views.
+ * that switches between the site's pages (`?view=`), and the wallet control
+ * (wallet/WalletControl.tsx): a real wallet found over EIP-6963, or the
+ * sample wallet. On phones the nav drops to a row under the brand. Shared by
+ * the six sites; each passes its own glyph, copy and views.
  *
  * Nav items are real links to `?view=`, so they open in a new tab and can be
  * copied; a plain click goes through `onView` instead (no push for the page
- * already open). A view change and a connected wallet are announced politely.
+ * already open). A view change is announced politely; the wallet control
+ * announces its own changes.
  */
 
 /** The search string of a view: the home page has none. */
@@ -81,9 +74,7 @@ export function SiteHeader<V extends string>({
   view,
   onView,
   connect,
-  connected,
-  wallet,
-  onConnect,
+  sample,
 }: {
   brand: string;
   /** The site's mark, drawn in its accent. */
@@ -93,11 +84,9 @@ export function SiteHeader<V extends string>({
   views: readonly V[];
   view: V;
   onView: (view: V) => void;
-  connect: { readonly label: string; readonly connected: string } | undefined;
-  connected: boolean;
-  /** The address shown once connected: the sample, or the live demo address. */
-  wallet: string;
-  onConnect: () => void;
+  connect: { readonly label: string; readonly connected: string };
+  /** The sample wallet: in use once the site's main button ran on it. */
+  sample: { readonly connected: boolean; readonly address: string; readonly onUse: () => void };
 }): JSX.Element {
   const home = views[0];
   const { pathname } = useLocation();
@@ -112,18 +101,6 @@ export function SiteHeader<V extends string>({
     shown.current = view;
     setSaid(label);
   }, [view, label]);
-
-  // Connect wallet is replaced by the connected chip: focus follows it, and
-  // the new state is read out. A wallet connected on load stays silent.
-  const chip = useRef<HTMLSpanElement>(null);
-  const handoff = useRef(false);
-  const connectedLabel = connect?.connected ?? "";
-  useLayoutEffect(() => {
-    if (!connected || !handoff.current) return;
-    handoff.current = false;
-    chip.current?.focus();
-    setSaid(`${connectedLabel} ${truncateAddress(wallet)}`);
-  }, [connected, connectedLabel, wallet]);
 
   return (
     <header className="border-b border-[color:var(--rule)]">
@@ -151,31 +128,7 @@ export function SiteHeader<V extends string>({
           <NavItems nav={nav} views={views} view={view} onView={onView} />
         </nav>
 
-        {connected ? (
-          <span
-            ref={chip}
-            tabIndex={-1}
-            className="flex min-h-11 items-center gap-2 border border-[color:var(--rule-strong)] px-3 py-2"
-          >
-            <span aria-hidden="true" className="size-2 rounded-full bg-[color:var(--safe)]" />
-            <span className="text-sm text-[color:var(--fg-muted)]">{connect?.connected}</span>
-            <span className="font-mono text-sm text-[color:var(--fg)]">
-              {truncateAddress(wallet)}
-            </span>
-          </span>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            onClick={() => {
-              handoff.current = true;
-              onConnect();
-            }}
-          >
-            {connect?.label}
-          </Button>
-        )}
+        <WalletControl connect={connect} sample={sample} />
       </div>
       <nav
         aria-label={brand}

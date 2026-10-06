@@ -3,7 +3,13 @@ import { type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
 import { FAILED, runCheck } from "@baret/web-ui/lib/check";
 import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { analyzeCall, displayAmount, fromAnalyzeResponse, shortAddress } from "./live.js";
+import {
+  analyzeCall,
+  analyzePayment,
+  displayAmount,
+  fromAnalyzeResponse,
+  shortAddress,
+} from "./live.js";
 import { advance, type CheckState, settle } from "./useCheck.js";
 
 const WALLET = "0x7a3f9e21c84b5d06f13a2e9b7c40d58e6f21c21e";
@@ -201,6 +207,26 @@ describe("live answer", () => {
       network: "testnet",
       transaction: call,
       userWallet: WALLET,
+    });
+  });
+
+  it("posts an x402 payment as typedData with its policy, and reads the signer's changes", async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify(response({ decision: "safe" }))));
+    vi.stubGlobal("fetch", fetch);
+    const built = {
+      typedData: { signer: WALLET, domain: {}, types: {}, primaryType: "T", message: {} },
+      payment: { origin: "https://x.example", payTo: OTHER, asset: OTHER, amount: "50000" },
+    };
+    const policy = { maxHourlyCap: "0.25" };
+    const result = await analyzePayment(built, policy, new AbortController().signal);
+    expect(result.verdict).toBe("safe");
+    expect(result.changes.length).toBeGreaterThan(0);
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({
+      network: "testnet",
+      typedData: built.typedData,
+      payment: built.payment,
+      policy,
     });
   });
 

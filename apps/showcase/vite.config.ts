@@ -86,10 +86,7 @@ export default defineConfig({
       output: {
         // The six demo sites are heavy and rarely visited together.
         codeSplitting: {
-          groups: [
-            { name: "react", test: /node_modules[\\/](react|react-dom|react-router)[\\/]/ },
-            { name: "chain", test: /node_modules[\\/]viem[\\/]/ },
-          ],
+          groups: [{ name: "react", test: /node_modules[\\/](react|react-dom|react-router)[\\/]/ }],
         },
       },
     },

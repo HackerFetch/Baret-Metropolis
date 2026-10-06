@@ -1,10 +1,12 @@
 import { findings, orbityield } from "@baret/content";
+import { DEMO } from "@baret/demo";
 import { hasValues } from "@baret/web-ui/components/CheckBlocks";
+import { decodeFunctionData, parseAbi } from "viem";
 import { describe, expect, it } from "vitest";
-import { format, LOSS_LIMIT, parseAmount, percent } from "../kit/amount.js";
+import { format, LOSS_LIMIT, parseAmount, percent, toWei } from "../kit/amount.js";
 import { VIEWS } from "./Glyph.js";
 import { overLimit, poolOf, SAMPLE, sampleCheck } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { buildRequest, livePoolOf, overLimitLive, SOURCE } from "./source.js";
 
 describe("the amount on a demo card", () => {
   it("reads dots, commas and spaces, and refuses anything that is not positive", () => {
@@ -64,7 +66,10 @@ describe("OrbitYield sample", () => {
   });
 
   it("answers from the sample", async () => {
-    const result = await SOURCE({ mode: "danger", amount: 5 }, new AbortController().signal);
+    const result = await SOURCE(
+      { mode: "danger", amount: 5, wei: 5n * 10n ** 18n, from: null },
+      new AbortController().signal,
+    );
     expect(result).toEqual(sampleCheck("danger", 5));
   });
 });
@@ -73,5 +78,44 @@ describe("OrbitYield pages", () => {
   it("has one page per nav item after the first, in nav order", () => {
     expect(orbityield.site.nav).toHaveLength(VIEWS.length);
     expect(orbityield.site.pages.views.map((v) => v.id)).toEqual(VIEWS.slice(1));
+  });
+});
+
+describe("OrbitYield live request", () => {
+  const from = "0x1111111111111111111111111111111111111111" as const;
+  const abi = parseAbi(["function stake() payable"]);
+  const mon = 10n ** 18n;
+
+  it("stakes in the listed pool when honest and the silent pool in the attack", () => {
+    const honest = buildRequest("safe", 2n * mon, from);
+    const attack = buildRequest("danger", 2n * mon, from);
+    expect(honest.to).toBe(DEMO.orbityield.pool);
+    expect(attack.to).toBe(DEMO.orbityield.silentPool);
+    for (const call of [honest, attack]) {
+      expect(call.value).toBe((2n * mon).toString());
+      expect(decodeFunctionData({ abi, data: call.data as `0x${string}` }).functionName).toBe(
+        "stake",
+      );
+    }
+    expect(livePoolOf("danger")).toBe(DEMO.orbityield.silentPool);
+  });
+
+  it("expects Blocked only when the attack's deposit is over the loss limit of the real balance", () => {
+    const limit = BigInt(Math.round(LOSS_LIMIT));
+    const balance = 10n * mon;
+    const atLimit = (balance * limit) / 100n;
+    expect(overLimitLive("danger", atLimit, balance)).toBe(false);
+    expect(overLimitLive("danger", atLimit + 1n, balance)).toBe(true);
+    expect(overLimitLive("safe", balance, balance)).toBe(false);
+    expect(overLimitLive("danger", balance, null)).toBe(false);
+  });
+
+  it("reads plain decimal MON into wei and refuses exponents, hex and signs", () => {
+    expect(toWei("2.5")).toBe(25n * 10n ** 17n);
+    expect(toWei("2,5")).toBe(25n * 10n ** 17n);
+    expect(toWei(" 0.000000000000000001 ")).toBe(1n);
+    for (const bad of ["", "0", "1e3", "0x10", "-1", "1.0000000000000000001", "abc"]) {
+      expect(toWei(bad)).toBeNull();
+    }
   });
 });

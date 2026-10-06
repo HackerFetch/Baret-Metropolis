@@ -240,6 +240,8 @@ export interface ScenarioSite {
       /** The input's visible label and a line under it, when the placeholder alone would not say. */
       label?: string;
       hint?: string;
+      /** The hint once a real wallet is connected (ClaimHub's eligibility field). */
+      hintConnected?: string;
       /** Label for what the amount buys, when no row says it (LaunchPad's LNTL). */
       receive?: string;
       /** Validation messages for the card's one input. */

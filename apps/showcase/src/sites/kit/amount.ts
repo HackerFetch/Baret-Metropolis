@@ -14,6 +14,19 @@ export function parseAmount(raw: string): number | null {
   return raw.trim() !== "" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+/**
+ * The same amount in wei, for a live request: plain digits with at most 18
+ * decimals ("12.5", "12,5"). Exponents, hex and signs are refused (null),
+ * so what Baret checks is exactly what the visitor typed.
+ */
+export function toWei(raw: string): bigint | null {
+  const text = raw.replace(",", ".").trim();
+  if (!/^\d+(?:\.\d{1,18})?$/.test(text)) return null;
+  const [whole = "0", fraction = ""] = text.split(".");
+  const wei = BigInt(whole) * 10n ** 18n + BigInt(fraction.padEnd(18, "0"));
+  return wei > 0n ? wei : null;
+}
+
 /** Two decimals, no grouping: what the cards and the panel print. */
 export function format(value: number): string {
   return value.toFixed(2);

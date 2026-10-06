@@ -1,22 +1,54 @@
+import { DEMO, orbityield } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
+import type { Address } from "viem";
+import { LOSS_LIMIT } from "../kit/amount.js";
+import type { DemoCall } from "../kit/live.js";
 import { sampleCheck } from "./sample.js";
 
 /**
- * Where OrbitYield's "Stake" goes. Prepared samples only, for now: the two
- * `stake()` calls need the demo pools and builders in `@baret/demo`
- * (tasks/FOR_EZGIN.md), and the frontend never writes calldata by hand.
- * Once they ship, the live path is NovaSwap's: build the call, `analyzeCall`
- * it, fail closed.
+ * Where OrbitYield's "Stake" goes. The request comes from `@baret/demo`, so
+ * the frontend never writes calldata: honest is `stake()` on the pool Baret
+ * knows (oMON back one to one), attack is the same call on a pool on no list
+ * that keeps the MON.
+ *
+ * Live when there is an address to simulate from (a connected wallet, or
+ * VITE_BARET_DEMO_FROM): the request goes to Baret's server and fails
+ * closed. With no address, the prepared sample, and nothing is fetched.
  */
 
 export interface StakeInput {
   readonly mode: DemoMode;
-  /** MON, already checked against the balance. */
+  /** MON, already checked against the balance: the sample reads this. */
   readonly amount: number;
+  /** The same amount in wei: a live request sends this. */
+  readonly wei: bigint;
+  /** The address a live check simulates from; null for the sample. */
+  readonly from: Address | null;
 }
 
-/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
-export const LIVE = false;
+/** The call each version asks the wallet to sign. */
+export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoCall {
+  return mode === "safe" ? orbityield.stake(from, wei) : orbityield.attackStake(from, wei);
+}
 
-export const SOURCE: CheckSource<StakeInput> = async (input) =>
-  sampleCheck(input.mode, input.amount);
+/** The pool a live request pays, for the panel's copy. */
+export function livePoolOf(mode: DemoMode): string {
+  return mode === "safe" ? DEMO.orbityield.pool : DEMO.orbityield.silentPool;
+}
+
+/**
+ * Live: true when the attack's deposit is more of the wallet's real balance
+ * than Balanced lets go with nothing back. Unknown balance: false.
+ */
+export function overLimitLive(mode: DemoMode, wei: bigint, balance: bigint | null): boolean {
+  return mode === "danger" && balance !== null && balance > 0n
+    ? wei * 100n > balance * BigInt(Math.round(LOSS_LIMIT))
+    : false;
+}
+
+/** The live path loads only when a live check runs, so the sample page never fetches it. */
+export const SOURCE: CheckSource<StakeInput> = async (input, signal) => {
+  if (input.from === null) return sampleCheck(input.mode, input.amount);
+  const { analyzeCall } = await import("../kit/live.js");
+  return analyzeCall(buildRequest(input.mode, input.wei, input.from), signal);
+};

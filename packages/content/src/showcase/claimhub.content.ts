@@ -76,6 +76,8 @@ export const claimhub = {
       note: "One signature. Your HUB arrives in the same transaction.",
       label: "Wallet address",
       hint: "Leave it empty to check the sample wallet.",
+      /** The same hint once a real wallet is connected. */
+      hintConnected: "Leave it empty to check the wallet you connected.",
       errors: {
         invalid: "That is not a wallet address. It starts with 0x and has 42 characters.",
       },

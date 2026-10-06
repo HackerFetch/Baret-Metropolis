@@ -1,9 +1,10 @@
 import { findings, scrybe } from "@baret/content";
+import { DEMO, SCRYBE } from "@baret/demo";
 import { hasValues } from "@baret/web-ui/components/CheckBlocks";
 import { describe, expect, it } from "vitest";
 import { VIEWS } from "./Glyph.js";
 import { CAPS, runOf, SAMPLE, sampleCheck, usdc } from "./sample.js";
-import { SOURCE } from "./source.js";
+import { paidBefore, policyFor, SOURCE } from "./source.js";
 
 describe("Scrybe amounts", () => {
   it("prints base units as USDC with two decimals", () => {
@@ -64,7 +65,10 @@ describe("Scrybe sample", () => {
   });
 
   it("answers from the sample and never fails closed on its own", async () => {
-    const result = await SOURCE({ mode: "danger", cap: 150_000n }, new AbortController().signal);
+    const result = await SOURCE(
+      { mode: "danger", cap: 150_000n, from: null },
+      new AbortController().signal,
+    );
     expect(result).toEqual(sampleCheck("danger", 150_000n));
   });
 });
@@ -73,5 +77,26 @@ describe("Scrybe pages", () => {
   it("has one page per nav item after the first, in nav order", () => {
     expect(scrybe.site.nav).toHaveLength(VIEWS.length);
     expect(scrybe.site.pages.views.map((v) => v.id)).toEqual(VIEWS.slice(1));
+  });
+});
+
+describe("Scrybe live payment", () => {
+  it("checks one answer with nothing paid before, and the loop at the payment that crosses the cap", () => {
+    expect(paidBefore("safe", 250_000n)).toBe(0);
+    for (const cap of CAPS) {
+      const before = paidBefore("danger", cap);
+      // Every payment before fits; the one checked would take the hour over the cap.
+      expect(BigInt(before) * SCRYBE.price <= cap).toBe(true);
+      expect(BigInt(before + 1) * SCRYBE.price > cap).toBe(true);
+      // The sample's run stops at the same payment.
+      expect(runOf(cap).at(-1)?.n).toBe(before + 1);
+    }
+  });
+
+  it("sends Balanced with the real test USDC and the visitor's cap as the hourly cap", () => {
+    const policy = policyFor(250_000n);
+    expect(policy.maxHourlyCap).toBe("0.25");
+    expect(policy.allowedAssets).toEqual([DEMO.usdc]);
+    expect(SCRYBE.price).toBe(SAMPLE.price);
   });
 });

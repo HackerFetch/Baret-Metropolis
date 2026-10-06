@@ -1,22 +1,43 @@
+import { DEMO, launchpad } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
+import type { Address } from "viem";
+import type { DemoCall } from "../kit/live.js";
 import { sampleCheck } from "./sample.js";
 
 /**
- * Where LaunchPad's "Contribute" goes. Prepared samples only, for now: the
- * two `contribute()` calls need the demo sale, the demo proxy and builders
- * in `@baret/demo` (tasks/FOR_EZGIN.md), and the frontend never writes
- * calldata by hand. Once they ship, the live path is NovaSwap's: build the
- * call, `analyzeCall` it, fail closed.
+ * Where LaunchPad's "Contribute" goes. The request comes from `@baret/demo`,
+ * so the frontend never writes calldata: honest is `contribute()` on the
+ * plain sale, attack is the same call on the proxy sale whose code its
+ * deployer can replace.
+ *
+ * Live when there is an address to simulate from (a connected wallet, or
+ * VITE_BARET_DEMO_FROM): the request goes to Baret's server and fails
+ * closed. With no address, the prepared sample, and nothing is fetched.
  */
 
 export interface ContributeInput {
   readonly mode: DemoMode;
-  /** MON, already checked against the sale's limits. */
+  /** MON, already checked against the sale's limits: the sample reads this. */
   readonly amount: number;
+  /** The same amount in wei: a live request sends this. */
+  readonly wei: bigint;
+  /** The address a live check simulates from; null for the sample. */
+  readonly from: Address | null;
 }
 
-/** Whether SOURCE asks Baret's server. Flip it with SOURCE: the panel's header note reads it. */
-export const LIVE = false;
+/** The call each version asks the wallet to sign. */
+export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoCall {
+  return mode === "safe" ? launchpad.contribute(from, wei) : launchpad.attackContribute(from, wei);
+}
 
-export const SOURCE: CheckSource<ContributeInput> = async (input) =>
-  sampleCheck(input.mode, input.amount);
+/** The sale a live request pays, for the panel's copy. */
+export function liveSaleOf(mode: DemoMode): string {
+  return mode === "safe" ? DEMO.launchpad.sale : DEMO.launchpad.proxySale;
+}
+
+/** The live path loads only when a live check runs, so the sample page never fetches it. */
+export const SOURCE: CheckSource<ContributeInput> = async (input, signal) => {
+  if (input.from === null) return sampleCheck(input.mode, input.amount);
+  const { analyzeCall } = await import("../kit/live.js");
+  return analyzeCall(buildRequest(input.mode, input.wei, input.from), signal);
+};
