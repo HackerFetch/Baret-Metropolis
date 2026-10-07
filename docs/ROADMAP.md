@@ -74,7 +74,7 @@ Submission closes **2026-10-14 06:59** (the time on the bounty page). The origin
 | 10-13 | Buffer. Submit. | | "Community supporter" status checked on the platform ($5,000, no work) |
 
 - [x] Chainlink CRE workflow (2026-10-07: simulated with a real write on testnet, D-026; DON deployment waits for Early Access)
-- [ ] MetaMask Agent Wallet plugin
+- [x] MetaMask Agent Wallet plugin (2026-10-07: the gates checked with a real Agent Wallet on testnet, D-027; the wallet itself cannot send on testnet)
 - [ ] Qwen reviewer
 - [ ] KIMI explanation
 - [ ] Cleanverse compliance (blocked on sponsor information)

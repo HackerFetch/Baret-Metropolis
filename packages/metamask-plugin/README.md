@@ -55,6 +55,20 @@ mm baret send 0x1365566191bAA9872A64AcDce963751d5343ff49 --value 100000000000000
 mm baret send 0xa8f3762b03ae73cbbdb9173d3537c632628727a4 --value 10000000000000000
 ```
 
+## Checked with a real wallet (2026-10-07)
+
+Agent Wallet CLI 7.0.0, a server wallet in Guard mode, Monad testnet, the live Baret server:
+
+| Command | Answer |
+|---|---|
+| `mm baret check`, 0.01 MON to an ordinary address | `safe`, `wouldSend: true` |
+| `mm baret check`, 0.01 MON to an address in the reputation registry | `blocked`, `KNOWN_MALICIOUS_ADDRESS` |
+| `mm baret send` to that address | `BARET_BLOCKED`, the wallet was not called |
+| `mm baret send` with an unreachable `--api` | `BARET_NO_VERDICT`, the wallet was not called |
+| `mm baret send` of the safe transfer | handed to the wallet, which answered `WALLET_DID_NOT_SEND` |
+
+The last row is a limit of the wallet, not of the plugin: the Agent Wallet lists Monad testnet (10143) but cannot send on it (`mm wallet send-transaction --chain-id 10143` fails the same way, `Invalid chainId`); it sends on Monad (143). The live Baret server analyses testnet only, so a confirmed send through the plugin has not been shown.
+
 ## Layout
 
 | File | Role |
