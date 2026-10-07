@@ -18,6 +18,7 @@ import {
 } from "viem";
 import { PAYMENT_GUARD_ABI } from "./abi.js";
 import { GuardBlockedError } from "./errors.js";
+import { type Review, type Reviewer, requireApproval } from "./reviewer.js";
 import type { AgentSigner } from "./signer.js";
 
 /** A call the agent wants to make. */
@@ -50,6 +51,11 @@ export interface AgentWalletOptions {
    * for a person to read, and an agent cannot read it.
    */
   allowCaution?: boolean;
+  /**
+   * A second check after Baret's: compares the call with the intent the agent
+   * states and can veto. With a reviewer set, every signature needs an intent.
+   */
+  reviewer?: Reviewer;
   chain?: ChainClient;
   guard?: Pick<TransactionGuard, "evaluate">;
 }
@@ -57,6 +63,14 @@ export interface AgentWalletOptions {
 export interface SubmitResult {
   hash: Hex;
   verdict: AnalyzeResponse;
+  /** The reviewer's approval, when a reviewer is set. */
+  review?: Review;
+}
+
+/** What the agent says about a call it wants signed. */
+export interface SignOptions {
+  /** The agent's own description of what the call is for. The reviewer compares against it. */
+  intent?: string;
 }
 
 function rpcChain(rpcUrl: string, chainId: number): ChainClient {
@@ -144,18 +158,37 @@ export class AgentWallet {
     return verdict.decision === "caution" && this.options.allowCaution === true;
   }
 
-  /** Checks, then signs. Throws GuardBlockedError when Baret does not clear the call. */
-  async guardedSign(call: AgentCall): Promise<{ raw: Hex; verdict: AnalyzeResponse }> {
+  /**
+   * Checks, then signs. Throws GuardBlockedError when Baret does not clear the
+   * call, and ReviewerVetoError when a reviewer is set and does not approve.
+   * The reviewer is asked only about calls Baret cleared.
+   */
+  async guardedSign(
+    call: AgentCall,
+    options: SignOptions = {},
+  ): Promise<{ raw: Hex; verdict: AnalyzeResponse; review?: Review }> {
     const verdict = await this.evaluate(call);
     if (!this.allows(verdict)) throw new GuardBlockedError(verdict);
+    const review = this.options.reviewer
+      ? await requireApproval(this.options.reviewer, {
+          intent: options.intent,
+          from: this.address,
+          call,
+          verdict,
+        })
+      : undefined;
     const tx = await this.chain.prepare(this.address, call);
-    return { raw: await this.options.signer.signTransaction(tx), verdict };
+    return {
+      raw: await this.options.signer.signTransaction(tx),
+      verdict,
+      ...(review ? { review } : {}),
+    };
   }
 
   /** Checks, signs and broadcasts. */
-  async guardedSubmit(call: AgentCall): Promise<SubmitResult> {
-    const { raw, verdict } = await this.guardedSign(call);
-    return { hash: await this.chain.send(raw), verdict };
+  async guardedSubmit(call: AgentCall, options: SignOptions = {}): Promise<SubmitResult> {
+    const { raw, verdict, review } = await this.guardedSign(call, options);
+    return { hash: await this.chain.send(raw), verdict, ...(review ? { review } : {}) };
   }
 
   /**
@@ -163,8 +196,19 @@ export class AgentWallet {
    * `reference` is the invoice id or x402 memo; it is hashed into the
    * payment's on-chain reference.
    */
-  pay(p: { vault: Address; merchant: Address; amount: bigint; reference: string }) {
-    return this.guardedSubmit(payCall(p));
+  pay(p: {
+    vault: Address;
+    merchant: Address;
+    amount: bigint;
+    reference: string;
+    /** Defaults to a plain description of the payment. */
+    intent?: string;
+  }) {
+    return this.guardedSubmit(payCall(p), {
+      intent:
+        p.intent ??
+        `Pay ${p.amount} base units of the vault's token from vault ${p.vault} to merchant ${p.merchant} for "${p.reference}".`,
+    });
   }
 }
 

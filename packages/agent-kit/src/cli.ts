@@ -4,17 +4,20 @@
  *
  *   baret address
  *   baret analyze --to 0x.. [--data 0x..] [--value <wei>]
- *   baret submit  --to 0x.. [--data 0x..] [--value <wei>]
- *   baret pay     --vault 0x.. --merchant 0x.. --amount <base units> --ref <text>
+ *   baret submit  --to 0x.. [--data 0x..] [--value <wei>] [--intent <text>]
+ *   baret pay     --vault 0x.. --merchant 0x.. --amount <base units> --ref <text> [--intent <text>]
  *   baret wallet create            (Dynamic: a new server wallet for the agent)
  *   baret policy list
  *
  * Exit codes: 0 Baret cleared it (and, for submit and pay, it was sent),
- * 1 Baret did not clear it and nothing was signed, 2 anything else went wrong.
+ * 1 Baret did not clear it or the reviewer vetoed it and nothing was signed,
+ * 2 anything else went wrong.
  *
  * Settings come from the environment, never from flags, so a key never lands
  * in shell history: BARET_API_URL, BARET_NETWORK, MONAD_TESTNET_RPC_URL,
- * BARET_POLICY_TEMPLATE, BARET_ALLOW_CAUTION=1, and one signer:
+ * BARET_POLICY_TEMPLATE, BARET_ALLOW_CAUTION=1, QWEN_API_KEY (turns the Qwen
+ * reviewer on: submit and pay then need an intent and can be vetoed; optional
+ * QWEN_BASE_URL and QWEN_MODEL), and one signer:
  *   BARET_AGENT_PRIVATE_KEY                      a local key (tests, local runs)
  *   DYNAMIC_ENVIRONMENT_ID + DYNAMIC_AUTH_TOKEN + BARET_AGENT_WALLET_PASSWORD
  *     a Dynamic server wallet, kept in BARET_AGENT_WALLET_FILE
@@ -28,6 +31,7 @@ import { type Address, getAddress, type Hex, isAddress, isHex } from "viem";
 import { type AgentCall, AgentWallet, payCall } from "./agent-wallet.js";
 import { createDynamicWallet, dynamicSignerFromFile } from "./dynamic.js";
 import { GuardBlockedError } from "./errors.js";
+import { qwenReviewer, ReviewerVetoError } from "./reviewer.js";
 import { type AgentSigner, localSigner } from "./signer.js";
 
 const EXIT = { allowed: 0, blocked: 1, error: 2 } as const;
@@ -86,6 +90,15 @@ async function wallet(): Promise<AgentWallet> {
     rpcUrl,
     policyTemplate: (template as keyof typeof POLICY_TEMPLATES | undefined) ?? "balanced",
     allowCaution: env.BARET_ALLOW_CAUTION === "1",
+    ...(env.QWEN_API_KEY
+      ? {
+          reviewer: qwenReviewer({
+            apiKey: env.QWEN_API_KEY,
+            ...(env.QWEN_BASE_URL ? { baseUrl: env.QWEN_BASE_URL } : {}),
+            ...(env.QWEN_MODEL ? { model: env.QWEN_MODEL } : {}),
+          }),
+        }
+      : {}),
   });
 }
 
@@ -125,6 +138,7 @@ async function main(argv: string[]): Promise<number> {
       merchant: { type: "string" },
       amount: { type: "string" },
       ref: { type: "string" },
+      intent: { type: "string" },
     },
   });
 
@@ -169,8 +183,17 @@ async function main(argv: string[]): Promise<number> {
             });
       if (command === "pay" && !values.ref)
         throw new UsageError("--ref is required: the invoice id or memo");
-      const { hash, verdict } = await w.guardedSubmit(call);
-      print({ decision: verdict.decision, hash, from: w.address });
+      const { hash, verdict, review } =
+        command === "submit"
+          ? await w.guardedSubmit(call, values.intent ? { intent: values.intent } : {})
+          : await w.pay({
+              vault: address(values.vault, "vault"),
+              merchant: address(values.merchant, "merchant"),
+              amount: amount(values.amount, "amount"),
+              reference: values.ref ?? "",
+              ...(values.intent ? { intent: values.intent } : {}),
+            });
+      print({ decision: verdict.decision, ...(review ? { review } : {}), hash, from: w.address });
       return EXIT.allowed;
     }
 
@@ -191,6 +214,10 @@ main(process.argv.slice(2))
         findings: err.verdict.findings.map((f) => ({ code: f.code, values: f.values })),
         firedRules: err.verdict.firedRules,
       });
+      process.exit(EXIT.blocked);
+    }
+    if (err instanceof ReviewerVetoError) {
+      print({ decision: "vetoed", signed: false, review: err.review });
       process.exit(EXIT.blocked);
     }
     if (err instanceof GuardUnreachableError) {

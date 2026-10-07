@@ -45,6 +45,9 @@
     },
     {
       "path": "./packages/metamask-plugin"
+    },
+    {
+      "path": "./packages/llm"
     }
   ]
 }
