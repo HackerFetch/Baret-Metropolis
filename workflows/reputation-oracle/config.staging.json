@@ -1,0 +1,11 @@
+{
+  "schedule": "0 */10 * * * *",
+  "feedUrl": "https://raw.githubusercontent.com/scamsniffer/scam-database/main/blacklist/address.json",
+  "chainName": "monad-testnet",
+  "receiverAddress": "0x0000000000000000000000000000000000000001",
+  "gasLimit": "2000000",
+  "windowSize": 20,
+  "rotationSeconds": 600,
+  "severity": 3,
+  "reasonCode": "SCAMSNIFFER_BLACKLIST"
+}

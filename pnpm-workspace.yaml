@@ -2,6 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
   - "indexer"
+  - "workflows/*"
 # tsx (apps/server) runs on esbuild, whose install script checks its native binary.
 allowBuilds:
   esbuild: true
