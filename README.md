@@ -6,21 +6,21 @@ This repository and this document set are meant for **live** tracking. They were
 
 ---
 
-## Status Summary (last updated: 2026-10-04)
+## Status Summary (last updated: 2026-10-07)
 
 | Area | Status |
 |---|---|
-| Phase | Frontend scaffolded. Backend core on the `backend` branch: `packages/guard` (schemas, templates, client), `apps/server` `/v1/analyze` with all 9 detectors and the policy engine, both contracts tested |
+| Phase | Backend live on Monad testnet and verified end to end; frontend built and being wired to it. Final week: stretch integrations, then the submission |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 46 files in `packages/content`, one per page or frame, complete |
 | Design system | 37 components in `packages/ui`; the web signature layer in `packages/web-ui` (type scale, motion, reveals, the eyelet cursor); the wallet pieces both wallets share in `packages/wallet-ui` (sign request, rule editor, findings, QR) |
 | Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Frontend audit (2026-10-04, branch `frontend-audit`): the landing is prerendered (LCP on a throttled phone 2.74 s to 1.88 s), every route has its own head and preloads, no console warnings on any surface, WCAG AA contrast in both themes and all six demo palettes, fail-closed gaps closed (locked request windows, permits, reachability), copy that claims nothing the product cannot back. Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
-| Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
+| Server and contracts | Server: `/v1/analyze` (9 detectors, fail-closed policy engine, all 38 finding codes produced by a test), `/v1/audit/*`; 62 tests; 18 of 18 showcase scenarios agree with the live API (`verify:demo`). Contracts: PaymentGuard, its factory, ReputationRegistry and the demo contracts; 45 forge tests incl. fuzz and invariants. Packages: `guard`, `demo`, `agent-kit` (Dynamic server wallet), `wallet-core` (Mera passkey account). Open: Nansen credits, Cleanverse, and the stretch items in `docs/ROADMAP.md` |
 | Contract deploy | Monad testnet: PaymentGuard, ReputationRegistry and the demo contracts of all six showcase sites, source verified — `docs/CONTRACTS.md` §2.6, §3.4, §7 |
 | Indexer | Envio HyperIndex, hosted: vaults, agent payments and the registry's history, served at `/v1/audit/*` (`docs/ARCHITECTURE.md` §8.8) |
-| Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |
-| Week | 3 / 6 (backend is a week behind: Week 2 core done, Week 3 integrations next) |
+| Hosting / CI | Live: `https://baret-metropolis.vercel.app` (showcase), `https://baret-wallet.vercel.app`, API `https://baret-monad-api.onrender.com`. GitHub Actions gates the API deploy; extension zips published on every push to `main` (`docs/DEPLOYMENT.md`) |
+| Week | Final week (2026-10-07 → 10-13). Submission closes 2026-10-14 06:59. Plan: `docs/ROADMAP.md` "Final week" |
 
 Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
 

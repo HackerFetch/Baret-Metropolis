@@ -135,7 +135,7 @@
 
 ### D-020 — Hackathon scope for the last eight days
 **Date:** 2026-10-05
-**Decision:** Submission closes 2026-10-13. Order: the five remaining demo sites live on testnet, agent-kit with Dynamic, the Mera wallet going live. Cut: the extension's live background (it stays on the sample wallet, labelled as a preview), Cleanverse (no API access), Chainlink CRE, the MetaMask plugin. Envio only if the Mera work finishes early.
+**Decision (scope updated → D-025):** Submission closes 2026-10-13. Order: the five remaining demo sites live on testnet, agent-kit with Dynamic, the Mera wallet going live. Cut: the extension's live background (it stays on the sample wallet, labelled as a preview), Cleanverse (no API access), Chainlink CRE, the MetaMask plugin. Envio only if the Mera work finishes early.
 **Rationale:** Every screen the judges can click should be real before a second wallet surface is. The extension background is the largest single piece of work left and the standalone wallet covers the same story plus two Mera bounties.
 **Status:** ✅ Final
 
@@ -163,6 +163,12 @@
 **Decision:** `indexer/` is an Envio HyperIndex v3 project on Monad testnet. The factory's `VaultCreated` registers each new vault, so no vault address is configured by hand except the demo vault that predates the factory. Besides current state (`Vault`, `Merchant`, `ReputationEntry`) it keeps append-only rows (`Payment`, `VaultActivity`, `ReputationChange`). The server exposes them at `/v1/audit/*` through `ENVIO_ENDPOINT`; when the indexer is missing or silent the routes answer 503. The indexer is hosted on Envio's service, deployed from this repo.
 **Rationale:** Completes D-008 (no in-memory audit trail). The wallet's history and delegation screens need what the contract cannot enumerate, and the free RPC plan limits `eth_getLogs` to ten blocks. An audit view that shows "no payments" because its source is down would be a false statement, hence 503.
 **Status:** ✅ Final. Open: an API token and the hosted deployment (docs/DEPLOYMENT.md §3.6).
+
+### D-025 — The stretch bounties are back in; the last week has one slot per item
+**Date:** 2026-10-07
+**Decision:** Updates D-020. With the planned backend finished three days early, the remaining week takes on the items D-020 cut: the Chainlink CRE reputation-oracle workflow, the MetaMask Agent Wallet plugin, a Qwen reviewer for agent transactions, a KIMI plain-language explanation of a verdict, and Cleanverse compliance if the sponsor's contract details arrive. Each has a fixed slot in `docs/ROADMAP.md` ("Final week"); an item that is not working at the end of its slot is dropped and recorded. 2026-10-11 and 10-12 are for the submission only. The extension's live background stays cut.
+**Rationale:** Owner decision. The fixed slots are what keeps five additions from eating the days the videos, the per-bounty notes and end-to-end testing need; the main track prize depends on those more than on any one sponsor bounty.
+**Status:** ✅ Final
 
 ---
 
