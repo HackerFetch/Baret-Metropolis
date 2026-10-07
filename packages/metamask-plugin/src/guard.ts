@@ -93,6 +93,11 @@ export function proposalProblem(p: {
   return null;
 }
 
+/** Wei as the 0x-prefixed quantity the wallet's executor takes. */
+export function toHexQuantity(wei: string): string {
+  return `0x${BigInt(wei).toString(16)}`;
+}
+
 /** The body of `POST /v1/analyze` for a proposal. */
 export function buildAnalyzeRequest(p: Proposal, policyTemplate: PolicyTemplate) {
   return {

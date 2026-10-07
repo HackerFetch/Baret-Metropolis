@@ -16,6 +16,7 @@ import {
   type Proposal,
   reasons,
   type SubmitOutcome,
+  toHexQuantity,
 } from "../../guard.js";
 import { proposalInputs, toProposal } from "../../inputs.js";
 
@@ -95,10 +96,19 @@ export default class BaretSendCommand extends PluginCommand<SendResult> {
         {
           kind: "transaction",
           chainId: p.chainId,
-          transaction: { to: p.to, value: p.value, data: p.data },
+          transaction: { to: p.to, value: toHexQuantity(p.value), data: p.data },
         },
         { signal: io.signal, ...(resolved.wait ? {} : { noAwait: true }) },
-      );
+      ).catch((cause: unknown) => {
+        // Baret let it through; what stopped it is the wallet (its policy, its
+        // approval, or a network it cannot send on). Say which side refused.
+        if (cause instanceof CommandError) throw cause;
+        throw new CommandError(
+          "WALLET_DID_NOT_SEND",
+          `Baret passed this transaction, but the wallet did not send it: ${cause instanceof Error ? cause.message : "unknown error"}.`,
+          "Check `mm chains list` (the wallet sends on Monad, chain 143) and the wallet's policy.",
+        );
+      });
       return {
         status: result.status,
         ...(result.hash ? { hash: result.hash } : {}),

@@ -11,6 +11,7 @@ import {
   parseVerdict,
   proposalProblem,
   reasons,
+  toHexQuantity,
   type Verdict,
 } from "./guard";
 
@@ -99,6 +100,13 @@ describe("buildAnalyzeRequest", () => {
 
   it("maps chain 143 to mainnet", () => {
     expect(buildAnalyzeRequest({ ...proposal, chainId: 143 }, "balanced").network).toBe("mainnet");
+  });
+});
+
+describe("toHexQuantity", () => {
+  it("gives the wallet a 0x quantity", () => {
+    expect(toHexQuantity("0")).toBe("0x0");
+    expect(toHexQuantity("10000000000000000")).toBe("0x2386f26fc10000");
   });
 });
 
