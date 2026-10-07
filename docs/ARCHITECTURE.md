@@ -2,7 +2,7 @@
 
 > This document is the **target architecture** for the Baret implementation to be written from scratch for Monad Metropolis (no code yet). As code starts being written, this file must be kept in sync with the code — if a contradiction is found, the source code is treated as the authority and this file is updated.
 
-Last updated: 2026-10-01 · Status: **`packages/guard`, the `apps/server` analysis core and both contracts are implemented and tested; Nansen/Cleanverse clients, Envio, CRE and agent-kit are not started**
+Last updated: 2026-10-07 · Status: **`packages/guard`, the `apps/server` analysis core, the contracts, agent-kit, wallet-core and the Envio indexer are implemented and live on testnet; the CRE reputation-oracle workflow is built and simulated with a real write (not deployed to a DON); Nansen and Cleanverse wait on the sponsors**
 
 ---
 
@@ -289,6 +289,20 @@ An Envio HyperIndex project (v3) over Monad testnet, from the block the contract
 - **Server:** `ENVIO_ENDPOINT` is the indexer's GraphQL URL. `GET /v1/audit/recent`, `/v1/audit/vault/:address`, `/v1/audit/owner/:address`, `/v1/audit/reputation/:address` read from it. No indexer, or no answer: 503, never an empty history.
 - **Why an indexer:** a vault cannot list its merchants or payments, and a free RPC plan answers `eth_getLogs` for ten blocks at a time.
 - `pnpm --filter @baret/indexer typecheck` runs in CI; `test:chain` replays real blocks through the handlers and needs `ENVIO_API_TOKEN`.
+
+### 8.9 `workflows/` — Chainlink CRE reputation oracle
+
+How threat intelligence reaches the chain without a deploy of the server (D-026). One CRE project, one workflow, `workflows/reputation-oracle`:
+
+1. **Trigger:** cron (every ten minutes in the config).
+2. **Fetch:** every node reads an external threat feed over HTTP (ScamSniffer's public address blacklist) and reduces it to the same sorted list; the DON accepts the result only when the nodes agree.
+3. **Select:** time picks one window of the feed per rotation, so the workflow needs no stored cursor and reaches every entry once per pass.
+4. **Read:** `ReputationOracleReceiver.pending` returns the candidates the registry does not hold and that are not protected.
+5. **Write:** a signed report through the CRE forwarder to the receiver, which hands it to `ReputationRegistry.onReport`.
+
+The server's `sources/registry.ts` reads the registry on every analysis, so a new entry is a `KNOWN_MALICIOUS_ADDRESS` finding on the next request. A feed that cannot be read or does not look like the feed writes nothing. Pure logic is in `src/feed.ts` (unit tested); `main.ts` holds the capability calls. Receiver contract and addresses: `docs/CONTRACTS.md` section 3.5. Running the simulator: `workflows/README.md`.
+
+---
 
 ## 9. Environment Variables
 

@@ -128,9 +128,14 @@ const onCronTrigger = (runtime: Runtime<Config>): Result => {
     throw new Error("registry write failed: the receiver refused the report");
   }
 
+  // The simulator answers SUCCESS with no hash when it is not broadcasting.
   const txHash = write.txHash && write.txHash.length > 0 ? bytesToHex(write.txHash) : "";
+  if (!txHash) {
+    runtime.log(`Dry run: ${targets.length} entries were ready, nothing was sent`);
+    return done(0, "");
+  }
   runtime.log(
-    `Wrote ${targets.length} entries as ${config.reasonCode}, severity ${config.severity}: ${txHash || "dry run, not broadcast"}`,
+    `Wrote ${targets.length} entries as ${config.reasonCode}, severity ${config.severity}: ${txHash}`,
   );
   return done(targets.length, txHash);
 };

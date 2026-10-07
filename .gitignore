@@ -42,3 +42,7 @@ docs/HANDOFF.md
 
 # Raw generated image originals, converted into apps/*/public/assets before commit
 assets-raw/
+
+# Chainlink CRE CLI build leftovers
+.cre_build_tmp.js
+*.wasm

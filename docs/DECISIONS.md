@@ -170,6 +170,14 @@
 **Rationale:** Owner decision. The fixed slots are what keeps five additions from eating the days the videos, the per-bounty notes and end-to-end testing need; the main track prize depends on those more than on any one sponsor bounty.
 **Status:** ✅ Final
 
+### D-026 — The CRE workflow writes through a receiver contract, and the simulator's forwarder is trusted only while a run lasts
+**Date:** 2026-10-07
+**Decision:** (1) `workflows/reputation-oracle` is a Chainlink CRE workflow in TypeScript: cron trigger, ScamSniffer's public address blacklist fetched on every node with identical consensus, one EVM read (`pending`) and one signed report to Monad testnet. It keeps no state: time selects which window of the sorted feed a run handles, and entries the registry already has are never rewritten. (2) `ReputationOracleReceiver` sits between the CRE forwarder and `ReputationRegistry` and is the registry's forwarder. It answers ERC-165, accepts reports only from workflows owned by one address, and refuses a report that names a protected contract. (3) The receiver listens to the production `KeystoneForwarder`. `simulate.sh --broadcast` points it at the `MockKeystoneForwarder` for the length of one run and restores it afterwards.
+**Rationale:** (2) The forwarder does not deliver to a contract without ERC-165 and delivers every workflow's reports, so the registry as deployed could not be a safe receiver. A receiver in front keeps the registry's address, the Render setting, the indexer and every entry as they are. The protected list is the answer to a poisoned feed: the feed is somebody else's data, and without it one bad line could make Baret block its own demo. (3) The mock forwarder verifies no signatures; a registry that trusts it permanently can be written by anyone, and the live API reads that registry before every verdict.
+**Alternatives:** redeploying the registry with ERC-165 — rejected for the last week, four places to update and every entry to rewrite; leaving the deploy key as the writer and showing a dry run only — rejected, the workflow would never have written to the contract the API reads.
+**Known limits:** not deployed to a DON (needs CRE Early Access; `cre whoami` shows deploy access not enabled). The simulator runs one node, so the consensus step is exercised but not across nodes. A full pass over the feed is 2,530 entries; the testnet run wrote one window of ten.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

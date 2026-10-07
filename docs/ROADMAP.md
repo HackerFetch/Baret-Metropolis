@@ -73,7 +73,7 @@ Submission closes **2026-10-14 06:59** (the time on the bounty page). The origin
 | 10-11 → 10-12 | **Submission**: README and ARCHITECTURE final, one "what we built, where the proof is" note per bounty, the demo video script, end-to-end QA with Meriç, fixes | all | recording the demo and pitch videos, the forms |
 | 10-13 | Buffer. Submit. | | "Community supporter" status checked on the platform ($5,000, no work) |
 
-- [ ] Chainlink CRE workflow
+- [x] Chainlink CRE workflow (2026-10-07: simulated with a real write on testnet, D-026; DON deployment waits for Early Access)
 - [ ] MetaMask Agent Wallet plugin
 - [ ] Qwen reviewer
 - [ ] KIMI explanation
