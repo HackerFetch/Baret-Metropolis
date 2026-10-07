@@ -1,0 +1,74 @@
+{
+  "name": "@baret/metamask-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Baret for the MetaMask Agent Wallet: every transaction an agent proposes on Monad is simulated and checked first, and a blocked one never reaches the wallet.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "oclif-plugin",
+    "metamask",
+    "agent-wallet",
+    "monad",
+    "baret"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "oclif": {
+    "bin": "mm",
+    "commands": "./dist/commands",
+    "topicSeparator": " "
+  },
+  "mm": {
+    "schemaVersion": 1,
+    "minCliVersion": "^7.0.0",
+    "capabilities": [
+      "wallet-read",
+      "wallet-submit"
+    ],
+    "commands": [
+      {
+        "id": "baret:check",
+        "capabilities": [
+          "wallet-read"
+        ],
+        "dataAccess": [
+          "accounts"
+        ],
+        "targetChains": [
+          10143,
+          143
+        ]
+      },
+      {
+        "id": "baret:send",
+        "capabilities": [
+          "wallet-read",
+          "wallet-submit"
+        ],
+        "dataAccess": [
+          "accounts"
+        ],
+        "targetChains": [
+          10143,
+          143
+        ]
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@metamask/agent-wallet": "^7.0.0"
+  },
+  "devDependencies": {
+    "@baret/guard": "workspace:*",
+    "@metamask/agent-wallet": "7.0.0",
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3"
+  }
+}

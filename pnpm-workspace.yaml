@@ -8,6 +8,8 @@ allowBuilds:
   esbuild: true
   # A dependency of the Dynamic wallet SDK; its script only checks versions.
   protobufjs: false
+  # Pulled in by the MetaMask Agent Wallet CLI (oclif plugin installs); nothing to build.
+  yarn: false
 minimumReleaseAgeExclude:
   - framer-motion@13.3.0
   - lucide-react@1.46.0
