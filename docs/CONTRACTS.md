@@ -113,7 +113,9 @@ function setForwarder(address forwarder) external;                              
 Severity 1 low … 4 critical. The server treats 3+ (or any flagged EOA) as a blocklist entry (`KNOWN_MALICIOUS_ADDRESS`) and a flagged contract below 3 as reported (`RISKY_CONTRACT_INTERACTION`).
 
 ### 3.2 Access Control
-Only the verified callback address forwarded by the CRE workflow (`onlyForwarder` modifier) can write — see `notes (4).txt`: "forward-contract pattern separates a safe local simulation from production authority." In development a local forward address is used; at deployment the real address is set and the state-setting callback is restricted to that address.
+Only the registry's `forwarder` can write (`onlyForwarder`). Since 2026-10-07 that address is `ReputationOracleReceiver` (section 3.5), not the deploy key: a report reaches the registry only through the Chainlink CRE forwarder and the receiver's checks, or as one entry written by the receiver's owner (`ownerReport`). The owner of the registry can still clear a wrong entry (`clearFlag`) and rotate the forwarder.
+
+`script/DeployDemoSites.s.sol` and `script/DeployNovaSwapDrainer.s.sol` call `registry.reportFlagged` as the deploy key; they ran before the receiver existed and would revert today. To add a demo entry now: `cast send <receiver> "ownerReport(address,uint8,string)" <target> <severity> <reason>`.
 
 ### 3.3 Events
 ```solidity
@@ -127,7 +129,31 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 | Network | Address | Forwarder (CRE) | Deploy date |
 |---|---|---|---|
-| Monad testnet (10143) | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) | `0x5aE13F1028144842f0384d09091067D6184F8197` (deployer, until the CRE forwarder exists) | 2026-10-02, block 67604757 |
+| Monad testnet (10143) | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) | [`0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d`](https://testnet.monadexplorer.com/address/0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d) (`ReputationOracleReceiver`, since 2026-10-07; the deploy key before that) | 2026-10-02, block 67604757 |
+
+### 3.5 `ReputationOracleReceiver.sol`: the door for the CRE workflow
+
+**Why it exists:** a CRE forwarder calls `supportsInterface` (ERC-165) for `IReceiver` before it delivers and marks the receiver invalid otherwise, and it delivers the reports of every workflow on the network. The registry has neither ERC-165 nor a way to tell workflows apart. Rather than redeploy the registry (new address on Render, in the indexer and in every doc, and every entry written again), the receiver sits in front of it (D-026).
+
+```solidity
+function onReport(bytes calldata metadata, bytes calldata report) external;      // CRE forwarder only; passes the report to the registry unchanged
+function ownerReport(address target, uint8 severity, string calldata reasonCode) external; // owner; one entry, for the demo entries
+function pending(address[] calldata candidates) external view returns (address[] memory);  // candidates not flagged yet and not protected
+function setForwarder(address forwarder) external;                                // owner
+function setWorkflowOwner(address workflowOwner) external;                        // owner; zero turns the check off
+function setProtected(address[] calldata targets, bool isProtected) external;     // owner
+function supportsInterface(bytes4 interfaceId) external pure returns (bool);      // IReceiver (0x805f2132) and ERC-165
+```
+
+Three checks before a report is written: the caller is the forwarder; the report's metadata names a workflow owned by `workflowOwner` (bytes 42 to 62 of `abi.encodePacked(bytes32 workflowId, bytes10 workflowName, address workflowOwner)`); no target is on the protected list, or the whole report reverts. The protected list holds the contracts Baret vouches for (`MONAD_TESTNET_KNOWN_CONTRACTS`), so a poisoned feed cannot turn the demo router or the vault factory into blocklist entries.
+
+| Network | Address | CRE forwarder | Workflow owner | Deploy date |
+|---|---|---|---|---|
+| Monad testnet (10143) | [`0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d`](https://testnet.monadexplorer.com/address/0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d) | `0xF8344CFd5c43616a4366C34E3EEE75af79a74482` (`KeystoneForwarder`) | `0x5aE13F1028144842f0384d09091067D6184F8197` | 2026-10-07, block 68851195 |
+
+The simulator's `MockKeystoneForwarder` on Monad testnet is `0xB9F79d863261869B234c481D1f9A7af84AeAd192`. It checks no signatures, so the receiver listens to it only while `workflows/simulate.sh --broadcast` runs. Both forwarder addresses are from Chainlink's forwarder directory and match `cre workflow supported-chains` for our account.
+
+First report through it: [`0xa1b97992…`](https://testnet.monadexplorer.com/tx/0xa1b9799281003c7a6d9113007540f31735033d6fba125fa20619395b16e359e8) (block 68851519), ten `ReputationFlagged` events, written by the `reputation-oracle` workflow in a broadcast simulation. How to run it: `workflows/README.md`.
 
 ---
 
@@ -142,6 +168,7 @@ Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the s
 - [x] `forge test -vv` — all unit + fuzz tests green (26 tests, 2026-10-01).
 - [x] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
 - [x] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
+- [x] `ReputationOracleReceiver` (13 tests, one fuzz): only the forwarder reports, another workflow owner is refused, a protected target stops the whole report, `pending` skips flagged, protected and zero, ERC-165 answers for `IReceiver`.
 - [ ] With Tenderly: the trace of a real "unlimited approve" and "payment to a flagged address" scenario is recorded (for the demo video).
 - [x] After deploying to testnet: live verification with `cast call`, the address tables (§2.6, §3.4) are filled in. Source verified on Monad's Sourcify (`forge verify-contract --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org`).
 

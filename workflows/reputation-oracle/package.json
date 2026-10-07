@@ -1,0 +1,19 @@
+{
+  "name": "@baret/reputation-oracle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chainlink CRE workflow: an external threat feed, checked against the chain, written to Baret's ReputationRegistry on Monad.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "1.23.0",
+    "viem": "2.56.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3"
+  }
+}

@@ -39,6 +39,9 @@
     },
     {
       "path": "./packages/wallet-core"
+    },
+    {
+      "path": "./workflows/reputation-oracle"
     }
   ]
 }

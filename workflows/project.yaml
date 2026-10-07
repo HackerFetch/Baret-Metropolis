@@ -1,0 +1,12 @@
+# Chainlink CRE project settings, shared by every workflow in this folder.
+# The RPC URL is read from the environment: put MONAD_TESTNET_RPC_URL in
+# workflows/.env (not committed) or export it before running the CLI.
+staging-settings:
+  rpcs:
+    - chain-name: monad-testnet
+      url: ${MONAD_TESTNET_RPC_URL}
+
+production-settings:
+  rpcs:
+    - chain-name: monad-testnet
+      url: ${MONAD_TESTNET_RPC_URL}
