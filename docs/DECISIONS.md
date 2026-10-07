@@ -178,6 +178,13 @@
 **Known limits:** not deployed to a DON (needs CRE Early Access; `cre whoami` shows deploy access not enabled). The simulator runs one node, so the consensus step is exercised but not across nodes. A full pass over the feed is 2,530 entries; the testnet run wrote one window of ten.
 **Status:** ✅ Final
 
+### D-027 — The MetaMask Agent Wallet plugin is a gate in front of the wallet, shown on testnet
+**Date:** 2026-10-07
+**Decision:** `packages/metamask-plugin` adds `mm baret check` and `mm baret send` to the Agent Wallet CLI. `send` calls the wallet's executor only after Baret's verdict: Safe goes on, Caution goes on only with `--accept-caution`, Blocked and "no verdict" never do. The plugin ships with no runtime dependencies and is installed from a packed tarball. The demonstration stays on Monad testnet: the three refusals and the hand-over of a Safe transaction are shown with a real Agent Wallet; a confirmed send is not.
+**Rationale:** The bounty asks for a new capability through the plugin architecture and forbids going around the wallet's policy; a pre-trade check that can only remove proposals fits both. The Agent Wallet (7.0.0, server wallet) lists chain 10143 but its own `mm wallet send-transaction` fails there with `Invalid chainId`, and it sends on chain 143 only; the live Baret server analyses testnet only. Opening mainnet on the server means a dashboard change, real MON and half a day, for one extra line in the demo (owner decision: no).
+**Found on the way:** installing the plugin from its workspace folder links it, the commands then load the workspace's copy of `@metamask/agent-wallet`, and with two copies every `mm` command fails with `window.addEventListener is not a function`. Hence the tarball. The executor takes `value` as a 0x quantity, not decimal wei.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

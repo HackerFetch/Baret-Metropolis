@@ -42,6 +42,9 @@
     },
     {
       "path": "./workflows/reputation-oracle"
+    },
+    {
+      "path": "./packages/metamask-plugin"
     }
   ]
 }

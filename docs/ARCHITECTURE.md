@@ -277,7 +277,13 @@ An agent's wallet that cannot sign what Baret has not cleared (built 2026-10-05,
 - CLI `baret`: `address`, `analyze`, `submit`, `pay`, `wallet create`, `policy list`. Settings come from the environment only (`BARET_API_URL`, `MONAD_TESTNET_RPC_URL`, `BARET_POLICY_TEMPLATE`, `BARET_ALLOW_CAUTION`, and `DYNAMIC_ENVIRONMENT_ID` + `DYNAMIC_AUTH_TOKEN` + `BARET_AGENT_WALLET_PASSWORD`, or `BARET_AGENT_PRIVATE_KEY`). Exit codes: `0` cleared (and sent), `1` not cleared and nothing signed, `2` error.
 
 ### 8.7 `packages/metamask-plugin`
-A separate package that wraps Baret's guard/policy engine in the MetaMask Agent Wallet plugin manifest format. Limited to read-only + tx-request-proposing permissions; it cannot bypass the agent-wallet policy engine (a condition of the bounty).
+A plugin for the MetaMask Agent Wallet CLI (`mm`, `@metamask/agent-wallet` 7.x), built on its `PluginCommand` base class and installed with `mm plugins install` (D-027).
+
+- `mm baret check <to>` (`wallet-read`): builds the transaction from the active wallet, asks `/v1/analyze`, returns the decision, the finding codes and whether `send` would go on.
+- `mm baret send <to>` (`wallet-read`, `wallet-submit`): the same check, then `ctx.walletExecutor` only behind an open gate. Blocked never reaches the wallet; Caution needs `--accept-caution`; no answer, a non-2xx status, a malformed answer or an expired verdict is `BARET_NO_VERDICT` and nothing is sent.
+- The manifest (`package.json#mm`) declares capabilities per command and `targetChains: [10143, 143]`. The plugin has no access to the session, the recovery phrase or the wallet's policy, and what it passes is still judged by MetaMask's own policy and approval: it can only remove proposals.
+- No runtime dependencies: `fetch` and a hand-written check of the answer (`src/guard.ts`, unit tested, its request checked against `analyzeRequestSchema`). Installed from a tarball (`pack:plugin`), never from the workspace folder.
+- Limit: the Agent Wallet lists Monad testnet but sends only on Monad (143), and the live server analyses testnet only, so a sent transaction is not demonstrated; the gates are (`packages/metamask-plugin/README.md`).
 
 ---
 
