@@ -2,6 +2,7 @@
 staging-settings:
   user-workflow:
     workflow-name: "baret-reputation-oracle-staging"
+    deployment-registry: "private"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.staging.json"
@@ -10,6 +11,7 @@ staging-settings:
 production-settings:
   user-workflow:
     workflow-name: "baret-reputation-oracle"
+    deployment-registry: "private"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.production.json"

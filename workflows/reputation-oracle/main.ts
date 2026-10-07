@@ -7,7 +7,7 @@ import {
   getNetwork,
   HTTPClient,
   handler,
-  LATEST_BLOCK_NUMBER,
+  LAST_FINALIZED_BLOCK_NUMBER,
   type NodeRuntime,
   ok,
   prepareReportRequest,
@@ -39,6 +39,9 @@ import {
  * Nothing is written when the feed cannot be read or does not look like the
  * feed: a blocklist is only extended on data every node agrees on.
  */
+
+/** `ReceiverContractExecutionStatus.REVERTED` in the EVM capability's reply. */
+const RECEIVER_REVERTED = 1;
 
 type FeedWindow = {
   total: number;
@@ -101,7 +104,7 @@ const onCronTrigger = (runtime: Runtime<Config>): Result => {
         to: config.receiverAddress,
         data: encodePendingCall(feed.addresses),
       }),
-      blockNumber: LATEST_BLOCK_NUMBER,
+      blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
     })
     .result();
   const targets = decodePendingResult(bytesToHex(reply.data));
@@ -118,6 +121,11 @@ const onCronTrigger = (runtime: Runtime<Config>): Result => {
     .result();
   if (write.txStatus !== TxStatus.SUCCESS) {
     throw new Error(`registry write failed: ${write.errorMessage ?? `status ${write.txStatus}`}`);
+  }
+
+  // The forwarder's transaction can succeed while the receiver refused the report.
+  if (write.receiverContractExecutionStatus === RECEIVER_REVERTED) {
+    throw new Error("registry write failed: the receiver refused the report");
   }
 
   const txHash = write.txHash && write.txHash.length > 0 ? bytesToHex(write.txHash) : "";
