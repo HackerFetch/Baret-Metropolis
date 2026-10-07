@@ -2,7 +2,7 @@
 
 > This file is the single authority on "what we target and why / what we do not target". When a scope debate comes up, check here first. The Status columns must be updated as work progresses.
 
-Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulled from the platform as of 2026-09-13)
+Last updated: 2026-10-07 · Source: `Bounties.txt` (tracks & bounties list pulled from the platform as of 2026-09-13)
 
 ---
 
@@ -29,7 +29,7 @@ Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulle
 | 3 | Best Use of Dynamic | Dynamic | $5,000 | All tracks | Autonomous/server wallet + delegated permission model inside `agent-kit` — NOT login-only | `packages/agent-kit` | ✅ Done — the agent's wallet is a Dynamic server wallet (MPC, two of two). It is the PaymentGuard vault's authorised agent on testnet and has paid a merchant through `baret pay`, with every transaction cleared by Baret before Dynamic signs (D-019, D-022). Left for the submission: show it on `/agents` and in the demo video |
 | 4 | Best Mera-Powered UX on Monad | Monad Foundation | $2,500 | All tracks | `apps/wallet` is entirely a Mera passkey account layer — no seed phrase | `apps/wallet` | 🔶 In progress — `packages/wallet-core`: the account is a Mera passkey account and every signature goes through Baret; checked on testnet (D-023). Left: wire it into the wallet screens |
 | 5 | Mera: One Passkey, Many Keys | Monad Foundation | $2,500 | All tracks | PaymentGuard's agent signer comes from a Mera PRF-derived sub-key (non-wallet, creative use) | `apps/wallet` + `contracts/PaymentGuard.sol` | 🔶 In progress — agent keys are derived from the passkey's PRF output on their own BIP-44 branch and authorised on the owner's vault; a derived key paid a merchant and was revoked on testnet (D-023). Left: the delegation screen |
-| 6 | Best Integration of Cleanverse | Cleanverse | $2,000 | Trust/Identity/AI | Compliance detector: a transfer that fails CVI verification never goes through (the "remove it and the product breaks" test) | `risk/detectors/compliance.ts` | ⬜ Not started |
+| 6 | Best Integration of Cleanverse | Cleanverse | $2,000 | Trust/Identity/AI | Compliance detector: a transfer that fails CVI verification never goes through (the "remove it and the product breaks" test) | `risk/detectors/compliance.ts` | 🔶 Detector written and tested against a fake source; the real source waits for the sponsor's CVI/CVA contract details (D-025) |
 | 7 | Best Use of Envio | Envio | $1,000 | All tracks | PaymentGuard + ReputationRegistry events are indexed with HyperIndex and feed the audit dashboard | `indexer/` | ✅ Done — a hosted HyperIndex v3 indexer follows every PaymentGuard vault (the factory registers new ones), each agent payment and the reputation registry on Monad testnet; the server serves it at `/v1/audit/*` for the wallet's history and delegation screens (D-024). Verified against the full on-chain history. Left for the submission: the history screens reading it |
 | 8 | Best Projects using Alchemy | Alchemy | $1,000 credits | All tracks | RPC + `debug_traceCall` + Smart Wallets SDK (gas sponsorship) + webhook monitoring + Alchemy CLI in the dev workflow | `apps/server/src/infra/`, agent gas sponsorship | 🔶 In progress — every read goes through the Alchemy Monad RPC (batched); traces through the public RPC because Alchemy's free tier has no `debug_traceCall` |
 | 9 | Best Community Team Project | Monad Foundation | $5,000 | All tracks | No extra work — verify "community supporter" status on the platform | — | ⬜ Not verified |
@@ -42,10 +42,10 @@ Last updated: 2026-09-13 · Source: `Bounties.txt` (tracks & bounties list pulle
 
 | # | Bounty | Sponsor | Amount | Track | How to win | Responsible component | Status |
 |---|---|---|---|---|---|---|---|
-| 10 | Best workflow with CRE | Chainlink | $3,000 | All tracks | "Reputation oracle" workflow: external threat-intelligence API → CRE → verified write to `ReputationRegistry.sol`. Even a simulation recording can be acceptable at a hackathon | `workflows/reputation-oracle`, `contracts/ReputationRegistry.sol` | ⬜ Not started |
-| 11 | Best Builds with Qwen 3.8 Max | Alibaba Cloud | $5,000 credits | Trust/Identity/AI | An "adversarial CFO agent" layer in `agent-kit` — before the agent signs, Qwen evaluates the pending tx against policy+context and can veto it | `packages/agent-kit` (reviewer hook) | ⬜ Not started |
-| 12 | Best Agent Wallet Plugin | Metamask | $2,500 | Onchain Finance & Trading | The Baret guard/policy engine is packaged as a MetaMask Agent Wallet plugin manifest | `packages/metamask-plugin` | ⬜ Not started |
-| 13 | Best Builds Powered by KIMI | Kimi (Moonshot AI) | $3,000 credits | All tracks | LLM layer that explains risk findings in plain language (`baret_explain` MCP tool / popup text) | `apps/server/src/mcp/`, extension popup | ⬜ Not started |
+| 10 | Best workflow with CRE | Chainlink | $3,000 | All tracks | "Reputation oracle" workflow: external threat-intelligence API → CRE → verified write to `ReputationRegistry.sol`. Even a simulation recording can be acceptable at a hackathon | `workflows/reputation-oracle`, `contracts/ReputationRegistry.sol` | 🔶 Planned for 10-07 → 10-08 (D-025). The registry already has the `onReport` receiver and a forwarder role; the workflow is not written |
+| 11 | Best Builds with Qwen 3.8 Max | Alibaba Cloud | $5,000 credits | Trust/Identity/AI | An "adversarial CFO agent" layer in `agent-kit` — before the agent signs, Qwen evaluates the pending tx against policy+context and can veto it | `packages/agent-kit` (reviewer hook) | 🔶 Planned for 10-09 → 10-10 (D-025), needs a Model Studio key |
+| 12 | Best Agent Wallet Plugin | Metamask | $2,500 | Onchain Finance & Trading | The Baret guard/policy engine is packaged as a MetaMask Agent Wallet plugin manifest | `packages/metamask-plugin` | 🔶 Planned for 10-08 → 10-09 (D-025), needs the plugin SDK docs |
+| 13 | Best Builds Powered by KIMI | Kimi (Moonshot AI) | $3,000 credits | All tracks | LLM layer that explains risk findings in plain language (`baret_explain` MCP tool / popup text) | `apps/server/src/mcp/`, extension popup | 🔶 Planned for 10-09 → 10-10 as `POST /v1/explain` (D-025), needs a Moonshot key |
 | 14 | Best Analytics / Risk Tool | Perpl | $3,000 | Onchain Finance & Trading | Perpl position-liquidation risk panel in the audit dashboard (optional data source) | `apps/server` audit module | ⬜ Not started |
 
 ---
