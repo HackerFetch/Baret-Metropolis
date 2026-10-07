@@ -20,3 +20,10 @@ jobs:
         run: |
           curl --silent --show-error --fail --max-time 120 \
             https://baret-monad-api.onrender.com/health/ready
+      # The hosted indexer is deleted after seven days without a request.
+      # This goes through the API, so it also shows the audit trail is up.
+      - name: Ask for the latest audit entries
+        continue-on-error: true
+        run: |
+          curl --silent --show-error --fail --max-time 60 \
+            "https://baret-monad-api.onrender.com/v1/audit/recent?limit=1"

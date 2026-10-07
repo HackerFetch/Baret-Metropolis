@@ -18,6 +18,7 @@ This repository and this document set are meant for **live** tracking. They were
 | Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Frontend audit (2026-10-04, branch `frontend-audit`): the landing is prerendered (LCP on a throttled phone 2.74 s to 1.88 s), every route has its own head and preloads, no console warnings on any surface, WCAG AA contrast in both themes and all six demo palettes, fail-closed gaps closed (locked request windows, permits, reachability), copy that claims nothing the product cannot back. Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
 | Server and contracts | Server: 31 tests, all 38 finding codes produced by a scenario, traced live against Monad testnet. Contracts: 26 forge tests. Nansen/Cleanverse clients, Envio, CRE, agent-kit not started |
 | Contract deploy | Monad testnet: PaymentGuard, ReputationRegistry and the demo contracts of all six showcase sites, source verified — `docs/CONTRACTS.md` §2.6, §3.4, §7 |
+| Indexer | Envio HyperIndex, hosted: vaults, agent payments and the registry's history, served at `/v1/audit/*` (`docs/ARCHITECTURE.md` §8.8) |
 | Hosting / CI | GitHub Actions CI (checks, build, contracts); Vercel for showcase + wallet, Render for the API — config written, projects not created yet (`docs/DEPLOYMENT.md`) |
 | Week | 3 / 6 (backend is a week behind: Week 2 core done, Week 3 integrations next) |
 
