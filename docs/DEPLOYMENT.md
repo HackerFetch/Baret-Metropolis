@@ -77,9 +77,12 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --private-k
 Put the addresses into `docs/CONTRACTS.md` §2.6 / §3.4 and `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS` / `MONAD_TESTNET_KNOWN_CONTRACTS` on Render. Contracts are not deployed from CI on purpose: a deployer key in GitHub secrets is a bigger risk than a manual step we run twice.
 
 ### 3.6 Envio (the indexer)
-1. envio.dev → sign in with GitHub → **API Tokens** → create one. It is `ENVIO_API_TOKEN` (HyperSync access): for local runs put it in `indexer/.env`, never in the repo.
-2. **Hosted Service → Add Indexer** → repository `HackerFetch/Baret-Metropolis`, branch `main`, **root directory `indexer`**, config file `config.yaml`. Add `ENVIO_API_TOKEN` to its environment if the service asks.
-3. When it has synced, copy its GraphQL endpoint into `ENVIO_ENDPOINT` on Render (`baret-monad-api`), "Save, rebuild, and deploy". `/health/ready` then shows `"indexer": true`, and `/v1/audit/recent` answers with the payments already made on testnet.
+1. envio.dev → sign in with GitHub → **API Tokens** → create a **HyperSync** token. It is `ENVIO_API_TOKEN`: for local runs put it in `indexer/.env`, never in the repo.
+2. **Add Indexer** → repository `HackerFetch/Baret-Metropolis`, branch `main`, **root directory `indexer`**, config file `config.yaml`. Add `ENVIO_API_TOKEN` to its environment if the service asks.
+3. The hosted service deploys on a push to that branch: nothing happens until the next commit lands on `main` (the page shows "Deployments 0/3" until then). After that, every merge that reaches `main` redeploys it; the free plan keeps three deployments.
+4. When it has synced, copy its GraphQL endpoint into `ENVIO_ENDPOINT` on Render (`baret-monad-api`), "Save, rebuild, and deploy". `/health/ready` then shows `"indexer": true`, and `/v1/audit/recent` answers with the payments already made on testnet.
+
+Checked before the first deployment (2026-10-07), with `ENVIO_API_TOKEN` set: `pnpm --filter @baret/indexer test:chain` passes on the real blocks of the wallet check, and a replay of every block since the contracts were deployed gives 21 events: two vaults (the demo vault with the Dynamic agent, 5 USDC in and 0.5 paid in two payments; the wallet-check vault with its owner, 1 USDC in, 0.2 paid, agent revoked), four payments at their blocks, and three registry entries at severity 4.
 
 ### 3.5 What runs on its own
 - **Keep-warm** (`.github/workflows/keep-warm.yml`): asks `/health/ready` every 10 minutes so the free Render instance does not sleep (a sleeping instance needs close to a minute, the demo sites wait 15 seconds).
@@ -111,5 +114,5 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | GitHub required checks | ⬜ After the first green run |
 | Render service | ✅ `baret-monad-api` live, traced analysis verified 2026-10-02 |
 | Vercel projects | ✅ `baret-metropolis` (showcase, main domain, canonical + sitemap verified) and `baret-wallet` live, `/api` rewrite verified 2026-10-02 |
-| Envio indexer (hosted) | ⬜ Project written and type-checked; needs an API token and the hosted deployment |
+| Envio indexer (hosted) | 🔶 Handlers verified against the full on-chain history (21 events); indexer created on Envio, first deployment starts with this commit; `ENVIO_ENDPOINT` on Render still to set |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |

@@ -10,8 +10,9 @@ import { describe, expect, it } from "vitest";
  *   68470154  Deposited             68470166  Paid
  *   68470158  AgentSignerSet        68470171  AgentSignerRevoked
  *
- * Needs ENVIO_API_TOKEN (HyperSync) and the network, so it is not part of
- * the workspace test run: `pnpm --filter @baret/indexer test:chain`.
+ * Needs ENVIO_API_TOKEN (a HyperSync token) and the network, so it is not
+ * part of the workspace test run: `pnpm --filter @baret/indexer test:chain`.
+ * Last run: 2026-10-07, passing.
  */
 
 const VAULT = "0xe0b411e9f1f48194a9aa426b2f955e16b4b8a8bd";
