@@ -46,3 +46,6 @@ assets-raw/
 # Chainlink CRE CLI build leftovers
 .cre_build_tmp.js
 *.wasm
+
+# MetaMask plugin tarball staging
+packages/metamask-plugin/pack/

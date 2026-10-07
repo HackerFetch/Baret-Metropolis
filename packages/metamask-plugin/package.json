@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pack:plugin": "pnpm build && node scripts/pack.mjs"
   },
   "oclif": {
     "bin": "mm",
