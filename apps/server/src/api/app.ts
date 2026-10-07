@@ -4,6 +4,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { AnalyzeDeps } from "../application/analyze.js";
 import { analyzeRoutes } from "./routes/analyze.js";
 import { auditRoutes } from "./routes/audit.js";
+import { explainRoutes } from "./routes/explain.js";
 import { healthRoutes } from "./routes/health.js";
 
 export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
@@ -32,5 +33,6 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   await app.register(healthRoutes, deps);
   await app.register(analyzeRoutes, deps);
   await app.register(auditRoutes, deps);
+  await app.register(explainRoutes, deps);
   return app;
 }

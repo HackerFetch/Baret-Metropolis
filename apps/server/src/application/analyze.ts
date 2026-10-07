@@ -28,6 +28,7 @@ import { PROXY_IMPLEMENTATION_SLOTS } from "../simulation/abi.js";
 import { decodeTransaction, type NormalizedTx } from "../simulation/decode.js";
 import { type CallTrace, parseCallTrace } from "../simulation/trace.js";
 import type { Sources } from "../sources/types.js";
+import type { Explainer } from "./explain.js";
 
 export const ANALYSIS_VERSION = "1";
 /** Bounds the reads one request can cause. */
@@ -45,6 +46,8 @@ export interface AnalyzeDeps {
   rpcFor: (network: NetworkConfig) => MonadRpc;
   sourcesFor: (network: NetworkConfig) => Sources;
   now?: () => number;
+  /** Writes /v1/explain's words. Absent or null: that route answers 503. */
+  explainer?: Explainer | null;
 }
 
 async function lookup<T>(

@@ -111,9 +111,15 @@ importers:
 
   apps/server:
     dependencies:
+      '@baret/content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@baret/guard':
         specifier: workspace:*
         version: link:../../packages/guard
+      '@baret/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@fastify/cors':
         specifier: 11.3.0
         version: 11.3.0

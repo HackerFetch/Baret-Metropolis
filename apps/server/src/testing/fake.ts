@@ -58,6 +58,7 @@ export const config: AppConfig = {
   nansenMode: "funder",
   cleanverse: null,
   envioEndpoint: null,
+  explain: null,
 };
 
 /** An in-memory chain. Everything defaults to an empty, healthy state. */

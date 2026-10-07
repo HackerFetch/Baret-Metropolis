@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./analyze": "./src/analyze.ts",
     "./chains": "./src/chains.ts",
+    "./explain": "./src/explain.ts",
     "./findings": "./src/findings.ts",
     "./guard": "./src/guard.ts",
     "./policy": "./src/policy.ts",

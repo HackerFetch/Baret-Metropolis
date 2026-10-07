@@ -72,6 +72,11 @@ const envSchema = z.object({
 
   /** The GraphQL endpoint of the deployed Envio indexer (indexer/). */
   ENVIO_ENDPOINT: z.string().url().optional(),
+
+  /** KIMI (Moonshot) writes the plain-language explanations of /v1/explain. */
+  KIMI_API_KEY: z.string().optional(),
+  KIMI_BASE_URL: z.string().url().optional(),
+  KIMI_MODEL: z.string().optional(),
 });
 
 export interface NetworkConfig {
@@ -107,6 +112,8 @@ export interface AppConfig {
   cleanverse: { apiKey: string; apiUrl: string } | null;
   /** Null: the audit routes answer 503. */
   envioEndpoint: string | null;
+  /** Null: /v1/explain answers 503. */
+  explain: { apiKey: string; baseUrl: string | null; model: string | null } | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -155,6 +162,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     nansenApiKey: e.NANSEN_API_KEY || null,
     nansenMode: e.NANSEN_MODE,
     envioEndpoint: e.ENVIO_ENDPOINT ?? null,
+    explain: e.KIMI_API_KEY
+      ? { apiKey: e.KIMI_API_KEY, baseUrl: e.KIMI_BASE_URL ?? null, model: e.KIMI_MODEL ?? null }
+      : null,
     cleanverse:
       e.CLEANVERSE_API_KEY && e.CLEANVERSE_API_URL
         ? { apiKey: e.CLEANVERSE_API_KEY, apiUrl: e.CLEANVERSE_API_URL }

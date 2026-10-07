@@ -1,5 +1,6 @@
 import type { MonadNetwork } from "@baret/guard";
 import { buildApp } from "./api/app.js";
+import { kimiExplainer } from "./application/explain.js";
 import { loadConfig } from "./config/env.js";
 import { type MonadRpc, ViemMonadRpc } from "./infra/rpc.js";
 import { createSources } from "./sources/index.js";
@@ -11,6 +12,7 @@ const sources = new Map<MonadNetwork, Sources>();
 
 const app = await buildApp({
   config,
+  explainer: config.explain ? kimiExplainer(config.explain) : null,
   rpcFor: (n) => {
     let rpc = rpcs.get(n.network);
     if (!rpc) {

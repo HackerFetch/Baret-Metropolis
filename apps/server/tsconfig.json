@@ -21,6 +21,12 @@
     },
     {
       "path": "../../packages/agent-kit"
+    },
+    {
+      "path": "../../packages/llm"
+    },
+    {
+      "path": "../../packages/content"
     }
   ]
 }
