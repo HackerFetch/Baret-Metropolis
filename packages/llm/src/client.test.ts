@@ -30,7 +30,7 @@ describe("LlmClient.json", () => {
 
     const [url, init] = vi.mocked(doFetch).mock.calls[0] ?? [];
     expect(url).toBe("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions");
-    expect((init?.headers as Record<string, string>).authorization).toBe("Bearer test-key");
+    expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-key");
     expect(JSON.parse(String(init?.body))).toMatchObject({
       model: "qwen3.8-max",
       response_format: { type: "json_object" },
