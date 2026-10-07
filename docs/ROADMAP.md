@@ -75,8 +75,8 @@ Submission closes **2026-10-14 06:59** (the time on the bounty page). The origin
 
 - [x] Chainlink CRE workflow (2026-10-07: simulated with a real write on testnet, D-026; DON deployment waits for Early Access)
 - [x] MetaMask Agent Wallet plugin (2026-10-07: the gates checked with a real Agent Wallet on testnet, D-027; the wallet itself cannot send on testnet)
-- [ ] Qwen reviewer
-- [ ] KIMI explanation
+- [x] Qwen reviewer (2026-10-08: `agent-kit` reviewer with veto, D-028)
+- [x] KIMI explanation (2026-10-08: `POST /v1/explain`, D-028)
 - [ ] Cleanverse compliance (blocked on sponsor information)
 - [ ] Nansen labels live (blocked on credits)
 - [ ] README/ARCHITECTURE finalized (in sync with code)

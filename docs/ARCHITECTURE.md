@@ -240,12 +240,13 @@ The entire analysis engine lives here. Endpoints:
 | POST | `/v1/analyze/stream` | SSE result stream |
 | POST | `/v1/replay` | Re-simulation |
 | GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-backed) |
+| POST | `/v1/explain` | A verdict in plain language (KIMI) |
 | GET/POST | `/mcp/tools`, `/mcp/call` | AI agent tools |
 | GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
 
-Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8). Batch, stream, replay, MCP and the demo paywall are not built.
+Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8), `/v1/explain` (below). Batch, stream, replay, MCP and the demo paywall are not built.
 
-MCP tools: `baret_analyze`, `baret_health`, `baret_list_profiles`, `baret_explain` (LLM-backed plain-language explanation — KIMI/Qwen).
+**`POST /v1/explain`** (D-028). Body `{ verdict, language? }`, where `verdict` is a `/v1/analyze` answer and `language` is `en` (default) or `tr`; answer `{ decision, explanation: { headline, summary, points[], advice }, language, model, requestId }` (`explainRequestSchema` / `explainResponseSchema` in `@baret/guard`). KIMI (Moonshot, `kimi-k3`) writes the four fields from the verdict's facts and from the sentences `@baret/content` already holds for each finding code, so the model rephrases Baret's wording instead of inventing its own. Three things keep it honest: `decision` is copied from the verdict, never taken from the model; the model's answer must match the schema exactly (an extra field such as a decision of its own is refused); and no key, an error, a timeout or an answer off the schema is `503 explain_unavailable`, so the client keeps the findings it shows today. `/health/ready` reports `configured.explain`.
 
 ### 8.2 `apps/wallet` and `packages/wallet-core`
 `apps/wallet` is the screens (wallet-ui store, today on sample data). `packages/wallet-core` is everything behind them, with no UI (D-023):
@@ -274,7 +275,10 @@ An agent's wallet that cannot sign what Baret has not cleared (built 2026-10-05,
 
 - `AgentWallet({ signer, baretUrl, rpcUrl, policyTemplate | policy, allowCaution? })`: `evaluate(call)`, `guardedSign(call)`, `guardedSubmit(call)`, `pay({ vault, merchant, amount, reference })` (a `PaymentGuard.pay`). Safe is signed; Blocked, an unreachable server or an answer off the contract throws (`GuardBlockedError`, `GuardUnreachableError`) and the signer never sees the transaction. Caution is not signed unless `allowCaution` is set: a Caution is for a person to read.
 - Signers (`AgentSigner`): `dynamicSigner` / `createDynamicWallet` — a Dynamic server wallet (MPC, two of two; the local share lives in one owner-only file), per D-019; `localSigner(privateKey)` for tests and local runs.
-- CLI `baret`: `address`, `analyze`, `submit`, `pay`, `wallet create`, `policy list`. Settings come from the environment only (`BARET_API_URL`, `MONAD_TESTNET_RPC_URL`, `BARET_POLICY_TEMPLATE`, `BARET_ALLOW_CAUTION`, and `DYNAMIC_ENVIRONMENT_ID` + `DYNAMIC_AUTH_TOKEN` + `BARET_AGENT_WALLET_PASSWORD`, or `BARET_AGENT_PRIVATE_KEY`). Exit codes: `0` cleared (and sent), `1` not cleared and nothing signed, `2` error.
+- Reviewer (D-028, optional): `AgentWallet({ reviewer })` adds a second check between Baret's verdict and the signature. `guardedSign(call, { intent })` hands the reviewer the intent the agent stated and what the call would do according to Baret's simulation (its own balance changes, the approvals, the findings); the reviewer answers `approve` or `veto` with the mismatches. `qwenReviewer({ apiKey })` is Qwen (`qwen3.8-max`, Alibaba Cloud Model Studio) with an adversarial prompt. It can only take away: it is asked only about calls Baret cleared, and a missing intent, a failed or slow model, or an answer off the schema is a veto (`ReviewerVetoError`, nothing signed).
+- CLI `baret`: `address`, `analyze`, `submit`, `pay`, `wallet create`, `policy list`. `submit` and `pay` take `--intent`; `QWEN_API_KEY` in the environment turns the reviewer on. Settings come from the environment only (`BARET_API_URL`, `MONAD_TESTNET_RPC_URL`, `BARET_POLICY_TEMPLATE`, `BARET_ALLOW_CAUTION`, and `DYNAMIC_ENVIRONMENT_ID` + `DYNAMIC_AUTH_TOKEN` + `BARET_AGENT_WALLET_PASSWORD`, or `BARET_AGENT_PRIVATE_KEY`). Exit codes: `0` cleared (and sent), `1` not cleared and nothing signed, `2` error.
+
+`packages/llm` is the one model client both uses share: `LlmClient.json({ system, user, schema })` posts an OpenAI-format chat completion to the configured provider (`QWEN`, `KIMI`, or any compatible endpoint) and returns the answer only after it passes a zod schema; everything else is `LlmUnavailableError`.
 
 ### 8.7 `packages/metamask-plugin`
 A plugin for the MetaMask Agent Wallet CLI (`mm`, `@metamask/agent-wallet` 7.x), built on its `PluginCommand` base class and installed with `mm plugins install` (D-027).
@@ -329,7 +333,9 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `NANSEN_API_KEY` / `NANSEN_MODE` | For the trust-level rule; adds to the blocklist | `sources/nansen.ts` (D-016, D-017). `funder` (default): `profiler/address/first-funder`, 1 credit per wallet. `labels`: `profiler/address/labels`, 100 credits. Unset: only `minNansenTrustLevel` above `new` fails closed |
 | `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
 | `ENVIO_ENDPOINT` | For `/v1/audit/*` | GraphQL endpoint of the deployed indexer |
-| `X402_*`, `DYNAMIC_ENVIRONMENT_ID`, `MERA_*`, `QWEN_API_KEY`, `KIMI_API_KEY` | Later | Added when their module is built |
+| `KIMI_API_KEY` | For `/v1/explain` | Moonshot platform key; without it the route answers 503. Optional `KIMI_BASE_URL`, `KIMI_MODEL` (defaults: `https://api.moonshot.ai/v1`, `kimi-k3`) |
+| `QWEN_API_KEY` | agent-kit only, not the server | Alibaba Cloud Model Studio key; turns the reviewer on in the `baret` CLI. Optional `QWEN_BASE_URL`, `QWEN_MODEL` (defaults: the international `compatible-mode/v1` endpoint, `qwen3.8-max`) |
+| `X402_*`, `MERA_*` | Later | Added when their module is built |
 
 Contracts deploy (`contracts/script/Deploy.s.sol`): `BARET_OWNER`, `BARET_CRE_FORWARDER`, `MONAD_TESTNET_USDC_ADDRESS`, deployer key passed on the command line, never stored.
 

@@ -185,6 +185,13 @@
 **Found on the way:** installing the plugin from its workspace folder links it, the commands then load the workspace's copy of `@metamask/agent-wallet`, and with two copies every `mm` command fails with `window.addEventListener is not a function`. Hence the tarball. The executor takes `value` as a 0x quantity, not decimal wei.
 **Status:** ✅ Final
 
+### D-028 — Two models, two narrow jobs, neither of them the decision
+**Date:** 2026-10-08
+**Decision:** One OpenAI-compatible client (`packages/llm`) with two uses. (1) Qwen (`qwen3.8-max`) is an optional reviewer in `agent-kit`: after Baret clears a call, it compares the call's simulated effects with the intent the agent stated and can veto. (2) KIMI (`kimi-k3`) writes `POST /v1/explain`: a verdict's findings in plain language, in English or Turkish, built on the sentences `@baret/content` holds for each code. Neither model can make a verdict more permissive: the reviewer only vetoes and is never asked about a call Baret blocked; the explain route copies `decision` from the verdict. A model that does not answer, or answers off its schema, is a veto in one place and a 503 in the other.
+**Rationale:** Baret's verdict is deterministic and has to stay that way: the same transaction, the same rules, the same answer, with a finding code for every reason. What it cannot know is what the agent meant, and what it does not do is talk like a person; those are the two places a language model adds something. Putting the model after the engine, with veto-only or words-only authority, keeps prompt injection (a token named "ignore previous instructions") from ever becoming a signature. One client for both because both providers speak the same format, and a second provider is then a configuration change.
+**Alternatives:** letting a model score risk inside the engine — rejected, a verdict nobody can reproduce; a single provider for both jobs — rejected, each sponsor's model gets the job it suits and the client makes the split free; an MCP tool `baret_explain` (the original plan) — replaced by the HTTP route, which the screens can call directly.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
