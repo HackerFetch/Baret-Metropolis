@@ -231,6 +231,15 @@
 **Checked 2026-10-09** with the changed engine against Monad testnet: OrbitYield's silent pool and LaunchPad's proxy sale answer Blocked, every honest scenario still answers Safe, and the other attacks are unchanged (18 of 20 through a local server on the public RPC; the two Cleanverse scenarios need more reads than that RPC allows). After the deploy, `verify:demo` agreed on 20 of 20 against the live API at commit `279bb3d`.
 **Status:** ✅ Final
 
+### D-034 — A CompliantPaymentGuard moves a Cleanverse asset by allowance, so it needs no credential of its own
+**Date:** 2026-10-09
+**Decision:** (1) The Cleanverse contract side is a new, small contract, `CompliantPaymentGuard`, not a `PaymentGuard` holding aUSDC. The owner keeps the asset and approves the guard; the agent's `pay` checks the A-Pass of payer and payee on-chain (credential, active, the owner's minimum tier) and Cleanverse's `canTransfer`, then calls `transferFrom(owner, merchant, amount)`. (2) Refusals are typed errors that name the party and the reason; a settlement emits both credentials. (3) The server decodes `NotVerified` from the simulation and reports `COMPLIANCE_NO_CREDENTIAL` with the party before the agent signs. (4) The use case entered for the prize is Travel Rule-compliant agent payments.
+**Rationale:** A vault that holds aUSDC is itself a party to the transfer and would need an A-Pass, which only Cleanverse can issue and whose registration is in guides we did not have (D-030's open point). A read-only simulation on the chain showed the way around: the policy checks the two ends of a transfer, and a spender with no credential can relay aUSDC between verified wallets. Custody stays with a verified person, which is also the better answer to "who is the originator". The prize gives priority to identity "structurally coupled to asset movement": the guard has one path to the asset and the checks sit on it.
+**Inferred, not documented:** Cleanverse's sources are unpublished. The function names come from the implementations' selectors (`canTransfer`, `isTokenRegistered`, `STATUS_ACTIVE`), the credential record's first two words (status, tier) from the chain, checked against two wallets. If Cleanverse changes the record's layout, `verified` reads wrong values; the asset's own check still stands behind it.
+**Checked:** 15 forge tests, and a fork test against the real contracts on Monad testnet (settles to a verified wallet, `NotVerified` for an unverified one). Deployed at `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`, source verified.
+**Not done:** a settlement on the deployed guard. Its owner has no A-Pass yet (docs/CONTRACTS.md 4.3).
+**Status:** ✅ Final for the contract; the live settlement waits on the owner's A-Pass.
+
 ## Open Decisions (not yet taken — to be filled in as we progress)
 
 | # | Topic | Where it has impact | Decision date |

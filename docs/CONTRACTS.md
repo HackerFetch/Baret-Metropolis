@@ -177,9 +177,21 @@ Observed with read-only calls on 2026-10-08: `aUSDC.transfer` between two wallet
 
 The asset says no without saying why (`execution reverted`). `apps/server` reads the same contracts, so a transfer of a compliant asset is checked on both sides whatever the user's rules are, and the verdict names the party and the reason before anything is signed (`COMPLIANCE_NO_CREDENTIAL`, `details.side`, `details.asset`). The user's own identity rules (`requireComplianceCheck`, `allowedCountries`, `minComplianceTier`) read the same credential for any transfer.
 
-### 4.3 Not built
+### 4.3 `CompliantPaymentGuard`: agent payments in a CVA, settled only between verified identities (D-034)
 
-A Baret contract that moves a compliant asset: a PaymentGuard vault paying merchants in aUSDC, so that an agent's payment to an unverified merchant is refused on-chain. A vault is a contract and would itself need an A-Pass, which only Cleanverse's issuer can mint; the way to register a contract is in the sponsor's integration guides, which we have not received.
+`contracts/src/CompliantPaymentGuard.sol`, on Monad testnet at `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`, source verified on Sourcify (exact match). Owner: the deploy wallet. Minimum tier: 1.
+
+**What it is.** The owner keeps aUSDC in their own wallet and gives the guard an allowance. They list merchants with a cap per payment and a cap per day and name one agent. The agent calls `pay(merchant, amount, ref)`, the same signature as `PaymentGuard`, so `baret pay --vault <guard>` works unchanged. Before any value moves, `pay` reads the A-Pass of the payer (the owner) and of the payee on-chain: each must hold a credential (`balanceOf > 0`) that is active (record word 0 equals `STATUS_ACTIVE`, 1) and of at least the owner's minimum tier (record word 1), and Cleanverse's `policy.canTransfer` must answer yes. Then `aUSDC.transferFrom(owner, merchant, amount)` and a `Settled` event that names both credentials and their tiers. A refusal is a typed error: `NotVerified(address party, Reason reason)` with `NoCredential`, `NotActive` or `TierTooLow`, or `RefusedByPolicy(from, to)`.
+
+**Why it needs no A-Pass of its own.** The guard never holds the asset. Simulated on the real chain on 2026-10-09 with a state override for the allowance: a spender with no credential can `transferFrom` aUSDC between two verified wallets, and the same call to an unverified wallet reverts with Cleanverse's own error. The policy checks the two ends of the transfer, not who relays it. This is why none of the sponsor's integration guides were needed.
+
+**The use case.** Travel Rule-compliant agent payments: an autonomous agent can pay only when originator and beneficiary are both identified, and each settlement records who they were by credential, never by personal data.
+
+**Coupling.** There is no function on the guard that moves the asset without the identity checks, and the asset asks the same policy again in its own transfer. On top of the asset the guard adds a decision that can be read (which party, which reason), the owner's own minimum tier, an agent's caps, and the settlement record. The server reads the typed refusal from the simulation and reports `COMPLIANCE_NO_CREDENTIAL` with the party and the reason before the agent signs (`risk/detectors/compliance.ts`, `refusedByGuard`).
+
+**Checked.** 15 forge tests against mocks that behave like Cleanverse's contracts (fuzz on the daily cap included). A fork test against the real aUSDC, A-Pass and policy on Monad testnet (`BARET_FORK_CLEANVERSE=1 MONAD_TESTNET_RPC_URL=<rpc> forge test --match-contract CompliantPaymentGuardFork`): a payment to a verified wallet settles, a payment to an unverified one reverts with `NotVerified(…, NoCredential)`. On the deployed contract: `verified(0xc448042EdAC1899B023CaA0E9Da5e4a8833de873)` answers true with tier 5; the agent is the Dynamic wallet `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`; two merchants are listed (the verified wallet above and the demo merchant `0x1365566191bAA9872A64AcDce963751d5343ff49`, which has no credential).
+
+**Not done yet.** No payment has settled on the deployed guard: its owner, the deploy wallet, has no A-Pass, so `pay` reverts today with `NotVerified(owner, NoCredential)`, which is the gate working. A real settlement needs an A-Pass for the owner (`https://test-magiclink.cleanverse.com/`), aUSDC in that wallet, an allowance for the guard, and the guard's address on the server's known-contracts list. The daily cap is a fixed 24 hours from the first payment of a window, not rolling like `PaymentGuard`'s.
 
 ---
 

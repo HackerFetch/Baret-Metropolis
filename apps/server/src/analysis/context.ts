@@ -5,7 +5,7 @@ import type {
   PaymentContext,
   SourceStatus,
 } from "@baret/guard";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import type { NetworkConfig } from "../config/env.js";
 import type { NormalizedTx } from "../simulation/decode.js";
 import type { CallTrace } from "../simulation/trace.js";
@@ -47,6 +47,8 @@ export interface AnalysisContext {
     ran: boolean;
     ok: boolean;
     revertReason: string | null;
+    /** The raw revert data, when the node returned it: a typed error can be decoded from it. */
+    revertData: Hex | null;
     traced: boolean;
     /** The gas limit the network will charge for: the sender's, else the estimate. */
     gasLimit: bigint | null;

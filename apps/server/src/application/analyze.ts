@@ -92,6 +92,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     ran: false,
     ok: true,
     revertReason: null,
+    revertData: null,
     traced: false,
     gasLimit: null,
   };
@@ -127,6 +128,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
       ran: true,
       ok: outcome.ok,
       revertReason: outcome.ok ? null : outcome.revertReason,
+      revertData: outcome.ok ? null : outcome.revertData,
       traced: trace !== null,
       gasLimit,
     };
