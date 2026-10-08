@@ -307,6 +307,53 @@ describe("contracts and dangerous calls", () => {
     expect(r.decision).toBe("blocked");
   });
 
+  it("blocks a call that pays an unknown contract and brings nothing back", async () => {
+    const pays = () => {
+      const rpc = new FakeRpc();
+      rpc.code.set(DAPP, "0x60");
+      rpc.frame = sendMon(DAPP, ONE_MON / 10n);
+      return rpc;
+    };
+    const stake = { to: DAPP, value: (ONE_MON / 10n).toString(), data: "0x3a4b66f1" as const };
+    const r = await run(tx(stake), pays());
+    const kept = r.findings.find((f) => f.code === "VALUE_KEPT_BY_UNKNOWN_CONTRACT");
+    expect(kept?.values).toEqual({ contract: DAPP, amount: "0.1", asset: "MON" });
+    // A small share of the balance: the loss limit says nothing, the new finding blocks.
+    expect(codes(r)).not.toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
+    expect(r.decision).toBe("blocked");
+    expect(r.firedRules.map((f) => f.rule)).toContain("blockRiskyContracts");
+
+    // With the rule off it is still shown, and no longer blocks.
+    const off = await run({ ...tx(stake), policy: policy({ blockRiskyContracts: false }) }, pays());
+    expect(codes(off)).toContain("VALUE_KEPT_BY_UNKNOWN_CONTRACT");
+    expect(off.decision).toBe("caution");
+  });
+
+  it("does not call a plain transfer, a known contract or an exchange a kept payment", async () => {
+    // No calldata: a transfer to a contract address, whose recipient the user chose.
+    const plain = new FakeRpc();
+    plain.code.set(DAPP, "0x60");
+    plain.frame = sendMon(DAPP, ONE_MON / 10n);
+    const transfer = await run(tx({ to: DAPP, value: (ONE_MON / 10n).toString() }), plain);
+    expect(codes(transfer)).toEqual(["UNKNOWN_CONTRACT_EXPOSURE"]);
+
+    // The unknown contract sends a token back in the same transaction.
+    const swap = new FakeRpc();
+    for (const a of [DAPP, FAKE_USDC]) swap.code.set(a, "0x60");
+    swap.frame = frame({
+      to: DAPP,
+      value: `0x${(ONE_MON / 10n).toString(16)}`,
+      calls: [
+        frame({ from: DAPP, to: FAKE_USDC, logs: [transferLog(FAKE_USDC, DAPP, USER, ONE_USDC)] }),
+      ],
+    });
+    const swapped = await run(
+      tx({ to: DAPP, value: (ONE_MON / 10n).toString(), data: "0x3a4b66f1" }),
+      swap,
+    );
+    expect(codes(swapped)).not.toContain("VALUE_KEPT_BY_UNKNOWN_CONTRACT");
+  });
+
   it("knows a vault the PaymentGuard factory deployed, and only with a factory configured", async () => {
     const vault = () => {
       const rpc = new FakeRpc();

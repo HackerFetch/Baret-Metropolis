@@ -47,7 +47,7 @@ export const BALANCED_POLICY: GuardPolicy = {
   blockSetApprovalForAll: true,
   blockPermit: true,
   blockSelfdestruct: true,
-  blockDelegatecall: false,
+  blockDelegatecall: true,
   blockOwnershipTransfer: true,
   maxLossPercent: 50,
   minPostUsdcBalance: null,

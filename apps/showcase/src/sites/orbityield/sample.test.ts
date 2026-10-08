@@ -36,16 +36,23 @@ describe("OrbitYield sample", () => {
     });
   });
 
-  it("marks the attack Caution: an unknown pool, MON out and nothing back", () => {
+  it("blocks the attack at any size: an unknown pool keeps the MON and sends nothing back", () => {
     const result = sampleCheck("danger", 5);
-    expect(result.verdict).toBe("caution");
+    expect(result.verdict).toBe("blocked");
     expect(result.findings).toEqual([
       { code: "UNKNOWN_CONTRACT_EXPOSURE", values: { contract: SAMPLE.other } },
+      {
+        code: "VALUE_KEPT_BY_UNKNOWN_CONTRACT",
+        values: { contract: SAMPLE.other, amount: format(5), asset: "MON" },
+      },
     ]);
+    for (const finding of result.findings) {
+      expect(hasValues(findings[finding.code].body, finding.values)).toBe(true);
+    }
     expect(result.changes).toEqual([{ direction: "out", value: format(5), unit: "MON" }]);
   });
 
-  it("blocks the attack above the loss limit, with the share it would cost", () => {
+  it("adds the loss finding above the loss limit, with the share it would cost", () => {
     expect(overLimit("danger", 12.5)).toBe(false);
     expect(overLimit("danger", 15)).toBe(true);
     expect(overLimit("safe", 20)).toBe(false);

@@ -45,7 +45,7 @@ export function saleOf(mode: DemoMode): string {
 
 /**
  * The sample answer. Both versions: MON out, LNTL in. Honest: Safe. Attack:
- * the sale runs borrowed code from a contract Baret does not know, Caution
+ * the sale runs borrowed code from a contract Baret does not know, Blocked
  * under Balanced. The most a wallet can put in is 1 MON, a twenty-fifth of
  * the sample balance, so the loss limit never comes into it here.
  */
@@ -59,7 +59,7 @@ export function sampleCheck(mode: DemoMode, mon: number): CheckResult {
   }
   return {
     source: "sample",
-    verdict: "caution",
+    verdict: "blocked",
     findings: [
       { code: "DELEGATECALL_DETECTED", values: { contract: SAMPLE.proxy } },
       { code: "UNKNOWN_CONTRACT_EXPOSURE", values: { contract: SAMPLE.proxy } },

@@ -85,7 +85,7 @@ Two things, and both are needed:
 - **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`).
 - **Baret is a panel on the page, not a wallet that refuses.** The extension's background and provider are empty stubs (cut). `apps/wallet` runs on sample data: no app imports `@baret/wallet-core`. No site can open the wallet's connect or sign window.
 - No screen reads `/v1/audit/*`. The agents playground answers its six actions from samples.
-- Two of the six attacks answer Caution, not Blocked, under Balanced: OrbitYield's silent pool and LaunchPad's proxy sale.
+- Two of the six attacks answered Caution under Balanced (OrbitYield's silent pool, LaunchPad's proxy sale). Since D-033 (2026-10-09) both are Blocked.
 - Off on the live API: Nansen (`nansen: false`), the explanation route (`explain: false`).
 - For the track's "Design & Craft": `packages/guard` and `packages/agent-kit` have no README. The landing says "MIT licence" and the repository has no `LICENSE` file.
 - Hale has GitHub access since 2026-10-08 and has not had a first session yet.
@@ -125,7 +125,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
 | E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Done 2026-10-09**, checked on the live URL with a virtual passkey | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Built 2026-10-09 (branch `wallet-live-delegation`, D-032), checked on testnet end to end; the pass on the live URL is left** | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
-| E5 | Decide and build: do the two Caution attacks become Blocked | Sat 10 | | main track |
+| E5 | Decide and build: do the two Caution attacks become Blocked. **Decided: Blocked. Built 2026-10-09 (branch `block-silent-deposits`, D-033), checked against testnet; the 20 of 20 on the live API is left** | Sat 10 | | main track |
 | E6 | Cleanverse contract side (the three guides are linked on the bounty page). First to be cut | Sat 10 | an A-Pass | Cleanverse |
 | E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |

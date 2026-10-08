@@ -56,7 +56,7 @@ export const launchpad = {
     threatClass: "trap",
     whyItMatters:
       "Nothing goes wrong on the day you buy. The risk is what the deployer can change after the sale closes.",
-    verdict: "caution",
+    verdict: "blocked",
   },
 
   site: {
@@ -220,9 +220,9 @@ export const launchpad = {
         body: "The same button pays a sale contract that runs code from another contract. Its deployer can swap that code at any time. LNTL still arrives.",
         asks: "LaunchPad wants you to buy LNTL on {contract}.",
         call: "contribute()",
-        expected: "caution",
+        expected: "blocked",
         expectedBody:
-          "Borrowed code and an unknown contract should both show up. Balanced rules treat them as Caution, so you can still sign after you read why. Strict rules block it.",
+          "Borrowed code and an unknown contract should both show up. Balanced rules block borrowed code, so nothing is signed. Under Permissive it is a Caution.",
       },
     },
     claims: [

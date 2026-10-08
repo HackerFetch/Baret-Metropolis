@@ -155,6 +155,14 @@ export const findings = {
     why: "Unknown does not mean harmful. Every new contract starts here. It means nobody Baret trusts has looked at it yet.",
     fix: "Compare the address with the one in the project's own docs before you sign.",
   },
+  VALUE_KEPT_BY_UNKNOWN_CONTRACT: {
+    emitter: "programs",
+    values: ["contract", "amount", "asset"],
+    title: "Nothing comes back for what you send",
+    body: "{contract} is on no list Baret reads. In the simulation it takes {amount} {asset} from you and you receive nothing.",
+    why: "A deposit, a stake or a purchase gives you something in the same transaction: a receipt token, the thing you bought. Here nothing arrives, and nobody vouches for the contract that keeps your funds.",
+    fix: "Decline. If the app says something arrives later, check that against its own docs first.",
+  },
 
   // evm-danger detector ----------------------------------------------------
 

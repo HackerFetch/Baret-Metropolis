@@ -36,8 +36,9 @@ export function overLimit(mode: DemoMode, amount: number): boolean {
 
 /**
  * The sample answer. Honest: Safe, MON out and oMON in, one to one. Attack:
- * MON out and nothing in, from a pool Baret does not know; Caution, or
- * Blocked once the deposit is above the loss limit.
+ * MON out and nothing in, kept by a pool Baret does not know: Blocked under
+ * Balanced at any size, with the loss finding on top once the deposit is
+ * above the loss limit.
  */
 export function sampleCheck(mode: DemoMode, amount: number): CheckResult {
   if (mode === "safe") {
@@ -54,9 +55,12 @@ export function sampleCheck(mode: DemoMode, amount: number): CheckResult {
   }
   const findings: CheckFinding[] = [
     { code: "UNKNOWN_CONTRACT_EXPOSURE", values: { contract: SAMPLE.other } },
+    {
+      code: "VALUE_KEPT_BY_UNKNOWN_CONTRACT",
+      values: { contract: SAMPLE.other, amount: format(amount), asset: "MON" },
+    },
   ];
-  const blocked = overLimit(mode, amount);
-  if (blocked) {
+  if (overLimit(mode, amount)) {
     findings.push({
       code: "ESTIMATED_LOSS_EXCEEDS_MAX",
       values: { actual: percent(lossPercent(amount, SAMPLE.mon)), limit: percent(LOSS_LIMIT) },
@@ -64,7 +68,7 @@ export function sampleCheck(mode: DemoMode, amount: number): CheckResult {
   }
   return {
     source: "sample",
-    verdict: blocked ? "blocked" : "caution",
+    verdict: "blocked",
     findings,
     changes: [{ direction: "out", value: format(amount), unit: "MON" }],
     approvals: [],

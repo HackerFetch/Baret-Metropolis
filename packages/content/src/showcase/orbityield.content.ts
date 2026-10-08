@@ -50,8 +50,8 @@ export const orbityield = {
     ],
     threatClass: "trap",
     whyItMatters:
-      "Nothing here is provably an attack. The missing receipt is the only sign, and it shows in the balance change, not on the page.",
-    verdict: "caution",
+      "The page shows nothing wrong. The missing receipt is the only sign, and it shows in the balance change, not on the page.",
+    verdict: "blocked",
   },
 
   site: {
@@ -229,9 +229,9 @@ export const orbityield = {
         body: "The same button sends your MON to a second pool that is on no list. It keeps the deposit and sends no oMON.",
         asks: "OrbitYield wants you to stake MON on {contract}.",
         call: "stake()",
-        expected: "caution",
+        expected: "blocked",
         expectedBody:
-          "Balanced rules show an unknown contract as Caution, so you can still sign after you read why. Under Strict, or above your loss limit, it is Blocked.",
+          "Balanced rules block a payment to an unknown contract that gives nothing back. The simulation should show MON out and no oMON in. Under Permissive it is a Caution.",
       },
     },
     claims: [
