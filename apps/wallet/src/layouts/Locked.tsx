@@ -1,5 +1,6 @@
-import { walletFrame } from "@baret/content";
+import { onboarding, walletFrame } from "@baret/content";
 import { Button, Mark } from "@baret/ui";
+import { Problem } from "@baret/wallet-ui/components/Block";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useEffect, useRef, useState } from "react";
 
@@ -11,10 +12,19 @@ export interface LockedProps {
    * request itself is never shown while the wallet is locked.
    */
   readonly request?: boolean;
+  /** Live: the passkey prompt is open, so the button waits. */
+  readonly busy?: boolean;
+  /** Live: why the last passkey prompt did not unlock, in the onboarding's words. */
+  readonly problem?: "cancelled" | "unsupported" | "notCompatible" | null;
 }
 
 /** What a locked wallet shows instead of the app or a pending request. */
-export function Locked({ onUnlock, request = false }: LockedProps): JSX.Element {
+export function Locked({
+  onUnlock,
+  request = false,
+  busy = false,
+  problem = null,
+}: LockedProps): JSX.Element {
   const { locked } = walletFrame;
   const [declined, setDeclined] = useState(false);
   const answer = useRef<HTMLParagraphElement>(null);
@@ -29,9 +39,15 @@ export function Locked({ onUnlock, request = false }: LockedProps): JSX.Element 
       </div>
       <h1 className={`${T.h2} text-[color:var(--fg)]`}>{locked.title}</h1>
       <p className={T.body}>{request ? locked.request : locked.body}</p>
+      {problem ? (
+        <Problem
+          title={onboarding.passkey.errors[problem].title}
+          body={onboarding.passkey.errors[problem].body}
+        />
+      ) : null}
       {declined ? null : (
         <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="primary" size="lg" onClick={onUnlock}>
+          <Button type="button" variant="primary" size="lg" disabled={busy} onClick={onUnlock}>
             {locked.action}
           </Button>
           {request ? (

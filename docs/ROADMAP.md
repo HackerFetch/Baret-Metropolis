@@ -123,7 +123,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 |---|---|---|---|---|
 | E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | Hale's wallet address | everything Hale does |
 | E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
-| E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core` | Fri 9 | | Mera UX |
+| E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Built 2026-10-09 (branch `wallet-live-store`), checked against testnet; the pass on the live URL is left** | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
 | E5 | Decide and build: do the two Caution attacks become Blocked | Sat 10 | | main track |
 | E6 | Cleanverse contract side (the three guides are linked on the bounty page). First to be cut | Sat 10 | an A-Pass | Cleanverse |

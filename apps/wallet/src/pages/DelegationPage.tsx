@@ -300,7 +300,9 @@ export function Component() {
   const [revealed, setRevealed] = useState(false);
   const [said, setSaid] = useState("");
   const { vault } = state;
-  const vaultRead = ready(state, "balances");
+  // Live, the vault's calls are not wired to this page yet (tasks/FOR_EZGIN.md E4).
+  // Until they are it reads as unreachable, so nothing here pretends to move money.
+  const vaultRead = ready(state, "balances") && !state.live;
   const listed = vault.merchants.filter((m) => m.status !== "removed");
 
   // Creating the key: the passkey prompt, then the transaction that registers it.

@@ -245,6 +245,9 @@ importers:
       '@baret/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@baret/wallet-core':
+        specifier: workspace:*
+        version: link:../../packages/wallet-core
       '@baret/wallet-ui':
         specifier: workspace:*
         version: link:../../packages/wallet-ui

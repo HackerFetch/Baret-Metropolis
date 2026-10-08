@@ -1,7 +1,7 @@
 import { createContext, type JSX, type ReactNode, use, useReducer } from "react";
 import type { PolicyTemplateName } from "../../../guard/src/policy-templates.js";
 import { fromUnits, toUnits } from "./format.js";
-import { diffFields } from "./rules.js";
+import { diffFields, fromTemplate } from "./rules.js";
 import {
   ACCOUNT,
   ACTIVITY,
@@ -81,6 +81,15 @@ export function readSample(search: string): Sample {
 
 export interface WalletState {
   readonly sample: Sample;
+  /**
+   * True when the account is a real one: a passkey account read from Monad
+   * and checked by the Baret server (apps/wallet/src/live). False on the
+   * sample. Screens that still act on the sample only must not pretend
+   * otherwise when this is set.
+   */
+  readonly live: boolean;
+  /** ISO time the unlocked session ends on its own; null while locked or on the sample. */
+  readonly sessionEndsAt: string | null;
   /** Fail-closed: a part not "ok" is shown as failed or loading, never as data. */
   readonly status: WalletStatus;
   readonly address: string;
@@ -124,6 +133,8 @@ export type WalletAction =
   | { type: "createAgent"; address: string; created: string }
   | { type: "revokeAgent"; at: string }
   | { type: "status"; key: keyof WalletStatus; value: LoadStatus }
+  /** Live data arriving: the account, balances, the vault, the lock. */
+  | { type: "patch"; patch: Partial<Omit<WalletState, "sample" | "live">> }
   | { type: "reset" };
 
 const ALL_OK: WalletStatus = { analyzer: "ok", balances: "ok", activity: "ok" };
@@ -193,6 +204,8 @@ function accountAmount(state: WalletState, text: string, sign: 1n | -1n): readon
 export function initialState(name: string, sample: Sample = "default"): WalletState {
   const base: WalletState = {
     sample,
+    live: false,
+    sessionEndsAt: null,
     status: ALL_OK,
     address: ACCOUNT.address,
     accountName: name,
@@ -238,6 +251,33 @@ export function initialState(name: string, sample: Sample = "default"): WalletSt
     default:
       return base;
   }
+}
+
+/**
+ * Where a live wallet starts: locked, with no account and nothing read yet.
+ * Fail-closed: every part is "loading" until the chain and the server have
+ * answered, so no screen shows a sample number as the account's own.
+ */
+export function initialLive(name: string, usdc: string): WalletState {
+  return {
+    sample: "default",
+    live: true,
+    sessionEndsAt: null,
+    status: { analyzer: "loading", balances: "loading", activity: "loading" },
+    address: "",
+    accountName: name,
+    assets: [],
+    activity: [],
+    permissions: [],
+    alerts: [],
+    policy: fromTemplate("balanced", [usdc]),
+    template: "balanced",
+    ruleChanges: [],
+    vault: { ...EMPTY_VAULT, address: "" },
+    agentPayments: [],
+    settings: { lockAfterInactivity: true, passkeyEverySignature: false },
+    locked: true,
+  };
 }
 
 function vaultAmount(vault: Vault, text: string, sign: 1n | -1n): Vault {
@@ -370,6 +410,8 @@ export function reduce(
       };
     case "status":
       return { ...state, status: { ...state.status, [action.key]: action.value } };
+    case "patch":
+      return { ...state, ...action.patch };
     case "reset":
       return initial(state.accountName);
   }
@@ -384,18 +426,27 @@ const WalletContext = createContext<Store | null>(null);
 
 export function WalletProvider({
   name,
+  initial,
   children,
 }: {
   /** The account's starting name, from the content's sample data. */
   name: string;
+  /** A live wallet's starting state (initialLive); left out, the sample. */
+  initial?: (name: string) => WalletState;
   children: ReactNode;
 }): JSX.Element {
   // The sample is read once, on the first render; the wallet is not prerendered.
   const [state, dispatch] = useReducer(
-    (current: WalletState, action: WalletAction) => reduce(current, action),
+    (current: WalletState, action: WalletAction) =>
+      initial ? reduce(current, action, initial) : reduce(current, action),
     name,
     (start: string) =>
-      initialState(start, readSample(typeof window === "undefined" ? "" : window.location.search)),
+      initial
+        ? initial(start)
+        : initialState(
+            start,
+            readSample(typeof window === "undefined" ? "" : window.location.search),
+          ),
   );
   return <WalletContext value={{ state, dispatch }}>{children}</WalletContext>;
 }

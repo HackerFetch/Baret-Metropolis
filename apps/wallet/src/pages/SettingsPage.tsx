@@ -12,6 +12,7 @@ import { type JSX, type ReactNode, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { WALLET_VERSION } from "../lib/version.js";
+import { useLive } from "../live/live.js";
 import { routes } from "../routes.js";
 
 /**
@@ -81,6 +82,7 @@ const LINK =
 
 export function Component() {
   const { state, dispatch } = useWallet();
+  const live = useLive();
   const nameId = useId();
   const confirmTitle = useId();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -97,10 +99,14 @@ export function Component() {
    * wallet loads again empty and starts over at setup, which says it was reset.
    */
   function confirm(): void {
+    // Live: the passkey stays with its provider; this browser forgets the rest.
+    live?.forget();
     dispatch({ type: "reset" });
     setAcknowledged(false);
     dialog.current?.close();
-    window.location.assign(`${routes.onboarding.path}?sample=empty&reset=1`);
+    window.location.assign(
+      live ? `${routes.onboarding.path}?reset=1` : `${routes.onboarding.path}?sample=empty&reset=1`,
+    );
   }
 
   if (!account || !security || !network || !privacy || !about) return null;
