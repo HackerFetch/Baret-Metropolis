@@ -42,6 +42,7 @@ export const network: NetworkConfig = {
   reputationRegistryAddress: null,
   knownContracts: [],
   paymentGuardFactoryAddress: null,
+  cleanverse: null,
 };
 
 export const config: AppConfig = {
@@ -56,7 +57,6 @@ export const config: AppConfig = {
   verdictTtlSeconds: 30,
   nansenApiKey: null,
   nansenMode: "funder",
-  cleanverse: null,
   envioEndpoint: null,
   explain: null,
 };
@@ -134,6 +134,8 @@ export function cleanSources(
     nansen?: Partial<Record<Address, Partial<NansenProfile>>> | null;
     registry?: Partial<Record<Address, RegistryEntry>> | null;
     compliance?: Partial<Record<Address, Credential | null>> | null;
+    /** Tokens the compliance source reports as compliant assets. */
+    gated?: Address[];
   } = {},
 ): Sources {
   const nansen = overrides.nansen === undefined ? {} : overrides.nansen;
@@ -161,6 +163,7 @@ export function cleanSources(
     },
     compliance: compliance && {
       lookup: async (as) => new Map(as.map((a) => [a, compliance[a] ?? null])),
+      gatedTokens: async (tokens) => tokens.filter((t) => overrides.gated?.includes(t)),
     },
   };
 }

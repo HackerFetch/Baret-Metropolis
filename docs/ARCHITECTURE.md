@@ -183,7 +183,7 @@ RESPONSE { decision, findings, firedRules, suggestions, confidence, estimatedCha
 | programs | `risk/detectors/programs.ts` | Contract on the risky list / unknown contract | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE` |
 | evm-danger | `risk/detectors/evm-danger.ts` | `SELFDESTRUCT`, `DELEGATECALL`, ownership transfer | `SELFDESTRUCT_CALL`, `DELEGATECALL_DETECTED`, `OWNERSHIP_TRANSFER` |
 | reputation | `risk/detectors/reputation.ts` | Nansen labels + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY`, `NANSEN_TRUST_BELOW_MINIMUM`, `REPUTATION_DATA_UNAVAILABLE` |
-| compliance | `risk/detectors/compliance.ts` **(new)** | Transfer that has not passed Cleanverse CVI verification | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED`, `COMPLIANCE_DATA_UNAVAILABLE` |
+| compliance | `risk/detectors/compliance.ts` **(new)** | A side of a transfer without an active Cleanverse credential (A-Pass, read on-chain): asked for by the user's identity rules, or by the asset itself when it is a compliant one (CVA), D-030 | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED`, `COMPLIANCE_DATA_UNAVAILABLE` |
 | cpi | `risk/detectors/cpi.ts` | Deep internal-call nesting, high operation count | `DEEP_CALL_NESTING`, `HIGH_OPERATION_COUNT` |
 | compute | `risk/detectors/compute.ts` | Excessive gas ceiling | `EXCESSIVE_GAS` |
 | x402 | `risk/detectors/x402.ts` | Missing memo, asset outside the allowlist, destination/asset mismatch | `X402_DESTINATION_MISMATCH`, `X402_ASSET_MISMATCH`, `X402_NON_CANONICAL_ASSET`, `X402_MEMO_MISSING`, `X402_ASSET_NOT_ALLOWED` |
@@ -333,6 +333,7 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `NANSEN_API_KEY` / `NANSEN_MODE` | For the trust-level rule; adds to the blocklist | `sources/nansen.ts` (D-016, D-017). `funder` (default): `profiler/address/first-funder`, 1 credit per wallet. `labels`: `profiler/address/labels`, 100 credits. Unset: only `minNansenTrustLevel` above `new` fails closed |
 | `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
 | `ENVIO_ENDPOINT` | For `/v1/audit/*` | GraphQL endpoint of the deployed indexer |
+| `MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS`, `MONAD_TESTNET_CLEANVERSE_POLICY_ADDRESS` | For identity rules and compliant assets | Cleanverse's A-Pass and aToken policy contracts (`docs/CONTRACTS.md` 4.1). Both or neither; unset, identity rules fail closed. Same pair with `MONAD_MAINNET_` |
 | `KIMI_API_KEY` | For `/v1/explain` | Moonshot platform key; without it the route answers 503. Optional `KIMI_BASE_URL`, `KIMI_MODEL` (defaults: `https://api.moonshot.ai/v1`, `kimi-k3`) |
 | `QWEN_API_KEY` | agent-kit only, not the server | Alibaba Cloud Model Studio key; turns the reviewer on in the `baret` CLI. Optional `QWEN_BASE_URL`, `QWEN_MODEL` (defaults: the international `compatible-mode/v1` endpoint, `qwen3.8-max`) |
 | `X402_*`, `MERA_*` | Later | Added when their module is built |

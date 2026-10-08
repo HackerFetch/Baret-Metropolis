@@ -49,10 +49,12 @@ services:
         sync: false
       - key: NANSEN_MODE
         value: funder
-      - key: CLEANVERSE_API_KEY
-        sync: false
-      - key: CLEANVERSE_API_URL
-        sync: false
+      # Cleanverse on Monad testnet: A-Pass (identity) and the aToken policy.
+      # Public contract addresses, from Cleanverse's query_chain_config.
+      - key: MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS
+        value: "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9"
+      - key: MONAD_TESTNET_CLEANVERSE_POLICY_ADDRESS
+        value: "0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd"
       # KIMI (Moonshot) for /v1/explain. Without the key the route answers 503.
       - key: KIMI_API_KEY
         sync: false

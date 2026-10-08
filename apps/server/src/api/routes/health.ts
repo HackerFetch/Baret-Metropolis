@@ -10,7 +10,7 @@ import type { NetworkConfig } from "../../config/env.js";
 function configured(n: NetworkConfig, config: AnalyzeDeps["config"]) {
   return {
     nansen: config.nansenApiKey !== null,
-    cleanverse: config.cleanverse !== null,
+    cleanverse: n.cleanverse !== null,
     indexer: config.envioEndpoint !== null,
     explain: config.explain !== null,
     separateTraceRpc: n.traceRpcUrl !== n.rpcUrl,

@@ -29,6 +29,8 @@ export interface DelegateCall {
   codeFrom: Address;
   /** The target is the contract's own EIP-1967 implementation: a standard proxy. */
   standardProxy: boolean;
+  /** The call was undone. Still listed, so a proxy is recognised in a failed simulation too. */
+  reverted: boolean;
 }
 
 /**
@@ -67,6 +69,11 @@ export interface AnalysisContext {
   nansen: Lookup<NansenProfile>;
   registry: Lookup<RegistryEntry>;
   compliance: Lookup<Credential | null>;
+  /**
+   * Compliant assets (CVA) the user sends in this request. Such a token moves
+   * only between credential holders, whatever the user's own rules say.
+   */
+  gatedAssets: Address[];
   payment: PaymentContext | null;
 }
 

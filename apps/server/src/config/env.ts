@@ -47,6 +47,9 @@ const envSchema = z.object({
   MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_TESTNET_KNOWN_CONTRACTS: addressList,
   MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS: optionalAddress,
+  /** Cleanverse's A-Pass (identity) and aToken policy contracts. Both or neither. */
+  MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS: optionalAddress,
+  MONAD_TESTNET_CLEANVERSE_POLICY_ADDRESS: optionalAddress,
 
   MONAD_MAINNET_RPC_URL: z.string().url().optional(),
   MONAD_MAINNET_TRACE_RPC_URL: z.string().url().optional(),
@@ -54,6 +57,8 @@ const envSchema = z.object({
   MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS: optionalAddress,
   MONAD_MAINNET_KNOWN_CONTRACTS: addressList,
   MONAD_MAINNET_PAYMENT_GUARD_FACTORY_ADDRESS: optionalAddress,
+  MONAD_MAINNET_CLEANVERSE_APASS_ADDRESS: optionalAddress,
+  MONAD_MAINNET_CLEANVERSE_POLICY_ADDRESS: optionalAddress,
 
   BARET_API_KEYS: csv,
   BARET_CORS_ORIGINS: csv,
@@ -67,8 +72,6 @@ const envSchema = z.object({
    * labels: Profiler labels, 100 credits each (needs a paid plan or granted credits).
    */
   NANSEN_MODE: z.enum(["funder", "labels"]).default("funder"),
-  CLEANVERSE_API_KEY: z.string().optional(),
-  CLEANVERSE_API_URL: z.string().url().optional(),
 
   /** The GraphQL endpoint of the deployed Envio indexer (indexer/). */
   ENVIO_ENDPOINT: z.string().url().optional(),
@@ -95,6 +98,8 @@ export interface NetworkConfig {
    * known contract, so a wallet's own vault is not reported as unknown.
    */
   paymentGuardFactoryAddress: `0x${string}` | null;
+  /** Cleanverse's contracts on this network. Null: identity rules fail closed. */
+  cleanverse: { apass: `0x${string}`; policy: `0x${string}` } | null;
 }
 
 export interface AppConfig {
@@ -109,11 +114,14 @@ export interface AppConfig {
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
   nansenMode: "funder" | "labels";
-  cleanverse: { apiKey: string; apiUrl: string } | null;
   /** Null: the audit routes answer 503. */
   envioEndpoint: string | null;
   /** Null: /v1/explain answers 503. */
   explain: { apiKey: string; baseUrl: string | null; model: string | null } | null;
+}
+
+function cleanverse(apass: `0x${string}` | null, policy: `0x${string}` | null) {
+  return apass && policy ? { apass, policy } : null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -134,6 +142,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       reputationRegistryAddress: e.MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_TESTNET_KNOWN_CONTRACTS,
       paymentGuardFactoryAddress: e.MONAD_TESTNET_PAYMENT_GUARD_FACTORY_ADDRESS,
+      cleanverse: cleanverse(
+        e.MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS,
+        e.MONAD_TESTNET_CLEANVERSE_POLICY_ADDRESS,
+      ),
     },
   };
   if (e.MONAD_MAINNET_RPC_URL) {
@@ -146,6 +158,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       reputationRegistryAddress: e.MONAD_MAINNET_REPUTATION_REGISTRY_ADDRESS,
       knownContracts: e.MONAD_MAINNET_KNOWN_CONTRACTS,
       paymentGuardFactoryAddress: e.MONAD_MAINNET_PAYMENT_GUARD_FACTORY_ADDRESS,
+      cleanverse: cleanverse(
+        e.MONAD_MAINNET_CLEANVERSE_APASS_ADDRESS,
+        e.MONAD_MAINNET_CLEANVERSE_POLICY_ADDRESS,
+      ),
     };
   }
 
@@ -165,9 +181,5 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     explain: e.KIMI_API_KEY
       ? { apiKey: e.KIMI_API_KEY, baseUrl: e.KIMI_BASE_URL ?? null, model: e.KIMI_MODEL ?? null }
       : null,
-    cleanverse:
-      e.CLEANVERSE_API_KEY && e.CLEANVERSE_API_URL
-        ? { apiKey: e.CLEANVERSE_API_KEY, apiUrl: e.CLEANVERSE_API_URL }
-        : null,
   };
 }

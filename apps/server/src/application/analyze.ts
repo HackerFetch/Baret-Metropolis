@@ -170,7 +170,9 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   ]).slice(0, MAX_ADDRESSES);
 
   const frames = trace?.frames.filter((f) => !f.reverted) ?? [];
-  const delegateFrames = frames.filter((f) => f.type === "DELEGATECALL" && f.to);
+  // Reverted delegatecalls are kept: when the whole call fails, a proxy's
+  // implementation should still not be reported as an unknown contract.
+  const delegateFrames = (trace?.frames ?? []).filter((f) => f.type === "DELEGATECALL" && f.to);
   const selfdestructs = frames.filter((f) => f.type === "SELFDESTRUCT").map((f) => f.from);
   const balanceTokens = uniq([...effects.transfers.map((t) => t.token), network.usdcAddress]);
 
@@ -190,6 +192,14 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
 
   const contracts = candidates.filter((_, i) => (codes[i] ?? "0x") !== "0x");
 
+  // A compliant asset demands identity on both sides by itself; ask about it
+  // even when the user's rules do not. If the question fails, the simulation
+  // still shows whether the asset refuses the transfer.
+  const sentTokens = uniq(effects.transfers.filter((t) => t.from === user).map((t) => t.token));
+  const gatedAssets =
+    sources.compliance && sentTokens.length > 0
+      ? await sources.compliance.gatedTokens(sentTokens).catch(() => [])
+      : [];
   // Vaults from Baret's own factory are known contracts, like the listed ones.
   const factory = network.paymentGuardFactoryAddress;
   const listed = new Set(network.knownContracts);
@@ -200,10 +210,18 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
         block,
       )
     : [];
-  const knownNetwork: NetworkConfig =
-    factory === null
-      ? network
-      : { ...network, knownContracts: [...network.knownContracts, factory, ...vaults] };
+  // Cleanverse's own contracts and the compliant assets they govern are known too.
+  const cleanverseContracts = network.cleanverse
+    ? [network.cleanverse.apass, network.cleanverse.policy, ...gatedAssets]
+    : [];
+  const knownNetwork: NetworkConfig = {
+    ...network,
+    knownContracts: [
+      ...network.knownContracts,
+      ...(factory === null ? [] : [factory, ...vaults]),
+      ...cleanverseContracts,
+    ],
+  };
   const tokens = new Map<Address, TokenMeta>();
   const symbols = new Map<Address, string>();
   tokenAddresses.forEach((t, i) => {
@@ -216,7 +234,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     const standardProxy = (implSlots[i] ?? []).some(
       (slot) => slot.length >= 42 && `0x${slot.slice(-40)}`.toLowerCase() === target,
     );
-    return { contract: f.from, codeFrom: f.to as Address, standardProxy };
+    return { contract: f.from, codeFrom: f.to as Address, standardProxy, reverted: f.reverted };
   });
 
   // 3. Reputation and identity.
@@ -226,6 +244,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   const contractSet = new Set(contracts);
   const nansenTargets = counterparties.filter((a) => !contractSet.has(a));
   const complianceActive =
+    gatedAssets.length > 0 ||
     policy.requireComplianceCheck ||
     policy.allowedCountries.length > 0 ||
     policy.minComplianceTier !== null;
@@ -260,6 +279,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     nansen,
     registry,
     compliance,
+    gatedAssets,
     payment,
   };
 

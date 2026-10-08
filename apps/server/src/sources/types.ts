@@ -26,17 +26,23 @@ export interface RegistrySource {
   lookup(addresses: readonly Address[]): Promise<Map<Address, RegistryEntry>>;
 }
 
-/** A Cleanverse identity credential, or null when the address has none. */
+/** An active Cleanverse identity credential (A-Pass), or null when the address has none. */
 export interface Credential {
-  /** Unix seconds. */
-  expiresAt: number;
-  /** ISO 3166-1 alpha-2. */
-  country: string;
+  /** Unix seconds; null when the credential does not expire. */
+  expiresAt: number | null;
+  /** ISO 3166-1 alpha-2 codes the credential carries. Can be empty. */
+  countries: string[];
   tier: number;
 }
 
 export interface ComplianceSource {
+  /** Throws when the source does not answer. Every requested address gets an entry. */
   lookup(addresses: readonly Address[]): Promise<Map<Address, Credential | null>>;
+  /**
+   * Which of these tokens are compliant assets (CVA): tokens that refuse to
+   * move unless both sides hold a credential.
+   */
+  gatedTokens(tokens: readonly Address[]): Promise<Address[]>;
 }
 
 export interface Sources {
