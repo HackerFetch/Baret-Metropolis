@@ -52,6 +52,8 @@ export interface WalletStatus {
   readonly balances: LoadStatus;
   /** The account's activity, read from the indexer. */
   readonly activity: LoadStatus;
+  /** The PaymentGuard vault, read from Monad. */
+  readonly vault: LoadStatus;
 }
 
 /**
@@ -137,7 +139,7 @@ export type WalletAction =
   | { type: "patch"; patch: Partial<Omit<WalletState, "sample" | "live">> }
   | { type: "reset" };
 
-const ALL_OK: WalletStatus = { analyzer: "ok", balances: "ok", activity: "ok" };
+const ALL_OK: WalletStatus = { analyzer: "ok", balances: "ok", activity: "ok", vault: "ok" };
 
 /** True only when that part loaded: loading and error both read as not ready. */
 export function ready(state: WalletState, key: keyof WalletStatus): boolean {
@@ -238,7 +240,7 @@ export function initialState(name: string, sample: Sample = "default"): WalletSt
       // permissions and the alerts about them).
       return {
         ...base,
-        status: { analyzer: "error", balances: "error", activity: "error" },
+        status: { analyzer: "error", balances: "error", activity: "error", vault: "error" },
         assets: [],
         activity: [],
         permissions: [],
@@ -263,7 +265,7 @@ export function initialLive(name: string, usdc: string): WalletState {
     sample: "default",
     live: true,
     sessionEndsAt: null,
-    status: { analyzer: "loading", balances: "loading", activity: "loading" },
+    status: { analyzer: "loading", balances: "loading", activity: "loading", vault: "loading" },
     address: "",
     accountName: name,
     assets: [],

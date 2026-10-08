@@ -3,6 +3,7 @@ import { Button, Meter, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Empty, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
+import { unreachable } from "@baret/wallet-ui/data/analyze";
 import { amount, day, when } from "@baret/wallet-ui/data/format";
 import { ADDRESS } from "@baret/wallet-ui/data/sample";
 import {
@@ -13,12 +14,14 @@ import {
   reserved,
   useWallet,
 } from "@baret/wallet-ui/data/store";
-import type { Merchant } from "@baret/wallet-ui/data/types";
+import type { Merchant, SignRequest as Request } from "@baret/wallet-ui/data/types";
+import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useEffect, useId, useRef, useState } from "react";
+import { createContext, type JSX, use, useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import {
   type MerchantForm,
@@ -28,16 +31,23 @@ import {
   vaultAmount,
   withdrawable,
 } from "../delegation/vault.js";
+import { type LiveRequest, type LiveStep, type StepBuilder, useLive } from "../live/live.js";
+import { routes } from "../routes.js";
 
 /**
  * Agent delegation: a PaymentGuard vault and a key only the agent uses. In
  * the content's order: why not hand over your key, who can do what, the four
  * steps, the vault and its reserve, the merchants with their caps (and what
  * the vault refuses), the agent key and its handover, stopping the agent in
- * a section of its own, and the agent's payments. Each change here would be
- * a transaction signed with the passkey; in the sample it changes the
- * account at once.
+ * a section of its own, and the agent's payments. On the sample each change
+ * alters the account at once. Live, each change is one or two transactions,
+ * and each is put in front of the owner as a sign request Baret has checked
+ * (`start`): nothing on this page signs by itself, and the figures are read
+ * again from Monad afterwards.
  */
+
+/** Live: starts a vault change as a run of sign requests. Null on the sample. */
+const FlowContext = createContext<((steps: StepBuilder[]) => void) | null>(null);
 
 const {
   explainer,
@@ -101,6 +111,8 @@ function Field({
 
 function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
   const { dispatch } = useWallet();
+  const live = useLive();
+  const start = use(FlowContext);
   const cols = merchants.columns;
   return (
     <li className="grid gap-4 border-b border-[color:var(--rule)] py-5">
@@ -140,11 +152,13 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
           type="button"
           variant="ghost"
           onClick={() =>
-            dispatch({
-              type: "merchantStatus",
-              address: merchant.address,
-              status: merchant.status === "paused" ? "active" : "paused",
-            })
+            live && start
+              ? start(live.vault.pause(merchant.address, merchant.status !== "paused"))
+              : dispatch({
+                  type: "merchantStatus",
+                  address: merchant.address,
+                  status: merchant.status === "paused" ? "active" : "paused",
+                })
           }
         >
           {merchant.status === "paused" ? merchants.actions.resume : merchants.actions.pause}
@@ -153,7 +167,9 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
           type="button"
           variant="danger"
           onClick={() =>
-            dispatch({ type: "merchantStatus", address: merchant.address, status: "removed" })
+            live && start
+              ? start(live.vault.remove(merchant.address))
+              : dispatch({ type: "merchantStatus", address: merchant.address, status: "removed" })
           }
         >
           {merchants.actions.remove}
@@ -165,6 +181,8 @@ function MerchantRow({ merchant }: { merchant: Merchant }): JSX.Element {
 
 function AddMerchant({ onDone }: { onDone: () => void }): JSX.Element {
   const { dispatch } = useWallet();
+  const live = useLive();
+  const start = use(FlowContext);
   const [form, setForm] = useState<MerchantForm>({
     address: "",
     origin: "",
@@ -217,7 +235,8 @@ function AddMerchant({ onDone }: { onDone: () => void }): JSX.Element {
             type="button"
             variant="primary"
             onClick={() => {
-              dispatch({ type: "merchant", merchant: review });
+              if (live && start) start(live.vault.merchant(review));
+              else dispatch({ type: "merchant", merchant: review });
               onDone();
             }}
           >
@@ -300,14 +319,62 @@ export function Component() {
   const [revealed, setRevealed] = useState(false);
   const [said, setSaid] = useState("");
   const { vault } = state;
-  // Live, the vault's calls are not wired to this page yet (tasks/FOR_EZGIN.md E4).
-  // Until they are it reads as unreachable, so nothing here pretends to move money.
-  const vaultRead = ready(state, "balances") && !state.live;
+  const live = useLive();
+  // Fail-closed: the figures show only when both the account and the vault were read.
+  const vaultRead = ready(state, "balances") && ready(state, "vault");
   const listed = vault.merchants.filter((m) => m.status !== "removed");
+
+  // Live: the vault change in progress, as the sign request of its current step.
+  const [flow, setFlow] = useState<{
+    readonly steps: readonly StepBuilder[];
+    readonly index: number;
+    readonly request: Request | null;
+    readonly pending: boolean;
+  } | null>(null);
+  const [flowFailed, setFlowFailed] = useState(false);
+  const [run, setRun] = useState(0);
+  const current = useRef<LiveStep | null>(null);
+  const signable = useRef<LiveRequest["signable"]>(null);
+  /** Set when the current step's transaction is in a block. */
+  const sent = useRef(false);
+  // The agent key, shown once after its own passkey prompt; never kept anywhere.
+  const [agentSecret, setAgentSecret] = useState<string | null>(null);
+
+  /** Builds step `index`, shows it as Checking, then with Baret's answer. */
+  async function load(steps: readonly StepBuilder[], index: number): Promise<void> {
+    const build = steps[index];
+    if (!live || !build) return;
+    signable.current = null;
+    setFlowFailed(false);
+    setFlow({ steps, index, request: null, pending: true });
+    try {
+      const step = await build();
+      current.current = step;
+      setRun((n) => n + 1);
+      setFlow({ steps, index, request: unreachable(step.context), pending: true });
+      const answer = await live.recheck(step.context, step.call);
+      signable.current = answer.signable;
+      setFlow({ steps, index, request: answer.request, pending: false });
+    } catch {
+      // The step could not be built (Monad did not answer): nothing was signed.
+      setFlow(null);
+      setKeyPhase("idle");
+      setFlowFailed(true);
+    }
+  }
+
+  function start(steps: StepBuilder[]): void {
+    void load(steps, 0);
+  }
+
+  function endFlow(): void {
+    setFlow(null);
+    setKeyPhase("idle");
+  }
 
   // Creating the key: the passkey prompt, then the transaction that registers it.
   useEffect(() => {
-    if (keyPhase === "idle") return;
+    if (live || keyPhase === "idle") return;
     const id = window.setTimeout(() => {
       if (keyPhase === "creating") setKeyPhase("registering");
       else {
@@ -320,7 +387,39 @@ export function Component() {
       }
     }, 1100);
     return () => window.clearTimeout(id);
-  }, [keyPhase, dispatch]);
+  }, [live, keyPhase, dispatch]);
+
+  /** Live: the agent's key from its own passkey namespace, then the call that registers it. */
+  function createAgent(): void {
+    setKeyPhase("creating");
+    if (!live) return;
+    void live.vault.derive().then((key) => {
+      if (!key) {
+        setKeyPhase("idle");
+        setSaid(agentKey.errors.cancelled.title);
+        return;
+      }
+      setKeyPhase("registering");
+      start(live.vault.agent(key.address));
+    });
+  }
+
+  /** Live: the key is derived again from the passkey each time it is shown. */
+  function reveal(): void {
+    if (!live) {
+      setRevealed(true);
+      return;
+    }
+    void live.vault.derive().then((key) => {
+      // Shown only when the passkey gives the key the vault has registered.
+      if (!key || key.address.toLowerCase() !== vault.agent?.address.toLowerCase()) {
+        setSaid(agentKey.errors.cancelled.title);
+        return;
+      }
+      setAgentSecret(key.privateKey);
+      setRevealed(true);
+    });
+  }
 
   function move(kind: "deposit" | "withdraw"): void {
     const value = vaultAmount(money);
@@ -342,369 +441,419 @@ export function Component() {
       setMoneyIssue("balance");
       return;
     }
-    dispatch({ type: kind, amount: value });
+    if (live) start(kind === "deposit" ? live.vault.deposit(value) : live.vault.withdraw(value));
+    else dispatch({ type: kind, amount: value });
     setMoney("");
     setMoneyIssue(null);
   }
 
   return (
-    <Screen title={delegation.title} body={delegation.body} picture={WALLET_ART.vault}>
-      <div className="grid gap-12">
-        <p role="status" className="sr-only">
-          {said}
-        </p>
+    <FlowContext value={live ? start : null}>
+      <Screen title={delegation.title} body={delegation.body} picture={WALLET_ART.vault}>
+        <div className="grid gap-12">
+          <p role="status" className="sr-only">
+            {said}
+          </p>
 
-        <Block title={explainer.title}>
-          <p className={`${T.lead} max-w-[56ch]`}>{explainer.body}</p>
-          <ul className="grid gap-6 border-t border-[color:var(--rule)] pt-5 sm:grid-cols-3 sm:gap-6">
-            {explainer.points.map((point) => (
-              <li key={point.title} className="grid content-start gap-1">
-                <p className={`${T.h3} text-[color:var(--fg)]`}>{point.title}</p>
-                <p className={T.small}>{point.body}</p>
-              </li>
-            ))}
-          </ul>
-        </Block>
-
-        <Block title={model.title}>
-          <div className="grid gap-8 md:grid-cols-12 md:gap-8">
-            <div className="grid content-start gap-4 md:col-span-7">
-              <dl className="grid border-t border-[color:var(--rule)]">
-                {model.rows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="grid gap-1 border-b border-[color:var(--rule)] py-3"
-                  >
-                    <dt className={T.label}>{row.label}</dt>
-                    <dd className="text-base text-[color:var(--fg)]">{row.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className={T.body}>{model.subKey}</p>
-            </div>
-            <ImgWell
-              asset={WALLET_ART.subKey}
-              ratio="4/3"
-              dim
-              sizes="(min-width: 768px) 380px, 100vw"
-              className="border border-[color:var(--rule)] md:col-span-5"
-            />
-          </div>
-        </Block>
-
-        <Block title={steps.title}>
-          <ol className="grid gap-6 md:grid-cols-4 md:gap-6">
-            {steps.items.map((item, i) => (
-              <li
-                key={item.title}
-                className="grid content-start gap-2 border-t-2 border-[color:var(--fg)] pt-3"
-              >
-                <p className={T.label}>
-                  <span className={T.num}>{i + 1}</span> {item.short}
-                </p>
-                <p className="font-display text-lg font-bold uppercase leading-tight text-[color:var(--fg)]">
-                  {item.title}
-                </p>
-                <p className={T.small}>{item.body}</p>
-              </li>
-            ))}
-          </ol>
-        </Block>
-
-        <Block title={vaultWords.title}>
-          {/* Fail-closed: an unread vault shows no figures, not a stale or zero balance. */}
-          {vaultRead ? null : (
+          {flowFailed ? (
             <Problem title={delegation.errors.vault.title} body={delegation.errors.vault.body} />
-          )}
-          {vaultRead && vault.balance === "0.00" ? (
-            <Empty title={vaultWords.empty.title} body={vaultWords.empty.body} />
           ) : null}
-          {vaultRead ? (
-            <>
-              <dl className="grid gap-6 sm:grid-cols-3">
-                {(
-                  [
-                    [vaultWords.balance, vault.balance],
-                    [vaultWords.reserved, reserved(vault)],
-                    [vaultWords.free, free(vault)],
-                  ] as const
-                ).map(([label, value]) => (
-                  <div key={label} className="grid gap-1 border-t border-[color:var(--rule)] pt-3">
-                    <dt className={T.small}>{label}</dt>
-                    <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
-                      {amount(value, 6)} <span className="text-lg">{ASSET}</span>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <p className={T.small}>
-                {fill(vaultWords.reservedNote, {
-                  amount: amount(reserved(vault), 6),
-                  asset: ASSET,
-                })}
-              </p>
-            </>
-          ) : null}
-          <div className="grid max-w-[520px] gap-2">
-            <label htmlFor={amountId} className="text-sm font-medium text-[color:var(--fg)]">
-              {vaultWords.amount.label}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <input
-                id={amountId}
-                inputMode="decimal"
-                autoComplete="off"
-                value={money}
-                onChange={(event) => {
-                  setMoney(event.target.value);
-                  setMoneyIssue(null);
+          {/* Live: the change in progress, one sign request per transaction. */}
+          {live && flow?.request ? (
+            <div className="max-w-[640px]">
+              <SignRequest
+                key={run}
+                request={flow.request}
+                pending={flow.pending}
+                onCheckAgain={async () => {
+                  const step = current.current;
+                  if (!step) return null;
+                  const answer = await live.recheck(step.context, step.call);
+                  signable.current = answer.signable;
+                  return answer.request;
                 }}
-                aria-invalid={moneyIssue ? true : undefined}
-                aria-describedby={moneyIssue ? amountErrorId : undefined}
-                className={`${INPUT} min-w-[10rem] flex-1 font-mono tabular-nums`}
+                onSign={async (outcome, sending) => {
+                  const cleared = signable.current;
+                  if (!cleared) throw new Error("nothing was cleared to sign");
+                  const receipt = await live.sign(cleared, outcome, sending);
+                  sent.current = true;
+                  return receipt;
+                }}
+                onDecline={endFlow}
+                onAgain={endFlow}
+                onLog={(item) => {
+                  dispatch({ type: "log", item });
+                  // A confirmed step moves on to the next one; the last one stays on its result.
+                  if (!sent.current) return;
+                  sent.current = false;
+                  if (flow.index + 1 < flow.steps.length) void load(flow.steps, flow.index + 1);
+                }}
+                editRules={(label, className) => (
+                  <Link to={routes.policies.path} className={className}>
+                    {label}
+                  </Link>
+                )}
               />
-              <Button type="button" variant="ghost" onClick={() => move("deposit")}>
-                {vaultWords.deposit.label}
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => move("withdraw")}>
-                {vaultWords.withdraw.label}
-              </Button>
             </div>
-            <div id={amountErrorId}>
-              {moneyIssue === "invalid" ? (
-                <p role="alert" className="text-sm font-medium text-[color:var(--blocked-ink)]">
-                  {send.errors.amountZero.title}
-                </p>
-              ) : null}
-              {moneyIssue === "reserved" ? (
-                <Problem
-                  title={delegation.errors.reserved.title}
-                  body={fill(delegation.errors.reserved.body, {
+          ) : null}
+
+          <Block title={explainer.title}>
+            <p className={`${T.lead} max-w-[56ch]`}>{explainer.body}</p>
+            <ul className="grid gap-6 border-t border-[color:var(--rule)] pt-5 sm:grid-cols-3 sm:gap-6">
+              {explainer.points.map((point) => (
+                <li key={point.title} className="grid content-start gap-1">
+                  <p className={`${T.h3} text-[color:var(--fg)]`}>{point.title}</p>
+                  <p className={T.small}>{point.body}</p>
+                </li>
+              ))}
+            </ul>
+          </Block>
+
+          <Block title={model.title}>
+            <div className="grid gap-8 md:grid-cols-12 md:gap-8">
+              <div className="grid content-start gap-4 md:col-span-7">
+                <dl className="grid border-t border-[color:var(--rule)]">
+                  {model.rows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="grid gap-1 border-b border-[color:var(--rule)] py-3"
+                    >
+                      <dt className={T.label}>{row.label}</dt>
+                      <dd className="text-base text-[color:var(--fg)]">{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className={T.body}>{model.subKey}</p>
+              </div>
+              <ImgWell
+                asset={WALLET_ART.subKey}
+                ratio="4/3"
+                dim
+                sizes="(min-width: 768px) 380px, 100vw"
+                className="border border-[color:var(--rule)] md:col-span-5"
+              />
+            </div>
+          </Block>
+
+          <Block title={steps.title}>
+            <ol className="grid gap-6 md:grid-cols-4 md:gap-6">
+              {steps.items.map((item, i) => (
+                <li
+                  key={item.title}
+                  className="grid content-start gap-2 border-t-2 border-[color:var(--fg)] pt-3"
+                >
+                  <p className={T.label}>
+                    <span className={T.num}>{i + 1}</span> {item.short}
+                  </p>
+                  <p className="font-display text-lg font-bold uppercase leading-tight text-[color:var(--fg)]">
+                    {item.title}
+                  </p>
+                  <p className={T.small}>{item.body}</p>
+                </li>
+              ))}
+            </ol>
+          </Block>
+
+          <Block title={vaultWords.title}>
+            {/* Fail-closed: an unread vault shows no figures, not a stale or zero balance. */}
+            {vaultRead ? null : (
+              <Problem title={delegation.errors.vault.title} body={delegation.errors.vault.body} />
+            )}
+            {vaultRead && vault.balance === "0.00" ? (
+              <Empty title={vaultWords.empty.title} body={vaultWords.empty.body} />
+            ) : null}
+            {vaultRead ? (
+              <>
+                <dl className="grid gap-6 sm:grid-cols-3">
+                  {(
+                    [
+                      [vaultWords.balance, vault.balance],
+                      [vaultWords.reserved, reserved(vault)],
+                      [vaultWords.free, free(vault)],
+                    ] as const
+                  ).map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="grid gap-1 border-t border-[color:var(--rule)] pt-3"
+                    >
+                      <dt className={T.small}>{label}</dt>
+                      <dd className="font-display text-4xl font-extrabold tabular-nums text-[color:var(--fg)]">
+                        {amount(value, 6)} <span className="text-lg">{ASSET}</span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className={T.small}>
+                  {fill(vaultWords.reservedNote, {
                     amount: amount(reserved(vault), 6),
                     asset: ASSET,
                   })}
+                </p>
+              </>
+            ) : null}
+            <div className="grid max-w-[520px] gap-2">
+              <label htmlFor={amountId} className="text-sm font-medium text-[color:var(--fg)]">
+                {vaultWords.amount.label}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  id={amountId}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={money}
+                  onChange={(event) => {
+                    setMoney(event.target.value);
+                    setMoneyIssue(null);
+                  }}
+                  aria-invalid={moneyIssue ? true : undefined}
+                  aria-describedby={moneyIssue ? amountErrorId : undefined}
+                  className={`${INPUT} min-w-[10rem] flex-1 font-mono tabular-nums`}
                 />
-              ) : null}
-              {moneyIssue === "balance" ? (
-                <Problem
-                  title={delegation.errors.balance.title}
-                  body={fill(delegation.errors.balance.body, { asset: ASSET })}
-                />
-              ) : null}
-              {moneyIssue === "vaultBalance" ? (
-                <Problem
-                  title={delegation.errors.vaultBalance.title}
-                  body={fill(delegation.errors.vaultBalance.body, { asset: ASSET })}
-                />
-              ) : null}
+                <Button type="button" variant="ghost" onClick={() => move("deposit")}>
+                  {vaultWords.deposit.label}
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => move("withdraw")}>
+                  {vaultWords.withdraw.label}
+                </Button>
+              </div>
+              <div id={amountErrorId}>
+                {moneyIssue === "invalid" ? (
+                  <p role="alert" className="text-sm font-medium text-[color:var(--blocked-ink)]">
+                    {send.errors.amountZero.title}
+                  </p>
+                ) : null}
+                {moneyIssue === "reserved" ? (
+                  <Problem
+                    title={delegation.errors.reserved.title}
+                    body={fill(delegation.errors.reserved.body, {
+                      amount: amount(reserved(vault), 6),
+                      asset: ASSET,
+                    })}
+                  />
+                ) : null}
+                {moneyIssue === "balance" ? (
+                  <Problem
+                    title={delegation.errors.balance.title}
+                    body={fill(delegation.errors.balance.body, { asset: ASSET })}
+                  />
+                ) : null}
+                {moneyIssue === "vaultBalance" ? (
+                  <Problem
+                    title={delegation.errors.vaultBalance.title}
+                    body={fill(delegation.errors.vaultBalance.body, { asset: ASSET })}
+                  />
+                ) : null}
+              </div>
             </div>
-          </div>
-        </Block>
+          </Block>
 
-        <Block
-          title={merchants.title}
-          aside={
-            adding ? null : (
-              <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
-                {merchants.add}
-              </Button>
-            )
-          }
-        >
-          {adding ? <AddMerchant onDone={() => setAdding(false)} /> : null}
-          {listed.length === 0 ? (
-            <Empty
-              title={merchants.empty.title}
-              body={merchants.empty.body}
-              {...(adding
-                ? {}
-                : {
-                    action: (
-                      <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
-                        {merchants.empty.action.label}
+          <Block
+            title={merchants.title}
+            aside={
+              adding ? null : (
+                <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
+                  {merchants.add}
+                </Button>
+              )
+            }
+          >
+            {adding ? <AddMerchant onDone={() => setAdding(false)} /> : null}
+            {listed.length === 0 ? (
+              <Empty
+                title={merchants.empty.title}
+                body={merchants.empty.body}
+                {...(adding
+                  ? {}
+                  : {
+                      action: (
+                        <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
+                          {merchants.empty.action.label}
+                        </Button>
+                      ),
+                    })}
+              />
+            ) : (
+              <ul className="grid border-t border-[color:var(--rule)]">
+                {listed.map((merchant) => (
+                  <MerchantRow key={merchant.address} merchant={merchant} />
+                ))}
+              </ul>
+            )}
+            <div className="grid gap-3 border-l-4 border-[color:var(--fg)] pl-4">
+              <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
+                {merchants.refuses.title}
+              </p>
+              <ul className="grid gap-1.5">
+                {merchants.refuses.points.map((point) => (
+                  <li key={point} className="text-base text-[color:var(--fg)]">
+                    {point}
+                  </li>
+                ))}
+              </ul>
+              <p className={T.small}>{merchants.refuses.note}</p>
+            </div>
+          </Block>
+
+          <Block title={agentKey.title}>
+            {vault.agent ? (
+              <div className="grid gap-5">
+                <div className="grid gap-1">
+                  <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
+                    {agentKey.active.title}
+                  </p>
+                  <p className={T.body}>
+                    {fill(agentKey.active.body, {
+                      date: day(vault.agent.created),
+                      count: String(vault.agent.payments),
+                    })}
+                  </p>
+                </div>
+                <div className="grid gap-1">
+                  <p className={T.label}>{agentKey.active.address}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                      {vault.agent.address}
+                    </code>
+                  </div>
+                </div>
+                <div className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
+                  <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
+                    {agentKey.handover.title}
+                  </p>
+                  <p className={`${T.body} max-w-[60ch]`}>{agentKey.handover.body}</p>
+                  {revealed ? (
+                    <div className="grid gap-2">
+                      <code className="block border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-3 font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                        {agentSecret ?? SAMPLE_AGENT_KEY}
+                      </code>
+                      <div className="-ml-2 flex">
+                        <CopyButton
+                          text={agentSecret ?? SAMPLE_AGENT_KEY}
+                          label={agentKey.handover.copy}
+                          done={agentKey.handover.copied}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex">
+                      <Button type="button" variant="ghost" onClick={reveal}>
+                        {agentKey.handover.reveal}
                       </Button>
-                    ),
-                  })}
-            />
-          ) : (
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                <Empty title={agentKey.none.title} body={agentKey.none.body} />
+                <p role="status" className="text-sm text-[color:var(--fg)]">
+                  {keyPhase === "creating"
+                    ? agentKey.creating
+                    : keyPhase === "registering"
+                      ? agentKey.registering
+                      : ""}
+                </p>
+                <div className="flex">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={keyPhase !== "idle"}
+                    onClick={createAgent}
+                  >
+                    {agentKey.none.action.label}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Block>
+
+          <Block title={revoke.title}>
+            <p className={`${T.body} max-w-[60ch]`}>{revoke.body}</p>
             <ul className="grid border-t border-[color:var(--rule)]">
-              {listed.map((merchant) => (
-                <MerchantRow key={merchant.address} merchant={merchant} />
-              ))}
-            </ul>
-          )}
-          <div className="grid gap-3 border-l-4 border-[color:var(--fg)] pl-4">
-            <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
-              {merchants.refuses.title}
-            </p>
-            <ul className="grid gap-1.5">
-              {merchants.refuses.points.map((point) => (
-                <li key={point} className="text-base text-[color:var(--fg)]">
-                  {point}
+              {revoke.options.map((option) => (
+                <li
+                  key={option.label}
+                  className="grid gap-1 border-b border-[color:var(--rule)] py-3"
+                >
+                  <p className="text-base font-medium text-[color:var(--fg)]">{option.label}</p>
+                  <p className={T.small}>{option.hint}</p>
                 </li>
               ))}
             </ul>
-            <p className={T.small}>{merchants.refuses.note}</p>
-          </div>
-        </Block>
-
-        <Block title={agentKey.title}>
-          {vault.agent ? (
-            <div className="grid gap-5">
-              <div className="grid gap-1">
-                <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
-                  {agentKey.active.title}
-                </p>
-                <p className={T.body}>
-                  {fill(agentKey.active.body, {
-                    date: day(vault.agent.created),
-                    count: String(vault.agent.payments),
-                  })}
-                </p>
-              </div>
-              <div className="grid gap-1">
-                <p className={T.label}>{agentKey.active.address}</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <code className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                    {vault.agent.address}
-                  </code>
-                </div>
-              </div>
-              <div className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
-                <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
-                  {agentKey.handover.title}
-                </p>
-                <p className={`${T.body} max-w-[60ch]`}>{agentKey.handover.body}</p>
-                {revealed ? (
-                  <div className="grid gap-2">
-                    <code className="block border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-3 font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                      {SAMPLE_AGENT_KEY}
-                    </code>
-                    <div className="-ml-2 flex">
-                      <CopyButton
-                        text={SAMPLE_AGENT_KEY}
-                        label={agentKey.handover.copy}
-                        done={agentKey.handover.copied}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex">
-                    <Button type="button" variant="ghost" onClick={() => setRevealed(true)}>
-                      {agentKey.handover.reveal}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <Empty title={agentKey.none.title} body={agentKey.none.body} />
-              <p role="status" className="text-sm text-[color:var(--fg)]">
-                {keyPhase === "creating"
-                  ? agentKey.creating
-                  : keyPhase === "registering"
-                    ? agentKey.registering
-                    : ""}
-              </p>
+            {vault.agent ? (
               <div className="flex">
-                <Button
-                  type="button"
-                  variant="primary"
-                  disabled={keyPhase !== "idle"}
-                  onClick={() => setKeyPhase("creating")}
-                >
-                  {agentKey.none.action.label}
+                <Button type="button" variant="danger" onClick={() => dialog.current?.showModal()}>
+                  {revoke.confirm.action}
                 </Button>
               </div>
-            </div>
-          )}
-        </Block>
+            ) : said === revoke.done ? (
+              <p className="text-base text-[color:var(--fg)]">{revoke.done}</p>
+            ) : null}
+          </Block>
 
-        <Block title={revoke.title}>
-          <p className={`${T.body} max-w-[60ch]`}>{revoke.body}</p>
-          <ul className="grid border-t border-[color:var(--rule)]">
-            {revoke.options.map((option) => (
-              <li
-                key={option.label}
-                className="grid gap-1 border-b border-[color:var(--rule)] py-3"
+          <Block title={activity.title}>
+            <p className={T.small}>{activity.body}</p>
+            {state.agentPayments.length === 0 ? (
+              <Empty title={activity.empty.title} body={activity.empty.body} />
+            ) : (
+              <ul className="grid border-t border-[color:var(--rule)]">
+                {state.agentPayments.map((payment) => (
+                  <li
+                    key={payment.id}
+                    className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-[color:var(--rule)] py-3"
+                  >
+                    <span className="text-base text-[color:var(--fg)]">
+                      {fill(activity.row, {
+                        amount: amount(payment.amount, 6),
+                        asset: ASSET,
+                        merchant: payment.merchant,
+                      })}
+                    </span>
+                    <time
+                      dateTime={payment.at}
+                      className="font-mono text-sm text-[color:var(--fg-muted)] tabular-nums"
+                    >
+                      {when(payment.at)}
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Block>
+        </div>
+
+        <dialog
+          ref={dialog}
+          aria-labelledby={dialogTitle}
+          className="m-auto w-[min(92vw,520px)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-0 text-[color:var(--fg)] backdrop:bg-black/55"
+        >
+          <div className="grid gap-5 p-6">
+            <h2 id={dialogTitle} className={`${T.h3} text-[color:var(--fg)]`}>
+              {revoke.confirm.title}
+            </h2>
+            <p className={T.body}>{revoke.confirm.body}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button type="button" variant="ghost" onClick={() => dialog.current?.close()}>
+                {revoke.confirm.cancel}
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => {
+                  if (live) start(live.vault.revokeAgent());
+                  else dispatch({ type: "revokeAgent", at: new Date().toISOString() });
+                  setAgentSecret(null);
+                  setRevealed(false);
+                  setSaid(revoke.done);
+                  dialog.current?.close();
+                }}
               >
-                <p className="text-base font-medium text-[color:var(--fg)]">{option.label}</p>
-                <p className={T.small}>{option.hint}</p>
-              </li>
-            ))}
-          </ul>
-          {vault.agent ? (
-            <div className="flex">
-              <Button type="button" variant="danger" onClick={() => dialog.current?.showModal()}>
                 {revoke.confirm.action}
               </Button>
             </div>
-          ) : said === revoke.done ? (
-            <p className="text-base text-[color:var(--fg)]">{revoke.done}</p>
-          ) : null}
-        </Block>
-
-        <Block title={activity.title}>
-          <p className={T.small}>{activity.body}</p>
-          {state.agentPayments.length === 0 ? (
-            <Empty title={activity.empty.title} body={activity.empty.body} />
-          ) : (
-            <ul className="grid border-t border-[color:var(--rule)]">
-              {state.agentPayments.map((payment) => (
-                <li
-                  key={payment.id}
-                  className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-[color:var(--rule)] py-3"
-                >
-                  <span className="text-base text-[color:var(--fg)]">
-                    {fill(activity.row, {
-                      amount: amount(payment.amount, 6),
-                      asset: ASSET,
-                      merchant: payment.merchant,
-                    })}
-                  </span>
-                  <time
-                    dateTime={payment.at}
-                    className="font-mono text-sm text-[color:var(--fg-muted)] tabular-nums"
-                  >
-                    {when(payment.at)}
-                  </time>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Block>
-      </div>
-
-      <dialog
-        ref={dialog}
-        aria-labelledby={dialogTitle}
-        className="m-auto w-[min(92vw,520px)] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-0 text-[color:var(--fg)] backdrop:bg-black/55"
-      >
-        <div className="grid gap-5 p-6">
-          <h2 id={dialogTitle} className={`${T.h3} text-[color:var(--fg)]`}>
-            {revoke.confirm.title}
-          </h2>
-          <p className={T.body}>{revoke.confirm.body}</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button type="button" variant="ghost" onClick={() => dialog.current?.close()}>
-              {revoke.confirm.cancel}
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                dispatch({ type: "revokeAgent", at: new Date().toISOString() });
-                setRevealed(false);
-                setSaid(revoke.done);
-                dialog.current?.close();
-              }}
-            >
-              {revoke.confirm.action}
-            </Button>
           </div>
-        </div>
-      </dialog>
-    </Screen>
+        </dialog>
+      </Screen>
+    </FlowContext>
   );
 }

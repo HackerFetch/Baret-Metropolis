@@ -55,7 +55,12 @@ describe("a live wallet's starting state", () => {
     expect(start.locked).toBe(true);
     expect(start.address).toBe("");
     expect(start.assets).toEqual([]);
-    expect(start.status).toEqual({ analyzer: "loading", balances: "loading", activity: "loading" });
+    expect(start.status).toEqual({
+      analyzer: "loading",
+      balances: "loading",
+      activity: "loading",
+      vault: "loading",
+    });
     expect(start.policy.allowedAssets).toEqual([USDC]);
   });
 
