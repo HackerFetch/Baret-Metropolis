@@ -2,7 +2,7 @@
 
 > Hale's working document: how Baret is tested, how a bug is reported, and what has to be handed in by the deadline. Hale's task list is `tasks/FOR_HALE.md`; this file is the method and the plan behind it.
 
-Last updated: 2026-10-08 · Owner: Hale · **Submission closes Wed 14 Oct 2026, 06:59 (GMT+3)**; the team submits on Mon 12 Oct. Hale's days are the `H` rows of the board in `docs/ROADMAP.md` ("Final week — the board"), which replace the day table in §9
+Last updated: 2026-10-09 · Owner: Hale · **Submission closes Wed 14 Oct 2026, 06:59 (GMT+3)**; the team submits on Mon 12 Oct. Hale's days are the `H` rows of the board in `docs/ROADMAP.md` ("Final week — the board"), which replace the day table in §9. Since 2026-10-09 Hale also builds and writes (D-031); §8.1 holds what every prize's page asks
 
 ---
 
@@ -152,25 +152,128 @@ Requirements must be read on the platform, not guessed: the first delivery task 
 
 ## 8. Submission tracker
 
-One row per bounty the team enters. Ezgin copies what each bounty page asks into the second column (E3); Hale checks it against the form itself (H2), then fills in the rest.
+One row per prize the team enters (twelve are selected on the project). What each page asks is in §8.1 below; the second column here is for anything the form itself adds (H2). Hale fills in the rest (H14, H15).
 
 | Bounty | Form fields / criteria (from the platform) | Evidence in the product (URL, tx, file) | Text written | Submitted |
 |---|---|---|---|---|
-| Main track: Trust, Identity & AI Infrastructure | | | ⬜ | ⬜ |
+| Main track: Trust, Identity & AI Infrastructure (logo, demo video max 3 min, pitch video max 2 min, live link with access instructions) | | | ⬜ | ⬜ |
 | Nansen | | | ⬜ | ⬜ |
 | Dynamic | | | ⬜ | ⬜ |
 | Mera-Powered UX | | | ⬜ | ⬜ |
 | Mera: One Passkey, Many Keys | | | ⬜ | ⬜ |
-| Cleanverse | | | ⬜ | ⬜ |
+| Cleanverse (demo video required, max 5 min) | | | ⬜ | ⬜ |
 | Envio | | | ⬜ | ⬜ |
 | Alchemy | | | ⬜ | ⬜ |
-| Best Community Team Project | | | ⬜ | ⬜ |
-| Chainlink: Best workflow with CRE | | | ⬜ | ⬜ |
-| MetaMask: Best Agent Wallet Plugin (another track: enter only if E3 confirms it can be) | | | ⬜ | ⬜ |
-| KIMI (only if M3 is live at the freeze) | | | ⬜ | ⬜ |
-| Qwen 3.8 Max (only if M4 is live at the freeze; needs the article, H10) | | | ⬜ | ⬜ |
+| Best Community Team Project (campus group in all three profiles) | | | ⬜ | ⬜ |
+| Chainlink: Best workflow with CRE (demo video required, max 2 min) | | | ⬜ | ⬜ |
+| KIMI (only if M4 is live at the freeze; published article required) | | | ⬜ | ⬜ |
+| Qwen 3.8 Max (only if M5 is live at the freeze; published article required) | | | ⬜ | ⬜ |
 
 A bounty whose integration is not working on the live URL two days before the deadline is not entered; write the reason in `docs/BOUNTIES_AND_TRACKS.md` (`❌ Dropped`).
+
+### 8.1 What each page asks (copied from the platform by Ezgin on 2026-10-09)
+
+The wording below is the platform's. Every prize closes on **Oct 14, 2026 at 06:59 GMT+3**; "selections stay editable until the final submission deadline". Twelve are selected on the project. Read the entry of a prize before building, testing, filming or writing for it. If the page changes, change this section first.
+
+#### The track: Trust, Identity & AI Infrastructure — $30,000, "split evenly among 3 winners - $10,000 each"
+
+- **Belongs here if:** "the primary output is a protocol, primitive, or infrastructure layer that other applications build on — not a standalone consumer product."
+- **Core question:** "What does the trust and data ownership layer look like for an AI-native internet — built in a way that is privacy-preserving, composable, and impossible for any single platform to capture?" The page names Monad's building blocks: the native P256 precompile for WebAuthn verification, ERC-8004 as a trustless agent registry, BTX encrypted mempools.
+- **Judges look for:**
+  - Technical Execution (20%): "is the trust/identity/data primitive implemented correctly and securely — correct use of WebAuthn/P256, sound key derivation, no leaked secrets?"
+  - Design & Craft (20%): "is the primitive usable by the developers who'd build on it — clear docs, clean interface or API — even without an end-user-facing UI? Design here means developer experience, not just visuals."
+  - Originality & Track Insight (15%): "does this solve trust, provenance, or data ownership in a way that's privacy-preserving and not capturable by a single platform, or does it just centralize the problem differently?"
+  - Founder & Market Readiness (25%): "does the team know which specific applications or developers would adopt this primitive, and why they'd choose it over rolling their own?"
+  - Traction & Path Forward (20%): "any evidence of developer interest (even one other team integrating it during the hackathon), and a specific plan to get more integrations post-event."
+- **To have ready:**
+  - Project logo or graphic: JPG, JPEG, PNG or WEBP, at most 3 MB.
+  - Public GitHub repository, "fully accessible by metropolis@hackathon.monad.xyz".
+  - Technical demo video: at most 3 minutes, on YouTube, Loom or Vimeo, "must show the live working product, not slides or a code walkthrough".
+  - Pitch video: at most 2 minutes, "introducing the team, the problem being solved, and why you're building it".
+  - Live product link: "deployed on Monad Mainnet or Testnet, accompanied by clear access instructions and any necessary test login credentials for judges".
+  - Optional: a product advertisement of at most 30 seconds, not judged.
+
+#### Best use of Nansen — $5,000 pool (1st $2,000, 2nd $1,500, 3rd $1,000, honorable mention $500) · all tracks
+
+- **For:** "The strongest projects will use Nansen to create a meaningful product experience — not simply expose raw data."
+- **Judges look for:** at least one Nansen API endpoint, MCP tool or the CLI, meaningfully integrated; Nansen data "as part of a core product feature, not just a superficial API call"; a working product; a clear explanation of how Nansen is integrated ("endpoints, data categories, MCP tools, CLI commands used"); a public repository; a short video or live demo.
+- **Asked at submission:** how the project integrates the Nansen API, MCP or CLI; an optional demo video of up to 2 minutes.
+
+#### Best Use of Dynamic — $5,000, single prize · all tracks
+
+- **For:** the Dynamic SDK "for authentication, embedded wallets (or server & agent wallets), and/or signing". "App must be deployed and usable/demoable by judges, and fit within one of Monad's four tracks."
+- **Judges look for:** creative use (wallets, money movement, agent wallets); technical execution ("would real users use this?"); bonus for combining primitives, "e.g., embedded wallets + Fireblocks Flow, or agent wallets + delegated access"; bonus for depth over breadth.
+- **Asked at submission:** how the project integrates the SDK; an optional demo video of up to 2 minutes.
+
+#### Best Mera-Powered UX on Monad — $2,500, single prize · all tracks
+
+- **For:** "an app on Monad where Mera is the entire account layer. No seed phrase. No wallet extension. No custody backend. The winner is the app where the user never notices there's a blockchain underneath."
+- **Judges look for:** "Time-to-first-transaction — taps and seconds from landing page to confirmed Monad transaction"; "Session design — sensible scoping of prompt-free vs. re-prompt actions, clean session-expiry UX"; the stateless test; bonus for combining Mera with the broader account stack (gas sponsorship, intents, recovery flows, smart-account patterns).
+- **To have ready:** deployed on Monad testnet or mainnet "with real transactions and a live demo"; "One-prompt onboarding — a single passkey ceremony, no seed phrase, extension install, or email/OTP dance"; "Prompt-free signing via Mera signing sessions with a clearly scoped session"; "Must pass the stateless test — judges clear local storage or open the app on a fresh device mid-demo, and identity/access must fully reconstruct from the passkey (plus untrusted storage if used)".
+- **Asked at submission:** how the project integrates Mera as the entire account layer; an optional demo video of up to 2 minutes "focusing on UX elements".
+- **For us:** this is entered with `apps/wallet` only. The extension (a preview, with a passphrase setup) is not part of this entry.
+
+#### Mera: One Passkey, Many Keys — $2,500, single prize · all tracks
+
+- **For:** "the most creative use of that primitive for anything that is NOT signing blockchain transactions from a wallet account." "every salt is an isolated namespace — one passkey can mint unlimited unrelated keys for encryption, identities, or capabilities, all reconstructible from the passkey alone, with zero secrets stored anywhere."
+- **Judges look for:** "Novelty — the further from 'passkey wallet,' the better"; "Correct use of the primitives — encryption vs. derivation used appropriately, salts genuinely namespaced, nothing sensitive persisted to disk or server"; "The cross-device test — same passkey on a second device or fresh browser profile reproduces the same derived keys / decrypts the same state, live".
+- **To have ready:** "A submission (may include a wallet, but the wallet can't be the point) where at least one PRF namespace does non-account work, demonstrated live".
+- **Ideas the page lists that are near ours:** "Per-agent or per-app isolated identities minted from salt namespaces"; "AI agent memory encrypted to the user's passkey"; "Secret vaults that wrap existing credentials".
+- **Asked at submission:** how the project uses Mera in non-account work; an optional demo video of up to 2 minutes.
+
+#### Best Integration of Cleanverse Verified Identity & Assets — $2,000 cash, single prize · our track
+
+- **For:** "an application that integrates Cleanverse Verified Identity (CVI) with Cleanverse Verified Assets (CVA), where asset movement is gated by on-chain identity verification."
+- **Judges look for:** "Priority given to projects where identity verification is structurally coupled to asset movement, not added as an optional layer".
+- **To have ready:** "Verify wallet-bound CVI credentials before executing any CVA transfer or settlement"; "a working end-to-end flow on Monad"; "a real-world compliance use case such as Travel Rule-compliant payments, permissioned DeFi, or verified RWA settlement"; "CVI/CVA integration is mandatory".
+- **Asked at submission:** the compliance use case, described; **a demo video (up to 5 minutes)** "showing the mandatory CVI/CVA integrations where wallet-bound CVI credentials are verified before executing any CVA transfer or settlement".
+- **Resources on the page:** the API reference (`docs.cleanverse.com`) with an app id and key, and three integration guides on Google Drive (CVI compliance, wrapped CVA, CVA). The key is on the bounty page; it is never copied into this repository.
+
+#### Best Use of Envio — $1,000, single prize · all tracks
+
+- **For:** "your project must meaningfully use Envio's HyperIndex, HyperSync or HyperRPC to power real on-chain data in your app — not just installed, but actually driving a feature."
+- **Judges look for:** "Depth of use — multichain indexing, non-trivial schema design, derived/aggregated entities, or creative use of HyperSync for analytics scores higher than a single-event ERC-20 indexer"; "Working product — it runs, the data is live and correct"; originality; "Craft — readable code, sensible schema, a repo someone else could pick up".
+- **To have ready:** "A working indexer or data pipeline built with Envio, deployed to Envio Cloud or self-hosted, with a public repo showing config.yaml, schema.graphql and event handlers"; "A frontend, dashboard, agent, bot or API that consumes that data and does something useful with it"; "A short demo (video or live link) showing the data flowing end to end".
+- **Asked at submission:** how the project uses Envio; an optional demo video of up to 2 minutes.
+
+#### Best Projects using Alchemy — $1,000 in Alchemy credits, single prize · all tracks
+
+- **For:** "a functional project deployed on Monad that meaningfully integrates at least one Alchemy service/tool."
+- **Judges look for:** quality of the integration; technical execution; usefulness and innovation.
+- **Asked at submission:** how the project integrates Alchemy; an optional demo video of up to 2 minutes.
+
+#### Best workflow with CRE (Chainlink) — $3,000, single prize · all tracks
+
+- **For:** "build, simulate, or deploy a CRE Workflow used as an orchestration layer within their project."
+- **To have ready:** "Integrate at least one blockchain with an external API, system, data source, LLM, or AI agent"; "Demonstrate a successful simulation (via the CRE CLI) or a live deployment on the CRE network"; "CRE must be meaningfully used in the project".
+- **Asked at submission:** how the project uses CRE as an orchestration layer; **a demo video (up to 2 minutes)** "showing a successful simulation (via the CRE CLI) or a live deployment on the CRE network".
+
+#### Best Builds Powered by KIMI — $3,000 in credits, "split across 10 teams who used KIMI to build" · all tracks
+
+- **Judges look for:** "KIMI is meaningfully driving a core feature, not bolted on as a chatbot widget"; "A working, demoable product on Monad"; bonus for creative or unexpected use.
+- **To have ready:** a working, demoable product on Monad genuinely powered by KIMI; **"A published article/blog post detailing how Kimi was used and what value Kimi brought to the project."**
+- **Asked at submission:** the published article.
+- **Ideas the page lists:** an AI agent that trades; a chatbot that reasons over on-chain data; a multilingual dApp interface.
+- **Resources on the page:** `platform.kimi.ai`, `platform.kimi.com/docs/overview`.
+
+#### Best Builds with Qwen 3.8 Max (Alibaba Cloud) — $5,000 in credits, "split across the top 3 Track 4 winners" · our track
+
+- **For:** "Push it into genuinely agentic territory on Monad: autonomous agents, coding copilots, on-chain decision-making, or anything that shows Qwen doing real work, not just answering prompts."
+- **Judges look for:** "Real agentic use of Qwen 3.8 Max — planning, tool use, multi-step execution"; "A working product deployed and demoable on Monad"; "Depth of integration over surface-level API calls".
+- **To have ready:** the product, and **"A published article/blog post detailing how Qwen was used and what value Qwen brought to the project."**
+- **Asked at submission:** the published article.
+- **Resources on the page:** `qwen.ai/qwencode`, `www.qwencloud.com`.
+
+#### Best Community Team Project — $5,000, single prize · all tracks
+
+- **For:** "the best overall project — across all four tracks — built by a team representing onboarded community supporters". It runs alongside track judging and can be won in addition to anything else.
+- **Judges look for:** the same quality bar as the track; no separate criteria.
+- **To have ready:** "Team must indicate their campus group when completing their profile on the hackathon portal"; "Community must be on the list of onboarded groups (selectable in the community field on the profile)"; the standard requirements (public repo, demo video, deployed on Monad).
+- **Asked at submission:** "Which community does your team represent?"
+
+#### Not selected
+
+The MetaMask "Best Agent Wallet Plugin" bounty (tagged Onchain Finance & Trading) is not in the list copied on 2026-10-09. The plugin is built (D-027) and stays in the repository; it is not entered unless Ezgin selects it.
 
 ## 9. Seven-day plan
 
