@@ -477,7 +477,7 @@ describe("compliance", () => {
     allowedCountries: ["DE"],
     minComplianceTier: 2,
   });
-  const good = { expiresAt: NOW + 1000, country: "DE", tier: 3 };
+  const good = { expiresAt: NOW + 1000, countries: ["DE"], tier: 3 };
 
   it("checks both sides and names the side", async () => {
     const r = await run(
@@ -501,11 +501,60 @@ describe("compliance", () => {
     const elsewhere = await run(
       { ...tx({ to: USDC }), policy: strictId },
       usdcSend(PEER),
-      cleanSources({ compliance: { [USER]: good, [PEER]: { ...good, country: "FR", tier: 1 } } }),
+      cleanSources({
+        compliance: { [USER]: good, [PEER]: { ...good, countries: ["DE", "FR"], tier: 1 } },
+      }),
     );
     expect(codes(elsewhere)).toEqual(
       expect.arrayContaining(["COMPLIANCE_COUNTRY_DISALLOWED", "COMPLIANCE_TIER_INSUFFICIENT"]),
     );
+  });
+
+  it("accepts a credential that does not expire, and refuses one with no country on it", async () => {
+    const forever = { ...good, expiresAt: null };
+    const ok = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: forever, [PEER]: forever } }),
+    );
+    expect(codes(ok).filter((c) => c.startsWith("COMPLIANCE_"))).toEqual([]);
+
+    const nowhere = await run(
+      { ...tx({ to: USDC }), policy: strictId },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: good, [PEER]: { ...good, countries: [] } } }),
+    );
+    expect(codes(nowhere)).toContain("COMPLIANCE_COUNTRY_DISALLOWED");
+  });
+
+  it("checks both sides of a compliant asset even when no rule asks for identity", async () => {
+    const noRules = { ...tx({ to: USDC }), policy: policy() };
+    const refused = await run(
+      noRules,
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: good, [PEER]: null }, gated: [USDC] }),
+    );
+    const f = refused.findings.find((x) => x.code === "COMPLIANCE_NO_CREDENTIAL");
+    expect(f).toMatchObject({ blocking: true, details: { side: "recipient", asset: USDC } });
+    expect(refused.decision).toBe("blocked");
+    expect(refused.sources).toContainEqual({ name: "cleanverse", status: "ok" });
+
+    const fine = await run(
+      noRules,
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: good, [PEER]: good }, gated: [USDC] }),
+    );
+    expect(codes(fine).filter((c) => c.startsWith("COMPLIANCE_"))).toEqual([]);
+  });
+
+  it("leaves an ordinary token alone when no rule asks for identity", async () => {
+    const r = await run(
+      { ...tx({ to: USDC }), policy: policy() },
+      usdcSend(PEER),
+      cleanSources({ compliance: { [USER]: null, [PEER]: null } }),
+    );
+    expect(codes(r).filter((c) => c.startsWith("COMPLIANCE_"))).toEqual([]);
+    expect(r.sources).toContainEqual({ name: "cleanverse", status: "skipped" });
   });
 
   it("fails closed when Cleanverse does not answer", async () => {

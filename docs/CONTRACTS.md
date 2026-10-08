@@ -159,7 +159,27 @@ First report through it: [`0xa1b97992…`](https://testnet.monadexplorer.com/tx/
 
 ## 4. Cleanverse Integration — Contract or API?
 
-Cleanverse has its own CVI (identity) / CVA (asset) contracts (provided by the sponsor). Baret does **not rewrite** them; it calls `complianceVerify` from its own `compliance.ts` detector and/or (if any) from the transfer hook of our own contracts. Whether a new contract is needed on the Baret side (e.g. a sample "gated asset" demo contract wrapping the Cleanverse rules) will be decided in `DECISIONS.md` — a minimal sample contract will probably be needed for the showcase.
+Cleanverse has its own CVI (identity) and CVA (asset) contracts. Baret does **not rewrite** them; it reads them (D-030).
+
+### 4.1 Cleanverse's contracts on Monad testnet (10143)
+
+From Cleanverse's `GET https://uatapi.cleanverse.com/api/skills/query_chain_config`. All three are UUPS proxies; their sources are not published.
+
+| Contract | Address | What Baret uses |
+|---|---|---|
+| A-Pass (CVI): one soulbound credential per verified wallet | `0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9` | `balanceOf(address)`; the credential record (selector `0x6a069f61(address)`, ten words: status, tier, …, expiry, …, a country bitmap over ISO 3166-1 alpha-2 in alphabetical order) |
+| aToken policy: what a compliant asset asks before it moves | `0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd` | `isTokenRegistered(address token)`. Also there: `canTransfer(address token, address from, address to, uint256 amount)` |
+| aUSDC (CVA): "Access USDC", 6 decimals, wraps the test USDC | `0xaC0893567D43C3E7e6e35a72803df05416C1f20D` | An ERC-20 whose `transfer` asks the policy |
+
+Observed with read-only calls on 2026-10-08: `aUSDC.transfer` between two wallets that hold an A-Pass succeeds; to a wallet without one it reverts with error `0xa6725971(address)` naming that wallet, and so does `policy.canTransfer`. The record decoded on-chain matches Cleanverse's `query_apass` API for four wallets (tier 5 with AD and AE; tier 59 with AT, CN, FR and TZ; two with no country). The gate is in the asset: there is no path around it.
+
+### 4.2 What Baret adds
+
+The asset says no without saying why (`execution reverted`). `apps/server` reads the same contracts, so a transfer of a compliant asset is checked on both sides whatever the user's rules are, and the verdict names the party and the reason before anything is signed (`COMPLIANCE_NO_CREDENTIAL`, `details.side`, `details.asset`). The user's own identity rules (`requireComplianceCheck`, `allowedCountries`, `minComplianceTier`) read the same credential for any transfer.
+
+### 4.3 Not built
+
+A Baret contract that moves a compliant asset: a PaymentGuard vault paying merchants in aUSDC, so that an agent's payment to an unverified merchant is refused on-chain. A vault is a contract and would itself need an A-Pass, which only Cleanverse's issuer can mint; the way to register a contract is in the sponsor's integration guides, which we have not received.
 
 ---
 

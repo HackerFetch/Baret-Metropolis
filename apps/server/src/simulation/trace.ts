@@ -22,6 +22,7 @@ export interface CallTrace {
   frames: TraceFrame[];
   /** Logs of frames that did not revert, in execution order. */
   logs: TraceLog[];
+  /** The deepest chain of contracts calling contracts; delegatecalls add no level. */
   maxDepth: number;
   /** Every address a call frame targeted. */
   touched: Address[];
@@ -49,13 +50,18 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
   const touched = new Set<Address>();
   let maxDepth = 0;
 
-  const walk = (f: RawCallFrame, depth: number, parentReverted: boolean) => {
+  // `contractDepth` is how many contracts deep a frame is. A DELEGATECALL runs
+  // borrowed code inside the calling contract (a proxy and its implementation
+  // are one contract to the user), so it does not add a level.
+  const walk = (f: RawCallFrame, depth: number, contractDepth: number, parentReverted: boolean) => {
     const reverted = parentReverted || Boolean(f.error) || Boolean(f.revertReason);
     const to = addr(f.to);
     if (to) touched.add(to);
-    maxDepth = Math.max(maxDepth, depth);
+    const type = (f.type ?? "CALL").toUpperCase();
+    const level = type === "DELEGATECALL" ? Math.max(contractDepth - 1, 0) : contractDepth;
+    maxDepth = Math.max(maxDepth, level);
     frames.push({
-      type: (f.type ?? "CALL").toUpperCase(),
+      type,
       from: addr(f.from) ?? ("0x0000000000000000000000000000000000000000" as Address),
       to,
       value: amount(f.value),
@@ -69,9 +75,9 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
         if (a) logs.push({ address: a, topics: log.topics as Hex[], data: log.data as Hex });
       }
     }
-    for (const child of f.calls ?? []) walk(child, depth + 1, reverted);
+    for (const child of f.calls ?? []) walk(child, depth + 1, level + 1, reverted);
   };
 
-  walk(root, 0, false);
+  walk(root, 0, 0, false);
   return { frames, logs, maxDepth, touched: [...touched] };
 }

@@ -198,6 +198,14 @@
 **Rationale:** Owner decision at the end of the slot's first day (the rule of D-025). The Qwen bounty page asks for agentic use (planning, tool use, multi-step execution) and a published article, which a one-call reviewer does not meet and a tool-using one would take another day; both providers ask for payment details before issuing a key and no hackathon credit code was offered; both prizes are platform credits, the Qwen one split three ways. Nothing in the verdict depends on a model (D-028), so the product loses two additions, not a safeguard: the intent check, whose gap stays bounded by the vault's caps, and the free-form explanation, which the screens already cover with the fixed sentences in `@baret/content`.
 **Status:** ✅ Final
 
+### D-030 — Cleanverse is read from the chain, and a compliant asset is checked whether or not the user asked
+**Date:** 2026-10-08
+**Decision:** (1) The compliance source reads Cleanverse's A-Pass and aToken policy contracts on Monad directly (`sources/cleanverse.ts`); there is no HTTP client and no API key. (2) When the user sends a token the policy has registered (a CVA such as aUSDC), both sides are looked up even if no identity rule is set, and a missing or expired credential is a blocking `COMPLIANCE_*` finding with `details.asset`. (3) A credential that exists but is not active counts as none; a record of an unexpected size makes the source fail, which blocks. (4) A credential carries a set of countries; `allowedCountries` passes only when every one of them is allowed, and a credential with no country does not pass. (5) Call depth is counted in contracts: a delegatecall into an implementation adds no level, and a proxy is recognised in a failed simulation too.
+**Rationale:** (1) The bounty is identity verified on-chain, and the chain is what the asset itself obeys; an API answer could differ from it. (2) Without it a refused aUSDC transfer is a bare `SIMULATION_FAILED`: correct, and useless to the person. "A rejected compliant transfer should be a legible product state." (4) Fail-closed: a rule that cannot be shown to hold is not treated as held. (5) An honest aUSDC transfer runs through three proxies and was reported as five levels deep with three unknown contracts.
+**Inferred, not documented:** the contracts' sources are unpublished. The record's layout (status, tier, country bitmap) was worked out from the chain and checked against Cleanverse's own API for four wallets. The expiry word's position is a guess: every credential seen has no expiry. If it is wrong, an expired credential would read as valid in Baret, while the asset would still refuse the transfer and the verdict would be `SIMULATION_FAILED` without the reason.
+**Not done:** a Baret contract that moves a compliant asset (`docs/CONTRACTS.md` 4.3). Our own wallet has no A-Pass, so the demo scenarios are simulated from a third party's verified wallet.
+**Status:** ✅ Final for the server side; the contract side waits on the sponsor's guides.
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
@@ -206,7 +214,6 @@
 |---|---|---|---|
 | AK-1 | Will we write our own x402 facilitator or use a standard one? | `X402_FACILITATOR.md` §4.4 | To be settled in Week 4 |
 | AK-2 | Name of the x402 demo scenario (replacing the old "scrybe") | `X402_FACILITATOR.md` §6, `apps/showcase` | Week 2 |
-| AK-4 | Is an additional "gated asset" demo contract needed on the Baret side for Cleanverse? | `CONTRACTS.md` §4 | Week 3 |
 | AK-6 | Whether a separate track submission is required to win the track-tagged bounties (Kuru/Agora/MetaMask plugin) | `BOUNTIES_AND_TRACKS.md` §1 | When the platform clarifies |
 | AK-7 | Best Community Team Project eligibility — confirmation of "community supporter" status | `BOUNTIES_AND_TRACKS.md` §2 row 9 | Week 4 |
 

@@ -4,29 +4,40 @@ import type { Detector, FindingDraft } from "../../analysis/context.js";
 /**
  * Cleanverse identity credentials on both sides of a transfer.
  *
- * requireComplianceCheck applies to the user and every recipient; the country
- * and level rules apply to recipients only. `details.side` says which account
- * a finding is about, so the client can pick `body` or `bodySelf`.
+ * Two things can ask for them. The user's rules: requireComplianceCheck
+ * applies to the user and every recipient; the country and level rules apply
+ * to recipients only. And the asset: a compliant token (CVA) moves only
+ * between credential holders, so sending one is checked on both sides whatever
+ * the rules say, and a missing credential is reported here instead of as a
+ * bare failed simulation.
+ *
+ * `details.side` says which account a finding is about, so the client can
+ * pick `body` or `bodySelf`. `details.asset` is set when the asset, not a
+ * rule, is what demands the credential.
  */
 export const compliance: Detector = (ctx) => {
   const p = ctx.policy;
-  const active =
+  const byAsset = ctx.gatedAssets[0] ?? null;
+  const byRule =
     p.requireComplianceCheck || p.allowedCountries.length > 0 || p.minComplianceTier !== null;
-  if (!active || ctx.recipients.length === 0) return [];
+  if ((!byRule && !byAsset) || ctx.recipients.length === 0) return [];
 
-  const deciding: GuardPolicyField = p.requireComplianceCheck
-    ? "requireComplianceCheck"
-    : p.allowedCountries.length > 0
-      ? "allowedCountries"
-      : "minComplianceTier";
+  const deciding: GuardPolicyField =
+    p.requireComplianceCheck || !byRule
+      ? "requireComplianceCheck"
+      : p.allowedCountries.length > 0
+        ? "allowedCountries"
+        : "minComplianceTier";
+  const asset = byAsset ? { asset: byAsset } : {};
 
   if (!ctx.compliance.data) {
-    return [{ code: "COMPLIANCE_DATA_UNAVAILABLE", values: {}, rule: deciding }];
+    return [{ code: "COMPLIANCE_DATA_UNAVAILABLE", values: {}, details: asset, rule: deciding }];
   }
 
+  const bothSides = p.requireComplianceCheck || byAsset !== null;
   const out: FindingDraft[] = [];
   const accounts = [
-    ...(p.requireComplianceCheck ? [{ address: ctx.user, side: "self" as const }] : []),
+    ...(bothSides ? [{ address: ctx.user, side: "self" as const }] : []),
     ...ctx.recipients
       .filter((r) => r !== ctx.user)
       .map((address) => ({ address, side: "recipient" as const })),
@@ -38,31 +49,35 @@ export const compliance: Detector = (ctx) => {
       out.push({
         code: "COMPLIANCE_NO_CREDENTIAL",
         values: { recipient: address },
-        details: { side },
+        details: { side, ...asset },
         rule: deciding,
       });
       continue;
     }
-    if (credential.expiresAt <= ctx.now) {
-      // An expired credential only blocks through the identity rule itself.
-      if (p.requireComplianceCheck) {
+    if (credential.expiresAt !== null && credential.expiresAt <= ctx.now) {
+      // An expired credential blocks through the identity rule or the asset.
+      if (bothSides) {
         out.push({
           code: "COMPLIANCE_EXPIRED",
           values: { recipient: address },
-          details: { side, expiresAt: credential.expiresAt },
+          details: { side, expiresAt: credential.expiresAt, ...asset },
           rule: "requireComplianceCheck",
         });
         continue;
       }
     }
     if (side === "self") continue;
-    if (p.allowedCountries.length > 0 && !p.allowedCountries.includes(credential.country)) {
-      out.push({
-        code: "COMPLIANCE_COUNTRY_DISALLOWED",
-        values: { recipient: address, country: credential.country },
-        details: { side },
-        rule: "allowedCountries",
-      });
+    if (p.allowedCountries.length > 0) {
+      // No country on the credential is not a pass: the rule cannot be shown to hold.
+      const outside = credential.countries.find((c) => !p.allowedCountries.includes(c));
+      if (outside !== undefined || credential.countries.length === 0) {
+        out.push({
+          code: "COMPLIANCE_COUNTRY_DISALLOWED",
+          values: { recipient: address, country: outside ?? "an unknown country" },
+          details: { side, countries: credential.countries },
+          rule: "allowedCountries",
+        });
+      }
     }
     if (p.minComplianceTier !== null && credential.tier < p.minComplianceTier) {
       out.push({

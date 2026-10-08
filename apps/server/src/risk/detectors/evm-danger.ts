@@ -12,7 +12,7 @@ export const evmDanger: Detector = (ctx) => {
   }
   const seen = new Set<string>();
   for (const d of ctx.delegateCalls) {
-    if (d.standardProxy || seen.has(d.contract)) continue;
+    if (d.reverted || d.standardProxy || seen.has(d.contract)) continue;
     seen.add(d.contract);
     out.push({
       code: "DELEGATECALL_DETECTED",
