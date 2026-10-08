@@ -180,7 +180,7 @@ RESPONSE { decision, findings, firedRules, suggestions, confidence, estimatedCha
 |---|---|---|---|
 | simulation | `risk/detectors/simulation.ts` | Simulation failed, calldata-only (no trace) | `SIMULATION_FAILED`, `LOW_CONFIDENCE_INCOMPLETE_DATA` |
 | approvals | `risk/detectors/approvals.ts` | Unlimited `approve`, `setApprovalForAll`, EIP-2612 `permit` | `ERC20_APPROVAL_GRANTED`, `ERC20_APPROVAL_UNLIMITED`, `NFT_OPERATOR_GRANTED`, `PERMIT_SIGNATURE_DETECTED` |
-| programs | `risk/detectors/programs.ts` | Contract on the risky list / unknown contract | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE` |
+| programs | `risk/detectors/programs.ts` | Contract on the risky list / unknown contract / an unknown contract that keeps what the user sends and returns nothing (a call with calldata, value out, nothing in; D-033) | `RISKY_CONTRACT_INTERACTION`, `UNKNOWN_CONTRACT_EXPOSURE`, `VALUE_KEPT_BY_UNKNOWN_CONTRACT` |
 | evm-danger | `risk/detectors/evm-danger.ts` | `SELFDESTRUCT`, `DELEGATECALL`, ownership transfer | `SELFDESTRUCT_CALL`, `DELEGATECALL_DETECTED`, `OWNERSHIP_TRANSFER` |
 | reputation | `risk/detectors/reputation.ts` | Nansen labels + on-chain ReputationRegistry | `KNOWN_MALICIOUS_ADDRESS`, `NANSEN_FLAGGED_FRESH_WALLET`, `NANSEN_FLAGGED_WHALE_COUNTERPARTY`, `NANSEN_TRUST_BELOW_MINIMUM`, `REPUTATION_DATA_UNAVAILABLE` |
 | compliance | `risk/detectors/compliance.ts` **(new)** | A side of a transfer without an active Cleanverse credential (A-Pass, read on-chain): asked for by the user's identity rules, or by the asset itself when it is a compliant one (CVA), D-030 | `COMPLIANCE_NO_CREDENTIAL`, `COMPLIANCE_EXPIRED`, `COMPLIANCE_TIER_INSUFFICIENT`, `COMPLIANCE_COUNTRY_DISALLOWED`, `COMPLIANCE_DATA_UNAVAILABLE` |

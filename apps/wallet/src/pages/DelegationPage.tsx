@@ -348,7 +348,12 @@ export function Component() {
     setFlowFailed(false);
     setFlow({ steps, index, request: null, pending: true });
     try {
-      const step = await build();
+      // Building a step reads Monad; the public RPC refuses bursts, so one
+      // more try before the page says the vault cannot be reached.
+      const step = await build().catch(async () => {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        return build();
+      });
       current.current = step;
       setRun((n) => n + 1);
       setFlow({ steps, index, request: unreachable(step.context), pending: true });

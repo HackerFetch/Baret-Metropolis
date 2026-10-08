@@ -236,7 +236,7 @@ Deployed 2026-10-05 with `script/DeployDemoSites.s.sol`, all source-verified (So
 | PixelDrop | `NightShift` (ERC-721 `NIGHT`) | `0xC3fAFF337A197d7BFa49bB3210C0C057dd188688` | Listed. `mint(count)` at 0.01 MON, ten per wallet |
 | OrbitYield | `OrbitPool` | `0x9dD3Bc0e343Bdc4AB2BCD4c96D01bc8500725f38` | Listed. `stake()` mints oMON one to one, `unstake` returns the MON |
 | OrbitYield | `DemoToken` oMON | `0xB789996F13551eC6f3DF93d54D4F04A1316C3A92` | Listed receipt token |
-| OrbitYield | `OrbitPoolSilent` | `0xb4cCbB7A8a0Ff5564115856C008eD9a46d306fa8` | Attack: keeps the MON, returns nothing. On no list, not reported |
+| OrbitYield | `OrbitPoolSilent` | `0xb4cCbB7A8a0Ff5564115856C008eD9a46d306fa8` | Attack: keeps the MON, returns nothing. On no list, not reported. Blocked under Balanced by `VALUE_KEPT_BY_UNKNOWN_CONTRACT` (D-033) |
 | ClaimHub | `ClaimHubDistributor` | `0x7cb4a1B209dF1beDEc7843d1bf20E5723BA6Cc2b` | Listed. `claim()` sends 2,410 HUB |
 | ClaimHub | `DemoToken` HUB | `0x26bC901B5489057F76D188631D6252779349684A` | Listed |
 | LaunchPad | `LaunchSale` | `0x7Dc38ed77388b1dacB4653b1681dC7FBF6Dc2aac` | Listed. `contribute()` 0.01 to 1 MON, 1,000 LNTL per MON |

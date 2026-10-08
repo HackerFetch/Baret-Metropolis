@@ -89,7 +89,7 @@ export const policy = {
       highlights: [
         "Blocks unlimited allowances, collection-wide access and signed allowances",
         "Blocks listed addresses and reported contracts",
-        "Unknown contracts show as Caution, not Blocked",
+        "An unknown contract shows as Caution, unless it keeps what you send or runs borrowed code",
       ],
     },
     permissive: {
@@ -165,9 +165,13 @@ export const policy = {
     // Contracts
     blockRiskyContracts: {
       group: "contracts",
-      label: "Block reported contracts",
-      hint: "Blocks a request that touches a contract on the risky list in the Baret reputation registry.",
-      codes: ["RISKY_CONTRACT_INTERACTION", "REPUTATION_DATA_UNAVAILABLE"],
+      label: "Block risky contracts",
+      hint: "Blocks a request that touches a contract on the risky list in the Baret reputation registry, or that pays an unknown contract and gets nothing back.",
+      codes: [
+        "RISKY_CONTRACT_INTERACTION",
+        "VALUE_KEPT_BY_UNKNOWN_CONTRACT",
+        "REPUTATION_DATA_UNAVAILABLE",
+      ],
     },
     blockUnknownContractExposure: {
       group: "contracts",

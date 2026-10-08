@@ -91,8 +91,8 @@ const scenarios: Scenario[] = [
   {
     name: "OrbitYield attack: silent pool, small",
     request: orbityield.attackStake(from, mon("0.1")),
-    verdict: "caution",
-    codes: ["UNKNOWN_CONTRACT_EXPOSURE"],
+    verdict: "blocked",
+    codes: ["UNKNOWN_CONTRACT_EXPOSURE", "VALUE_KEPT_BY_UNKNOWN_CONTRACT"],
   },
   { name: "ClaimHub   honest claim", request: claimhub.claim(from), verdict: "safe", codes: [] },
   {
@@ -110,7 +110,7 @@ const scenarios: Scenario[] = [
   {
     name: "LaunchPad  proxy sale",
     request: launchpad.attackContribute(from, mon("0.2")),
-    verdict: "caution",
+    verdict: "blocked",
     codes: ["UNKNOWN_CONTRACT_EXPOSURE", "UNKNOWN_CONTRACT_EXPOSURE", "DELEGATECALL_DETECTED"],
   },
   {
@@ -197,7 +197,14 @@ if (!process.argv.includes("--skip-cleanverse")) {
 const sorted = (xs: string[]) => [...xs].sort().join(",");
 let failed = 0;
 
-for (const s of scenarios) {
+// `--only <text>` runs the scenarios whose name contains the text; `--pause <ms>`
+// waits between requests, for a server reading from a rate-limited RPC.
+const only = arg("only")?.toLowerCase();
+const pause = Number(arg("pause") ?? 0);
+const picked = only ? scenarios.filter((s) => s.name.toLowerCase().includes(only)) : scenarios;
+
+for (const s of picked) {
+  if (pause > 0) await new Promise((resolve) => setTimeout(resolve, pause));
   const body =
     "typedData" in s.request
       ? { network: "testnet", ...s.request, ...s.with }
@@ -229,5 +236,5 @@ for (const s of scenarios) {
   console.log(`${s.name.padEnd(56)} ${line}`);
 }
 
-console.log(`\n${scenarios.length - failed} of ${scenarios.length} scenarios agree with ${api}`);
+console.log(`\n${picked.length - failed} of ${picked.length} scenarios agree with ${api}`);
 process.exit(failed === 0 ? 0 : 1);

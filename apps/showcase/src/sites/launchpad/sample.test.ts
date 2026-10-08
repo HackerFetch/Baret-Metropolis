@@ -36,9 +36,9 @@ describe("LaunchPad sample", () => {
     });
   });
 
-  it("marks the attack Caution: borrowed code in a sale Baret does not know, LNTL still in", () => {
+  it("blocks the attack: borrowed code in a sale Baret does not know, LNTL still in", () => {
     const result = sampleCheck("danger", 0.5);
-    expect(result.verdict).toBe("caution");
+    expect(result.verdict).toBe("blocked");
     expect(result.findings.map((f) => f.code)).toEqual([
       "DELEGATECALL_DETECTED",
       "UNKNOWN_CONTRACT_EXPOSURE",

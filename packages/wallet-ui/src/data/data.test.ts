@@ -65,8 +65,8 @@ describe("the decision rule (D-014)", () => {
 
   it("reads Custom once a field differs from the template, ignoring the account's assets", () => {
     expect(changedFields(POLICY, "balanced")).toEqual([]);
-    expect(changedFields({ ...POLICY, blockDelegatecall: true }, "balanced")).toEqual([
-      "blockDelegatecall",
+    expect(changedFields({ ...POLICY, blockUnknownContractExposure: true }, "balanced")).toEqual([
+      "blockUnknownContractExposure",
     ]);
   });
 });
@@ -100,12 +100,12 @@ describe("the wallet store", () => {
   it("records each rule that changed, with its old and new value", () => {
     const next = reduce(start, {
       type: "saveRules",
-      policy: { ...start.policy, blockDelegatecall: true, maxLossPercent: 25 },
+      policy: { ...start.policy, blockUnknownContractExposure: true, maxLossPercent: 25 },
       template: "balanced",
       at,
     });
     expect(next.ruleChanges.map((c) => [c.field, c.previous, c.value])).toEqual([
-      ["blockDelegatecall", false, true],
+      ["blockUnknownContractExposure", false, true],
       ["maxLossPercent", 50, 25],
     ]);
   });
