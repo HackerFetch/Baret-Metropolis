@@ -208,6 +208,13 @@
 
 ---
 
+### D-031 — One board for the last week; the split crosses the roles; KIMI and Qwen are back in, with Meriç
+**Date:** 2026-10-08
+**Decision:** (1) `docs/ROADMAP.md` "Final week — the board" is the single plan: every open task has an ID, an owner and a day, and the three task files hold the detail. (2) The aim of the demo is stated once: the same site and the same button, an ordinary wallet signs the attack and the money leaves, Baret reads and stops the same request. Work is ordered by that. (3) For this week the work is split by who finishes fastest: Ezgin wires the wallet's data layer, the history and the playground (E5 to E9); Meriç builds what the viewer sees (M1, M2) and takes the two model bounties (M3 KIMI, M4 Qwen), including their backend code; Hale tests, records and submits. (4) D-029 is reversed in part: both model bounties are targeted again. Qwen has a hard stop on Sat 10 Oct at 20:00 and is dropped again if a real, multi-step run is not working.
+**Rationale:** A check of the repository and the live system on 2026-10-08 found the backend finished and verified (`verify:demo` 20 of 20) while the story the main track is judged on cannot be shown: the demo sites sign nothing, no app imports `@baret/wallet-core`, no screen reads the indexer. Of the thirteen targeted prizes only Alchemy and Chainlink CRE meet their page's text today. The unfinished pieces sit on the seam between the two halves of the team, so the seam is moved for a week rather than waited on. The model bounties come back by owner decision; they go to Meriç so they do not compete with the wallet for Ezgin's Friday.
+**Not changed:** D-028 (a model never decides a verdict), fail-closed, and the rule that nothing is claimed about another wallet that was not seen in Hale's rehearsal (H3).
+**Status:** ✅ Final
+
 ## Open Decisions (not yet taken — to be filled in as we progress)
 
 | # | Topic | Where it has impact | Decision date |

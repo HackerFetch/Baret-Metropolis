@@ -2,7 +2,7 @@
 
 > Hale's working document: how Baret is tested, how a bug is reported, and what has to be handed in by the deadline. Hale's task list is `tasks/FOR_HALE.md`; this file is the method and the plan behind it.
 
-Last updated: 2026-10-07 · Owner: Hale · **Submission closes 2026-10-13** (confirm the exact hour and time zone on the hackathon platform on day 1)
+Last updated: 2026-10-08 · Owner: Hale · **Submission closes Wed 14 Oct 2026, 06:59 (GMT+3)**; the team submits on Mon 12 Oct. Hale's days are the `H` rows of the board in `docs/ROADMAP.md` ("Final week — the board"), which replace the day table in §9
 
 ---
 
@@ -152,7 +152,7 @@ Requirements must be read on the platform, not guessed: the first delivery task 
 
 ## 8. Submission tracker
 
-Filled in by Hale from the platform. One row per bounty the team enters.
+One row per bounty the team enters. Ezgin copies what each bounty page asks into the second column (E3); Hale checks it against the form itself (H2), then fills in the rest.
 
 | Bounty | Form fields / criteria (from the platform) | Evidence in the product (URL, tx, file) | Text written | Submitted |
 |---|---|---|---|---|
@@ -165,12 +165,16 @@ Filled in by Hale from the platform. One row per bounty the team enters.
 | Envio | | | ⬜ | ⬜ |
 | Alchemy | | | ⬜ | ⬜ |
 | Best Community Team Project | | | ⬜ | ⬜ |
+| Chainlink: Best workflow with CRE | | | ⬜ | ⬜ |
+| MetaMask: Best Agent Wallet Plugin (another track: enter only if E3 confirms it can be) | | | ⬜ | ⬜ |
+| KIMI (only if M3 is live at the freeze) | | | ⬜ | ⬜ |
+| Qwen 3.8 Max (only if M4 is live at the freeze; needs the article, H10) | | | ⬜ | ⬜ |
 
 A bounty whose integration is not working on the live URL two days before the deadline is not entered; write the reason in `docs/BOUNTIES_AND_TRACKS.md` (`❌ Dropped`).
 
 ## 9. Seven-day plan
 
-Dates are 2026. Each evening: update `docs/QA_LOG.md`, push the day's work, update the tracker, write tomorrow's blockers for Ezgin and Meriç into their task files.
+**Written for a Wednesday 7 Oct start, which did not happen. The days that count are the `H` rows of the board in `docs/ROADMAP.md`; this table is kept for what belongs to each kind of day.** Dates are 2026. Each evening: update `docs/QA_LOG.md`, push the day's work, update the tracker, write tomorrow's blockers for Ezgin and Meriç into their task files.
 
 | Day | Testing | Delivery |
 |---|---|---|
