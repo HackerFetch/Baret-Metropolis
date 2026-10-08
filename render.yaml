@@ -53,3 +53,6 @@ services:
         sync: false
       - key: CLEANVERSE_API_URL
         sync: false
+      # KIMI (Moonshot) for /v1/explain. Without the key the route answers 503.
+      - key: KIMI_API_KEY
+        sync: false

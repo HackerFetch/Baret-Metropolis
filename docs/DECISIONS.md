@@ -185,6 +185,19 @@
 **Found on the way:** installing the plugin from its workspace folder links it, the commands then load the workspace's copy of `@metamask/agent-wallet`, and with two copies every `mm` command fails with `window.addEventListener is not a function`. Hence the tarball. The executor takes `value` as a 0x quantity, not decimal wei.
 **Status:** ✅ Final
 
+### D-028 — Two models, two narrow jobs, neither of them the decision
+**Date:** 2026-10-08
+**Decision:** One OpenAI-compatible client (`packages/llm`) with two uses. (1) Qwen (`qwen3.8-max`) is an optional reviewer in `agent-kit`: after Baret clears a call, it compares the call's simulated effects with the intent the agent stated and can veto. (2) KIMI (`kimi-k3`) writes `POST /v1/explain`: a verdict's findings in plain language, in English or Turkish, built on the sentences `@baret/content` holds for each code. Neither model can make a verdict more permissive: the reviewer only vetoes and is never asked about a call Baret blocked; the explain route copies `decision` from the verdict. A model that does not answer, or answers off its schema, is a veto in one place and a 503 in the other.
+**Rationale:** Baret's verdict is deterministic and has to stay that way: the same transaction, the same rules, the same answer, with a finding code for every reason. What it cannot know is what the agent meant, and what it does not do is talk like a person; those are the two places a language model adds something. Putting the model after the engine, with veto-only or words-only authority, keeps prompt injection (a token named "ignore previous instructions") from ever becoming a signature. One client for both because both providers speak the same format, and a second provider is then a configuration change.
+**Alternatives:** letting a model score risk inside the engine — rejected, a verdict nobody can reproduce; a single provider for both jobs — rejected, each sponsor's model gets the job it suits and the client makes the split free; an MCP tool `baret_explain` (the original plan) — replaced by the HTTP route, which the screens can call directly.
+**Status:** ✅ Final for the design. The two bounties are dropped: see D-029.
+
+### D-029 — The Qwen and KIMI bounties are dropped; the code stays in, off by default and untested against the real models
+**Date:** 2026-10-08
+**Decision:** Baret does not submit for "Best Builds with Qwen 3.8 Max" or "Best Builds Powered by KIMI". The reviewer in `agent-kit`, `POST /v1/explain` and `packages/llm` are merged as optional features: without `QWEN_API_KEY` the reviewer is not created, without `KIMI_API_KEY` the route answers 503. They are covered by unit tests with stubbed model answers only; no request has been sent to either provider, and the model names (`qwen3.8-max`, `kimi-k3`) and endpoints are from the providers' documentation, not from a call that succeeded.
+**Rationale:** Owner decision at the end of the slot's first day (the rule of D-025). The Qwen bounty page asks for agentic use (planning, tool use, multi-step execution) and a published article, which a one-call reviewer does not meet and a tool-using one would take another day; both providers ask for payment details before issuing a key and no hackathon credit code was offered; both prizes are platform credits, the Qwen one split three ways. Nothing in the verdict depends on a model (D-028), so the product loses two additions, not a safeguard: the intent check, whose gap stays bounded by the vault's caps, and the free-form explanation, which the screens already cover with the fixed sentences in `@baret/content`.
+**Status:** ✅ Final
+
 ---
 
 ## Open Decisions (not yet taken — to be filled in as we progress)

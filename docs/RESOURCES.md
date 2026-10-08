@@ -54,7 +54,7 @@ Enable **Monad gas pricing** in Foundry for local tests (MIP-8 note — see `not
 | Tenderly Simulator/Debugger/Virtual TestNet/Alerts | [tenderly.co](https://tenderly.co/) | Contract development + demo rehearsal environment | Perk, not a bounty directly but improves quality |
 | Zerion CLI/API | [developers.zerion.io](https://developers.zerion.io/) | Optional — backup data source for wallet activity | Perk, optional |
 | Qwen 3.8 Max API | Alibaba Cloud (credits) | `agent-kit` adversarial reviewer | Tier A #11 |
-| KIMI API | Moonshot AI (credits) | `baret_explain` MCP tool | Tier A #13 |
+| KIMI API | Moonshot AI (credits) | `POST /v1/explain` | Tier A #13 |
 | MetaMask Agent Wallet plugin SDK | Bounty description, detailed documentation to be obtained from the platform | `packages/metamask-plugin` | Tier A #12 |
 
 ---

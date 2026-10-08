@@ -191,7 +191,7 @@ export async function checkProposal(p: Proposal, options: CheckOptions = {}): Pr
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(options.apiKey ? { authorization: `Bearer ${options.apiKey}` } : {}),
+        ...(options.apiKey ? { "x-api-key": options.apiKey } : {}),
       },
       body: JSON.stringify(buildAnalyzeRequest(p, options.policyTemplate ?? "balanced")),
       signal,

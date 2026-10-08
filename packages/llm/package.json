@@ -1,0 +1,23 @@
+{
+  "name": "@baret/llm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "One OpenAI-compatible chat client for Baret's two model uses: the Qwen reviewer in agent-kit and the KIMI explanation in the server.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3"
+  }
+}
