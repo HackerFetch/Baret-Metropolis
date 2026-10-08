@@ -129,13 +129,30 @@ export interface SignRequest {
   /** The site that asks; null for a transfer the account starts itself. */
   readonly origin: string | null;
   /** A key of content sign.actions, and the values for its sentence. */
-  readonly action: "transfer" | "contractCall" | "approvalUnlimited" | "payment";
+  readonly action:
+    | "transfer"
+    | "contractCall"
+    | "approval"
+    | "approvalUnlimited"
+    | "payment"
+    | "vaultDeposit"
+    | "vaultWithdraw"
+    | "vaultCaps"
+    | "vaultRemoveMerchant"
+    | "vaultAgentKey"
+    | "vaultRevokeAgent";
   readonly values: Readonly<Record<string, string>>;
   /** What the site says about the request, shown and never trusted; null without a site. */
   readonly claim: string | null;
   readonly verdict: LoggedVerdict;
   /** The impact sentence's key (content sign.impact). */
-  readonly impact: "transfer" | "approvalUnlimited" | "payment" | "unknown";
+  readonly impact:
+    | "transfer"
+    | "approval"
+    | "approvalUnlimited"
+    | "payment"
+    | "nothing"
+    | "unknown";
   readonly findings: readonly CheckFinding[];
   readonly changes: readonly CheckChange[];
   readonly approvals: readonly CheckApproval[];

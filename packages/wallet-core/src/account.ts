@@ -9,7 +9,15 @@ import { toViemAccount } from "@category-labs/mera/viem";
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { type Address, bytesToHex, type Hex, type LocalAccount } from "viem";
+import {
+  type Address,
+  bytesToHex,
+  concatBytes,
+  type Hex,
+  type LocalAccount,
+  sha256,
+  stringToBytes,
+} from "viem";
 import { privateKeyToAddress } from "viem/accounts";
 
 /**
@@ -22,10 +30,17 @@ import { privateKeyToAddress } from "viem/accounts";
  * from them, on separate BIP-44 branches so they can never collide:
  *
  *   m/44'/60'/0'/0/n   the person's own accounts (n = 0 is the wallet)
- *   m/44'/60'/1'/0/n   agent keys: a key the owner can hand to an agent,
- *                      authorise on a PaymentGuard vault, and derive again
- *                      at any time to audit or revoke it. One passkey, many
- *                      keys, and none of them needs a backup.
+ *   m/44'/60'/1'/0/n   agent keys on a branch of the same output: kept for
+ *                      scripts that hold the output and cannot run a passkey
+ *                      prompt (`WalletSession.agentKey`).
+ *
+ * The wallet app does not use that branch for agents. It gives every agent
+ * its own PRF namespace instead (`agentKeyFromPasskey`): the passkey is asked
+ * again with a salt that names the agent, and the answer, unrelated to the
+ * wallet's output, becomes the agent's key. The wallet's own secret is never
+ * an input, so handing an agent its key says nothing about the account, and
+ * the same passkey on any device mints the same agent again. One passkey,
+ * many keys, none stored anywhere.
  */
 
 /** What the browser must remember to ask for the same passkey again. Not secret. */
@@ -103,6 +118,47 @@ export class WalletSession {
 
   get locked(): boolean {
     return this.prfOutput === null;
+  }
+}
+
+/** Names the agent family of PRF namespaces; changing it changes every agent key. */
+export const AGENT_NAMESPACE = "baret.agent.v1";
+
+/** The PRF salt of agent `index`: its own namespace, 32 bytes. */
+export function agentSalt(index: number): Uint8Array {
+  if (!Number.isInteger(index) || index < 0) throw new Error("index must be a whole number");
+  return sha256(stringToBytes(`${AGENT_NAMESPACE}:${index}`), "bytes");
+}
+
+/**
+ * The agent key that comes from one namespace's PRF output. The output is
+ * hashed under a label, so it is never used raw and never equals a key some
+ * other use of the same output would make.
+ */
+export function agentKeyFromPrf(prfOutput: Uint8Array, index: number): AgentKey {
+  if (prfOutput.length !== 32) throw new Error("PRF output must be 32 bytes");
+  const privateKey = sha256(concatBytes([stringToBytes(`${AGENT_NAMESPACE}:key`), prfOutput]));
+  return { index, address: privateKeyToAddress(privateKey), privateKey };
+}
+
+/**
+ * Agent key `index`, from its own PRF namespace. Shows one passkey prompt.
+ * Nothing is stored: the same passkey gives the same key on any device.
+ */
+export async function agentKeyFromPasskey(
+  options: PasskeyOptions & { credential?: StoredCredential },
+  index: number,
+): Promise<AgentKey> {
+  const got = await getPasskeyPrfOutput({
+    rpId: options.rpId,
+    prfSalt: agentSalt(index),
+    ...(options.credential ? { credential: options.credential } : {}),
+    ...(options.webAuthnClient ? { webAuthnClient: options.webAuthnClient } : {}),
+  });
+  try {
+    return agentKeyFromPrf(got.prfOutput, index);
+  } finally {
+    got.prfOutput.fill(0);
   }
 }
 

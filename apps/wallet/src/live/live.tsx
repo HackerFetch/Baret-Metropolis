@@ -3,7 +3,7 @@ import type { StoredCredential, Wallet, WalletCall, WalletSession } from "@baret
 import { fromAnalyze, type SignContext, unreachable } from "@baret/wallet-ui/data/analyze";
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
 import { useWallet, type WalletState } from "@baret/wallet-ui/data/store";
-import type { Asset, GuardPolicy, SignRequest } from "@baret/wallet-ui/data/types";
+import type { Asset, GuardPolicy, Merchant, SignRequest } from "@baret/wallet-ui/data/types";
 import type { SignReceipt } from "@baret/wallet-ui/sign/SignRequest";
 import {
   createContext,
@@ -19,15 +19,28 @@ import {
 import {
   clearStored,
   type PasskeyProblem,
+  readAgentSince,
   readCredential,
+  readMerchants,
   readName,
   readRules,
   SESSION_MS,
   USDC,
+  writeAgentSince,
   writeCredential,
+  writeMerchant,
   writeName,
   writeRules,
 } from "./storage.js";
+import {
+  auditVaultOf,
+  type LiveStep,
+  merchantAddresses,
+  type StepBuilder,
+  toVault,
+  VAULT_ASSET,
+  vaultUnits,
+} from "./vault.js";
 
 /**
  * The wallet's live side: the one place the screens' store meets a real
@@ -79,7 +92,34 @@ export interface Live {
   ): Promise<SignReceipt>;
   /** Forgets everything this browser holds about the account. The passkey itself stays. */
   forget(): void;
+  /**
+   * The PaymentGuard vault. Every change is a list of steps, each one a call
+   * the page puts in front of the owner as a sign request (recheck, then
+   * sign): nothing here signs by itself. The first step opens the vault when
+   * the account has none.
+   */
+  readonly vault: {
+    /** Reads the vault from Monad and the indexer into the store. */
+    refresh(): Promise<void>;
+    /** An exact allowance, then the deposit: two sign requests. */
+    deposit(amount: string): StepBuilder[];
+    withdraw(amount: string): StepBuilder[];
+    /** Lists a merchant or changes its caps. */
+    merchant(merchant: Merchant): StepBuilder[];
+    pause(address: string, paused: boolean): StepBuilder[];
+    remove(address: string): StepBuilder[];
+    /** Authorises `address` as the one key that may pay from the vault. */
+    agent(address: string): StepBuilder[];
+    revokeAgent(): StepBuilder[];
+    /**
+     * One passkey prompt in the agent's own PRF namespace: the agent's address
+     * and key, the same on every device. Null when the prompt gave nothing.
+     */
+    derive(): Promise<{ readonly address: string; readonly privateKey: string } | null>;
+  };
 }
+
+export type { LiveStep, StepBuilder };
 
 const LiveContext = createContext<Live | null>(null);
 
@@ -90,6 +130,15 @@ export function useLive(): Live | null {
 
 const RPC_URL: string =
   import.meta.env.VITE_MONAD_TESTNET_RPC_URL || "https://testnet-rpc.monad.xyz";
+
+type CreateChain = typeof import("@baret/wallet-core")["createWalletChain"];
+let sharedChain: ReturnType<CreateChain> | null = null;
+
+/** One client for every read, so calls made together travel in one batch to the RPC. */
+function chainOf(create: CreateChain): ReturnType<CreateChain> {
+  sharedChain ??= create({ rpcUrl: RPC_URL });
+  return sharedChain;
+}
 
 function problemOf(error: unknown, isMeraError: (e: unknown) => boolean): PasskeyProblem {
   if (typeof window.PublicKeyCredential === "undefined") return "unsupported";
@@ -109,7 +158,7 @@ async function feeOf(from: string | undefined, call: WalletCall): Promise<string
   if (!from) return "0";
   try {
     const { createWalletChain } = await import("@baret/wallet-core");
-    const tx = await createWalletChain({ rpcUrl: RPC_URL }).prepare(from as `0x${string}`, call);
+    const tx = await chainOf(createWalletChain).prepare(from as `0x${string}`, call);
     const gas = typeof tx.gas === "bigint" ? tx.gas : 0n;
     const price =
       "maxFeePerGas" in tx && typeof tx.maxFeePerGas === "bigint"
@@ -154,7 +203,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     if (!open) return;
     try {
       const { createWalletChain } = await import("@baret/wallet-core");
-      const balances = await createWalletChain({ rpcUrl: RPC_URL }).balances(open.address, [USDC]);
+      const balances = await chainOf(createWalletChain).balances(open.address, [USDC]);
       if (session.current !== open) return;
       patch({
         assets: balances.map((b) => ({
@@ -171,9 +220,80 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     }
   }, [patch]);
 
-  // The latest status, for the async reads above.
+  const vaultRead = useCallback(async (): Promise<boolean> => {
+    const open = session.current;
+    if (!open) return true;
+    try {
+      const { createWalletChain } = await import("@baret/wallet-core");
+      const chain = chainOf(createWalletChain);
+      const found = await chain.findVault(open.address);
+      if (!found) {
+        if (session.current === open)
+          patch({
+            vault: { address: "", asset: VAULT_ASSET, balance: "0.00", merchants: [], agent: null },
+            agentPayments: [],
+            status: { ...statusRef.current, vault: "ok" },
+          });
+        return true;
+      }
+      // The indexer names the merchants the vault ever had. Without it the
+      // ones this browser added are still read; a fresh browser then shows none.
+      const audit = await fetch(`/api/v1/audit/vault/${found}?limit=50`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then(auditVaultOf)
+        .catch(() => null);
+      const labels = readMerchants();
+      const state = await chain.vault(found, merchantAddresses(audit, labels));
+      if (session.current !== open) return true;
+      const vault = toVault(state, audit, labels, readAgentSince());
+      patch({
+        vault,
+        agentPayments: audit?.payments ?? [],
+        permissions: vault.agent
+          ? [
+              {
+                id: "agent",
+                kind: "agent",
+                values: {
+                  count: String(vault.merchants.filter((m) => m.status === "active").length),
+                },
+              },
+            ]
+          : [],
+        status: { ...statusRef.current, vault: "ok" },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }, [patch]);
+
+  /**
+   * One read at a time: a second caller waits for the one in flight, so a
+   * signature that triggers several refreshes costs one. A read that fails is
+   * tried once more (the public RPC limits bursts); then the vault reads as
+   * unreachable. Fail-closed: an unread vault shows no figures.
+   */
+  const vaultInFlight = useRef<Promise<void> | null>(null);
+  const vaultRefresh = useCallback((): Promise<void> => {
+    vaultInFlight.current ??= (async () => {
+      const open = session.current;
+      if (!(await vaultRead())) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        if (!(await vaultRead()) && session.current === open)
+          patch({ status: { ...statusRef.current, vault: "error" } });
+      }
+    })().finally(() => {
+      vaultInFlight.current = null;
+    });
+    return vaultInFlight.current;
+  }, [patch, vaultRead]);
+
+  // The latest status and state, for the async reads above.
   const statusRef = useRef(state.status);
   statusRef.current = state.status;
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   /** An unlocked session arrives: the account, the wallet that signs, the first reads. */
   const open = useCallback(
@@ -182,7 +302,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       session.current = next;
       wallet.current = new WalletClass({
         session: next,
-        chain: createWalletChain({ rpcUrl: RPC_URL }),
+        chain: chainOf(createWalletChain),
         baretUrl: "/api",
         policy: () => policy.current,
       });
@@ -199,11 +319,11 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         ...(rules ? { policy: rules.policy, template: rules.template } : {}),
         // The log of what this wallet did lives in memory; the indexer's
         // history is read by the history screen.
-        status: { analyzer: "ok", balances: "loading", activity: "ok" },
+        status: { analyzer: "ok", balances: "loading", activity: "ok", vault: "loading" },
       });
-      void refresh();
+      void refresh().then(vaultRefresh);
     },
-    [patch, refresh, state.accountName],
+    [patch, refresh, vaultRefresh, state.accountName],
   );
 
   const prompt = useCallback(
@@ -302,25 +422,204 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
   const sign = useCallback(
     async (
       signable: NonNullable<LiveRequest["signable"]>,
-      outcome: "sent" | "overridden",
+      _outcome: "sent" | "overridden",
       sending: () => void,
     ): Promise<SignReceipt> => {
       const signer = wallet.current;
       if (!signer) throw new Error("the wallet is locked");
       const { createWalletChain } = await import("@baret/wallet-core");
-      // The wallet refuses Blocked and an expired verdict itself; a Caution
-      // is signed only because the reader held the override.
-      const hash = await signer.sign(signable.call, signable.verdict, {
-        acknowledged: outcome === "overridden",
-      });
+      // The reader has the verdict and its findings on screen and pressed
+      // sign: that is the acknowledgement a Caution needs. The wallet still
+      // refuses Blocked and an expired verdict itself, override or not.
+      const hash = await signer.sign(signable.call, signable.verdict, { acknowledged: true });
       sending();
-      const receipt = await createWalletChain({ rpcUrl: RPC_URL }).wait(hash);
-      void refresh();
+      const receipt = await chainOf(createWalletChain).wait(hash);
+      void refresh().then(vaultRefresh);
       if (!receipt.ok) throw new Error("the transaction reverted");
       return { hash: receipt.hash, block: receipt.block.toString() };
     },
-    [refresh],
+    [refresh, vaultRefresh],
   );
+
+  const vault = useMemo<Live["vault"]>(() => {
+    const core = () => import("@baret/wallet-core");
+    const owner = () => {
+      const open = session.current;
+      if (!open) throw new Error("the wallet is locked");
+      return open.address;
+    };
+    /** The vault's address, read from the factory: the account may have just opened it. */
+    const address = async () => {
+      const { createWalletChain } = await core();
+      const found = await chainOf(createWalletChain).findVault(owner());
+      if (!found) throw new Error("the account has no vault");
+      return found;
+    };
+    const step = async (
+      call: WalletCall,
+      action: SignContext["action"],
+      values: Readonly<Record<string, string>>,
+      impact: SignContext["impact"],
+      decoded: string,
+    ): Promise<LiveStep> => ({
+      call,
+      context: {
+        id: `${action}-${Date.now()}`,
+        origin: null,
+        action,
+        values,
+        claim: null,
+        impact,
+        fee: await feeOf(owner(), call),
+        raw: { to: call.to, value: call.value.toString(), data: call.data, decoded },
+        expires: 300,
+        wallet: owner(),
+      },
+    });
+    /** Opening the vault comes first when the account has none. */
+    const withVault = (steps: StepBuilder[]): StepBuilder[] => {
+      const opened = async (): Promise<LiveStep> => {
+        const { vault: calls, WALLET_CONTRACTS } = await core();
+        const factory = WALLET_CONTRACTS.testnet?.paymentGuardFactory;
+        if (!factory) throw new Error("no vault factory on this network");
+        return step(
+          calls.create(factory, USDC),
+          "contractCall",
+          { contract: factory },
+          "nothing",
+          "createVault(token)",
+        );
+      };
+      return stateRef.current.vault.address === "" ? [opened, ...steps] : steps;
+    };
+    const units = (text: string) => {
+      const amount = vaultUnits(text);
+      if (amount === null) throw new Error("not an amount");
+      return amount;
+    };
+    return {
+      refresh: vaultRefresh,
+      deposit: (amount) =>
+        withVault([
+          async () => {
+            const { vault: calls } = await core();
+            const to = await address();
+            return step(
+              calls.deposit(to, USDC, units(amount))[0],
+              "approval",
+              { spender: to, amount, asset: VAULT_ASSET },
+              "approval",
+              "approve(spender, amount)",
+            );
+          },
+          async () => {
+            const { vault: calls } = await core();
+            return step(
+              calls.deposit(await address(), USDC, units(amount))[1],
+              "vaultDeposit",
+              { amount, asset: VAULT_ASSET },
+              "unknown",
+              "deposit(amount)",
+            );
+          },
+        ]),
+      withdraw: (amount) => [
+        async () => {
+          const { vault: calls } = await core();
+          return step(
+            calls.withdraw(await address(), units(amount)),
+            "vaultWithdraw",
+            { amount, asset: VAULT_ASSET },
+            "unknown",
+            "withdraw(amount)",
+          );
+        },
+      ],
+      merchant: (merchant) =>
+        withVault([
+          async () => {
+            const { vault: calls } = await core();
+            writeMerchant(merchant.address, merchant.origin);
+            return step(
+              calls.setMerchantCap(await address(), merchant.address as `0x${string}`, {
+                perPayment: units(merchant.perPayment),
+                perHour: merchant.perHour === null ? null : units(merchant.perHour),
+                perDay: units(merchant.perDay),
+              }),
+              "vaultCaps",
+              { merchant: merchant.address },
+              "nothing",
+              "setMerchantCap(merchant, perTxCap, hourlyCap, dailyCap)",
+            );
+          },
+        ]),
+      pause: (merchant, paused) => [
+        async () => {
+          const { vault: calls } = await core();
+          const to = await address();
+          return step(
+            calls.setMerchantPaused(to, merchant as `0x${string}`, paused),
+            "contractCall",
+            { contract: to },
+            "nothing",
+            "setMerchantPaused(merchant, paused)",
+          );
+        },
+      ],
+      remove: (merchant) => [
+        async () => {
+          const { vault: calls } = await core();
+          return step(
+            calls.revokeMerchant(await address(), merchant as `0x${string}`),
+            "vaultRemoveMerchant",
+            { merchant },
+            "nothing",
+            "revokeMerchant(merchant)",
+          );
+        },
+      ],
+      agent: (agent) =>
+        withVault([
+          async () => {
+            const { vault: calls } = await core();
+            writeAgentSince(new Date().toISOString());
+            return step(
+              calls.setAgent(await address(), agent as `0x${string}`),
+              "vaultAgentKey",
+              {},
+              "nothing",
+              "setAgentSigner(agent)",
+            );
+          },
+        ]),
+      revokeAgent: () => [
+        async () => {
+          const { vault: calls } = await core();
+          return step(
+            calls.revokeAgent(await address()),
+            "vaultRevokeAgent",
+            {},
+            "nothing",
+            "revokeAgentSigner()",
+          );
+        },
+      ],
+      derive: async () => {
+        const { agentKeyFromPasskey } = await core();
+        const stored = readCredential();
+        try {
+          // Agent 0: the vault takes one agent at a time.
+          const key = await agentKeyFromPasskey(
+            { rpId: window.location.hostname, ...(stored ? { credential: stored } : {}) },
+            0,
+          );
+          return { address: key.address, privateKey: key.privateKey };
+        } catch {
+          return null;
+        }
+      },
+    };
+  }, [vaultRefresh]);
 
   const forget = useCallback(() => {
     lock();
@@ -341,8 +640,9 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       recheck: check,
       sign,
       forget,
+      vault,
     }),
-    [known, busy, problem, prompt, lock, refresh, transfer, check, sign, forget],
+    [known, busy, problem, prompt, lock, refresh, transfer, check, sign, forget, vault],
   );
 
   return <LiveContext value={value}>{children}</LiveContext>;

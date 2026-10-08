@@ -5,7 +5,13 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { decodeFunctionData, erc20Abi, keccak256, parseTransaction } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import { describe, expect, it } from "vitest";
-import { createWallet, unlockWallet, WalletSession } from "./account.js";
+import {
+  agentKeyFromPasskey,
+  agentSalt,
+  createWallet,
+  unlockWallet,
+  WalletSession,
+} from "./account.js";
 import { PAYMENT_GUARD_ABI, transfers, vault, type WalletCall } from "./calls.js";
 import type { WalletChain } from "./chain.js";
 import { NotClearedError, Wallet } from "./wallet.js";
@@ -87,6 +93,29 @@ describe("passkey", () => {
     expect(unlocked.session.address).toBe(created.session.address);
     expect(unlocked.session.agentAddress(0)).toBe(created.session.agentAddress(0));
     expect(unlocked.credential).toEqual(created.credential);
+  });
+  it("mints each agent from its own PRF namespace, the same on every device", async () => {
+    const options = { rpId: "wallet.example", webAuthnClient: fakeAuthenticator() };
+    const first = await agentKeyFromPasskey(options, 0);
+    // A second device with the same passkey: a new client, the same answer.
+    const again = await agentKeyFromPasskey(
+      { rpId: "wallet.example", webAuthnClient: fakeAuthenticator() },
+      0,
+    );
+    expect(again).toEqual(first);
+    expect((await agentKeyFromPasskey(options, 1)).address).not.toBe(first.address);
+
+    // Unrelated to the wallet's own keys, including its older agent branch.
+    const { session } = await unlockWallet(options);
+    expect(first.address).not.toBe(session.address);
+    expect(first.address).not.toBe(session.agentAddress(0));
+  });
+
+  it("names a namespace by a 32-byte salt and refuses a bad index", () => {
+    expect(agentSalt(0)).toHaveLength(32);
+    expect(agentSalt(0)).not.toEqual(agentSalt(1));
+    expect(() => agentSalt(-1)).toThrow();
+    expect(() => agentSalt(1.5)).toThrow();
   });
 });
 

@@ -24,7 +24,7 @@ describe("the wallet samples", () => {
 
   it("starts the default sample with everything loaded", () => {
     const state = initialState("Main account");
-    expect(state.status).toEqual({ analyzer: "ok", balances: "ok", activity: "ok" });
+    expect(state.status).toEqual({ analyzer: "ok", balances: "ok", activity: "ok", vault: "ok" });
     expect(state.assets.length).toBeGreaterThan(0);
     expect(state.activity.length).toBeGreaterThan(0);
   });
