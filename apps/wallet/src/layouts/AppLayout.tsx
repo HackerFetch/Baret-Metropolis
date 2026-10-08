@@ -8,8 +8,9 @@ import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
 import { Menu, X } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { SampleNotice } from "../components/SampleNotice.js";
+import { useLive } from "../live/live.js";
 import { routes } from "../routes.js";
 import { Locked } from "./Locked.js";
 
@@ -58,6 +59,7 @@ function Nav(): JSX.Element {
 
 function Account(): JSX.Element {
   const { state, dispatch } = useWallet();
+  const live = useLive();
   return (
     <div className="grid gap-4">
       <div className="grid gap-1">
@@ -74,7 +76,12 @@ function Account(): JSX.Element {
           />
         </div>
       </div>
-      <Button type="button" variant="ghost" size="sm" onClick={() => dispatch({ type: "lock" })}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => (live ? live.lock() : dispatch({ type: "lock" }))}
+      >
         {walletFrame.lock.label}
       </Button>
     </div>
@@ -83,6 +90,7 @@ function Account(): JSX.Element {
 
 export function Component() {
   const { state, dispatch } = useWallet();
+  const live = useLive();
   const { pathname } = useLocation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
@@ -104,7 +112,18 @@ export function Component() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  if (state.locked) return <Locked onUnlock={() => dispatch({ type: "unlock" })} />;
+  // Live with no passkey ever used in this browser: setup, which also offers
+  // "I already have a passkey" for a cleared browser or a new device.
+  if (live && state.locked && !live.known) return <Navigate to={routes.onboarding.path} replace />;
+  if (state.locked) {
+    return (
+      <Locked
+        onUnlock={() => (live ? void live.unlock() : dispatch({ type: "unlock" }))}
+        busy={live?.busy ?? false}
+        problem={live?.problem ?? null}
+      />
+    );
+  }
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">

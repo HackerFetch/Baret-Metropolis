@@ -19,6 +19,7 @@ import type { PolicyTemplateName } from "../../../../packages/guard/src/policy-t
 import type { ImgAsset } from "../assets.js";
 import { WALLET_ART } from "../assets.js";
 import { SampleNotice } from "../components/SampleNotice.js";
+import { useLive } from "../live/live.js";
 import { routes } from "../routes.js";
 
 /**
@@ -94,6 +95,7 @@ function StepFrame({
 
 export function Component() {
   const { state, dispatch } = useWallet();
+  const live = useLive();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(0);
   const [passkey, setPasskey] = useState<"idle" | "working" | "ready" | "failed">("idle");
@@ -109,20 +111,58 @@ export function Component() {
   // The browser's passkey prompt, stood in for by a short wait.
   // ?sample=passkey-error makes it fail, to show the error state.
   useEffect(() => {
-    if (passkey !== "working") return;
+    if (live || passkey !== "working") return;
     const outcome = state.sample === "passkey-error" ? "failed" : "ready";
     const id = window.setTimeout(() => setPasskey(outcome), 1200);
     return () => window.clearTimeout(id);
-  }, [passkey, state.sample]);
+  }, [live, passkey, state.sample]);
+
+  // Live: one passkey prompt makes the passkey and the account that comes from it.
+  function createPasskey(): void {
+    setPasskey("working");
+    if (!live) return;
+    void live.create(state.accountName).then((made) => setPasskey(made ? "ready" : "failed"));
+  }
+
+  // Live: "I already have a passkey". With storage cleared or on a new device
+  // the browser offers the site's passkeys, and the same one gives the same account.
+  function useExisting(): void {
+    if (!live) {
+      navigate(routes.home.path);
+      return;
+    }
+    void live.unlock().then((opened) => {
+      if (opened) navigate(routes.home.path);
+    });
+  }
+
+  const mon = state.assets.find((asset) => asset.symbol === "MON");
+  const held = live ? (mon?.balance ?? "0.00") : FAUCET_AMOUNT;
+  const funded = live && mon !== undefined && !/^[0.]*$/.test(mon.balance);
+
+  // Live: the balance is read from Monad until the faucet's transfer shows, for 90 seconds.
+  useEffect(() => {
+    if (!live || funds !== "watching") return;
+    if (funded) {
+      setFunds("arrived");
+      return;
+    }
+    const started = Date.now();
+    const id = window.setInterval(() => {
+      if (Date.now() - started > 90_000) setFunds("timeout");
+      else void live.refresh();
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [live, funds, funded]);
 
   // The faucet's transfer, once the reader has opened the faucet.
   // ?sample=fund-timeout makes the balance unreadable instead.
   useEffect(() => {
-    if (funds !== "watching") return;
+    if (live || funds !== "watching") return;
     const outcome = state.sample === "fund-timeout" ? "timeout" : "arrived";
     const id = window.setTimeout(() => setFunds(outcome), 1600);
     return () => window.clearTimeout(id);
-  }, [funds, state.sample]);
+  }, [live, funds, state.sample]);
 
   const go = (next: Step) => {
     setStep(next);
@@ -162,11 +202,18 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 size="lg"
-                onClick={() => navigate(routes.home.path)}
+                disabled={live?.busy ?? false}
+                onClick={useExisting}
               >
                 {welcome.existing.label}
               </Button>
             </div>
+            {live?.problem && passkey === "idle" ? (
+              <Problem
+                title={words.errors[live.problem].title}
+                body={words.errors[live.problem].body}
+              />
+            ) : null}
             <p className={T.small}>{welcome.footnote}</p>
           </StepFrame>
         ) : null}
@@ -181,7 +228,10 @@ export function Component() {
               {passkey === "working" ? words.working : ""}
             </p>
             {passkey === "failed" ? (
-              <Problem title={words.errors.failed.title} body={words.errors.failed.body} />
+              <Problem
+                title={words.errors[live?.problem ?? "failed"].title}
+                body={words.errors[live?.problem ?? "failed"].body}
+              />
             ) : null}
             <div className="flex">
               {passkey === "ready" ? (
@@ -194,7 +244,7 @@ export function Component() {
                   variant="primary"
                   size="lg"
                   disabled={passkey === "working"}
-                  onClick={() => setPasskey("working")}
+                  onClick={createPasskey}
                 >
                   {passkey === "failed" ? words.errors.failed.action.label : words.action.label}
                 </Button>
@@ -209,7 +259,7 @@ export function Component() {
               <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[color:var(--rule)] py-3">
                 <dt className="text-sm text-[color:var(--fg-muted)]">{fund.balanceLabel}</dt>
                 <dd className="font-display text-2xl font-extrabold tabular-nums text-[color:var(--fg)]">
-                  {funds === "arrived" ? FAUCET_AMOUNT : "0.00"} MON
+                  {funds === "arrived" ? held : "0.00"} MON
                 </dd>
               </div>
               <div className="grid gap-1 border-b border-[color:var(--rule)] py-3">
@@ -230,7 +280,7 @@ export function Component() {
               {funds === "watching"
                 ? fund.waiting
                 : funds === "arrived"
-                  ? fill(fund.arrived, { amount: FAUCET_AMOUNT })
+                  ? fill(fund.arrived, { amount: held })
                   : ""}
             </p>
             {funds === "timeout" ? (
@@ -250,7 +300,7 @@ export function Component() {
                   type="button"
                   variant="primary"
                   size="lg"
-                  disabled={Number(FAUCET_AMOUNT) < MINIMUM}
+                  disabled={Number(held) < MINIMUM}
                   onClick={() => go(3)}
                 >
                   {fund.next.label}

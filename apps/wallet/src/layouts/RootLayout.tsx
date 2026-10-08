@@ -1,9 +1,11 @@
 import { walletFrame } from "@baret/content";
-import { useWallet, WalletProvider } from "@baret/wallet-ui/data/store";
+import { initialLive, useWallet, WalletProvider } from "@baret/wallet-ui/data/store";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import { Outlet, ScrollRestoration, useMatches } from "react-router";
+import { LiveProvider, useLive } from "../live/live.js";
+import { isLive, USDC } from "../live/storage.js";
 import { routes } from "../routes.js";
 import * as AppLayout from "./AppLayout.js";
 import { Locked } from "./Locked.js";
@@ -23,10 +25,26 @@ import { Locked } from "./Locked.js";
  *
  * A locked wallet answers a request window with the lock screen, never the
  * request: fail-closed. Unlocking shows the request; declining needs no unlock.
- * The lock lives in memory only while the wallet runs on sample data
- * (data/store), so it covers the tab it was set in: a request window opened
- * as a new document starts unlocked until the live keystore holds the lock.
+ * On the sample the lock lives in memory and covers the tab it was set in.
+ * Live (live/live.tsx), the keys live in memory too, so every new document,
+ * a request window included, starts locked and needs the passkey.
  */
+
+/** Read once: a deployed build is live, `?sample=` keeps the sample (live/storage.ts). */
+const LIVE = typeof window !== "undefined" && isLive(window.location.search);
+const liveStart = (name: string) => initialLive(name, USDC);
+
+/** The wallet's state, and its live side when there is one. */
+function Account({ children }: { children: ReactNode }): JSX.Element {
+  return (
+    <WalletProvider
+      name={walletFrame.sampleData.accountName}
+      {...(LIVE ? { initial: liveStart } : {})}
+    >
+      {LIVE ? <LiveProvider>{children}</LiveProvider> : children}
+    </WalletProvider>
+  );
+}
 
 /** What a route carries in its handle (router.tsx). */
 type Handle = { title?: string; standalone?: boolean; request?: boolean };
@@ -56,8 +74,16 @@ export function routeFlags(matches: readonly Match[]): Required<Handle> {
 /** A request window behind the lock shows the lock screen instead. */
 function Gate({ request }: { request: boolean }): JSX.Element {
   const { state, dispatch } = useWallet();
+  const live = useLive();
   if (request && state.locked) {
-    return <Locked request onUnlock={() => dispatch({ type: "unlock" })} />;
+    return (
+      <Locked
+        request
+        onUnlock={() => (live ? void live.unlock() : dispatch({ type: "unlock" }))}
+        busy={live?.busy ?? false}
+        problem={live?.problem ?? null}
+      />
+    );
   }
   return <Outlet />;
 }
@@ -71,9 +97,9 @@ export function Component(): JSX.Element {
       <ScrollRestoration />
       <Signature quiet={request} />
       {/* The account and everything done with it, shared by every screen (data/store). */}
-      <WalletProvider name={walletFrame.sampleData.accountName}>
+      <Account>
         <Gate request={request} />
-      </WalletProvider>
+      </Account>
     </LandingMotion>
   );
 }
@@ -89,9 +115,9 @@ export function HydrateFallback(): JSX.Element {
   return (
     <LandingMotion>
       <title>{title}</title>
-      <WalletProvider name={walletFrame.sampleData.accountName}>
-        {standalone ? null : <AppLayout.Component />}
-      </WalletProvider>
+      {/* Live, the frame would be a lock screen whose button unlocks a provider
+          that is thrown away when the route arrives: paint the ground only. */}
+      <Account>{standalone || LIVE ? null : <AppLayout.Component />}</Account>
     </LandingMotion>
   );
 }

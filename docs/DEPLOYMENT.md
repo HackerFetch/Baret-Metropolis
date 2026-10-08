@@ -86,6 +86,7 @@ Checked before the first deployment (2026-10-07), with `ENVIO_API_TOKEN` set: `p
 
 ### 3.5 What runs on its own
 - **Keep-warm** (`.github/workflows/keep-warm.yml`): asks `/health/ready` every 10 minutes so the free Render instance does not sleep (a sleeping instance needs close to a minute, the demo sites wait 15 seconds).
+- **Wallet, live or sample**: a production build of `apps/wallet` is live (a Mera passkey account, Monad reads, the Baret check before every signature); any `?sample=<name>` in the URL keeps the sample. In dev, `VITE_BARET_WALLET=live pnpm --filter @baret/wallet dev` turns the live side on (a passkey made on `localhost` is a different wallet from one made on `baret-wallet.vercel.app`). `VITE_MONAD_TESTNET_RPC_URL` on the wallet's Vercel project replaces the public RPC for its reads; it is optional.
 - **Extension release** (`ci.yml` → `release-extension`): every push to `main` replaces the `extension-latest` GitHub release with `baret-chrome.zip` and `baret-firefox.zip`. `/install` links to `releases/latest/download/<name>.zip` through `VITE_BARET_EXTENSION_CHROMIUM_URL` and `VITE_BARET_EXTENSION_FIREFOX_URL` on the showcase project.
 - **Showcase 404s**: no catch-all rewrite; the build writes a file per route and `404.html`. The wallet keeps its single-page fallback.
 

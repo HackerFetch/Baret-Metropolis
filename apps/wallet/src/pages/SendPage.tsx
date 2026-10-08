@@ -19,9 +19,10 @@ import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId, useState } from "react";
+import { type JSX, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
+import { type LiveRequest, useLive } from "../live/live.js";
 import { routes } from "../routes.js";
 import { unchecked } from "./unchecked.js";
 
@@ -75,6 +76,10 @@ function FieldError({
 
 export function Component() {
   const { state, dispatch } = useWallet();
+  const live = useLive();
+  // Live: Baret's answer is on its way, and what can be signed once it is in.
+  const [pending, setPending] = useState(false);
+  const signable = useRef<LiveRequest["signable"]>(null);
   const ids = {
     asset: useId(),
     to: useId(),
@@ -128,8 +133,36 @@ export function Component() {
     setTried(true);
     if (blocking || amountIssue || warnPoisoning || !asset) return;
     const request = transferRequest(asset, value, recipient.trim(), state.policy);
+    if (live) {
+      // Live: the screen shows Checking on an unchecked request until the
+      // server answers; with no answer it stays Can't reach Baret.
+      signable.current = null;
+      setReview(unchecked(request));
+      setPending(true);
+      void ask().then(() => setPending(false));
+      return;
+    }
     // Without Baret the transfer is not checked, so it reads as unreachable and is not sent.
     setReview(ready(state, "analyzer") ? request : unchecked(request));
+  }
+
+  /** Live: builds the transfer, asks Baret and shows what came back. */
+  async function ask(): Promise<Request | null> {
+    if (!live || !asset) return null;
+    const answer = await live.transfer(asset, value, recipient.trim());
+    signable.current = answer.signable;
+    setReview(answer.request);
+    return answer.request;
+  }
+
+  /** Live: signs and sends what Baret cleared, after the passkey when the setting asks for it. */
+  async function signLive(outcome: "sent" | "overridden", sending: () => void) {
+    const cleared = signable.current;
+    if (!live || !cleared) throw new Error("nothing was cleared to sign");
+    if (state.settings.passkeyEverySignature && !(await live.unlock())) {
+      throw new Error("the passkey was not given");
+    }
+    return live.sign(cleared, outcome, sending);
   }
 
   if (review) {
@@ -147,8 +180,10 @@ export function Component() {
               setTried(false);
               setRun((n) => n + 1);
             }}
+            {...(live ? { pending, onCheckAgain: ask, onSign: signLive } : {})}
             onLog={(item) =>
-              item.kind === "sent" || item.kind === "overridden"
+              // Live balances are read from Monad after the send, never worked out here.
+              !live && (item.kind === "sent" || item.kind === "overridden")
                 ? dispatch({ type: "send", asset: asset.symbol, amount: value, fee, item })
                 : dispatch({ type: "log", item })
             }
