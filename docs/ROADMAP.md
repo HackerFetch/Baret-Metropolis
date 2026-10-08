@@ -2,7 +2,7 @@
 
 > This file is a **live checklist**. At the end of every week the boxes are ticked, and slips/delays are written into the "Notes" line. The status table in `README.md` is kept in sync with this file.
 
-Last updated: 2026-10-06 · Currently: **Week 3** (backend caught up to the end of Week 2) · **Submission closes 2026-10-13.** The day-by-day plan for the last week (testing, videos, forms) is `docs/QA_AND_DELIVERY.md` §9; Hale joined on 2026-10-06 for QA and delivery and brings the boxes below up to date
+Last updated: 2026-10-09 · Currently: **the final week**. **Submission closes Wed 14 Oct 2026, 06:59 (GMT+3).** The plan for all three people is the section "Final week — the board" below; the boxes of Weeks 1 to 4 are history and are brought up to date by Hale (H14)
 
 ---
 
@@ -57,35 +57,128 @@ Last updated: 2026-10-06 · Currently: **Week 3** (backend caught up to the end 
 
 ---
 
-## Final week — 2026-10-07 to 2026-10-13 (replaces Weeks 5 and 6)
+## Final week — the board (written 2026-10-08, redistributed 2026-10-09; replaces Weeks 5 and 6)
 
-Submission closes **2026-10-14 06:59** (the time on the bounty page). The original six-week plan assumed more calendar than the hackathon has; this section is the real one. Decision: D-025.
+**This section is the single plan for all three people and their agents.** Every open piece of work has one line here with an ID, an owner and a day. The detail of a task is in its owner's file: `E` tasks in `tasks/FOR_EZGIN.md`, `M` tasks in `tasks/FOR_MERIC.md`, `H` tasks in `tasks/FOR_HALE.md`. When a task is finished, slips or changes owner, change its line here **and** in the owner's file in the same commit. Decisions behind it: D-025, D-031. What every bounty page asks, word for word: `docs/QA_AND_DELIVERY.md` §8.1.
 
-**Where things stand on 2026-10-07.** Done and live on Monad testnet: the analysis API (Render), the showcase and wallet sites (Vercel), CI/CD, PaymentGuard + factory + ReputationRegistry + the demo contracts of all six showcase sites (source verified), `@baret/demo` builders with all 18 scenarios agreeing with the live API, agent-kit with a Dynamic server wallet that has paid from a vault, `@baret/wallet-core` (Mera passkey account, agent keys, check before every signature), the Envio indexer feeding `/v1/audit/*`, Alchemy for every read. Waiting on others: Nansen (credits), the frontend wiring of the demo sites, the playground, the wallet and the history screens (Meriç, guides in `tasks/FOR_MERIC.md`).
+### The goal
 
-| Day | Backend work (Ezgin) | Bounty | Needs from Ezgin first |
+Two things, and both are needed:
+
+1. **The demo:** on the same site, with the same button, a wallet with no pre-sign check lets the user sign the attack and the money leaves; with Baret the same request is read, explained and stopped before anything is signed. The six showcase sites exist for that.
+2. **The frame:** the track is for "a protocol, primitive, or infrastructure layer that other applications build on — not a standalone consumer product". Baret is entered as the pre-sign policy layer that any wallet, dapp or agent calls. The wallet and the showcase are proof that the layer works, not the product. 45% of the track's score is "Founder & Market Readiness" (who adopts this and why) and "Traction & Path Forward" (evidence of developer interest, "even one other team integrating it during the hackathon"); 20% is "Design & Craft", which the page defines as developer experience: clear docs and a clean API. H9 and the pitch video carry these.
+
+### Dates
+
+| When | What |
+|---|---|
+| Fri 9 Oct | Build day: the wallet goes live, the real signature path lands on NovaSwap, Hale sets up and takes the playground live |
+| Sat 10 Oct | Build day: the site-to-wallet window, the model layer, history and `/agents`, the test pass, the scripts |
+| **Sun 11 Oct, 12:00** | **Feature freeze.** After it only P0 and P1 fixes merge. Recording starts in the afternoon |
+| Mon 12 Oct | Final regression, articles published, forms filled in, **submit** |
+| Tue 13 Oct | Buffer. Nothing new merges |
+| **Wed 14 Oct, 06:59 (GMT+3)** | Submission closes. Bounty selections stay editable until then |
+
+### Where things stand (checked 2026-10-08 against the live system, commit `2965c57`)
+
+- Live: the API on Render, the showcase and the wallet site on Vercel, the extension zips, the Envio indexer. `verify:demo` agrees with the live API on 20 of 20 scenarios. CI on `main` is green.
+- **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`).
+- **Baret is a panel on the page, not a wallet that refuses.** The extension's background and provider are empty stubs (cut). `apps/wallet` runs on sample data: no app imports `@baret/wallet-core`. No site can open the wallet's connect or sign window.
+- No screen reads `/v1/audit/*`. The agents playground answers its six actions from samples.
+- Two of the six attacks answer Caution, not Blocked, under Balanced: OrbitYield's silent pool and LaunchPad's proxy sale.
+- Off on the live API: Nansen (`nansen: false`), the explanation route (`explain: false`).
+- For the track's "Design & Craft": `packages/guard` and `packages/agent-kit` have no README. The landing says "MIT licence" and the repository has no `LICENSE` file.
+- Hale has GitHub access since 2026-10-08 and has not had a first session yet.
+
+### Sponsor bounties: what each page asks and what is missing
+
+Twelve prizes are selected on the project (the list Ezgin copied from the platform on 2026-10-09). The MetaMask Agent Wallet Plugin bounty is **not** among them: it is built (D-027) and not entered unless Ezgin says otherwise.
+
+| Prize | What the page requires (short; full text in `docs/QA_AND_DELIVERY.md` §8.1) | State on 2026-10-09 | Closed by |
 |---|---|---|---|
-| 10-07 → 10-08 | **Chainlink CRE**: `workflows/reputation-oracle` — cron trigger, fetch a threat feed, write to `ReputationRegistry.onReport` through the forwarder; at least a recorded simulation | $3,000 | a CRE account and `cre login` on this machine |
-| 10-08 → 10-09 | **MetaMask Agent Wallet plugin**: `packages/metamask-plugin` — a pre-trade check that asks Baret and refuses to propose a transaction Baret blocks | $2,500 | the plugin SDK docs from the bounty page |
-| 10-09 → 10-10 | **LLM layer** (one OpenAI-compatible client, two uses): Qwen reviews an agent's transaction against its intent and can veto (`agent-kit`); KIMI turns a verdict into plain language (`POST /v1/explain`) | $5,000 + $3,000 in credits | an Alibaba Cloud Model Studio key and a Moonshot (KIMI) key |
-| when unblocked | **Cleanverse**: the compliance detector reads CVI identity on-chain and gates a CVA transfer; one gated demo scenario | $2,000 | the CVI/CVA contract addresses or docs from the sponsor channel |
-| when credits arrive | **Nansen**: `NANSEN_MODE=labels`, checked live | $5,000 pool | credits on the account, `NANSEN_API_KEY` on Render |
-| 10-11 → 10-12 | **Submission**: README and ARCHITECTURE final, one "what we built, where the proof is" note per bounty, the demo video script, end-to-end QA with Meriç, fixes | all | recording the demo and pitch videos, the forms |
-| 10-13 | Buffer. Submit. | | "Community supporter" status checked on the platform ($5,000, no work) |
+| Main track: Trust, Identity & AI Infrastructure ($30,000, three winners at $10,000) | A primitive others build on. Logo, public repo, demo video (max 3 min, the live product), pitch video (max 2 min), live link with access instructions for judges | 🔶 The product works; the story cannot be shown yet; no developer docs, no traction evidence | M1, M2, M3, E5, H9, H11, H13, H14 |
+| Best use of Nansen ($5,000 pool: 2,000 / 1,500 / 1,000 / 500) | Nansen data in a core feature, with the endpoints used explained | ❌ Off on the live API, no key | E2, H10 |
+| Best Use of Dynamic ($5,000) | A deployed app judges can use; bonus for agent wallets + delegated access | 🔶 A Dynamic server wallet paid from a vault through the CLI; nothing a judge can open | H6, E4 |
+| Best Mera-Powered UX ($2,500) | Mera as the entire account layer; one-prompt onboarding; prompt-free signing in a scoped session; **the stateless test** (judges clear local storage or use a fresh device, everything must come back from the passkey) | ❌ The wallet app is on sample data | E3, M6, H10 |
+| Mera: One Passkey, Many Keys ($2,500) | A PRF namespace doing **non-account work** ("anything that is NOT signing blockchain transactions from a wallet account"); salts genuinely namespaced; **the cross-device test** | 🔶 Agent keys exist, on a BIP-44 branch of the one PRF output, and they sign payments: weak against the page's text | E4, H10 |
+| Best Integration of Cleanverse ($2,000) | CVI verified before any CVA transfer, end to end on Monad, a real compliance use case; identity "structurally coupled" to movement. **Demo video required (max 5 min)** | 🔶 The server reads the chain, 2 of 2 live scenarios agree; nothing on a screen, no Baret contract | H7, E6 |
+| Best Use of Envio ($1,000) | A deployed indexer with a public config, schema and handlers; a frontend that consumes it; depth of schema | 🔶 Indexer and `/v1/audit/*` live; no screen reads them | H5, H6 |
+| Best Projects using Alchemy ($1,000 credits) | At least one Alchemy service, meaningfully | ✅ Every read goes through Alchemy (`alchemy: ok` on live answers). Thin, but it meets the text | H14 |
+| Best workflow with CRE ($3,000) | A blockchain joined to an external source; a successful simulation by the CRE CLI. **Demo video required (max 2 min)** | ✅ Built and simulated with a real write; the video is missing | H13 |
+| Best Builds Powered by KIMI ($3,000 credits, split across 10 teams) | KIMI driving a core feature, "not bolted on as a chatbot widget". **A published article is required** | ❌ Back in (D-031). The route exists and has never called the model | M4, E7, H12 |
+| Best Builds with Qwen 3.8 Max ($5,000 credits, "split across the top 3 Track 4 winners") | Planning, tool use, multi-step execution; deployed and demoable. **A published article is required** | ❌ Back in (D-031). A one-call reviewer exists and has never called the model | M5, H12 |
+| Best Community Team Project ($5,000) | Every member names the campus group in the platform profile; the group is on the onboarded list | ❌ Not done | H2 |
 
-- [x] Chainlink CRE workflow (2026-10-07: simulated with a real write on testnet, D-026; DON deployment waits for Early Access)
-- [x] MetaMask Agent Wallet plugin (2026-10-07: the gates checked with a real Agent Wallet on testnet, D-027; the wallet itself cannot send on testnet)
-- [ ] ~~Qwen reviewer~~ Bounty dropped 2026-10-08 (D-029). The reviewer is in `agent-kit` as an optional feature, not run against the real model
-- [ ] ~~KIMI explanation~~ Bounty dropped 2026-10-08 (D-029). `POST /v1/explain` is in the server, off without a key, not run against the real model
-- [ ] Cleanverse compliance (blocked on sponsor information)
-- [ ] Nansen labels live (blocked on credits)
-- [ ] README/ARCHITECTURE finalized (in sync with code)
-- [ ] Per-bounty evidence notes; status column of every row in `BOUNTIES_AND_TRACKS.md` up to date
-- [ ] Demo video and pitch video recorded
-- [ ] Submission fields filled in for every targeted bounty
-- [ ] Best Community Team Project eligibility verified
+### Who does what (redistributed 2026-10-09)
 
-**Rule for this week:** each stretch item gets its day and no more. If one is not working by the end of its slot it is dropped and written down, so the submission days (10-11, 10-12) are never spent on a feature.
+Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (D-031):
+
+- **Ezgin** keeps what only Ezgin can do: the wallet's back side (`@baret/wallet-core` into the store), the engine decision, the Cleanverse contract, and the account-owner steps (credits, keys on Render, funding).
+- **Meriç** builds what the viewer sees in the demo, including the window that lets a site open the wallet, and owns the two model bounties (KIMI and Qwen) end to end.
+- **Hale** builds as well as tests: the agents playground and the `/agents` page, the history screens, the Cleanverse scenario, the developer quickstart, then the scripts, videos, articles, final documents and the submission. Hale's testing is cut down to the demo path and the sponsors' own tests.
+
+### Ezgin
+
+| ID | Task | Day | Needs | Serves |
+|---|---|---|---|---|
+| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | Hale's wallet address | everything Hale does |
+| E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
+| E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core` | Fri 9 | | Mera UX |
+| E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
+| E5 | Decide and build: do the two Caution attacks become Blocked | Sat 10 | | main track |
+| E6 | Cleanverse contract side (the three guides are linked on the bounty page). First to be cut | Sat 10 | an A-Pass | Cleanverse |
+| E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
+| E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
+
+### Meriç
+
+| ID | Task | Day | Needs | Serves |
+|---|---|---|---|---|
+| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving | Fri 9 | | main track |
+| M2 | The comparison flow and its copy: same site, same button, two wallets | Fri 9 | M1 | main track |
+| M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it | Sat 10 | E3, M1 | main track, Mera UX |
+| M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | Fri 9 to Sat 10 | E7 for production | KIMI |
+| M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable. Dropped again if not working by Sat 10, 20:00 | Sat 10 | a key | Qwen |
+| M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice | Sat 10 | E3, E4 | Mera UX |
+| M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | Sun 11 | | main track |
+
+### Hale
+
+| ID | Task | Day | Needs | Serves |
+|---|---|---|---|---|
+| H1 | First session: machine, `qa` branch, git identity into `CLAUDE.md`, a test wallet | Fri 9 morning | | |
+| H2 | The platform: all three profiles name the campus group; the twelve prizes are selected; the form's fields against §8.1 | Fri 9 | E1 | Community, all forms |
+| H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows | Fri 9 to Sat 10 | M1, E1 | main track |
+| H4 | Build: the agents playground's six actions answer from the live API | Fri 9 | | main track |
+| H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*` | Sat 10 | E3 for the live account | Envio, Mera UX |
+| H6 | Build: `/agents` matches what shipped, with the Dynamic agent's real payments read live from the indexer | Sat 10 | | Dynamic, Envio |
+| H7 | Build: the Cleanverse scenario on a screen, and the wording for a finding that comes from the asset | Sat 10 | | Cleanverse |
+| H8 | Build: small copy and the extension (ScamSniffer reason, agent-key sentence, API URL, unused permission). First to be cut | Sun 11 before 12:00 | | |
+| H9 | Write: the developer quickstart (READMEs for `guard` and `agent-kit`, "call Baret from your app"), and get one other team to try it | Sat 10 | | main track |
+| H10 | Test: the six sites and `verify:demo`, the suites once, the wallet end to end with Mera's stateless and cross-device tests, the Nansen label, the CRE checks | Sat 10 to Sun 11 morning | E1 to E4, M6 | all |
+| H11 | Write: the scripts. Demo (3 min), pitch (2 min), and the list of sponsor clips | Sat 10 evening | H3, E5 | all |
+| H12 | Write and publish: the KIMI article and the Qwen article, each only if its feature is live | Sun 11 to Mon 12 | M4, M5 | KIMI, Qwen |
+| H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
+| H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
+| H15 | Final regression and submit | Mon 12 | | all |
+
+### What is cut first
+
+If a day slips, drop in this order and write it down here and in `docs/BOUNTIES_AND_TRACKS.md`: H8, E6 (Cleanverse contract), M5 with its article (Qwen), H7, E5, M4 with its article (KIMI), M3. **Never cut:** M1 and M2 (the story), E3 and E4 (three prizes depend on them), H3, H9, H11, H13, H15.
+
+If M3 is not working by Saturday evening, the Baret side of the story stays the panel on the page, the MetaMask drain is still real, and the video is told with those two.
+
+### Known risks
+
+- Hale starts on Friday with fifteen tasks and no session behind them. Hale's build tasks are small and specified to the file; if one takes more than half a day it goes back to its earlier owner (H4, H5 to Ezgin; H6, H7, H8 to Meriç) and the board says so.
+- E3 and E4 are still the base of three prizes (both Mera prizes, Dynamic) and of M3, M6, H5.
+- H3 can change the story. If MetaMask warns on that transaction, the claim becomes "it does not tell you what will change", never "it does not protect you". Nothing about another wallet is said in the copy or the video that H3 did not see.
+- "One Passkey, Many Keys" is weak as built: the page excludes signing transactions from a wallet account and wants namespaced salts. E4 says what would make it stronger; if that does not land, the prize is entered as it is or dropped by Ezgin at the freeze.
+- The track is not for a consumer product. Every text and both videos present Baret as the layer; a pitch that reads "a safer wallet" loses the track.
+
+### Not planned before the deadline
+
+The MetaMask plugin bounty (not selected), the extension's live background and provider, a real 402 paywall endpoint for Scrybe, Alchemy webhooks and gas sponsorship, the CRE workflow on a DON, the Perpl panel, the sponsor perks (Tenderly, QuickNode, Zerion), `POST /vitals`, the sources-zip rebuild job in CI.
 
 ---
 

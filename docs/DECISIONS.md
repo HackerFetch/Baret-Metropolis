@@ -208,6 +208,13 @@
 
 ---
 
+### D-031 — One board for the last week; the split crosses the roles; KIMI and Qwen are back in, with Meriç
+**Date:** 2026-10-08, redistributed 2026-10-09
+**Decision:** (1) `docs/ROADMAP.md` "Final week — the board" is the single plan: every open task has an ID, an owner and a day, and the three task files hold the detail. `docs/QA_AND_DELIVERY.md` §8.1 holds what each prize's page asks, word for word, and work for a prize is checked against it. (2) The aim is stated once: the demo (the same site and button, an ordinary wallet signs the attack and the money leaves, Baret reads and stops the same request), inside the frame the track sets (Baret is the layer other applications call, not a consumer product). (3) The work is split by who can finish it, not by folder. Ezgin keeps the wallet's back side, the engine, the contracts and the account-owner steps. Meriç builds what the viewer sees, the site-to-wallet window, and takes the two model prizes (KIMI, Qwen) including their backend code. Hale builds the playground, the `/agents` page, the history screens and the Cleanverse scenario, writes the developer quickstart and the final documents, and keeps the demo-path tests, the videos, the articles and the submission. (4) D-029 is reversed in part: both model prizes are targeted again. Qwen has a hard stop on Sat 10 Oct at 20:00. (5) The MetaMask plugin bounty is not selected on the project and is not entered; the plugin stays in the repository.
+**Rationale:** A check of the repository and the live system on 2026-10-08 found the backend finished and verified (`verify:demo` 20 of 20) while the story cannot be shown: the demo sites sign nothing, no app imports `@baret/wallet-core`, no screen reads the indexer. The first split put all of that on Ezgin and left Hale with tests only; on 2026-10-09 the owner moved the specified, self-contained pieces to Hale and the window to Meriç. The bounty pages, read in full the same day, add requirements nobody had planned for: the track scores developer docs and traction (40%) and market readiness (25%); the Mera prizes are judged by a stateless test and a cross-device test, and "Many Keys" excludes signing from a wallet account; Cleanverse and Chainlink require their own demo videos; KIMI and Qwen each require a published article.
+**Not changed:** D-028 (a model never decides a verdict), fail-closed, and the rule that nothing is claimed about another wallet that was not seen in Hale's rehearsal (H3).
+**Status:** ✅ Final
+
 ## Open Decisions (not yet taken — to be filled in as we progress)
 
 | # | Topic | Where it has impact | Decision date |

@@ -28,7 +28,18 @@ An identity that matches none of the three rows: ask who it is before doing anyt
    - Working with Meriç → `tasks/FOR_MERIC.md` (work Ezgin and Hale left for Meriç)
    - Working with Ezgin → `tasks/FOR_EZGIN.md` (work Meriç and Hale left for Ezgin)
    - Working with Hale → `tasks/FOR_HALE.md` (work Ezgin and Meriç left for Hale), then `docs/QA_AND_DELIVERY.md` (the test plan, the bug format, the day-by-day plan to the deadline). **Before either, read `docs/QA_LOG.md`** §1 and its latest session entry, and tell Hale where the last session stopped. On Hale's first session follow `docs/QA_AND_DELIVERY.md` §0 step by step.
-4. Then move on to the user's request for the day.
+4. Read `docs/ROADMAP.md` → "Final week — the board": the one plan for all three people, with every open task (`E` Ezgin, `M` Meriç, `H` Hale), its day, what it waits on and the state of every prize. Tell the person which of the other two's tasks theirs wait on, and which wait on theirs. Before work that serves a prize, read that prize's entry in `docs/QA_AND_DELIVERY.md` §8.1 (what its page asks, word for word).
+5. Then move on to the user's request for the day.
+
+## Final week: the split crosses the roles (2026-10-08 to the deadline, D-031)
+
+The "Owns" column above says who owns a folder. For the last week the work is split by who can finish it, and the board in `docs/ROADMAP.md` is what counts:
+
+- **Ezgin** also changes the data layer behind Meriç's wallet screens (`packages/wallet-ui/src/data`, `apps/wallet`). Not the look of a screen.
+- **Meriç** also owns the KIMI and Qwen prizes end to end, including `packages/llm`, `packages/agent-kit/src/reviewer.ts` and `apps/server/src/api/routes/explain.ts`, and the window that lets a site open the wallet (which touches `packages/wallet-core`).
+- **Hale** also builds: the agents playground and the `/agents` page, the wallet's history screens, the Cleanverse scenario, small copy and extension fixes, the READMEs of `packages/guard` and `packages/agent-kit`, and the final README. This replaces "does not change product code" for exactly the `H` tasks on the board that say "Build" or "Write". Each goes on its own branch and pull request, not on `qa`.
+
+An agent does not refuse or re-ask about a task because it sits in another person's folder when the board gives it to the person it is working with. A task that is on nobody's line on the board is asked about first. When a task is finished, slips or changes hands, its line on the board and its entry in the owner's task file change in the same commit.
 
 ## Task handoff (creating work for the other side)
 

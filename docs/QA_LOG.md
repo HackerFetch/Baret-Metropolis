@@ -20,16 +20,16 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-07 · by: Ezgin's agent (before Hale's first session)
+Last updated: 2026-10-09 · by: Ezgin's agent (before Hale's first session)
 
 | | |
 |---|---|
 | **Done** | Role, task list, plan and this log exist (`CLAUDE.md`, `tasks/FOR_HALE.md`, `docs/QA_AND_DELIVERY.md`). Nothing tested yet |
 | **In progress** | Nothing |
-| **Blocked on** | Ezgin: repo write access, team membership on the hackathon platform, a funded test wallet (`tasks/FOR_EZGIN.md`, "Onboard Hale") |
-| **Next step** | The first session: `docs/QA_AND_DELIVERY.md` §0, then the "First session" tasks in `tasks/FOR_HALE.md` |
+| **Blocked on** | Ezgin (E1): team membership on the hackathon platform, a funded test wallet. GitHub access was given on 2026-10-08 |
+| **Next step** | Read the board in `docs/ROADMAP.md` ("Final week — the board") and `docs/QA_AND_DELIVERY.md` §8.1, then H1 in `tasks/FOR_HALE.md`. Since 2026-10-09 the role also builds and writes (H4 to H9, H14), not only tests |
 | **Open bugs filed by Hale** | 0 |
-| **Days to the deadline** | 6 (closes 2026-10-13) |
+| **Days to the deadline** | Freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---
 

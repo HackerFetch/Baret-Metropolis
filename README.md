@@ -6,21 +6,21 @@ This repository and this document set are meant for **live** tracking. They were
 
 ---
 
-## Status Summary (last updated: 2026-10-07)
+## Status Summary (last updated: 2026-10-09)
 
 | Area | Status |
 |---|---|
-| Phase | Backend live on Monad testnet and verified end to end; frontend built and being wired to it. Final week: stretch integrations, then the submission |
+| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Open: the demo sites sign nothing yet, the wallet app is on sample data, no screen reads the indexer, no developer quickstart. **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 46 files in `packages/content`, one per page or frame, complete |
 | Design system | 37 components in `packages/ui`; the web signature layer in `packages/web-ui` (type scale, motion, reveals, the eyelet cursor); the wallet pieces both wallets share in `packages/wallet-ui` (sign request, rule editor, findings, QR) |
 | Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Frontend audit (2026-10-04, branch `frontend-audit`): the landing is prerendered (LCP on a throttled phone 2.74 s to 1.88 s), every route has its own head and preloads, no console warnings on any surface, WCAG AA contrast in both themes and all six demo palettes, fail-closed gaps closed (locked request windows, permits, reachability), copy that claims nothing the product cannot back. Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
-| Server and contracts | Server: `/v1/analyze` (9 detectors, fail-closed policy engine, all 38 finding codes produced by a test), `/v1/audit/*`; 62 tests; 18 of 18 showcase scenarios agree with the live API (`verify:demo`). Contracts: PaymentGuard, its factory, ReputationRegistry, the CRE receiver in front of it and the demo contracts; 58 forge tests incl. fuzz and invariants. Packages: `guard`, `demo`, `agent-kit` (Dynamic server wallet), `wallet-core` (Mera passkey account). Packages also: `metamask-plugin` (MetaMask Agent Wallet: `mm baret check` / `mm baret send`). Workflows: the Chainlink CRE reputation oracle (`workflows/`), simulated with a real write to the registry on testnet. Open: Nansen credits, Cleanverse, and the stretch items in `docs/ROADMAP.md` |
+| Server and contracts | Server: `/v1/analyze` (9 detectors, fail-closed policy engine, all 38 finding codes produced by a test), `/v1/audit/*`; 62 tests; 18 of 18 showcase scenarios agree with the live API (`verify:demo`). Contracts: PaymentGuard, its factory, ReputationRegistry, the CRE receiver in front of it and the demo contracts; 58 forge tests incl. fuzz and invariants. Packages: `guard`, `demo`, `agent-kit` (Dynamic server wallet), `wallet-core` (Mera passkey account). Packages also: `metamask-plugin` (MetaMask Agent Wallet: `mm baret check` / `mm baret send`). Workflows: the Chainlink CRE reputation oracle (`workflows/`), simulated with a real write to the registry on testnet. Open: Nansen credits, the Cleanverse contract side, KIMI and Qwen against the real models (back in, D-031). The MetaMask plugin is built and not entered |
 | Contract deploy | Monad testnet: PaymentGuard, ReputationRegistry, ReputationOracleReceiver and the demo contracts of all six showcase sites, source verified — `docs/CONTRACTS.md` §2.6, §3.4, §3.5, §7 |
 | Indexer | Envio HyperIndex, hosted: vaults, agent payments and the registry's history, served at `/v1/audit/*` (`docs/ARCHITECTURE.md` §8.8) |
 | Hosting / CI | Live: `https://baret-metropolis.vercel.app` (showcase), `https://baret-wallet.vercel.app`, API `https://baret-monad-api.onrender.com`. GitHub Actions gates the API deploy; extension zips published on every push to `main` (`docs/DEPLOYMENT.md`) |
-| Week | Final week (2026-10-07 → 10-13). Submission closes 2026-10-14 06:59. Plan: `docs/ROADMAP.md` "Final week" |
+| Week | Final week. Feature freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3). Plan: `docs/ROADMAP.md` "Final week — the board" |
 
 Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
 
