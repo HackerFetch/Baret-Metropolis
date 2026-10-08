@@ -1,4 +1,5 @@
 import type { GuardPolicyField } from "@baret/guard";
+import { getAddress } from "viem";
 import type { Detector, FindingDraft } from "../../analysis/context.js";
 
 /**
@@ -15,7 +16,39 @@ import type { Detector, FindingDraft } from "../../analysis/context.js";
  * pick `body` or `bodySelf`. `details.asset` is set when the asset, not a
  * rule, is what demands the credential.
  */
+/** `NotVerified(address party, uint8 reason)`, the typed refusal of Baret's CompliantPaymentGuard. */
+const NOT_VERIFIED = "0x0c2b355f";
+const GUARD_REASONS = ["NoCredential", "NotActive", "TierTooLow"] as const;
+
+/**
+ * A payment the CompliantPaymentGuard refused in simulation: the contract
+ * checked both identities on-chain before moving anything and named the
+ * party that failed. The asset never moved, so there is no transfer for the
+ * rest of this detector to read; the contract's own answer is reported.
+ */
+function refusedByGuard(ctx: Parameters<Detector>[0]): FindingDraft[] {
+  const data = ctx.simulation.revertData;
+  if (!data?.toLowerCase().startsWith(NOT_VERIFIED) || data.length !== 138) return [];
+  const party = getAddress(`0x${data.slice(34, 74)}`);
+  const reason = GUARD_REASONS[Number(BigInt(`0x${data.slice(74)}`))];
+  if (!reason) return [];
+  return [
+    {
+      code: "COMPLIANCE_NO_CREDENTIAL",
+      values: { recipient: party },
+      details: {
+        side: party === ctx.user ? "self" : "recipient",
+        reason,
+        refusedBy: ctx.tx?.to ?? null,
+      },
+      rule: "requireComplianceCheck",
+    },
+  ];
+}
+
 export const compliance: Detector = (ctx) => {
+  const refused = refusedByGuard(ctx);
+  if (refused.length > 0) return refused;
   const p = ctx.policy;
   const byAsset = ctx.gatedAssets[0] ?? null;
   const byRule =

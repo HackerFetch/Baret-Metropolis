@@ -557,6 +557,20 @@ describe("compliance", () => {
     );
   });
 
+  it("names the party a CompliantPaymentGuard refused, before anything is signed", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
+    // NotVerified(PEER, NoCredential): the guard's typed refusal.
+    const revertData = `0x0c2b355f${PEER.slice(2).toLowerCase().padStart(64, "0")}${"0".repeat(64)}`;
+    rpc.outcome = { ok: false, revertReason: null, revertData: revertData as `0x${string}` };
+    const r = await run(tx({ to: DAPP, data: "0x8b7bd0a5" }), rpc);
+    const finding = r.findings.find((f) => f.code === "COMPLIANCE_NO_CREDENTIAL");
+    expect(finding?.values).toEqual({ recipient: PEER });
+    expect(finding?.details).toMatchObject({ side: "recipient", reason: "NoCredential" });
+    expect(codes(r)).toContain("SIMULATION_FAILED");
+    expect(r.decision).toBe("blocked");
+  });
+
   it("accepts a credential that does not expire, and refuses one with no country on it", async () => {
     const forever = { ...good, expiresAt: null };
     const ok = await run(

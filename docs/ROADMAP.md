@@ -126,7 +126,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Done 2026-10-09**, checked on the live URL with a virtual passkey | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Done 2026-10-09** (D-032), checked on the live URL with a virtual passkey | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
 | E5 | Decide and build: do the two Caution attacks become Blocked. **Done 2026-10-09**: Blocked (D-033); `verify:demo` 20 of 20 on the live API at commit `279bb3d` | Sat 10 | | main track |
-| E6 | Cleanverse contract side (the three guides are linked on the bounty page). First to be cut | Sat 10 | an A-Pass | Cleanverse |
+| E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts; a live settlement waits on the owner's A-Pass** | Sat 10 | an A-Pass | Cleanverse |
 | E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
 
