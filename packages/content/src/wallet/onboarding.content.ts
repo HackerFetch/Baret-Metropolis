@@ -18,7 +18,7 @@ export const onboarding = {
 
   welcome: {
     title: "No recovery phrase. Your passkey is the key.",
-    body: "Your Monad account is made from a passkey, the kind you open with Face ID, Touch ID, Windows Hello or a security key. There are no words to write down.",
+    body: "Your Monad account comes from a passkey you open with Face ID, Touch ID, Windows Hello or a security key. Nothing to write down. Baret uses Mera to make it.",
     pillars: [
       {
         title: "Reads it",
@@ -33,8 +33,11 @@ export const onboarding = {
         body: "A request that breaks your rules stops before you sign.",
       },
     ],
-    action: { label: "Create a passkey" },
-    existing: { label: "I already have a Baret passkey" },
+    action: { label: "Create my wallet" },
+    existing: { label: "Open with my passkey" },
+    /** Under the existing-passkey action: the stateless way back in. */
+    existingNote:
+      "Used Baret here before, or cleared your browser? Open with your passkey and the same account comes back. Creating a new wallet starts an empty one.",
     footnote: "Monad testnet only. Open source under the MIT licence.",
   },
 
@@ -42,7 +45,14 @@ export const onboarding = {
     title: "Create your passkey",
     body: "Your browser asks you to confirm with Face ID, Touch ID, Windows Hello or a security key. Baret uses Mera to turn that passkey into your Monad account.",
     action: { label: "Create the passkey" },
-    working: "Waiting for your browser",
+    working: "Confirm in your browser's prompt",
+    /** The sample's stand-in for the prompt: no browser prompt appears. */
+    sampleWorking: "Creating your sample account",
+    /** Under the working state: why a second prompt may follow the first. */
+    twice:
+      "Some devices ask you to confirm twice: once to save the passkey, once to open the account.",
+    /** The user name the passkey is saved under in the browser's manager. */
+    userName: "Baret wallet",
     success: {
       title: "Your account is ready",
       body: "This passkey is the only way into it. Keep it. If you delete it, there is no phrase to fall back on.",
@@ -51,18 +61,17 @@ export const onboarding = {
     errors: {
       cancelled: {
         title: "No passkey yet",
-        body: "You closed the browser prompt, so nothing was created. Try again when you are ready.",
+        body: "The passkey prompt closed, so no account was opened. Try again when you are ready.",
         action: { label: "Try again" },
       },
       unsupported: {
-        title: "This browser can't create passkeys",
-        body: "Try a recent browser on a device with a screen lock. Or use the Baret extension, which works with a password instead.",
-        action: { label: "Get the extension" },
+        title: "This browser can't use passkeys",
+        body: "Open this page in a recent Chrome, Safari, Edge or Firefox, on a device with a screen lock or a security key.",
       },
       notCompatible: {
         title: "This passkey can't make an account",
-        body: "Your passkey provider lacks a feature Mera needs. Try another device or another password manager.",
-        action: { label: "Try again" },
+        body: "Your passkey provider lacks a feature Mera needs. Google Password Manager and iCloud Keychain have it. You can delete the unused Baret passkey this left behind.",
+        action: { label: "Try another provider" },
       },
       failed: {
         title: "The passkey was not created",

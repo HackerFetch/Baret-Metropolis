@@ -30,6 +30,9 @@ export const send = {
     fee: "Network fee",
     total: "Total",
     remaining: "Left after this",
+    /** Live: the fee is read from the chain on the sign request, not guessed here. */
+    feeLater: "Shown before you sign",
+    totalPlusFee: "{amount} plus the network fee",
   },
 
   action: {

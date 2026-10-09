@@ -86,6 +86,7 @@ export function LinkButton({
   size = "md",
   icon = "none",
   fullOnPhone,
+  newTab,
 }: {
   href: string;
   label: string;
@@ -93,7 +94,10 @@ export function LinkButton({
   size?: Size;
   icon?: Icon;
   fullOnPhone?: boolean;
+  /** Opens in a new tab, so the page that links (and its in-memory state) stays open. */
+  newTab?: boolean;
 }): JSX.Element {
+  const tab = newTab ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
   const outer = cx(OUTER, HIT[size], fullOnPhone && "max-md:w-full");
   const face: ReactNode = (
     <span className={cx(INNER, SIZE[size], FACE[variant], fullOnPhone && "max-md:w-full")}>
@@ -105,20 +109,20 @@ export function LinkButton({
 
   if (href.startsWith("http")) {
     return (
-      <a href={href} rel="noreferrer" className={outer}>
+      <a href={href} rel="noreferrer" className={outer} {...tab}>
         {face}
       </a>
     );
   }
   if (href.startsWith("#")) {
     return (
-      <a href={href} className={outer}>
+      <a href={href} className={outer} {...tab}>
         {face}
       </a>
     );
   }
   return (
-    <Link to={href} viewTransition className={outer}>
+    <Link to={href} viewTransition className={outer} {...tab}>
       {face}
     </Link>
   );

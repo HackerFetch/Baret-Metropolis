@@ -135,10 +135,14 @@ export interface SignRequest {
     | "approval"
     | "approvalUnlimited"
     | "payment"
+    | "vaultCreate"
+    | "vaultApproval"
     | "vaultDeposit"
     | "vaultWithdraw"
     | "vaultCaps"
     | "vaultRemoveMerchant"
+    | "vaultPauseMerchant"
+    | "vaultResumeMerchant"
     | "vaultAgentKey"
     | "vaultRevokeAgent";
   readonly values: Readonly<Record<string, string>>;
@@ -151,6 +155,9 @@ export interface SignRequest {
     | "approval"
     | "approvalUnlimited"
     | "payment"
+    | "vaultApproval"
+    | "vaultDeposit"
+    | "vaultWithdraw"
     | "nothing"
     | "unknown";
   readonly findings: readonly CheckFinding[];

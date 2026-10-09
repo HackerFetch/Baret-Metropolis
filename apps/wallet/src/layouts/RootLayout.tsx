@@ -106,7 +106,7 @@ export function Component(): JSX.Element {
 
 /**
  * What paints while the first screen's chunk loads: the app frame (sidebar or
- * top bar, and the sample notice) on an app screen, the bare ground on a
+ * top bar, and the sample notice on the sample) on an app screen, the bare ground on a
  * request or setup screen. AppLayout is imported statically for this, so the
  * frame arrives with the entry instead of one lazy hop later.
  */
