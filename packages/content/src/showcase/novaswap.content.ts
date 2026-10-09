@@ -301,6 +301,11 @@ export const novaswap = {
       open: "The unlimited allowance to the look-alike stays open. It can take any dUSDC this wallet receives later.",
       next: "Press Enable dUSDC trading to see what Baret says about the same request.",
     },
+    /** In Baret's panel, in place of "If this were signed", once the attack was signed here with no check. */
+    panel: {
+      title: "When you signed it with no check",
+      body: "Your dUSDC went from {before} to {after}. The look-alike used the allowance this request asks for.",
+    },
   },
 } as const satisfies ScenarioSite & {
   live: { wallet: string; balance: string };
@@ -310,6 +315,7 @@ export const novaswap = {
     faucet: { body: string; label: string; busy: string; pending: string; done: string };
     empty: string;
     outcome: { safe: string; danger: string; open: string; next: string };
+    panel: { title: string; body: string };
   };
 };
 

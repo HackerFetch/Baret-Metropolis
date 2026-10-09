@@ -135,7 +135,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
 | M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving. **Built 2026-10-09** on branch `novaswap-sign`, checked end to end on a fork of Monad testnet; live once merged | Fri 9 | | main track |
-| M2 | The comparison flow and its copy: same site, same button, two wallets | Fri 9 | M1 | main track |
+| M2 | The comparison flow and its copy: same site, same button, two wallets. **Built 2026-10-09** on branch `comparison-flow` (on top of M1); the MetaMask wording waits for H3 | Fri 9 | M1 | main track |
 | M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it | Sat 10 | E3, M1 | main track, Mera UX |
 | M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | Fri 9 to Sat 10 | E7 for production | KIMI |
 | M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable. Dropped again if not working by Sat 10, 20:00 | Sat 10 | a key | Qwen |

@@ -206,6 +206,23 @@ export function NovaSwapSite(): JSX.Element {
   const copy = analysis.modes[checked];
   const signMode = ran?.mode ?? mode;
   const { outcome } = novaswap.sign;
+  // The attack signed here with no check, both balances read: Baret's panel
+  // for the same request shows what it cost, in place of "If this were signed".
+  const { before, after } = sign.state;
+  const drained =
+    checked === "danger" &&
+    ran?.mode === "danger" &&
+    sign.state.phase === "done" &&
+    before !== null &&
+    after !== null
+      ? {
+          title: novaswap.sign.panel.title,
+          body: fill(novaswap.sign.panel.body, {
+            before: displayAmount(before, NOVASWAP.usdcDecimals),
+            after: displayAmount(after, NOVASWAP.usdcDecimals),
+          }),
+        }
+      : null;
 
   return (
     <>
@@ -317,7 +334,7 @@ export function NovaSwapSite(): JSX.Element {
           expected: copy.expected,
           expectedBody: copy.expectedBody,
           claims: analysis.claims,
-          without: analysis.without,
+          without: drained ?? analysis.without,
           lesson: analysis.lesson,
         }}
         onTryOther={tryOther}
