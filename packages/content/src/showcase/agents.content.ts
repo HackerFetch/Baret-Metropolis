@@ -475,11 +475,11 @@ export const agents = {
         },
         cleanverseVerified: {
           label: "Pay aUSDC to a verified wallet",
-          body: "A compliant asset, checked on both sides by its own policy before it moves: Travel Rule-compliant payments.",
+          body: "A transfer of aUSDC, a compliant asset, between two wallets that hold a Cleanverse identity credential: the shape of a Travel Rule-compliant payment.",
         },
         cleanverseNoCredential: {
           label: "Pay aUSDC to a wallet with no credential",
-          body: "The recipient has no Cleanverse identity credential, so the asset itself refuses the transfer.",
+          body: "A transfer of aUSDC to a wallet that holds no Cleanverse identity credential.",
         },
       },
       custom: {

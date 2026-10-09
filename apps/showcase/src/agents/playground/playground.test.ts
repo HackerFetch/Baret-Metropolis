@@ -1,5 +1,9 @@
+import { findings as findingCopy } from "@baret/content";
+import { CLEANVERSE } from "@baret/demo";
+import { bodyOf } from "@baret/web-ui/components/CheckBlocks";
+import { fill } from "@baret/web-ui/lib/util";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ACTIONS, randomAddress, SAMPLES, verdictFor } from "./sample.js";
+import { ACTIONS, randomAddress, SAMPLE_AUSDC, SAMPLES, verdictFor } from "./sample.js";
 import {
   agentAddress,
   isAddress,
@@ -11,6 +15,26 @@ import {
   sourceFor,
 } from "./source.js";
 import { outcomeOf, terminalLines } from "./terminal.js";
+
+describe("the Cleanverse sample reads like the live answer", () => {
+  it("names aUSDC by the address the server sends in details.asset", () => {
+    expect(SAMPLE_AUSDC).toBe(CLEANVERSE.aUsdc);
+  });
+
+  it("reads the asset's rule, not the user's, and never prints the asset's address", () => {
+    const finding = SAMPLES.cleanverseNoCredential.findings.find(
+      (f) => f.code === "COMPLIANCE_NO_CREDENTIAL",
+    );
+    expect(finding).toBeDefined();
+    if (!finding) return;
+    const { template, values } = bodyOf(findingCopy.COMPLIANCE_NO_CREDENTIAL, finding);
+    const sentence = fill(template, values);
+    expect(sentence).toContain("this asset only moves between verified wallets");
+    expect(sentence).not.toContain("your rules");
+    expect(sentence).not.toContain("{");
+    expect(sentence.toLowerCase()).not.toContain(CLEANVERSE.aUsdc.toLowerCase());
+  });
+});
 
 describe("the playground's verdicts follow the engine's rule", () => {
   /** Expected from the templates: toggles block when on, warnings only when allowWarnings is off. */

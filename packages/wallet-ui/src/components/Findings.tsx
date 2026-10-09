@@ -21,7 +21,7 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
   if (items.length === 0) return <p className={T.body}>{sign.findings.none}</p>;
   return (
     <ul className="grid gap-5">
-      {items.map((item) => {
+      {items.map((item, i) => {
         const words = findingCopy[item.code];
         const severity = FINDING_SPECS[item.code].severity;
         const titleValues = Object.fromEntries(
@@ -33,7 +33,8 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
         const { template, values } = bodyOf(words, item);
         return (
           <li
-            key={item.code}
+            // biome-ignore lint/suspicious/noArrayIndexKey: an answer can repeat a code (both sides of a compliance check), and the list never reorders.
+            key={`${item.code}-${i}`}
             className="grid gap-1.5 border-l-4 border-[color:var(--rule-strong)] pl-4"
           >
             <p className={T.label}>{sign.findings.severity[severity]}</p>

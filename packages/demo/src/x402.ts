@@ -125,7 +125,7 @@ const ABI = parseAbi([
   "function setApprovalForAll(address operator, bool approved)",
 ]);
 
-/** The six actions of the /agents playground. */
+/** The six agent actions of the /agents playground; its two Cleanverse actions come from cleanverse.ts. */
 export const agents = {
   /** Pays a merchant what its 402 asked, 0.25 USDC. Nothing to find. */
   pay: (from: Address): DemoPayment => payment(from, { amount: 250_000n }),

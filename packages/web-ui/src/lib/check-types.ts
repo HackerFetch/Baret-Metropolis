@@ -26,9 +26,11 @@ export interface CheckFinding {
   readonly code: FindingCode;
   readonly values: Readonly<Record<string, string>>;
   /**
-   * Extra facts a finding's wording can branch on (server `analyze.ts`
-   * `findingSchema.details`) — today only `asset`: set when an asset's own
-   * policy demands something, not the caller's rules (compliance.ts).
+   * Extra facts the server attaches to a finding (`findingSchema.details` in
+   * packages/guard). The wording branches on two of them (`bodyOf()`): `side`,
+   * "self" when the finding is about the user's own account, and `asset`, the
+   * address of a compliant asset whose own policy, not the caller's rules,
+   * demands the credential (apps/server compliance.ts).
    */
   readonly details?: Readonly<Record<string, unknown>>;
 }

@@ -4,9 +4,12 @@ import { bodyOf, hasValues } from "./CheckBlocks.js";
 const BASE = {
   body: "{recipient} has no credential, and your rules require one.",
   bodySelf: "Your account has no credential, and your rules require one.",
-  bodyAsset: "{recipient} has no credential. {asset} can only move between verified wallets.",
-  bodySelfAsset: "Your account has no credential. {asset} can only move between verified wallets.",
+  bodyAsset: "{recipient} has no credential, and this asset only moves between verified wallets.",
+  bodySelfAsset:
+    "Your account has no credential, and this asset only moves between verified wallets.",
 };
+/** What the server sends in `details.asset`: the compliant asset's address. */
+const AUSDC = "0xaC0893567D43C3E7e6e35a72803df05416C1f20D";
 
 describe("bodyOf", () => {
   it("reads the plain body with no details", () => {
@@ -23,19 +26,20 @@ describe("bodyOf", () => {
     expect(template).toBe(BASE.bodySelf);
   });
 
-  it("picks bodyAsset and folds details.asset into {asset} when the asset, not a rule, demands it", () => {
+  it("picks bodyAsset when the asset, not a rule, demands it, and never prints the asset's address", () => {
     const { template, values } = bodyOf(BASE, {
       values: { recipient: "0xabc" },
-      details: { asset: "aUSDC" },
+      details: { side: "recipient", asset: AUSDC },
     });
     expect(template).toBe(BASE.bodyAsset);
-    expect(values).toEqual({ recipient: "0xabc", asset: "aUSDC" });
+    expect(values).toEqual({ recipient: "0xabc" });
+    expect(template).not.toContain("{asset}");
   });
 
   it("picks bodySelfAsset when both details are set", () => {
     const { template } = bodyOf(BASE, {
       values: {},
-      details: { side: "self", asset: "aUSDC" },
+      details: { side: "self", asset: AUSDC },
     });
     expect(template).toBe(BASE.bodySelfAsset);
   });
@@ -43,10 +47,10 @@ describe("bodyOf", () => {
   it("falls back down the chain when a variant is missing", () => {
     const noSelfAsset = { body: BASE.body, bodyAsset: BASE.bodyAsset };
     expect(
-      bodyOf(noSelfAsset, { values: {}, details: { side: "self", asset: "aUSDC" } }).template,
+      bodyOf(noSelfAsset, { values: {}, details: { side: "self", asset: AUSDC } }).template,
     ).toBe(noSelfAsset.bodyAsset);
     const noAssetAtAll = { body: BASE.body, bodySelf: BASE.bodySelf };
-    expect(bodyOf(noAssetAtAll, { values: {}, details: { asset: "aUSDC" } }).template).toBe(
+    expect(bodyOf(noAssetAtAll, { values: {}, details: { asset: AUSDC } }).template).toBe(
       noAssetAtAll.body,
     );
   });
