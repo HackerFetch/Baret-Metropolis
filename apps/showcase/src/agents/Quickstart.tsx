@@ -66,7 +66,7 @@ export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
         <Reveal className="col-span-4 min-w-0 md:col-span-8 lg:col-span-7" delay={0.06}>
           <fieldset>
             <legend className="sr-only">{quickstart.tabs}</legend>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
               {(Object.keys(SAMPLES) as SampleId[]).map((id) => (
                 <Segment
                   key={id}

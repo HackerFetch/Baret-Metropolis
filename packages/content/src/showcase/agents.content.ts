@@ -39,8 +39,9 @@ export const agents = {
       secondary: { label: "Try the playground", href: "#playground" },
     },
     install: "git clone https://github.com/HackerFetch/Baret-Metropolis",
-    /** Shown next to the install line until the kit is on npm. */
-    installStatus: "Not on npm yet. Works today from a clone: pnpm install, then @baret/agent-kit.",
+    /** Shown under the install line until the kit is on npm. */
+    installStatus:
+      "Not on npm yet. After the clone, pnpm install, then use @baret/agent-kit and the baret CLI from the workspace.",
   },
 
   /** The argument. Concrete over scary. */
@@ -86,7 +87,7 @@ export const agents = {
       },
       {
         title: "The guarded signer",
-        body: "Asks Baret first and signs only on allow. The HTTP API, the TypeScript SDK and the CLI all work today, from a clone of the repository; not yet on npm.",
+        body: "Asks Baret first and signs only what Baret clears. The HTTP API is live. The TypeScript SDK and the CLI work today from a clone of the repository, not yet from npm.",
         points: [
           "HTTP API, works today",
           "TypeScript SDK (@baret/agent-kit), works today",
@@ -110,18 +111,30 @@ export const agents = {
 
   /** A real agent's own payments, read live from the indexer (H6, 2026-10-09).
    *  Serves the Dynamic and Envio prizes together: a deployed agent wallet
-   *  with delegated access, and a frontend consuming the indexer's data. */
+   *  with delegated access, and a frontend consuming the indexer's data.
+   *  The vault is the demo PaymentGuard vault (docs/CONTRACTS.md §2), whose
+   *  token is USDC; the agent is its authorised agent since 2026-10-05. */
   liveAgent: {
     title: "A real agent, paying from a real vault.",
-    body: "The agent above is a Dynamic server wallet, authorised on a PaymentGuard vault on Monad testnet. Every payment below is real, read live from the indexer.",
-    address: "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",
+    body: "This agent is a Dynamic server wallet, authorised on a PaymentGuard vault on Monad testnet. Every payment below is real, read live from the Envio indexer.",
+    agent: "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",
+    vault: "0x0A82671420114E47c672D5e8e23017DdCE850A35",
+    labels: { agent: "Agent", vault: "Vault", merchant: "Merchant" },
     explorer: "https://testnet.monadexplorer.com",
     view: "View {hash} on the explorer",
-    columns: { merchant: "Merchant", amount: "Amount", when: "When" },
     loading: "Reading the agent's payments...",
+    /** Announced once the list is in. */
+    shown: "Showing the agent's {count} latest payments.",
+    shownOne: "Showing the agent's one payment.",
     empty: {
       title: "No payments yet",
       body: "This agent has not paid from its vault yet.",
+    },
+    /** The vault's latest payments (the most one answer holds) are all
+     *  someone else's, so older ones may still be this agent's. */
+    notRecent: {
+      title: "No recent payments",
+      body: "None of the vault's latest {count} payments are this agent's. Its full history is on the explorer.",
     },
     unavailable: {
       title: "History unavailable",
@@ -195,7 +208,7 @@ export const agents = {
       {
         short: "Install",
         title: "Install the kit",
-        body: "Add @baret/agent-kit to a TypeScript or Node agent once it is published. Until then, any language can call the HTTP API.",
+        body: "Clone the repository and run pnpm install. @baret/agent-kit and the baret CLI then work from the workspace, and any language can call the HTTP API.",
       },
       {
         short: "Policy",
@@ -205,7 +218,7 @@ export const agents = {
       {
         short: "Wrap",
         title: "Wrap your signer",
-        body: "Replace your send call with guardedSubmit. Allow means it signs and sends. Block means it throws before the key runs.",
+        body: "Replace your send call with guardedSubmit. Safe means it signs and sends. Blocked, or Caution unless you allow it, means it throws before the key runs.",
       },
     ],
   },
@@ -214,7 +227,7 @@ export const agents = {
     /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Quickstart",
     title: "From install to your first blocked transaction.",
-    /** Accessible name of the TypeScript / any language / agent frameworks picker. */
+    /** Accessible name of the HTTP API / TypeScript / any language picker. */
     tabs: "Show the code for",
     /** Under a sample whose package or endpoint does not exist yet. Such a sample has no copy button. */
     planned: "Planned. Not published yet, so this code does not run today.",
@@ -236,7 +249,7 @@ export const agents = {
         "  }'",
       ],
       after:
-        "The answer carries a decision: safe, caution or blocked. Sign only on safe or caution. No answer means no signature.",
+        "The answer carries a decision: safe, caution or blocked. An agent signs only on safe, since a caution is for a person to read. No answer means no signature.",
     },
     sdk: {
       title: "TypeScript",
@@ -244,32 +257,40 @@ export const agents = {
         "Wrap the signer, then send the way you already do. Works today, from a clone of the repository.",
       code: [
         'import { AgentWallet, localSigner } from "@baret/agent-kit";',
+        'import { type Hex, parseEther } from "viem";',
         "",
         "const agent = new AgentWallet({",
-        "  signer: localSigner(process.env.BARET_AGENT_PRIVATE_KEY!),",
+        "  signer: localSigner(process.env.BARET_AGENT_PRIVATE_KEY as Hex),",
         '  baretUrl: "http://localhost:8080",',
         '  rpcUrl: "https://testnet-rpc.monad.xyz",',
         '  policyTemplate: "balanced",',
         "});",
         "",
-        "const { hash } = await agent.guardedSubmit({ to, value, data });",
+        "const { hash } = await agent.guardedSubmit({",
+        '  to: "0x...",',
+        '  value: parseEther("0.1"),',
+        "});",
+        'console.log("sent", hash);',
       ],
-      after: "A block throws GuardBlockedError. The key never signed, so there is nothing to undo.",
+      after:
+        "A Blocked answer, or a Caution unless allowCaution is set, throws GuardBlockedError. The key never signed, so there is nothing to undo.",
     },
     cli: {
       title: "Any language",
       before:
-        "Pipe settings through the environment, never a flag, so a key never lands in shell history. Works today, from a clone of the repository.",
+        "Settings come from the environment or packages/agent-kit/.env, never from flags, so a key never lands in shell history. Works today, from a clone of the repository.",
       code: [
-        "export BARET_AGENT_PRIVATE_KEY=0x...",
+        "# packages/agent-kit/.env (git-ignored), read by the baret script:",
+        "# BARET_AGENT_PRIVATE_KEY=0x...",
+        "cd packages/agent-kit",
         "export BARET_POLICY_TEMPLATE=balanced",
         "",
-        "baret address                        # prints the agent address",
-        "baret analyze --to 0x... --value 100000000000000000",
-        "baret submit  --to 0x... --value 100000000000000000",
+        "pnpm baret address    # prints the agent address",
+        "pnpm baret analyze --to 0x... --value 100000000000000000",
+        "pnpm baret submit --to 0x... --value 100000000000000000",
       ],
       after:
-        "Exit 0 means allowed (and, for submit, sent). Exit 1 means a rule blocked it and nothing was signed. Exit 2 means the check could not finish, so nothing was signed either.",
+        "Exit 0 means Baret cleared it (for submit, it was also sent). Exit 1 means Baret did not clear it, or Qwen vetoed it when QWEN_API_KEY is set, and nothing was signed. Exit 2 means anything else went wrong, such as Baret not answering.",
     },
     /** Three levels of involvement, smallest first. */
     /** Not rendered on /agents since 2026-10-03. */
@@ -342,7 +363,7 @@ export const agents = {
     },
     secrets: {
       title: "About the secret",
-      body: "The agent key comes from BARET_AGENT_SECRET. Keep it out of files, logs and prompts. Better still, give the agent a key that holds only gas and can only call pay on your vault.",
+      body: "The agent key comes from BARET_AGENT_PRIVATE_KEY, or from a Dynamic server wallet whose key is never whole in one place. Keep it out of the repository, logs and prompts. Better still, give the agent a key that holds only gas and can only call pay on your vault.",
     },
   },
 
@@ -565,12 +586,12 @@ export const agents = {
       {
         question: "Does Baret ever hold my agent's key?",
         answer:
-          "No. The key stays in your process. Baret gets the unsigned transaction and returns a decision. The server never sees a key and never signs. The vault holds what you deposit, and only you can withdraw it.",
+          "No. The key stays with you: in your process, or split between your machine and Dynamic for a Dynamic server wallet. Baret gets the unsigned transaction and returns a decision. The server never sees a key and never signs. The vault holds what you deposit, and only you can withdraw it.",
       },
       {
         question: "What if the agent ignores the answer?",
         answer:
-          "Today nothing in your code stops it, so sign only when the HTTP API answers allow. The planned guarded signer will refuse on its own. Either way, the vault still enforces its caps in the contract.",
+          "With the HTTP API alone, nothing in your code stops it, so sign only on safe. AgentWallet refuses on its own: a call Baret does not clear never reaches the signer. Either way, the vault still enforces its caps in the contract.",
       },
       {
         question: "What if the agent key leaks?",
@@ -612,7 +633,7 @@ export const agents = {
 
   cta: {
     title: "Your agent stops instead of signing blind.",
-    body: "Pick a policy and call the HTTP API, the SDK or the CLI today, from a clone of the repository. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
+    body: "Pick a policy and call the HTTP API today, or use the SDK and the CLI from a clone of the repository. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
     actions: {
       primary: { label: "Read the quickstart", href: "#quickstart" },
       secondary: { label: "Read the vault spec", href: "/docs#contracts-and-payments" },

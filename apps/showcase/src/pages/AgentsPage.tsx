@@ -22,7 +22,9 @@ import { ClosingBand } from "../shared/ClosingBand.js";
  * questions, and the way in. The problem, the control model, the chooser,
  * fail-closed and revoke are folded into those or cut. One policy choice
  * drives the quickstart's code and the playground's answers. The questions
- * sit beside their title from 1024 px.
+ * sit beside their title from 1024 px. Below the hero the grounds alternate,
+ * deep first: the layers, the live agent, the quickstart, the playground and
+ * the questions.
  */
 
 const FAQ = agents.faq.items.map((item) => ({ summary: item.question, body: item.answer }));
