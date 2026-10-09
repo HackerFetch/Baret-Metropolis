@@ -14,8 +14,9 @@ import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId, useState } from "react";
+import { type JSX, useEffect, useId, useState } from "react";
 import { WALLET_ART } from "../assets.js";
+import { useLive } from "../live/live.js";
 
 /**
  * Activity: every verdict, including requests the reader declined and the
@@ -184,6 +185,13 @@ function Details({
 
 export function Component() {
   const { state } = useWallet();
+  const live = useLive();
+  // The indexer's history is read by this screen, not by unlock: live.tsx
+  // starts status.activity "ok" with an empty log, this reads the real one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadHistory reads state.vault.address itself; re-run once it resolves.
+  useEffect(() => {
+    if (state.live) void live?.loadHistory();
+  }, [state.live, live, state.vault.address]);
   // Fail-closed: activity that did not load is an error, never an empty log.
   const loaded = ready(state, "activity");
   const name = useId();

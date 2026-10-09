@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { activityOf } from "./history.js";
 import {
   clearStored,
   type PasskeyProblem,
@@ -103,6 +104,12 @@ export interface Live {
   ): Promise<SignReceipt>;
   /** Forgets everything this browser holds about the account. The passkey itself stays. */
   forget(): void;
+  /**
+   * Reads the vault's activity from the indexer into the store, for the
+   * History page. A vault that does not exist yet (`state.vault.address`
+   * empty) is read as "ok" with no rows, never as unavailable.
+   */
+  loadHistory(): Promise<void>;
   /**
    * The PaymentGuard vault. Every change is a list of steps, each one a call
    * the page puts in front of the owner as a sign request (recheck, then
@@ -327,6 +334,32 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
   statusRef.current = state.status;
   const stateRef = useRef(state);
   stateRef.current = state;
+
+  /**
+   * The History page's own read: the vault's activity from the indexer. Not
+   * part of `open()`'s first reads (`status.activity` starts "ok" with an
+   * empty log there) — the comment on that patch says the indexer's history
+   * is for the history screen to read, so it reads it on its own mount.
+   */
+  const loadHistory = useCallback(async (): Promise<void> => {
+    const open = session.current;
+    if (!open) return;
+    const vaultAddress = stateRef.current.vault.address;
+    if (!vaultAddress) {
+      patch({ activity: [], status: statusWith(statusRef, { activity: "ok" }) });
+      return;
+    }
+    patch({ status: statusWith(statusRef, { activity: "loading" }) });
+    try {
+      const res = await fetch(`/api/v1/audit/vault/${vaultAddress}?limit=50`);
+      if (!res.ok) throw new Error(String(res.status));
+      const body: unknown = await res.json();
+      if (session.current !== open) return;
+      patch({ activity: activityOf(body), status: statusWith(statusRef, { activity: "ok" }) });
+    } catch {
+      if (session.current === open) patch({ status: statusWith(statusRef, { activity: "error" }) });
+    }
+  }, [patch]);
 
   /** An unlocked session arrives: the account, the wallet that signs, the first reads. */
   const open = useCallback(
@@ -734,6 +767,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       recheck: check,
       sign,
       forget,
+      loadHistory,
       vault,
     }),
     [
@@ -749,6 +783,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       check,
       sign,
       forget,
+      loadHistory,
       vault,
     ],
   );
