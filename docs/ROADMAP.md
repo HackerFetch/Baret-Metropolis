@@ -106,8 +106,8 @@ Twelve prizes are selected on the project (the list Ezgin copied from the platfo
 | Best Use of Envio ($1,000) | A deployed indexer with a public config, schema and handlers; a frontend that consumes it; depth of schema | 🔶 Indexer and `/v1/audit/*` live; no screen reads them | H5, H6 |
 | Best Projects using Alchemy ($1,000 credits) | At least one Alchemy service, meaningfully | ✅ Every read goes through Alchemy (`alchemy: ok` on live answers). Thin, but it meets the text | H14 |
 | Best workflow with CRE ($3,000) | A blockchain joined to an external source; a successful simulation by the CRE CLI. **Demo video required (max 2 min)** | ✅ Built and simulated with a real write; the video is missing | H13 |
-| Best Builds Powered by KIMI ($3,000 credits, split across 10 teams) | KIMI driving a core feature, "not bolted on as a chatbot widget". **A published article is required** | 🔶 Working (D-036): `kimi-k3` writes the plain words under every live verdict in three languages, checked with the real key and in a browser. Production waits on the key on Render | E7, H12 |
-| Best Builds with Qwen 3.8 Max ($5,000 credits, "split across the top 3 Track 4 winners") | Planning, tool use, multi-step execution; deployed and demoable. **A published article is required** | 🔶 Working (D-035): the reviewer plans, calls four tools and vetoes or approves; on Monad testnet a mismatched payment vetoed and the matching one sent | H12 |
+| Best Builds Powered by KIMI ($3,000 credits, split across 10 teams) | KIMI driving a core feature, "not bolted on as a chatbot widget". **A published article is required** | 🔶 Working (D-036): `kimi-k3` writes the plain words under every live verdict in three languages, checked with the real key and in a browser. A judge with no wallet gets them through "Check it live" in the demo sites' panel; the wallet's Rules page turns a sentence into suggested rule changes (`/v1/policy/draft`: tightening ticked, loosening unticked with a warning, nothing saved until Save). Production waits on the key on Render | E7, H12, H16 |
+| Best Builds with Qwen 3.8 Max ($5,000 credits, "split across the top 3 Track 4 winners") | Planning, tool use, multi-step execution; deployed and demoable. **A published article is required** | 🔶 Working (D-035): the reviewer plans, calls four tools and vetoes or approves; on Monad testnet a mismatched payment vetoed and the matching one sent. Deployable as `POST /v1/review` (three fixed scenarios on the demo vault, streamed) and demoable on the showcase page `/review`, checked live in a browser against a local server (the honest payment approved and sent, overpay and injected vetoed). Production waits on the keys on Render | E7, H12, H16 |
 | Best Community Team Project ($5,000) | Every member names the campus group in the platform profile; the group is on the onboarded list | ❌ Not done | H2 |
 
 ### Who does what (redistributed 2026-10-09)
@@ -128,7 +128,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Done 2026-10-09** (D-032), checked on the live URL with a virtual passkey | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
 | E5 | Decide and build: do the two Caution attacks become Blocked. **Done 2026-10-09**: Blocked (D-033); `verify:demo` 20 of 20 on the live API at commit `279bb3d` | Sat 10 | | main track |
 | E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts. Parked 2026-10-09: the owner has its A-Pass and the allowance is set; a live settlement waits only on test aUSDC, which Cleanverse has to send** | Sat 10 | an A-Pass | Cleanverse |
-| E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
+| E7 | Account steps before recording: three keys on Render (`KIMI_API_KEY`, `QWEN_API_KEY`, `BARET_DEMO_AGENT_PRIVATE_KEY`), Render on Starter, `~/.baret/` backed up, the `LICENSE` file. The keys go in on Fri 9 or Sat 10, not Sunday, so H16 can test before recording | Fri 9 or Sat 10 | M4, M5 | KIMI, Qwen, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
 | E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges | Fri 9 to Sat 10 | H4 merged | main track (H4) |
 
@@ -163,6 +163,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
 | H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
+| H16 | Test on the live URLs after the merge deploy and E7: `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
 
 ### What is cut first
 
