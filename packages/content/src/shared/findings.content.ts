@@ -26,7 +26,7 @@
  *             the right one.
  *   bodyReason  only on KNOWN_MALICIOUS_ADDRESS: rendered instead of `body`
  *             when the registry's `reasonCode` (`details.registry`) is one
- *             `bodyOf()` recognises (today, `SCAMSNIFFER_BLACKLIST`) —
+ *             `bodyOf()` recognises (today, `SCAMSNIFFER_BLACKLIST`):
  *             written out in full, nothing interpolated, so an unmapped
  *             reasonCode safely falls back to `body` instead of guessing.
  *   why       opens on "Why this matters". One or two sentences.
