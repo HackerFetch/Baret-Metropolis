@@ -12,7 +12,7 @@ cd Baret-Metropolis
 pnpm install
 ```
 
-Import it from `packages/guard` inside the workspace, or copy `TransactionGuard` (one class, no chain library dependency) into your own project — the only runtime dependency is `zod`.
+Inside the workspace, add `"@baret/guard": "workspace:*"` to a package's dependencies and import from `@baret/guard`. The package ships its TypeScript source (`src/index.ts`), so run it through a TypeScript-aware tool (tsx, Vite, a bundler). Outside this repository, copy `src/guard.ts` (`TransactionGuard`) with the four files it reads, `analyze.ts`, `chains.ts`, `findings.ts` and `policy.ts`: no chain library inside, and the only runtime dependency is `zod`.
 
 ## The smallest working call
 
@@ -76,36 +76,39 @@ curl -X POST https://baret-monad-api.onrender.com/v1/analyze \
   }'
 ```
 
-An x402 payment goes the same way, with `typedData` (the EIP-3009 `TransferWithAuthorization` message) and `payment` (what the merchant's 402 asked for) instead of `transaction` — see `docs/X402_FACILITATOR.md`.
+An x402 payment goes the same way: `typedData` (the EIP-3009 `TransferWithAuthorization` message) in place of `transaction`, plus `payment` (what the merchant's 402 asked for), which the x402 detector compares with what the signature would actually pay. The request shapes are in `docs/ARCHITECTURE.md` §5, the flow in `docs/X402_FACILITATOR.md`.
 
 ## What comes back
 
-`decision` is one of `safe`, `caution` or `blocked`. `findings` names every detector that fired, with the values its sentence needs (`packages/guard/src/findings.ts` has the full list, `docs/ARCHITECTURE.md` §6 the detectors behind them). `firedRules` names which of your policy's fields decided it. `estimatedChanges` and `approvals` are only the signer's own balance and allowance changes — never the whole trace. `confidence` drops to `low` when the simulation could not run or a data source was unavailable; your policy still decides, Baret never hides the gap.
+`decision` is one of `safe`, `caution` or `blocked`. `findings` names every detector that fired, with the values its sentence needs (`packages/guard/src/findings.ts` has the full list, `docs/ARCHITECTURE.md` §6 the detectors behind them). `firedRules` names which of your policy's fields decided it. `estimatedChanges` and `approvals` are only the changes to `userWallet` (the sender, unless you set it) — never the whole trace. `confidence` is `low` when the simulated call reverted or a source a rule needed did not answer (a `…_UNAVAILABLE` finding), and `medium` when there was nothing to simulate (a signature request) or the call could not be traced; your policy still decides, Baret never hides the gap.
 
-`policy` takes the full rule set (`GuardPolicy`, `packages/guard/src/policy.ts`); `policyTemplate` takes `"strict"`, `"balanced"` or `"permissive"` and the server fills in the rest, including the network's own USDC as the one allowed payment asset. Send one or the other, never both.
+`policy` takes the full rule set (`GuardPolicy`, `packages/guard/src/policy.ts`); `policyTemplate` takes `"strict"`, `"balanced"` or `"permissive"` and the server fills in the rest, including the network's own USDC as the one allowed payment asset. Send one or the other, never both; with neither, the server applies Balanced.
 
 ## Fail-closed
 
-`evaluate()` only ever returns a parsed, schema-valid `AnalyzeResponse` or throws `GuardUnreachableError` — a non-2xx status, a body that does not match the contract, or no answer within 15 seconds (configurable via `timeoutMs`). There is no silent fallback: a caller that cannot reach Baret has to treat that the same way it treats `blocked`, because a transaction Baret could not check is not a transaction Baret cleared. This is the same rule the live showcase and wallet follow (`CLAUDE.md` hard constraint 3): missing data is never read as safe.
+`evaluate()` checks your request against `analyzeRequestSchema` first: a request that breaks it throws zod's `ZodError`, and nothing is sent. After that it only ever returns a parsed, schema-valid `AnalyzeResponse` or throws `GuardUnreachableError` — a non-2xx status, a body that does not match the contract, or no answer within 15 seconds (configurable via `timeoutMs`). There is no silent fallback: a caller that cannot reach Baret has to treat that the same way it treats `blocked`, because a transaction Baret could not check is not a transaction Baret cleared. This is the same rule the live showcase and wallet follow (`CLAUDE.md` hard constraint 3): missing data is never read as safe.
 
 ```ts
-import { GuardUnreachableError, TransactionGuard } from "@baret/guard";
+import { type AnalyzeRequest, GuardUnreachableError, isSafe, TransactionGuard } from "@baret/guard";
 
-try {
-  const verdict = await guard.evaluate(request);
-  // sign only on verdict.decision === "safe" (or "caution" if your policy allows it)
-} catch (err) {
-  if (err instanceof GuardUnreachableError) {
-    // Baret could not be reached or answered with something it should not: treat as blocked
+const guard = new TransactionGuard({ baseUrl: "https://baret-monad-api.onrender.com" });
+
+/** True only when Baret answered and the answer is Safe. */
+async function clearedToSign(request: AnalyzeRequest): Promise<boolean> {
+  try {
+    return isSafe(await guard.evaluate(request));
+  } catch (err) {
+    if (err instanceof GuardUnreachableError) return false; // not checked is not cleared
+    throw err; // a request that breaks the schema: a bug in the caller
   }
-  throw err;
 }
 ```
 
-`isSafe(verdict)` and `isSignable(verdict)` are the two one-line checks most callers need instead of reading `decision` by hand.
+`isSafe(verdict)` (Safe: sign without asking anyone) and `isSignable(verdict)` (anything but Blocked: a person may sign after reading the findings) are the two one-line checks most callers need instead of reading `decision` by hand.
 
 ## More
 
 - The full request and response shapes: `packages/guard/src/analyze.ts` (`analyzeRequestSchema`, `analyzeResponseSchema`).
+- Two more contracts in the same package, both answered by a language model on the server (`503` when none is configured): `/v1/explain` (`src/explain.ts`) puts a verdict into plain words in `en`, `tr` or `zh`. Send `{ requestId, language }` with the verdict's `meta.requestId`; the older `{ verdict, language }` still works, and the server reads only its `meta.requestId`. The `decision` in the answer is copied from the server's own cached verdict, never from the model or the request. `/v1/policy/draft` (`src/policy-draft.ts`) turns a sentence into proposed rule changes: each one checked against the policy schema, the ones that loosen a rule marked, none applied.
 - Every detector and finding code: `docs/ARCHITECTURE.md` §5 to §7.
 - Agent payments and a spending-limited vault instead of a raw key: [`@baret/agent-kit`](../agent-kit/README.md).

@@ -9,7 +9,7 @@ import { DocCard } from "./DocCard.js";
 import { slug } from "./docs.js";
 
 /**
- * The index: four groups in one deep band, so they read as one list. Each
+ * The index: five groups in one deep band, so they read as one list. Each
  * group is its own section with an anchor (the slug of its title; /agents
  * links to #contracts-and-payments), a split header and a row of cards sized
  * to the group: two, three or four across from 1024 px, two from 768 px, one
