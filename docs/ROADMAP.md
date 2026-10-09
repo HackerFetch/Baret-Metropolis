@@ -142,7 +142,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | **Built 2026-10-09**, checked with the real key; production after E7 | E7 for production | KIMI |
 | M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable | **Done 2026-10-09** on Monad testnet (D-035) | none | Qwen |
 | M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice. **Done 2026-10-09** (#45): 4 taps and about 6 s to a first confirmed send, the stateless test passes; real-device pass is H10 | Sat 10 | E3, E4 | Mera UX |
-| M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | Sun 11 | | main track |
+| M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | **Done 2026-10-09** (`docs/submission/`) | | main track |
 
 ### Hale
 
