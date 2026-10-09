@@ -24,6 +24,11 @@
  *             address, so these sentences say "this asset" and never print
  *             it. `bodyOf()` in `@baret/web-ui/components/CheckBlocks` picks
  *             the right one.
+ *   bodyReason  only on KNOWN_MALICIOUS_ADDRESS: rendered instead of `body`
+ *             when the registry's `reasonCode` (`details.registry`) is one
+ *             `bodyOf()` recognises (today, `SCAMSNIFFER_BLACKLIST`) —
+ *             written out in full, nothing interpolated, so an unmapped
+ *             reasonCode safely falls back to `body` instead of guessing.
  *   why       opens on "Why this matters". One or two sentences.
  *   fix       what the reader can do, when there is something to do.
  *
@@ -89,6 +94,9 @@ interface Finding {
   /** Rendered instead of `body` (or `bodySelf`) when `details.asset` is set. */
   bodyAsset?: string;
   bodySelfAsset?: string;
+  /** Rendered instead of `body` on KNOWN_MALICIOUS_ADDRESS when the registry
+   *  names a known source (`bodyOf()`). */
+  bodyReason?: string;
   why: string;
   fix?: string;
 }
@@ -208,6 +216,10 @@ export const findings = {
     values: ["address"],
     title: "This address is on a blocklist",
     body: "{address} is on the blocklist in the Baret reputation registry or is flagged by Nansen.",
+    /** Rendered instead of `body` when the registry's reasonCode is
+     *  SCAMSNIFFER_BLACKLIST (`bodyOf()`), naming the actual list instead of
+     *  the generic "the blocklist ... or is flagged by Nansen". */
+    bodyReason: "{address} is on ScamSniffer's public blacklist.",
     why: "A listed address has been tied to theft before. Anything this request gives it may be gone for good.",
     fix: "Decline. If you are sure the listing is wrong, confirm the address with the project first.",
   },

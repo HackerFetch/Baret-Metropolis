@@ -326,7 +326,7 @@ export const home = {
     },
     // Not rendered on the landing since 2026-10-01.
     kicker: "The caps are the firewall. Nothing over a cap goes out on its own.",
-    note: "Agent wallets come from Dynamic. Per-payment and daily caps live on\u2011chain in your PaymentGuard vault.",
+    note: "The agent's own wallet comes from Dynamic, and the vault owner authorises it with their Mera passkey. Per-payment and daily caps live on\u2011chain in your PaymentGuard vault.",
     action: { label: "Set up your agent", href: "/agents" },
   },
 
