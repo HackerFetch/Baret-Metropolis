@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
-import type { Address } from "viem";
+import { type Address, type Hex, isAddress } from "viem";
 import type { ConnectError } from "./baret.js";
+import { askBaret } from "./baretWindow.js";
 
 /**
  * The demo sites' wallet, as the page reads it. A small store of its own, so
@@ -41,7 +42,15 @@ export interface WalletState {
   /** MON on Monad testnet for the connected address, in wei; null until read, or unreadable. */
   readonly balance: bigint | null;
   readonly switching: "idle" | "busy" | "failed";
+  /** The Baret wallet connected through its own window (baretWindow.ts), or null. */
+  readonly baret: { readonly address: Address } | null;
+  /** The last connect through the Baret wallet window: under way, or how it ended without an address. */
+  readonly baretStatus: BaretStatus;
+  /** MON on Monad testnet for the Baret window address, in wei; null until read, or unreadable. */
+  readonly baretBalance: bigint | null;
 }
+
+export type BaretStatus = "idle" | "connecting" | "declined" | "closed" | "blocked" | "busy";
 
 export const INITIAL: WalletState = {
   ready: false,
@@ -50,7 +59,18 @@ export const INITIAL: WalletState = {
   error: null,
   balance: null,
   switching: "idle",
+  baret: null,
+  baretStatus: "idle",
+  baretBalance: null,
 };
+
+/** One call for the wallet to send, as `@baret/demo` builds it: value in wei, as a decimal string. */
+export interface SendCall {
+  readonly from: Address;
+  readonly to: Address;
+  readonly value: string;
+  readonly data: Hex;
+}
 
 /** What the engine can do once it has loaded. */
 export interface Engine {
@@ -58,6 +78,19 @@ export interface Engine {
   disconnect(): Promise<void>;
   switchToMonad(): Promise<void>;
   refreshBalance(): Promise<void>;
+  /**
+   * Asks the connected wallet to sign and send one call on Monad testnet;
+   * resolves to its hash once sent. Refuses with SendRefused when no wallet
+   * or another account is connected ("account"), or the wallet is on another
+   * chain ("network").
+   */
+  send(call: SendCall): Promise<Hex>;
+  /** Waits for the call's block: "success" or "reverted". Rejects when Monad testnet does not confirm in time. */
+  confirm(hash: Hex): Promise<"success" | "reverted">;
+  /** An ERC-20 balance in base units, read from Monad testnet's public RPC. */
+  tokenBalance(token: Address, owner: Address): Promise<bigint>;
+  /** MON in wei for any address, read from Monad testnet's public RPC (the Baret window address). */
+  balanceOf(address: Address): Promise<bigint>;
 }
 
 export type Push = (patch: Partial<WalletState>) => void;
@@ -113,6 +146,34 @@ export function refreshBalance(): Promise<void> {
   return prepare().then((e) => e.refreshBalance());
 }
 
+export function sendCall(call: SendCall): Promise<Hex> {
+  return prepare().then((e) => e.send(call));
+}
+
+export function confirmCall(hash: Hex): Promise<"success" | "reverted"> {
+  return prepare().then((e) => e.confirm(hash));
+}
+
+export function readTokenBalance(token: Address, owner: Address): Promise<bigint> {
+  return prepare().then((e) => e.tokenBalance(token, owner));
+}
+
+const pickerListeners = new Set<() => void>();
+
+/** Opens the header's wallet picker from anywhere on the page (a card's "Sign with your wallet" with no wallet). */
+export function requestPicker(): void {
+  prefetch();
+  for (const fn of pickerListeners) fn();
+}
+
+/** For the wallet control: runs `fn` on each request; returns the unsubscribe. */
+export function onPickerRequest(fn: () => void): () => void {
+  pickerListeners.add(fn);
+  return () => {
+    pickerListeners.delete(fn);
+  };
+}
+
 /** The key the engine keeps the last wallet under (wagmi's storage, key "baret.demo"). */
 export const RECENT_KEY = "baret.demo.recentConnectorId";
 
@@ -146,9 +207,97 @@ function resume(): void {
   idle(prefetch);
 }
 
+/** Where the Baret window's address is kept between visits: an address, not a secret. */
+export const BARET_KEY = "baret.demo.window";
+
+function readBaret(): WalletState["baret"] {
+  try {
+    const raw = window.localStorage.getItem(BARET_KEY);
+    if (raw === null) return null;
+    const value: unknown = JSON.parse(raw);
+    if (typeof value !== "object" || value === null) return null;
+    const address = (value as { address?: unknown }).address;
+    return typeof address === "string" && isAddress(address) ? { address } : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeBaret(baret: WalletState["baret"]): void {
+  try {
+    if (baret === null) window.localStorage.removeItem(BARET_KEY);
+    else window.localStorage.setItem(BARET_KEY, JSON.stringify(baret));
+  } catch {
+    // Storage blocked: the connection lasts for this page only.
+  }
+}
+
+let restored = false;
+
+/** Once per page load, after the first render: the Baret window address from an earlier visit. */
+function restore(): void {
+  if (restored) return;
+  restored = true;
+  const baret = readBaret();
+  if (baret !== null) {
+    push({ baret });
+    void refreshBaretBalance();
+  }
+}
+
+/**
+ * Reads the Baret window address's MON, so the sites' balance guards work
+ * for it as for an injected wallet. Unreadable stays null, never zero.
+ */
+export async function refreshBaretBalance(): Promise<void> {
+  const baret = state.baret;
+  if (baret === null) {
+    push({ baretBalance: null });
+    return;
+  }
+  try {
+    const value = await prepare().then((e) => e.balanceOf(baret.address));
+    if (state.baret?.address === baret.address) push({ baretBalance: value });
+  } catch {
+    if (state.baret?.address === baret.address) push({ baretBalance: null });
+  }
+}
+
+/**
+ * Connects the Baret wallet through its own window. Call it straight from a
+ * click, so the browser lets the window open. Resolves once it has ended.
+ */
+export async function connectBaret(): Promise<void> {
+  push({ baretStatus: "connecting" });
+  const answer = await askBaret("connect");
+  if (answer.type === "connected") {
+    const baret = { address: answer.address };
+    writeBaret(baret);
+    push({ baret, baretStatus: "idle", baretBalance: null });
+    void refreshBaretBalance();
+    return;
+  }
+  const status: BaretStatus =
+    answer.type === "blocked"
+      ? "blocked"
+      : answer.type === "busy"
+        ? "busy"
+        : answer.type === "refused"
+          ? "declined"
+          : "closed";
+  push({ baretStatus: status });
+}
+
+/** Forgets the Baret window address here; the wallet itself keeps its account. */
+export function forgetBaret(): void {
+  writeBaret(null);
+  push({ baret: null, baretStatus: "idle", baretBalance: null });
+}
+
 /** The wallet state, for a component. */
 export function useWallet(): WalletState {
   useEffect(resume, []);
+  useEffect(restore, []);
   return useSyncExternalStore(subscribe, read, () => INITIAL);
 }
 
@@ -162,6 +311,7 @@ export function resetForTests(next: EngineLoader = defaultLoader): void {
   loader = next;
   engine = null;
   resumed = false;
+  restored = false;
   state = INITIAL;
   for (const listener of listeners) listener();
 }

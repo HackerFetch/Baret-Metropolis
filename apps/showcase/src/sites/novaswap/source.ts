@@ -1,16 +1,17 @@
-import { NOVASWAP, novaswap } from "@baret/demo";
+import { type DemoTx, NOVASWAP, novaswap } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import type { Address } from "viem";
-import type { DemoCall } from "../kit/live.js";
 import { sampleCheck } from "./sample.js";
 
 /**
- * Where NovaSwap's "Review swap" goes. The one place that knows both the
- * request and the source of the answer.
+ * Where NovaSwap's "Review swap" goes, and what "Sign with your wallet"
+ * sends. The one place that knows the requests and the source of the answer.
  *
- * The request comes from `@baret/demo`, so the frontend never writes
+ * The requests come from `@baret/demo`, so the frontend never writes
  * calldata: honest is `swapMonForUsdc` on the router, attack is the
  * "enable trading" approval, `approve(look-alike, unlimited)` on dUSDC.
+ * The same builders feed the panel's check and the wallet's signature, so
+ * what Baret checks is what the wallet signs.
  *
  * Live when there is an address to simulate from (a connected wallet, or
  * VITE_BARET_DEMO_FROM): the request goes to Baret's server and fails
@@ -28,8 +29,23 @@ export interface SwapInput {
 }
 
 /** The call each version asks the wallet to sign. */
-export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoCall {
+export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoTx {
   return mode === "safe" ? novaswap.swapMonForUsdc(from, wei) : novaswap.attackApprove(from);
+}
+
+/**
+ * The calls "Sign with your wallet" sends, in order. Honest: the swap the
+ * panel checks. Attack: the "enable trading" approval the panel checks, then
+ * the "swap" on the look-alike that spends it (it takes the whole balance).
+ */
+export function signCalls(mode: DemoMode, wei: bigint, units: bigint, from: Address): DemoTx[] {
+  if (mode === "safe") return [buildRequest("safe", wei, from)];
+  return [buildRequest("danger", wei, from), novaswap.attackSwap(from, units)];
+}
+
+/** 100 test dUSDC to the visitor, before the attack. */
+export function faucetCall(from: Address): DemoTx {
+  return novaswap.faucet(from);
 }
 
 /** The contract each version's request touches, for "What the site asks for". */

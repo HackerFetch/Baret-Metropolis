@@ -36,11 +36,11 @@ export const settings = {
         { label: "Network", hint: "Monad testnet. Mainnet is not available yet." },
         {
           label: "Node",
-          hint: "Where your balance is read and your transactions are sent. Change it only if you run your own.",
+          hint: "Your balances are read and your transactions are sent through the public Monad testnet node.",
         },
         {
           label: "Analysis server",
-          hint: "Where Baret checks your requests. Change it only if you run your own.",
+          hint: "Baret's server checks every request before you sign.",
         },
       ],
     },
@@ -97,6 +97,17 @@ export const settings = {
       "Baret never receives your passkey or your keys.",
     ],
   },
+
+  /** Live only: the read-only row that replaces the lock switch. */
+  session: {
+    label: "This session",
+    hint: "Signing needs no prompt until {time}. Then the wallet locks itself and the keys leave memory.",
+    /** With the passkey asked on every signature. */
+    hintAsk: "Your session ends at {time}. Then the wallet locks itself and the keys leave memory.",
+  },
+  /** Live only: the hint of the passkey-on-every-signature row. */
+  passkeyHintLive:
+    "On, every signature asks for your passkey. Off, only opening the wallet does. Showing the agent key always asks.",
 
   saved: "Saved.",
 
