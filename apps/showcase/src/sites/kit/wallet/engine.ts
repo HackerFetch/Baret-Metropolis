@@ -252,6 +252,13 @@ export async function start(
       return receipt.status;
     },
 
+    async balanceOf(address) {
+      const { value } = await caughtUp(() =>
+        getBalance(config, { address, chainId: monadTestnet.id, ...pinned() }),
+      );
+      return value;
+    },
+
     tokenBalance(token, owner) {
       return caughtUp(() =>
         readContract(config, {

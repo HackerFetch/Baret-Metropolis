@@ -88,6 +88,11 @@ export interface Live {
   refresh(): Promise<void>;
   /** Builds a transfer and asks Baret about it. */
   transfer(asset: Asset, amount: string, recipient: string): Promise<LiveRequest>;
+  /**
+   * Asks Baret about a call a site sent (request/siteRequest.tsx); `origin`
+   * is the site as the browser reports it.
+   */
+  siteRequest(origin: string, call: WalletCall): Promise<LiveRequest>;
   /** Asks Baret again about the same call. */
   recheck(context: SignContext, call: WalletCall): Promise<LiveRequest>;
   /** Signs and sends a cleared call; resolves once it is in a block. */
@@ -483,6 +488,25 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     [check],
   );
 
+  const siteRequest = useCallback(
+    async (origin: string, call: WalletCall): Promise<LiveRequest> => {
+      const context: SignContext = {
+        id: `site-${Date.now()}`,
+        origin,
+        action: "contractCall",
+        values: { contract: call.to },
+        claim: null,
+        impact: "contractCall",
+        fee: await feeOf(session.current?.address, call),
+        raw: { to: call.to, value: call.value.toString(), data: call.data, decoded: null },
+        expires: 300,
+        wallet: session.current?.address ?? "",
+      };
+      return check(context, call);
+    },
+    [check],
+  );
+
   const sign = useCallback(
     async (
       signable: NonNullable<LiveRequest["signable"]>,
@@ -706,12 +730,27 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       expiredAt,
       refresh,
       transfer,
+      siteRequest,
       recheck: check,
       sign,
       forget,
       vault,
     }),
-    [known, busy, problem, prompt, lock, expiredAt, refresh, transfer, check, sign, forget, vault],
+    [
+      known,
+      busy,
+      problem,
+      prompt,
+      lock,
+      expiredAt,
+      refresh,
+      transfer,
+      siteRequest,
+      check,
+      sign,
+      forget,
+      vault,
+    ],
   );
 
   return <LiveContext value={value}>{children}</LiveContext>;

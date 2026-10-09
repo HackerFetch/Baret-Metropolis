@@ -52,6 +52,7 @@ function fakeEngine(fake: Fake = {}): { sent: SendCall[]; reads: number; refresh
       return fake.send ? fake.send(c, n) : Promise.resolve(hashOf(n));
     },
     confirm: (hash) => (fake.confirm ? fake.confirm(hash) : Promise.resolve("success")),
+    balanceOf: async () => 0n,
     tokenBalance: async () => {
       const value = balances[Math.min(log.reads, balances.length - 1)] ?? 0n;
       log.reads += 1;

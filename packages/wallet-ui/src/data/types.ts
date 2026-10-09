@@ -158,6 +158,7 @@ export interface SignRequest {
     | "vaultApproval"
     | "vaultDeposit"
     | "vaultWithdraw"
+    | "contractCall"
     | "nothing"
     | "unknown";
   readonly findings: readonly CheckFinding[];

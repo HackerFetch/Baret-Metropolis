@@ -11,7 +11,8 @@ import { balanceOf, format, parseAmount, quote, quoteBack } from "./sample.js";
  * test rate, the route rows from the copy, and the main button, which hands
  * the request to Baret's panel instead of a wallet. Beside it, "Sign with
  * your wallet" sends the same request to the connected wallet with no check
- * (kit/wallet/SignBlock.tsx).
+ * (kit/wallet/SignBlock.tsx), and "Check with Baret" sends it to the Baret
+ * wallet, which checks it before any signature (kit/wallet/BaretCheck.tsx).
  *
  * Honest, the card buys dUSDC with MON. In the attack it sells dUSDC and its
  * button asks to "enable trading", the unlimited allowance. The switch at
@@ -33,6 +34,7 @@ export function SwapCard({
   liveToken = null,
   faucet = null,
   sign = null,
+  baret = null,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -53,6 +55,8 @@ export function SwapCard({
   faucet?: ReactNode;
   /** "Sign with your wallet", shown under the main button. */
   sign?: ReactNode;
+  /** "Check with Baret", shown under "Sign with your wallet". */
+  baret?: ReactNode;
 }): JSX.Element {
   const inputId = useId();
   const errorId = useId();
@@ -155,6 +159,7 @@ export function SwapCard({
         {card.cta}
       </Button>
       {sign}
+      {baret}
       <p className={T.small}>{card.note}</p>
 
       <AttackSwitch

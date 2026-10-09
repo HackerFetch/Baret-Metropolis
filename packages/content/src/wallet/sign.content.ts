@@ -152,6 +152,8 @@ export const sign = {
       "Your vault may take up to {amount} {asset} from your account. The next step moves it.",
     vaultDeposit: "{amount} {asset} moves from your account into your vault.",
     vaultWithdraw: "{amount} {asset} comes back from your vault to your account.",
+    /** A site's call: Baret simulated it, so what moves is in "What changes". */
+    contractCall: "This runs a call on {contract}. What changes is listed below.",
     nothing: "Nothing leaves your wallet.",
     unknown: "Baret could not tell what moves. Treat that as a reason to stop.",
   },

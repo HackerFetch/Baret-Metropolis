@@ -1,4 +1,4 @@
-import { walletFrame } from "@baret/content";
+import { onboarding, walletFrame } from "@baret/content";
 import { initialLive, useWallet, WalletProvider } from "@baret/wallet-ui/data/store";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { Signature } from "@baret/web-ui/components/Signature";
@@ -6,6 +6,7 @@ import type { JSX, ReactNode } from "react";
 import { Outlet, ScrollRestoration, useMatches } from "react-router";
 import { LiveProvider, useLive } from "../live/live.js";
 import { isLive, USDC } from "../live/storage.js";
+import { SiteRequestProvider, useSiteRequest } from "../request/siteRequest.js";
 import { routes } from "../routes.js";
 import * as AppLayout from "./AppLayout.js";
 import { Locked } from "./Locked.js";
@@ -75,17 +76,49 @@ export function routeFlags(matches: readonly Match[]): Required<Handle> {
 function Gate({ request }: { request: boolean }): JSX.Element {
   const { state, dispatch } = useWallet();
   const live = useLive();
+  const site = useSiteRequest();
+  const waiting = site.request;
   if (request && state.locked) {
+    // Live, the lock screen speaks of a waiting site only once its request is
+    // in: before that (or with no site at all) it is the plain lock, with no
+    // Decline that could reach no one.
+    const asks = live === null || waiting !== null;
     return (
       <Locked
-        request
+        request={asks}
         onUnlock={() => (live ? void live.unlock() : dispatch({ type: "unlock" }))}
         busy={live?.busy ?? false}
         problem={live?.problem ?? null}
+        origin={waiting ? site.origin : null}
+        {...(waiting
+          ? {
+              // Declining needs no unlock: the site hears it at once.
+              onDecline: () =>
+                site.reply({
+                  type: "refused",
+                  id: waiting.id,
+                  reason: "declined",
+                  address: null,
+                  findings: [],
+                }),
+            }
+          : {})}
+        {...(live && !live.known
+          ? // No passkey on this device: creating the wallet comes first.
+            { onCreate: () => void live.create(onboarding.passkey.userName) }
+          : {})}
       />
     );
   }
   return <Outlet />;
+}
+
+/** Which request a request window takes, from its route's title (routes.ts). */
+function kindOf(title: string, request: boolean): "connect" | "sign" | null {
+  if (!request) return null;
+  if (title === routes.connect.title) return "connect";
+  if (title === routes.sign.title) return "sign";
+  return null;
 }
 
 export function Component(): JSX.Element {
@@ -98,7 +131,10 @@ export function Component(): JSX.Element {
       <Signature quiet={request} />
       {/* The account and everything done with it, shared by every screen (data/store). */}
       <Account>
-        <Gate request={request} />
+        {/* A site's request, live in a window a site opened (request/siteRequest.tsx). */}
+        <SiteRequestProvider kind={kindOf(title, request)}>
+          <Gate request={request} />
+        </SiteRequestProvider>
       </Account>
     </LandingMotion>
   );

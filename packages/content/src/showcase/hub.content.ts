@@ -110,7 +110,7 @@ export const hub = {
     /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "The difference",
     title: "Same request, with and without a check.",
-    body: "On NovaSwap the attack's request can go two ways. Sign with your wallet sends it straight to the wallet you use today; sign both steps and the dUSDC leaves. The site's own button sends the same request through Baret's check first, and it is stopped before anything is signed. No wallet is singled out here. Baret is a check any wallet can call before it signs.",
+    body: "On NovaSwap the attack's request can go two ways. Sign with your wallet sends it straight to the wallet you use today; sign both steps and the dUSDC leaves. The site's own button sends the same request through Baret's check first, and it is stopped before anything is signed. Check with Baret sends it to the Baret wallet, which calls the same check and refuses it in its own window. No wallet is singled out here. Baret is a check any wallet can call before it signs.",
     columns: { without: "A wallet with no pre-sign check", with: "With Baret's check" },
     rows: [
       {
@@ -166,8 +166,8 @@ export const hub = {
 
     /**
      * The wallet picker in a demo site's header and the connected wallet's
-     * menu. Wallets are found with EIP-6963; Baret's extension is listed
-     * first, found or not. {wallet} is a wallet's own name.
+     * menu. The Baret wallet is listed first and opens in its own window;
+     * other wallets are found with EIP-6963. {wallet} is a wallet's own name.
      */
     wallet: {
       title: "Connect a wallet",
@@ -175,10 +175,16 @@ export const hub = {
       looking: "Looking for wallets in this browser...",
       baret: {
         name: "Baret",
-        found: "Found in this browser",
-        missing: "Not found in this browser",
-        note: "The Baret extension is a preview and does not connect to sites yet. Any other wallet works here, and Baret still checks each request.",
-        install: { label: "Get the extension", href: "/install" },
+        /** The Baret wallet (https://baret-wallet.vercel.app), opened in its own window. */
+        window: "Your Baret wallet, in its own window. Your passkey stays on the wallet's site.",
+        connecting: "Answer in the Baret wallet window...",
+        declined: "You declined in the Baret wallet. Nothing was connected.",
+        closed: "The Baret wallet window closed before it answered. Nothing was connected.",
+        blocked:
+          "Your browser stopped the Baret wallet window. Allow pop-ups for this site, then try again.",
+        forget: "Disconnect the Baret wallet",
+        /** A second press while the window still waits on a request: it comes to the front. */
+        busy: "The Baret wallet window has a request open. Finish it there first.",
       },
       others: "Wallets in this browser",
       none: "No other wallet found in this browser.",
@@ -354,6 +360,31 @@ export const hub = {
       },
       /** Read out when a step changes: "Step 1 of 2, Confirmed". */
       announce: "Step {n} of {total}, {status}",
+    },
+
+    /**
+     * Beside "Sign with your wallet": the same request sent to the Baret
+     * wallet, which opens in its own window and checks it before any signature.
+     */
+    baretCheck: {
+      action: "Check with Baret",
+      note: "Sends the same request to your Baret wallet, in its own window. Baret checks it before you can sign.",
+      waiting: "Answer in the Baret wallet window...",
+      blocked: "The Baret wallet refused it. Nothing was signed.",
+      /** Above the list of finding titles under a refusal. */
+      findings: "Why it refused",
+      declined: "You declined in the Baret wallet. Nothing was signed.",
+      unreachable: "The Baret wallet could not reach Baret, so it did not sign. Nothing moved.",
+      signed: "Signed in the Baret wallet and confirmed on Monad testnet.",
+      // The window may close after a signature it could not report (a revert,
+      // no receipt), so this says only what is sure.
+      closed:
+        "The Baret wallet window closed before it answered. Anything you did not sign there was not sent.",
+      /** A second press while the window still waits: it comes to the front instead. */
+      busy: "The Baret wallet window has a request open. Finish it there first.",
+      /** The browser refused to open the window (a pop-up blocker). */
+      blockedWindow:
+        "Your browser stopped the Baret wallet window. Allow pop-ups for this site, then press again.",
     },
   },
 } as const;

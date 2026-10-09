@@ -134,12 +134,12 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving. **Built 2026-10-09** on branch `novaswap-sign`, checked end to end on a fork of Monad testnet; live once merged | Fri 9 | | main track |
-| M2 | The comparison flow and its copy: same site, same button, two wallets. **Built 2026-10-09** on branch `comparison-flow` (on top of M1); the MetaMask wording waits for H3 | Fri 9 | M1 | main track |
-| M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it | Sat 10 | E3, M1 | main track, Mera UX |
+| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving. **Done 2026-10-09** (#42, live); the live MetaMask run is Hale's H3 | Fri 9 | | main track |
+| M2 | The comparison flow and its copy: same site, same button, two wallets. **Done 2026-10-09** (#44); the MetaMask wording waits for H3 | Fri 9 | M1 | main track |
+| M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it. **Done 2026-10-09** (#46): the attack comes back Blocked with nothing signed, the honest swap is signed and confirmed; the live run is Hale's | Sat 10 | E3, M1 | main track, Mera UX |
 | M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | Fri 9 to Sat 10 | E7 for production | KIMI |
 | M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable. Dropped again if not working by Sat 10, 20:00 | Sat 10 | a key | Qwen |
-| M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice. **Built 2026-10-09** on branch `wallet-live-screens`: 4 taps and about 6 s to a first confirmed send on a fork, the stateless test passes; real-device pass is H10 | Sat 10 | E3, E4 | Mera UX |
+| M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice. **Done 2026-10-09** (#45): 4 taps and about 6 s to a first confirmed send, the stateless test passes; real-device pass is H10 | Sat 10 | E3, E4 | Mera UX |
 | M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | Sun 11 | | main track |
 
 ### Hale
