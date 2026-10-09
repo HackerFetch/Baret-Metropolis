@@ -1,4 +1,4 @@
-import { common, history, walletFrame, walletHome } from "@baret/content";
+import { common, history, receive, walletFrame, walletHome } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { ActivityRow } from "@baret/wallet-ui/components/ActivityRow";
@@ -7,13 +7,16 @@ import { Screen } from "@baret/wallet-ui/components/Screen";
 import { amount } from "@baret/wallet-ui/data/format";
 import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { Asset, Permission } from "@baret/wallet-ui/data/types";
+import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
 import { useCountUp } from "@baret/web-ui/lib/useCountUp";
 import { counted, fill } from "@baret/web-ui/lib/util";
-import type { JSX } from "react";
-import { Link } from "react-router";
+import { type JSX, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { WALLET_ART } from "../assets.js";
+import { useLive } from "../live/live.js";
+import { useWatch } from "../live/useWatch.js";
 import { routes } from "../routes.js";
 
 /**
@@ -23,9 +26,14 @@ import { routes } from "../routes.js";
  *
  * Testnet tokens have no price, so the USD estimate says so instead of
  * inventing one; the balances themselves lead the assets block.
+ *
+ * Right after onboarding (router state `fresh`) a one-time setup panel leads:
+ * keep the passkey, fund the address, the rules in force. Live, while that
+ * panel or the no-funds banner shows, the balances are read again until the
+ * faucet's transfer lands.
  */
 
-const { balance, actions, assets, activity, permissions, alerts, banners } = walletHome;
+const { balance, setup, actions, assets, activity, permissions, alerts, banners } = walletHome;
 
 /** A permission's sentence: addresses shortened, the agent's merchants counted. */
 function permissionText(permission: Permission): string {
@@ -62,12 +70,40 @@ function MonFigure({ mon }: { mon: Asset }): JSX.Element {
   );
 }
 
+/**
+ * Live, before the first read answers: a fixed-width bar where the figure
+ * goes, and the reason in a polite live region. Never a zero in its place.
+ */
+function Loading(): JSX.Element {
+  return (
+    <div className="grid gap-3">
+      <span
+        aria-hidden="true"
+        className="block h-10 w-48 bg-[color:var(--ground-deep)] motion-safe:animate-pulse"
+      />
+      <p role="status" aria-live="polite" className={T.small}>
+        {balance.loading}
+      </p>
+    </div>
+  );
+}
+
 /** Fail-closed: a balance that did not load is said so, never shown as zero. */
-function Balance({ loaded, mon }: { loaded: boolean; mon: Asset | undefined }): JSX.Element {
+function Balance({
+  loaded,
+  loading,
+  mon,
+}: {
+  loaded: boolean;
+  loading: boolean;
+  mon: Asset | undefined;
+}): JSX.Element {
   return (
     <div className="grid gap-2">
       <p className={T.label}>{balance.label}</p>
-      {loaded ? (
+      {loading ? (
+        <Loading />
+      ) : loaded ? (
         <>
           <MonFigure mon={mon ?? { symbol: "MON", balance: "0", decimals: 18, contract: null }} />
           <p className={T.small}>{balance.monNote}</p>
@@ -81,16 +117,85 @@ function Balance({ loaded, mon }: { loaded: boolean; mon: Asset | undefined }): 
 
 /** The faucet, for an account with nothing to pay a fee with. */
 function FaucetLink(): JSX.Element {
-  return <LinkButton href={walletFrame.links.faucet} label={assets.empty.action.label} />;
+  return (
+    <LinkButton
+      href={walletFrame.links.faucet}
+      label={assets.empty.action.label}
+      icon="arrow-up-right"
+      newTab
+    />
+  );
+}
+
+/** The one-time panel after onboarding: the passkey, the faucet, the rules. */
+function Setup({
+  address,
+  watching,
+  onDismiss,
+}: {
+  address: string;
+  watching: boolean;
+  onDismiss: () => void;
+}): JSX.Element {
+  return (
+    <section
+      aria-labelledby="setup-title"
+      className="grid gap-5 border border-[color:var(--rule)] bg-[color:var(--ground-deep)] p-5 md:p-6"
+    >
+      <h2 id="setup-title" className={`${T.h3} text-[color:var(--fg)]`}>
+        {setup.title}
+      </h2>
+      <p className={`${T.body} max-w-[64ch]`}>{setup.passkey}</p>
+      <div className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
+        <p className={`${T.body} max-w-[64ch]`}>{setup.fund}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <code className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+            {address}
+          </code>
+          <CopyButton
+            text={address}
+            label={receive.address.copy}
+            done={walletFrame.account.copied}
+          />
+        </div>
+        <div className="flex">
+          <FaucetLink />
+        </div>
+        <p role="status" className={T.small}>
+          {watching ? setup.watching : ""}
+        </p>
+      </div>
+      <div className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
+        <p className={`${T.body} max-w-[64ch]`}>{setup.rules}</p>
+        <div className="flex flex-wrap gap-3">
+          <LinkButton href={routes.policies.path} label={setup.rulesAction.label} />
+          <Button type="button" variant="ghost" onClick={onDismiss}>
+            {setup.dismiss}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export function Component() {
   const { state, dispatch } = useWallet();
+  const live = useLive();
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Onboarding sends a new wallet here with { fresh: true }; the panel stays until hidden.
+  const [showSetup, setShowSetup] = useState(
+    () => (location.state as { fresh?: boolean } | null)?.fresh === true,
+  );
   const recent = state.activity.slice(0, 4);
   const balancesReady = ready(state, "balances");
   const analyzerReady = ready(state, "analyzer");
   const mon = state.assets.find((asset) => asset.symbol === "MON");
   const noFunds = balancesReady && (!mon || /^[0.]*$/.test(mon.balance));
+  // Live only: "loading" is not a failure yet, so it gets no error in its place.
+  const balancesLoading = live !== null && state.status.balances === "loading";
+  const analyzerLoading = live !== null && state.status.analyzer === "loading";
+  const { polling } = useWatch(live, showSetup || noFunds);
 
   function revoke(permission: Permission): void {
     dispatch({
@@ -124,16 +229,41 @@ export function Component() {
       }
     >
       <div className="grid gap-12">
+        {showSetup ? (
+          <Setup
+            address={state.address}
+            watching={polling}
+            onDismiss={() => {
+              setShowSetup(false);
+              // Hidden for good: the history entry forgets `fresh`, so an
+              // unlock or a reload does not bring the panel back.
+              navigate(location.pathname, { replace: true, state: null });
+            }}
+          />
+        ) : null}
+
         {/* One banner, the most urgent: Baret unreachable, then no MON for a fee. */}
-        {!analyzerReady ? (
+        {!analyzerReady && !analyzerLoading ? (
           <Problem body={banners.analyzerDown} />
         ) : noFunds ? (
-          <Problem body={banners.noFunds} action={<FaucetLink />} />
+          <Problem
+            body={banners.noFunds}
+            action={
+              <div className="grid gap-2">
+                <FaucetLink />
+                {polling && !showSetup ? (
+                  <p role="status" className={T.small}>
+                    {setup.watching}
+                  </p>
+                ) : null}
+              </div>
+            }
+          />
         ) : null}
 
         <div className="grid gap-6 md:grid-cols-12 md:items-end md:gap-8">
           <div className="md:col-span-7">
-            <Balance loaded={balancesReady} mon={mon} />
+            <Balance loaded={balancesReady} loading={balancesLoading} mon={mon} />
           </div>
           <p className="flex flex-wrap items-center gap-3 md:col-span-5">
             <Tag tone="network" size="sm">
@@ -144,7 +274,9 @@ export function Component() {
         </div>
 
         <Block title={assets.title}>
-          {!balancesReady ? (
+          {balancesLoading ? (
+            <Loading />
+          ) : !balancesReady ? (
             <Problem body={balance.error} />
           ) : state.assets.length === 0 ? (
             <Empty title={assets.empty.title} body={assets.empty.body} action={<FaucetLink />} />
@@ -259,7 +391,10 @@ export function Component() {
         >
           <p className={`${T.body} max-w-[64ch]`}>{permissions.body}</p>
           {state.permissions.length === 0 ? (
-            <Empty title={permissions.empty.title} body={permissions.empty.body} />
+            <Empty
+              title={permissions.empty.title}
+              body={live ? permissions.empty.bodyLive : permissions.empty.body}
+            />
           ) : (
             <ul className="grid border-t border-[color:var(--rule)]">
               {state.permissions.map((permission) => (
@@ -275,7 +410,8 @@ export function Component() {
                       href={permissions.manageAgent.href}
                       label={permissions.manageAgent.label}
                     />
-                  ) : (
+                  ) : live ? null : (
+                    // Live has no revoke that only changes memory; the note below says how.
                     <Button
                       type="button"
                       variant={permission.kind === "site" ? "ghost" : "danger"}
@@ -290,7 +426,7 @@ export function Component() {
               ))}
             </ul>
           )}
-          <p className={T.small}>{permissions.revoke.note}</p>
+          <p className={T.small}>{live ? permissions.noteLive : permissions.revoke.note}</p>
         </Block>
       </div>
     </Screen>

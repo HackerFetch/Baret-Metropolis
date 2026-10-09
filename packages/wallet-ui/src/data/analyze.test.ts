@@ -116,6 +116,47 @@ describe("fromAnalyze", () => {
     ]);
   });
 
+  it("shows the MON a transfer sends, not the amount plus gas", () => {
+    const request = fromAnalyze(
+      answer({
+        estimatedChanges: [
+          {
+            account: WALLET,
+            asset: { kind: "native", address: null, symbol: "MON", decimals: 18 },
+            before: null,
+            after: null,
+            // 1 MON plus 0.002 MON of gas.
+            delta: "-1002000000000000000",
+          },
+        ],
+      }),
+      { ...CONTEXT, raw: { ...CONTEXT.raw, value: "1000000000000000000" } },
+      NOW,
+    );
+    expect(request.changes).toEqual([{ direction: "out", value: "1", unit: "MON" }]);
+    expect(request.fee).toBe("0.002");
+  });
+
+  it("drops the MON row of a token transfer, which is only the fee", () => {
+    const request = fromAnalyze(
+      answer({
+        estimatedChanges: [
+          ...answer().estimatedChanges,
+          {
+            account: WALLET,
+            asset: { kind: "native", address: null, symbol: "MON", decimals: 18 },
+            before: null,
+            after: null,
+            delta: "-2000000000000000",
+          },
+        ],
+      }),
+      CONTEXT,
+      NOW,
+    );
+    expect(request.changes).toEqual([{ direction: "out", value: "12.5", unit: "USDC" }]);
+  });
+
   it("keeps a rule's limit and observed value when the server sends them", () => {
     const request = fromAnalyze(
       answer({

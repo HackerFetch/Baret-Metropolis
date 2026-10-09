@@ -10,9 +10,9 @@ const envFrom: unknown = import.meta.env.VITE_BARET_DEMO_FROM;
 
 /**
  * A developer's stand-in for a wallet: a funded testnet address in
- * VITE_BARET_DEMO_FROM (no key; Baret only simulates). A connected wallet
- * always wins over it. Unset, a site with no wallet shows its samples and
- * never calls the API.
+ * VITE_BARET_DEMO_FROM (no key; Baret only simulates). A connected wallet,
+ * or the Baret wallet connected through its window, always wins over it.
+ * Unset, a site with no wallet shows its samples and never calls the API.
  */
 export const DEMO_FROM: Address | null =
   typeof envFrom === "string" && isAddress(envFrom) ? envFrom : null;
@@ -22,7 +22,10 @@ export const MONAD_TESTNET_ID = 10143;
 
 export interface DemoWallet {
   readonly wallet: WalletState;
-  /** Where live checks simulate from: the connected wallet, else the test address. */
+  /**
+   * Where live checks simulate from: the connected wallet, else the Baret
+   * wallet's address from its window, else the test address.
+   */
   readonly from: Address | null;
   readonly live: boolean;
   /** MON in wei for the connected wallet once read; null otherwise. */
@@ -32,8 +35,10 @@ export interface DemoWallet {
 export function useDemoWallet(): DemoWallet {
   const wallet = useWallet();
   const connected = addressOf(wallet);
-  const from = connected ?? DEMO_FROM;
-  return { wallet, from, live: from !== null, balance: connected ? wallet.balance : null };
+  const from = connected ?? wallet.baret?.address ?? DEMO_FROM;
+  // The Baret window address has its MON read too, so every site's balance guard holds for it.
+  const balance = connected ? wallet.balance : wallet.baret ? wallet.baretBalance : null;
+  return { wallet, from, live: from !== null, balance };
 }
 
 /** Whether a request of `wei` asks for more MON than a known balance holds. */

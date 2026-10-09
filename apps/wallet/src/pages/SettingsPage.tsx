@@ -8,11 +8,13 @@ import { useWallet } from "@baret/wallet-ui/data/store";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { T } from "@baret/web-ui/lib/type";
+import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { WALLET_VERSION } from "../lib/version.js";
 import { useLive } from "../live/live.js";
+import { sessionTime } from "../live/session.js";
 import { routes } from "../routes.js";
 
 /**
@@ -20,7 +22,7 @@ import { routes } from "../routes.js";
  * each row its label, one plain line and its control; the danger zone, which
  * states every consequence before the button and asks again in a dialog with
  * an acknowledgement; and what Baret keeps. Changes apply at once and say
- * "Saved."
+ * "Saved." On live, the lock switch gives way to the session's end time.
  */
 
 const [account, security, network, privacy, about] = settings.groups;
@@ -180,7 +182,21 @@ export function Component() {
 
         <Block title={security.title}>
           <ul className="grid border-t border-[color:var(--rule)]">
-            {lockRow ? (
+            {/* Live: the session always ends at its deadline, so the switch would be
+                false. A read-only row says when instead. */}
+            {live ? (
+              state.sessionEndsAt ? (
+                <SettingRow
+                  label={settings.session.label}
+                  hint={fill(
+                    state.settings.passkeyEverySignature
+                      ? settings.session.hintAsk
+                      : settings.session.hint,
+                    { time: sessionTime(state.sessionEndsAt) },
+                  )}
+                />
+              ) : null
+            ) : lockRow ? (
               <SettingRow
                 label={lockRow.label}
                 hint={lockRow.hint}
@@ -196,7 +212,7 @@ export function Component() {
             {passkeyEveryRow ? (
               <SettingRow
                 label={passkeyEveryRow.label}
-                hint={passkeyEveryRow.hint}
+                hint={live ? settings.passkeyHintLive : passkeyEveryRow.hint}
                 toggle={{
                   on: state.settings.passkeyEverySignature,
                   onToggle: (on) => {

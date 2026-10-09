@@ -29,6 +29,10 @@ export const receive = {
   watching: {
     idle: "Watching for incoming transfers",
     received: "{amount} {asset} arrived.",
+    /** Live: before the first balance read answers. */
+    loading: "Getting ready to watch for transfers.",
+    live: "Watching for incoming transfers. New MON shows up here on its own.",
+    check: "Check again",
   },
 
   errors: {

@@ -2,14 +2,17 @@ import { novaswap } from "@baret/content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import { type JSX, useId, useRef } from "react";
+import { type JSX, type ReactNode, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 import { balanceOf, format, parseAmount, quote, quoteBack } from "./sample.js";
 
 /**
  * The swap form, NovaSwap's focal point. One input, the quote at the fixed
  * test rate, the route rows from the copy, and the main button, which hands
- * the request to Baret's panel instead of a wallet.
+ * the request to Baret's panel instead of a wallet. Beside it, "Sign with
+ * your wallet" sends the same request to the connected wallet with no check
+ * (kit/wallet/SignBlock.tsx), and "Check with Baret" sends it to the Baret
+ * wallet, which checks it before any signature (kit/wallet/BaretCheck.tsx).
  *
  * Honest, the card buys dUSDC with MON. In the attack it sells dUSDC and its
  * button asks to "enable trading", the unlimited allowance. The switch at
@@ -28,6 +31,10 @@ export function SwapCard({
   live = false,
   liveBalance = null,
   walletConnected = false,
+  liveToken = null,
+  faucet = null,
+  sign = null,
+  baret = null,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -42,6 +49,14 @@ export function SwapCard({
   liveBalance?: string | null;
   /** A real wallet is connected (not the developer's test address). */
   walletConnected?: boolean;
+  /** The connected wallet's dUSDC, formatted, once read. */
+  liveToken?: string | null;
+  /** The test dUSDC faucet, shown under the amount (attack, with a wallet). */
+  faucet?: ReactNode;
+  /** "Sign with your wallet", shown under the main button. */
+  sign?: ReactNode;
+  /** "Check with Baret", shown under "Sign with your wallet". */
+  baret?: ReactNode;
 }): JSX.Element {
   const inputId = useId();
   const errorId = useId();
@@ -52,12 +67,14 @@ export function SwapCard({
   const receive = value === null ? "0.00" : format(danger ? quoteBack(value) : quote(value));
   const balance = balanceOf(mode);
   const [pay, get, ...rest] = card.rows;
-  // Live, only MON is read: the honest side shows it; the attack sells
-  // dUSDC, whose balance is not read. With no wallet, say when it shows.
+  // Live, the card shows what it spends: MON on the honest side, dUSDC in
+  // the attack. With no wallet, say when it shows; a wallet whose balance
+  // is not read yet shows nothing rather than a guess.
+  const liveSpend = danger ? liveToken : liveBalance;
   const balanceText = !live
     ? `${panel.balance} ${format(balance)} ${pay?.value}`
-    : liveBalance !== null && !danger
-      ? `${panel.balance} ${liveBalance} ${pay?.value}`
+    : liveSpend !== null
+      ? `${panel.balance} ${liveSpend} ${pay?.value}`
       : walletConnected
         ? ""
         : novaswap.live.balance;
@@ -118,6 +135,8 @@ export function SwapCard({
         </p>
       </div>
 
+      {faucet}
+
       <dl className="grid gap-0 border-t border-[color:var(--rule)]">
         <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--rule)] py-3">
           <dt className={T.small}>{get?.label}</dt>
@@ -139,6 +158,8 @@ export function SwapCard({
       <Button type="submit" variant="primary" size="lg" className="w-full">
         {card.cta}
       </Button>
+      {sign}
+      {baret}
       <p className={T.small}>{card.note}</p>
 
       <AttackSwitch

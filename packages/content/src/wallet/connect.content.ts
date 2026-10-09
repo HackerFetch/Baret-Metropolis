@@ -54,6 +54,9 @@ export const connect = {
     connected: "Connected to {origin}.",
     /** Approved without "Don't ask again": nothing is kept. */
     connectedOnce: "Connected to {origin} for now. It asks again next time.",
+    /** A site's own window: the site keeps the connection, not this wallet. */
+    connectedSite:
+      "Connected to {origin}. The site keeps this connection until you disconnect it there.",
     declined: "Declined. {origin} was told you said no.",
     expired: "The request timed out, so {origin} was not connected.",
   },

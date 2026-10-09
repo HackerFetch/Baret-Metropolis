@@ -51,13 +51,15 @@ export const policies = {
     same: "Same outcome for all of them.",
     stricter: "{count} that went through would now be blocked.",
     looser: "{count} that were blocked would now go through.",
-    empty: "No requests yet, so there is nothing to compare.",
+    empty: "Nothing to run the rules over yet. Send something first.",
   },
 
   history: {
     title: "Changes to your rules",
     row: "{rule} changed from {previous} to {value}",
     empty: "No changes since setup.",
+    /** Live: changes are kept in this page's memory, so a reload empties the list. */
+    emptyLive: "No changes since this page was opened. The list clears when the page reloads.",
   },
 
   help: {

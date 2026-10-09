@@ -47,8 +47,12 @@ export const sign = {
     vaultWithdraw: "Withdraw {amount} {asset} from your vault",
     vaultCaps: "Set the caps for {merchant} in your vault",
     vaultRemoveMerchant: "Remove {merchant} from your vault",
-    vaultAgentKey: "Register your agent key with your vault",
+    vaultAgentKey: "Let {agent} pay from your vault",
     vaultRevokeAgent: "Revoke your agent key",
+    vaultCreate: "Open your vault",
+    vaultApproval: "Let your vault take {amount} {asset} from your account",
+    vaultPauseMerchant: "Pause payments to {merchant}",
+    vaultResumeMerchant: "Resume payments to {merchant}",
     unknown: "Sign a transaction Baret could not name",
   },
 
@@ -87,6 +91,10 @@ export const sign = {
       primary: "Decline",
       secondary: "Override this block",
       noSign: "There is no sign button on a blocked request.",
+      /** Live: the wallet has no override; the way past is the rule itself. */
+      noOverride:
+        "This wallet does not sign a blocked request. If you trust it, change the rule and check again.",
+      editRule: "Change the rule",
       /** One suggested fix per block, from the server's suggestions. */
       fix: {
         title: "Suggested fix",
@@ -114,6 +122,16 @@ export const sign = {
         reputation: "Reputation from Nansen and threat reports from Chainlink CRE",
         compliance: "Identity rules from Cleanverse",
       },
+      /**
+       * Live: one line per source the server reports as ok, so a skipped
+       * source is never claimed. The static list above stays for the sample.
+       */
+      live: {
+        nansen: "Wallet reputation from Nansen",
+        registry: "Threat reports from Chainlink CRE",
+        cleanverse: "Identity rules from Cleanverse",
+      },
+      unavailable: "{source}: could not be reached this time",
     },
     ruleLink: "See the rule",
   },
@@ -130,6 +148,12 @@ export const sign = {
     revoke: "{spender} can no longer spend your {asset}.",
     ownershipTransfer: "Someone else gets control of {contract}.",
     payment: "{amount} {asset} goes to {merchant}.",
+    vaultApproval:
+      "Your vault may take up to {amount} {asset} from your account. The next step moves it.",
+    vaultDeposit: "{amount} {asset} moves from your account into your vault.",
+    vaultWithdraw: "{amount} {asset} comes back from your vault to your account.",
+    /** A site's call: Baret simulated it, so what moves is in "What changes". */
+    contractCall: "This runs a call on {contract}. What changes is listed below.",
     nothing: "Nothing leaves your wallet.",
     unknown: "Baret could not tell what moves. Treat that as a reason to stop.",
   },
@@ -171,6 +195,8 @@ export const sign = {
   raw: {
     title: "Raw data",
     hint: "The exact request the site sent. Nothing is left out.",
+    /** The wallet's own request (a send, a vault change): no site sent it. */
+    hintOwn: "The exact request this wallet built. Nothing is left out.",
     decoded: "Decoded call",
     notDecoded: "Baret could not decode this call.",
     to: "To",
@@ -184,6 +210,21 @@ export const sign = {
     label: "Declines on its own in {seconds} seconds",
     labelOne: "Declines on its own in {seconds} second",
     note: "When time runs out, the request is declined and nothing is signed.",
+    /** Live: how long Baret's answer stays good, before it must be checked again. */
+    fresh: "This check is good for {seconds} more seconds",
+    freshOne: "This check is good for {seconds} more second",
+  },
+
+  /** Live: Baret's answer ran out. Signing waits for a fresh check. */
+  stale: {
+    title: "Check again before you sign",
+    body: "Baret's answer is out of date, and the chain may have changed. Nothing was signed.",
+    action: "Check again",
+  },
+
+  /** Live: inside an unlocked session, signing asks for no passkey. */
+  session: {
+    note: "No passkey prompt: your session runs until {time}.",
   },
 
   /**
@@ -235,6 +276,7 @@ export const sign = {
     unknown: "It may have been sent. Check your activity before you try again.",
     /** Standalone wallet only. The extension signs with its unlocked key. */
     passkey: "Confirm with your passkey",
+    passkeyCancelled: "The passkey was not given, so nothing was signed.",
   },
 
   result: {

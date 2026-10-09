@@ -21,6 +21,22 @@ export const delegation = {
   title: "Agent delegation",
   body: "Give an agent a budget instead of your key. The caps live in a contract on Monad, so the agent can't talk its way past them.",
 
+  /**
+   * Live: a change runs as one or more transactions, each its own sign
+   * request at the top of the page. One change at a time.
+   */
+  flow: {
+    label: "Change in progress",
+    preparing: "Getting the transaction ready. Nothing is signed until you say so.",
+    step: "Step {current} of {total}",
+    next: "Continue to step {next}",
+    stopped:
+      "You stopped before the last step. What you already sent stays done, and nothing else changes.",
+    busy: "Finish or stop the change above first.",
+    /** Beside Try again when a step cannot be built: ends the change here. */
+    stop: "Stop here",
+  },
+
   explainer: {
     title: "Why not hand the agent your key?",
     body: "A key can only say yes to everything. A vault can say: this much, to these merchants, until you say stop.",
@@ -129,6 +145,8 @@ export const delegation = {
       perPayment: { label: "Most per payment", hint: "A single payment above this reverts." },
       perHour: { label: "Most per hour", hint: "Optional. Leave it empty for no hourly limit." },
       perDay: { label: "Most per 24 hours", hint: "A rolling 24 hours, not a calendar day." },
+      /** Live: a name kept on this device only; the contract stores none. */
+      origin: { label: "Name", hint: "Optional. Only you see it, on this device." },
     },
 
     /** Shown before the first payment to a merchant is possible: the terms you sign. */
@@ -169,6 +187,14 @@ export const delegation = {
       title: "No agent key yet",
       body: "Create one when the vault and your merchants are ready. Until then, nothing can pay from the vault.",
       action: { label: "Create the agent key" },
+      /** Live: the way to authorise an agent wallet made elsewhere. */
+      or: "Or use an agent wallet you already have",
+    },
+    /** Live: an outside agent address, registered without its key ever being here. */
+    external: {
+      label: "Agent address",
+      hint: "The address of an agent wallet, such as one made with Dynamic. Its key stays with the agent.",
+      action: { label: "Authorise this address" },
     },
     creating: "Confirm with your passkey. Mera derives the agent key from it.",
     registering: "Sign to register the agent key with your vault.",
@@ -183,6 +209,9 @@ export const delegation = {
       reveal: "Show the agent key",
       copy: "Copy the agent key",
       copied: "Copied. Paste it only into your agent.",
+      /** Live: an outside agent's key was never here, so there is none to show. */
+      external:
+        "This agent holds its own key, so there is nothing to show here. It can pay only your listed merchants, up to their caps.",
     },
     errors: {
       cancelled: {
