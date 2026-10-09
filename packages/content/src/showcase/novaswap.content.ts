@@ -270,6 +270,47 @@ export const novaswap = {
     wallet: "Test address",
     balance: "Balance shows once a wallet connects",
   },
-} as const satisfies ScenarioSite & { live: { wallet: string; balance: string } };
+
+  /**
+   * "Sign with your wallet" on the swap card (hub.frame.sign): the request
+   * Baret's panel checks, sent to the connected wallet. The attack signs two
+   * steps, the allowance and then the "swap" that drains. The visitor takes
+   * test dUSDC from the faucet first.
+   */
+  sign: {
+    token: "dUSDC",
+    /** One label per step, in order; {amount} is what the card holds. */
+    steps: {
+      safe: ["Swap {amount} MON for dUSDC"],
+      danger: ["Enable dUSDC trading", "Swap {amount} dUSDC"],
+    },
+    faucet: {
+      body: "The attack sells dUSDC, so take some first. It is free and has no value.",
+      label: "Get 100 test dUSDC",
+      busy: "Confirm in {wallet}...",
+      pending: "Getting test dUSDC...",
+      done: "100 test dUSDC received.",
+    },
+    /** The attack, pressed with no dUSDC in the wallet. */
+    empty: "This wallet holds no dUSDC yet. Get 100 test dUSDC first.",
+    outcome: {
+      safe: "The router paid the dUSDC into your wallet.",
+      danger:
+        "The look-alike router took your whole dUSDC balance and paid nothing back. It went to an address nobody holds the key to.",
+      /** After the attack, or when the swap was declined after the allowance went through. */
+      open: "The unlimited allowance to the look-alike stays open. It can take any dUSDC this wallet receives later.",
+      next: "Press Enable dUSDC trading to see what Baret says about the same request.",
+    },
+  },
+} as const satisfies ScenarioSite & {
+  live: { wallet: string; balance: string };
+  sign: {
+    token: string;
+    steps: Record<"safe" | "danger", readonly string[]>;
+    faucet: { body: string; label: string; busy: string; pending: string; done: string };
+    empty: string;
+    outcome: { safe: string; danger: string; open: string; next: string };
+  };
+};
 
 export type NovaswapContent = typeof novaswap;

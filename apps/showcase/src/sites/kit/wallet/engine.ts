@@ -4,19 +4,23 @@ import {
   createConfig,
   createStorage,
   disconnect,
+  estimateGas,
   type GetConnectionReturnType,
   getBalance,
   getConnection,
   getConnectors,
+  getPublicClient,
   noopStorage,
+  readContract,
   reconnect,
+  sendTransaction,
   switchChain,
   watchConnection,
   watchConnectors,
 } from "@wagmi/core";
-import { http } from "viem";
+import { erc20Abi, type Hex, http, type Transport } from "viem";
 import { monadTestnet } from "viem/chains";
-import { connectErrorOf, isBaret, safeIcon } from "./baret.js";
+import { connectErrorOf, isBaret, isBlockNotFound, SendRefused, safeIcon } from "./baret.js";
 import type { Connection, Engine, Push, WalletOption, WalletState } from "./store.js";
 
 /**
@@ -29,12 +33,46 @@ import type { Connection, Engine, Push, WalletOption, WalletState } from "./stor
  * networks goes through the wallet; a wallet that does not know Monad
  * testnet is offered viem's chain definition to add it.
  *
- * Nothing here signs or sends: the sites read the address, Baret simulates
- * each request from it, and the balance is read from Monad testnet's
- * public RPC.
+ * The sites read the address and Baret simulates each request from it.
+ * Only a site's "Sign with your wallet" sends: `send` asks the wallet to
+ * sign one call with a gas limit estimated on Monad testnet (Monad charges
+ * the limit, not the gas used), and `confirm` waits for its block.
+ * Balances, MON and tokens, are read from Monad testnet's public RPC.
  */
 
 export const STORAGE_KEY = "baret.demo";
+
+/**
+ * How long `confirm` waits for a receipt. Monad blocks come about every
+ * 0.4 s, so a minute with no receipt is reported to the visitor, not guessed.
+ */
+export const CONFIRM_MS = 60_000;
+
+/**
+ * Monad testnet's public RPC is a pool of nodes, and the one that answers
+ * the next read may not have the block a receipt just came from. For this
+ * long after a receipt, reads and gas estimates are pinned to that block,
+ * so the next step's allowance and the balance after a drain are never read
+ * from a node a block behind.
+ */
+export const FRESH_MS = 15_000;
+
+/** A node behind the pinned block answers "block not found": try again this often, this many times. */
+const LAG_MS = 400;
+const LAG_TRIES = 8;
+
+/** Runs a read again while the node answering it has not reached the pinned block. */
+async function caughtUp<T>(read: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; attempt < LAG_TRIES; attempt++) {
+    try {
+      return await read();
+    } catch (error) {
+      if (!isBlockNotFound(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, LAG_MS));
+    }
+  }
+  return read();
+}
 
 /** localStorage when the browser lets this page use it, the no-op store otherwise. */
 function browserStorage(): Storage | typeof noopStorage {
@@ -76,13 +114,23 @@ function connectionOf(connection: GetConnectionReturnType): Connection {
   }
 }
 
-export async function start(push: Push, read: () => WalletState): Promise<Engine> {
+/** `transport` is Monad testnet's public RPC; tests pass a mock. */
+export async function start(
+  push: Push,
+  read: () => WalletState,
+  transport: Transport = http(),
+): Promise<Engine> {
   const config = createConfig({
     chains: [monadTestnet],
-    transports: { [monadTestnet.id]: http() },
+    transports: { [monadTestnet.id]: transport },
     multiInjectedProviderDiscovery: true,
     storage: createStorage({ key: STORAGE_KEY, storage: browserStorage() }),
   });
+
+  /** The newest receipt's block, and when it arrived (see FRESH_MS). */
+  let fresh: { block: bigint; at: number } | null = null;
+  const pinned = (): { blockNumber?: bigint } =>
+    fresh && Date.now() - fresh.at < FRESH_MS ? { blockNumber: fresh.block } : {};
 
   /** Only wallets the browser announced: EIP-6963 connectors are injected ones. */
   const options = (): WalletOption[] =>
@@ -97,10 +145,13 @@ export async function start(push: Push, read: () => WalletState): Promise<Engine
       return;
     }
     try {
-      const { value } = await getBalance(config, {
-        address: connection.address,
-        chainId: monadTestnet.id,
-      });
+      const { value } = await caughtUp(() =>
+        getBalance(config, {
+          address: connection.address,
+          chainId: monadTestnet.id,
+          ...pinned(),
+        }),
+      );
       // The account may have changed while the read was out.
       if (getConnection(config).address === connection.address) push({ balance: value });
     } catch {
@@ -166,5 +217,52 @@ export async function start(push: Push, read: () => WalletState): Promise<Engine
     },
 
     refreshBalance,
+
+    async send(call) {
+      const connection = getConnection(config);
+      if (
+        connection.status !== "connected" ||
+        connection.address.toLowerCase() !== call.from.toLowerCase()
+      ) {
+        throw new SendRefused("account");
+      }
+      if (connection.chainId !== monadTestnet.id) throw new SendRefused("network");
+      const request = {
+        account: connection.address,
+        chainId: monadTestnet.id,
+        to: call.to,
+        data: call.data,
+        value: BigInt(call.value),
+      };
+      const gas = await caughtUp(() => estimateGas(config, { ...request, ...pinned() }));
+      // Monad charges the gas limit, so the limit stays a tenth above the estimate.
+      return sendTransaction(config, { ...request, gas: gas + gas / 10n });
+    },
+
+    async confirm(hash: Hex) {
+      const client = getPublicClient(config, { chainId: monadTestnet.id });
+      if (!client) throw new Error("No Monad testnet client");
+      const receipt = await client.waitForTransactionReceipt({
+        hash,
+        timeout: CONFIRM_MS,
+        pollingInterval: 1_000,
+      });
+      const block = fresh && fresh.block > receipt.blockNumber ? fresh.block : receipt.blockNumber;
+      fresh = { block, at: Date.now() };
+      return receipt.status;
+    },
+
+    tokenBalance(token, owner) {
+      return caughtUp(() =>
+        readContract(config, {
+          address: token,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [owner],
+          chainId: monadTestnet.id,
+          ...pinned(),
+        }),
+      );
+    },
   };
 }

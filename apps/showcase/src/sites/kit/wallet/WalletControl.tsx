@@ -17,6 +17,7 @@ import { Link } from "react-router";
 import {
   connectWallet,
   disconnectWallet,
+  onPickerRequest,
   prefetch,
   refreshBalance,
   switchToMonad,
@@ -34,8 +35,10 @@ import { DEMO_FROM, formatMon, MONAD_TESTNET_ID } from "./useDemoWallet.js";
  *
  * The picker lists Baret first (found or not), then every wallet the browser
  * announced over EIP-6963, then the sample wallet, which needs no extension.
- * Connected, Baret checks each request from that address, live; nothing is
- * signed or sent. The wallet code loads on the first hover, focus or press.
+ * Connected, Baret checks each request from that address, live, and nothing
+ * is signed unless the visitor signs it in the wallet (a card's "Sign with
+ * your wallet", which opens this picker when no wallet is connected). The
+ * wallet code loads on the first hover, focus or press.
  */
 
 const copy = hub.frame.wallet;
@@ -285,6 +288,16 @@ export function WalletControl({
     setOpen(false);
     setSaid(fill(copy.announce.connected, { wallet: name, address: truncateAddress(address) }));
   }, [address, name]);
+
+  // A card's "Sign with your wallet" with no wallet opens the picker here.
+  useEffect(
+    () =>
+      onPickerRequest(() => {
+        prefetch();
+        setOpen(true);
+      }),
+    [],
+  );
 
   // A failed pick or a decline keeps the picker open with its message.
   useEffect(() => {

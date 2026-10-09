@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import type { ConnectError } from "./baret.js";
 
 /**
@@ -52,12 +52,31 @@ export const INITIAL: WalletState = {
   switching: "idle",
 };
 
+/** One call for the wallet to send, as `@baret/demo` builds it: value in wei, as a decimal string. */
+export interface SendCall {
+  readonly from: Address;
+  readonly to: Address;
+  readonly value: string;
+  readonly data: Hex;
+}
+
 /** What the engine can do once it has loaded. */
 export interface Engine {
   connect(id: string): Promise<void>;
   disconnect(): Promise<void>;
   switchToMonad(): Promise<void>;
   refreshBalance(): Promise<void>;
+  /**
+   * Asks the connected wallet to sign and send one call on Monad testnet;
+   * resolves to its hash once sent. Refuses with SendRefused when no wallet
+   * or another account is connected ("account"), or the wallet is on another
+   * chain ("network").
+   */
+  send(call: SendCall): Promise<Hex>;
+  /** Waits for the call's block: "success" or "reverted". Rejects when Monad testnet does not confirm in time. */
+  confirm(hash: Hex): Promise<"success" | "reverted">;
+  /** An ERC-20 balance in base units, read from Monad testnet's public RPC. */
+  tokenBalance(token: Address, owner: Address): Promise<bigint>;
 }
 
 export type Push = (patch: Partial<WalletState>) => void;
@@ -111,6 +130,34 @@ export function switchToMonad(): Promise<void> {
 
 export function refreshBalance(): Promise<void> {
   return prepare().then((e) => e.refreshBalance());
+}
+
+export function sendCall(call: SendCall): Promise<Hex> {
+  return prepare().then((e) => e.send(call));
+}
+
+export function confirmCall(hash: Hex): Promise<"success" | "reverted"> {
+  return prepare().then((e) => e.confirm(hash));
+}
+
+export function readTokenBalance(token: Address, owner: Address): Promise<bigint> {
+  return prepare().then((e) => e.tokenBalance(token, owner));
+}
+
+const pickerListeners = new Set<() => void>();
+
+/** Opens the header's wallet picker from anywhere on the page (a card's "Sign with your wallet" with no wallet). */
+export function requestPicker(): void {
+  prefetch();
+  for (const fn of pickerListeners) fn();
+}
+
+/** For the wallet control: runs `fn` on each request; returns the unsubscribe. */
+export function onPickerRequest(fn: () => void): () => void {
+  pickerListeners.add(fn);
+  return () => {
+    pickerListeners.delete(fn);
+  };
 }
 
 /** The key the engine keeps the last wallet under (wagmi's storage, key "baret.demo"). */
