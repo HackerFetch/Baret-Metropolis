@@ -529,6 +529,9 @@ export const agents = {
     /** Shown only when this build sends live checks to the server. */
     liveNote:
       "Every check here, the six actions and a pasted transaction alike, goes to the same /v1/analyze endpoint, on a rate-limited testnet server.",
+    /** Shown instead when this build sends only a pasted transaction live. */
+    livePasteNote:
+      "A pasted transaction goes to the /v1/analyze endpoint, on a rate-limited testnet server. The six actions answer from prepared samples.",
     /** Shown under the button while one of the six actions is picked, when this build does not send them live. */
     sample: "Prepared sample answers. The six actions are not sent to Baret's server.",
     /** Shown under the button for a pasted transaction when this build sends nothing. */

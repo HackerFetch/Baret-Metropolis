@@ -145,6 +145,9 @@ describe("the playground source", () => {
   });
 });
 
+/** A stand-in for VITE_BARET_PLAYGROUND_AGENT, the funded agent wallet. */
+const FUNDED = "0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d";
+
 describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
   const signal = new AbortController().signal;
 
@@ -180,7 +183,7 @@ describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
   it("sends an x402 action as typedData and payment, never under transaction", async () => {
     const fetch = vi.fn(async () => okResponse("safe"));
     vi.stubGlobal("fetch", fetch);
-    const result = await sourceFor(true)(
+    const result = await sourceFor(true, FUNDED)(
       { kind: "action", action: "pay", policy: "balanced" },
       signal,
     );
@@ -197,7 +200,7 @@ describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
   it("sends a plain-call action as a transaction, with userWallet and policyTemplate", async () => {
     const fetch = vi.fn(async () => okResponse("blocked"));
     vi.stubGlobal("fetch", fetch);
-    const result = await sourceFor(true)(
+    const result = await sourceFor(true, FUNDED)(
       { kind: "action", action: "flaggedAddress", policy: "strict" },
       signal,
     );
@@ -211,22 +214,25 @@ describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
   });
 
   it("signs from VITE_BARET_PLAYGROUND_AGENT when it is a valid address", () => {
-    const funded = "0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d";
-    expect(agentAddress(funded)).toBe(funded);
-    expect(agentAddress(undefined)).not.toBe(funded);
-    expect(agentAddress("not an address")).not.toBe("not an address");
+    expect(agentAddress(FUNDED)).toBe(FUNDED);
+    expect(agentAddress(undefined)).toBeNull();
+    expect(agentAddress("not an address")).toBeNull();
   });
 
-  it("falls back to a fresh, unfunded address when the agent env is unset", () => {
-    const seen = new Set<string>();
-    for (let i = 0; i < 3; i++) seen.add(agentAddress(undefined));
-    expect(seen.size).toBeGreaterThan(1);
-    for (const address of seen) expect(isAddress(address)).toBe(true);
+  it("answers the six actions from samples when live but no agent is set", async () => {
+    const fetch = vi.fn(async () => okResponse("safe"));
+    vi.stubGlobal("fetch", fetch);
+    const result = await sourceFor(true, null)(
+      { kind: "action", action: "pay", policy: "balanced" },
+      signal,
+    );
+    expect(result.source).toBe("sample");
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("fails closed on a non-2xx status, like the demo sites", async () => {
     vi.stubGlobal("fetch", async () => new Response("down", { status: 503 }));
-    const result = await sourceFor(true)(
+    const result = await sourceFor(true, FUNDED)(
       { kind: "action", action: "pay", policy: "balanced" },
       signal,
     );

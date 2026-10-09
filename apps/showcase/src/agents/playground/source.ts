@@ -5,7 +5,7 @@ import { type Address, getAddress } from "viem";
 // By file, like sample.ts: this module imports types only, so zod stays out of the chunk.
 import { createPolicy } from "../../../../../packages/guard/src/policy-templates.js";
 import { ANALYZE_URL, analyze, fromAnalyzeResponse } from "../../sites/kit/live.js";
-import { type ActionId, type PolicyName, randomAddress, SAMPLES, verdictFor } from "./sample.js";
+import { type ActionId, type PolicyName, SAMPLES, verdictFor } from "./sample.js";
 
 /**
  * Where "Check it as the agent" goes. The one place that knows the request
@@ -23,8 +23,9 @@ import { type ActionId, type PolicyName, randomAddress, SAMPLES, verdictFor } fr
  * `verify-demo`'s own `--from`): the engine's loss rule and its post-balance
  * floor cannot be computed from a zero balance and fail closed when they
  * cannot, which would turn "pay" and "the wrong address" into Blocked no
- * matter what they are built to show. Unset (local development only), a
- * fresh unfunded address is used instead and the matrix will not match.
+ * matter what they are built to show. Unset or invalid, the six actions
+ * answer from the prepared samples even with the live flag, and only a
+ * pasted transaction goes live.
  */
 
 export type PlaygroundInput =
@@ -115,12 +116,18 @@ const agentEnv: unknown = import.meta.env.VITE_BARET_PLAYGROUND_AGENT;
 
 /**
  * The address the six live actions sign from: the funded wallet named by
- * `VITE_BARET_PLAYGROUND_AGENT`, else a fresh address with no balance
- * (`env` is only a parameter so a test can pick the branch directly).
+ * `VITE_BARET_PLAYGROUND_AGENT`, else null (`env` is only a parameter so a
+ * test can pick the branch directly).
  */
-export function agentAddress(env: unknown = agentEnv): Address {
-  return typeof env === "string" && isAddress(env) ? getAddress(env) : getAddress(randomAddress());
+export function agentAddress(env: unknown = agentEnv): Address | null {
+  return typeof env === "string" && isAddress(env) ? getAddress(env) : null;
 }
+
+/** The funded agent of this build, or null when none is set. */
+export const AGENT = agentAddress();
+
+/** True when the six actions go live: the flag and a funded agent address. */
+export const LIVE_ACTIONS = LIVE && AGENT !== null;
 
 /**
  * A pasted transaction this build did not send. A failed check (Blocked), kept
@@ -176,9 +183,9 @@ async function liveResult(
 function liveActionResult(
   action: ActionId,
   policy: PolicyName,
+  from: Address,
   signal: AbortSignal,
 ): Promise<CheckResult> {
-  const from = agentAddress();
   const built = agents[action](from);
   return "typedData" in built
     ? analyze(
@@ -193,12 +200,19 @@ function liveActionResult(
       );
 }
 
-/** Picks the answer for one run; `runCheck` turns any failure into Blocked. */
-export function sourceFor(live: boolean): CheckSource<PlaygroundInput> {
+/**
+ * Picks the answer for one run; `runCheck` turns any failure into Blocked.
+ * The six actions go live only with a funded agent address as well: from an
+ * unfunded one the loss rules fail closed and the verdicts would mislead.
+ */
+export function sourceFor(
+  live: boolean,
+  agent: Address | null = AGENT,
+): CheckSource<PlaygroundInput> {
   return async (input, signal) => {
     if (input.kind === "action") {
-      return live
-        ? liveActionResult(input.action, input.policy, signal)
+      return live && agent
+        ? liveActionResult(input.action, input.policy, agent, signal)
         : sampleResult(input.action, input.policy);
     }
     if (!live) return NOT_SENT;

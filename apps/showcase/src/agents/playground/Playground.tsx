@@ -10,16 +10,17 @@ import { useCheck } from "../../sites/kit/useCheck.js";
 import { PolicyPicker } from "./PolicyPicker.js";
 import { Result } from "./Result.js";
 import { ACTIONS, type ActionId, type PolicyName, randomAddress } from "./sample.js";
-import { isAddress, LIVE, parseTransaction, senderOf, sourceFor } from "./source.js";
+import { isAddress, LIVE, LIVE_ACTIONS, parseTransaction, senderOf, sourceFor } from "./source.js";
 import { outcomeOf } from "./terminal.js";
 
 /**
  * Watch an agent ask first. Pick what the agent tries and a starting policy,
  * then check it: the terminal prints the exchange and the answer appears
- * with its findings. Both the six actions and a pasted transaction go to
- * Baret only with VITE_BARET_PLAYGROUND=live; without it the six answer from
- * prepared samples and say so under the button, a pasted transaction sends
- * nothing and the answer is the fail-closed one. The agent address only
+ * with its findings. A pasted transaction goes to Baret with
+ * VITE_BARET_PLAYGROUND=live; the six actions need VITE_BARET_PLAYGROUND_AGENT
+ * (a funded wallet) as well. Otherwise the six answer from prepared samples
+ * and say so under the button, a pasted transaction sends nothing and the
+ * answer is the fail-closed one. The agent address only
  * shows for a pasted transaction, the one run that reads it. One status
  * region announces each verdict; nothing runs until the button is pressed.
  */
@@ -219,12 +220,11 @@ export function Playground({
             <Button type="submit" variant="primary" size="lg" className="w-full md:w-auto">
               {playground.action.label}
             </Button>
-            {/* What actually happens on this run, without VITE_BARET_PLAYGROUND=live:
-                prepared answers for the six actions, and for a pasted
-                transaction a plain "not sent". With the flag both go live,
-                and the footer note below says so instead. */}
+            {/* What actually happens on this run when it is not live: prepared
+                answers for the six actions, and for a pasted transaction a
+                plain "not sent". What goes live, the footer note says. */}
             {choice !== "custom" ? (
-              LIVE ? null : (
+              LIVE_ACTIONS ? null : (
                 <p className={T.small}>{playground.sample}</p>
               )
             ) : LIVE ? null : (
@@ -241,7 +241,9 @@ export function Playground({
 
       <div className="mt-12 grid gap-2 border-t border-[color:var(--rule)] pt-6">
         <p className={T.small}>{playground.note}</p>
-        {LIVE ? <p className={T.small}>{playground.liveNote}</p> : null}
+        {LIVE ? (
+          <p className={T.small}>{LIVE_ACTIONS ? playground.liveNote : playground.livePasteNote}</p>
+        ) : null}
         <p className={T.small}>{playground.footnote}</p>
       </div>
       <p role="status" className="sr-only">
