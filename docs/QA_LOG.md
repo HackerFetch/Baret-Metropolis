@@ -20,14 +20,14 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-09 · by: Ezgin's agent (before Hale's first session)
+Last updated: 2026-10-09 · by: Hale's agent (session 1)
 
 | | |
 |---|---|
-| **Done** | Role, task list, plan and this log exist (`CLAUDE.md`, `tasks/FOR_HALE.md`, `docs/QA_AND_DELIVERY.md`). Nothing tested yet |
-| **In progress** | Nothing |
-| **Blocked on** | Ezgin (E1): team membership on the hackathon platform, a funded test wallet. GitHub access was given on 2026-10-08 |
-| **Next step** | Read the board in `docs/ROADMAP.md` ("Final week — the board") and `docs/QA_AND_DELIVERY.md` §8.1, then H1 in `tasks/FOR_HALE.md`. Since 2026-10-09 the role also builds and writes (H4 to H9, H14), not only tests |
+| **Done** | H1: machine proven on a clean `main` (`pnpm check`, `pnpm contracts:test` green), git identity in `CLAUDE.md`, `qa` branch opened, test wallet created and its address left for Ezgin |
+| **In progress** | H1's last piece (dUSDC from the faucet) — blocked on funding |
+| **Blocked on** | Ezgin (E1): platform team membership, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, a vault to test against |
+| **Next step** | Once E1 lands: H2 (platform), H3 (MetaMask rehearsal, also needs M1), H4 (build: playground from the live API, no dependency, can start now) |
 | **Open bugs filed by Hale** | 0 |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
@@ -35,13 +35,46 @@ Last updated: 2026-10-09 · by: Ezgin's agent (before Hale's first session)
 
 ## 2. How things work (kept current)
 
-One entry per thing Hale has actually run. Each: what it is, the command, what it needs, what a good result looks like, known traps. Empty until the first session; the commands to start from are in `docs/QA_AND_DELIVERY.md` §5.1.
+One entry per thing Hale has actually run. Each: what it is, the command, what it needs, what a good result looks like, known traps.
 
-_(nothing run yet)_
+**`pnpm install --frozen-lockfile` then `pnpm check`** — lint (biome), `tsc -b`, the copy lint, and every vitest project. Needs Node ≥ 22.22, pnpm ≥ 11 (`corepack enable`). Good result: `Test Files N passed (N)`, `Tests N passed (N)`, no non-zero exit. `AbortError` stack traces from `happy-dom`'s fetch teardown print to stderr during the run; they are noise, not a failure — only the final `Test Files` / `Tests` summary line decides pass or fail. On `main` at `ca59710`: 76 files, 712 tests, ~7s.
+
+**`pnpm contracts:test`** (`cd contracts && forge test`) — needs Foundry (`forge`, `cast`). Good result: `Ran N test suites … N tests passed, 0 failed, 0 skipped`. On `main` at `ca59710`: 9 suites, 74 tests, incl. the `PaymentGuard` fuzz and invariant tests. Leaves an untracked `contracts/foundry.lock` (forge-std's pinned rev) after the first run; harmless, not committed.
+
+**`cast wallet new`** — generates a fresh keypair for the test wallet. The key goes in a local, gitignored `.env` at the repo root, never in a task file or the log.
 
 ---
 
 ## 3. Sessions (newest on top)
+
+### 2026-10-09 — session 1 (commit `43b766d` on `qa`, off `main` `ca59710`)
+
+Goal of the session: H1 — first session, machine setup, `qa` branch, identity, test wallet.
+
+- **Piece: read the updated plan** (task: "H1 · First session and setup")
+  - What: pulled `main` (`a29f040` → `ca59710`, 98 files) before starting; `tasks/FOR_HALE.md`, `docs/QA_LOG.md`, `docs/QA_AND_DELIVERY.md`, `CLAUDE.md` had all changed since the role was set up. Read `README.md`, `docs/PROJECT_OVERVIEW.md`, `docs/ROADMAP.md` "Final week — the board", `docs/QA_AND_DELIVERY.md` §8.1.
+  - How it works: as of 2026-10-09 (D-031) Hale's role is no longer only testing; the board in `docs/ROADMAP.md` is the one plan for all three people, with `H1`–`H15` replacing the old task list. `tasks/FOR_HALE.md`'s "Earlier items" section is history only.
+  - Result: understood. The submission deadline is **Wed 14 Oct 06:59 (GMT+3)**, not 2026-10-13 as the pre-update `docs/QA_AND_DELIVERY.md` and `tasks/FOR_HALE.md` said — that discrepancy is now resolved by the newer board/doc update, not a live bug.
+  - Files changed: none (reading only).
+- **Piece: machine check** (task: "H1 · First session and setup")
+  - What: `node -v`, `pnpm -v`, `forge --version`, `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm contracts:test` on a clean working tree of `main` at `ca59710`.
+  - How it works: see §2.
+  - Result: passed. Node `v22.22.3`, pnpm `11.1.3`, Foundry `1.7.1`. `pnpm check`: 76/76 test files, 712/712 tests. `pnpm contracts:test`: 9/9 suites, 74/74 tests. No first bug report needed.
+  - Problem: none.
+  - Files changed: none (`contracts/foundry.lock` appeared untracked, left alone).
+- **Piece: `qa` branch and git identity** (task: "H1 · First session and setup")
+  - What: `git switch -c qa` off the up-to-date `main`; filled Hale's row in `CLAUDE.md`'s team table (name, email, GitHub user) as the first commit.
+  - Result: done. Commit `43b766d` on `qa`.
+  - Files changed: `CLAUDE.md`.
+- **Piece: test wallet** (task: "H1 · First session and setup")
+  - What: `cast wallet new` → address `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, key written to a local `.env` (gitignored, never committed). Left the address for Ezgin in `tasks/FOR_EZGIN.md` under E1.
+  - Result: wallet created, has 0 MON and 0 USDC — cannot yet call `DemoUSDC.faucet()` (needs gas). That part of H1 stays open.
+  - Bugs filed: none.
+  - Files changed: `.env` (not committed), `tasks/FOR_EZGIN.md`.
+
+End of session: tasks ticked in `tasks/FOR_HALE.md`: none ticked `[x]` (H1 is noted in progress, not complete — funding is outstanding). Left unfinished: dUSDC from the faucet (needs MON first), platform access (H2), everything depending on E1. Next session starts with: checking whether Ezgin funded the wallet and gave platform access; if not, start H4 (the playground, no dependency). §1 rewritten: yes.
+
+---
 
 ### 2026-10-07 — session 0 (Ezgin's agent, setup of the role)
 
