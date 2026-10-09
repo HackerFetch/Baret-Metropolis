@@ -38,6 +38,8 @@ Update this table at every major phase transition (when the repo is created, on 
 | [`docs/RESOURCES.md`](docs/RESOURCES.md) | Which sponsor tool is used where and how, claim tracking, env var list | When starting an integration |
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Smart contract specifications, deploy table, security checklist | When writing/deploying contracts |
 | [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | x402 payment flow and facilitator design | When touching the x402/agent payment layer |
+| [`packages/guard/README.md`](packages/guard/README.md) | Developer quickstart for the pre-sign check: install, the smallest working call, what fail-closed means for the caller | Calling `/v1/analyze` from your own app, with or without the SDK |
+| [`packages/agent-kit/README.md`](packages/agent-kit/README.md) | Developer quickstart for the guarded agent wallet and the `baret` CLI | Giving an agent a signer that cannot sign past Baret's verdict |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6-week calendar, weekly checklist, progress | Update at the start/end of every week |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architecture/scope decisions taken and their rationale (ADR log) | Check here first before taking a new decision, then add it |
 | [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Comparative review of the 5 previous Baret versions (EVM, Stellar, Casper, Midnight, OKX): what gets reused, which mistakes are not repeated | Read the relevant section before starting to write a module |
