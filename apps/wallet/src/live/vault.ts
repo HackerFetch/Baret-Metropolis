@@ -71,14 +71,15 @@ export function auditVaultOf(body: unknown): AuditVault | null {
           id: String(row.id ?? row.txHash ?? at),
           at,
           merchant: row.merchant,
-          amount: fromUnits(BigInt(amount), VAULT_DECIMALS, { max: 2 }),
+          // All six decimals: a sub-cent x402 payment must not read 0.00.
+          amount: fromUnits(BigInt(amount), VAULT_DECIMALS, { max: 6 }),
         },
       ];
     }),
   };
 }
 
-const money = (amount: bigint) => fromUnits(amount, VAULT_DECIMALS, { max: 2 });
+const money = (amount: bigint) => fromUnits(amount, VAULT_DECIMALS, { max: 6 });
 
 /**
  * The vault for the screens. `labels` are the names this browser gave its

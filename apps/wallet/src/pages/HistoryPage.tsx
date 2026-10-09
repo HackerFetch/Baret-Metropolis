@@ -16,6 +16,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId, useState } from "react";
 import { WALLET_ART } from "../assets.js";
+import { useHistoryRead, useLive } from "../live/live.js";
 
 /**
  * Activity: every verdict, including requests the reader declined and the
@@ -184,8 +185,13 @@ function Details({
 
 export function Component() {
   const { state } = useWallet();
+  const live = useLive();
+  // Live: the vault's history from the indexer joins the wallet's own log.
+  useHistoryRead();
   // Fail-closed: activity that did not load is an error, never an empty log.
   const loaded = ready(state, "activity");
+  // Live only: "loading" is not a failure yet, so it gets no error in its place.
+  const loading = live !== null && state.status.activity === "loading";
   const name = useId();
   const [filter, setFilter] = useState<FilterId>("all");
   const [open, setOpen] = useState<string | null>(null);
@@ -257,14 +263,23 @@ export function Component() {
 
         <Block
           title={history.filters.find((f) => f.id === filter)?.label ?? history.title}
-          aside={<span className={`${T.label} ${T.num}`}>{rows.length}</span>}
+          aside={loaded ? <span className={`${T.label} ${T.num}`}>{rows.length}</span> : null}
         >
-          {!loaded ? (
+          {loading ? (
+            <p role="status" aria-live="polite" className={T.small}>
+              {history.loading}
+            </p>
+          ) : !loaded ? (
             <Problem
               title={history.errors.load.title}
               body={history.errors.load.body}
               action={
-                <Button type="button" variant="ghost" onClick={() => window.location.reload()}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  // Live, a reload would end the session: read again instead.
+                  onClick={() => (live ? void live.loadHistory() : window.location.reload())}
+                >
                   {history.errors.load.action.label}
                 </Button>
               }

@@ -68,6 +68,14 @@ describe("auditVaultOf", () => {
     ]);
   });
 
+  it("keeps a sub-cent payment readable, not 0.00", () => {
+    const read = auditVaultOf({
+      ...audit,
+      payments: [{ id: "p3", merchant: MERCHANT.toLowerCase(), amount: "1234", timestamp: 400 }],
+    });
+    expect(read?.payments[0]?.amount).toBe("0.001234");
+  });
+
   it("answers null for a body that is not a vault", () => {
     expect(auditVaultOf(null)).toBeNull();
     expect(auditVaultOf({ error: "not_found" })).toBeNull();

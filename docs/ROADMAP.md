@@ -131,7 +131,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E7 | Account steps before recording: three keys on Render (`KIMI_API_KEY`, `QWEN_API_KEY`, `BARET_DEMO_AGENT_PRIVATE_KEY`), Render on Starter, `~/.baret/` backed up, the `LICENSE` file. The keys go in on Fri 9 or Sat 10, not Sunday, so H16 can test before recording | Fri 9 or Sat 10 | M4, M5 | KIMI, Qwen, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
 | E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges | Fri 9 to Sat 10 | H4 merged | main track (H4) |
-| E10 | Nine more activity kinds for the wallet's history, cosmetic (found by H5) | — | H5 merged | Envio, Mera UX |
+| E10 | Nine more activity kinds for the wallet's history, cosmetic (found by H5); a transaction the wallet already logged must not show twice | — | H5 merged | Envio, Mera UX |
 
 ### Meriç
 
@@ -153,7 +153,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H2 | The platform: all three profiles name the campus group; the twelve prizes are selected; the form's fields against §8.1 | Fri 9 | E1 | Community, all forms |
 | H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows | Fri 9 to Sat 10 | M1, E1 | main track |
 | H4 | Build: the agents playground's six actions answer from the live API. **Built and checked against the real engine 2026-10-09**; needs E9 before it reproduces `verify:demo`'s matrix live (see "Where things stand") | Fri 9 | E9 to go live correctly | main track |
-| H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*` | Sat 10 | E3 for the live account | Envio, Mera UX |
+| H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*`. **Built in part 2026-10-09** (#52): History and Home read the vault's `paid` rows from the indexer; the other nine kinds are E10 | Sat 10 | E3 for the live account | Envio, Mera UX |
 | H6 | Build: `/agents` matches what shipped, with the Dynamic agent's real payments read live from the indexer | Sat 10 | | Dynamic, Envio |
 | H7 | Build: the Cleanverse scenario on a screen, and the wording for a finding that comes from the asset | Sat 10 | | Cleanverse |
 | H8 | Build: small copy and the extension (ScamSniffer reason, agent-key sentence, API URL, unused permission). First to be cut | Sun 11 before 12:00 | | |

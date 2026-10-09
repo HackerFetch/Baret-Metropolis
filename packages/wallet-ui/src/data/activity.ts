@@ -10,7 +10,7 @@ import type { ActivityItem } from "./types.js";
  * show them whole.
  */
 
-const ADDRESS_KEYS = new Set(["recipient", "spender", "operator", "contract"]);
+const ADDRESS_KEYS = new Set(["recipient", "spender", "operator", "contract", "merchant"]);
 
 /** The row's values as the sentence prints them. */
 export function rowValues(item: ActivityItem): Record<string, string> {

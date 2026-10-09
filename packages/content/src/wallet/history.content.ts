@@ -83,6 +83,9 @@ export const history = {
     note: "The file is built on this device. Nothing is uploaded.",
   },
 
+  /** Live, while the vault's history is read from the indexer. */
+  loading: "Reading your vault's history from the indexer.",
+
   errors: {
     load: {
       title: "Can't load your activity",
