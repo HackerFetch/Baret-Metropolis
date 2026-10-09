@@ -15,6 +15,8 @@ services:
         - apps/server/**
         - packages/guard/**
         - packages/content/**
+        - packages/llm/**
+        - packages/agent-kit/**
         - pnpm-lock.yaml
         - render.yaml
     buildCommand: corepack enable && pnpm install --frozen-lockfile --filter @baret/server...
@@ -58,3 +60,12 @@ services:
       # KIMI (Moonshot) for /v1/explain. Without the key the route answers 503.
       - key: KIMI_API_KEY
         sync: false
+      # Qwen (QwenCloud) for /v1/review. Without the key the route answers 503.
+      - key: QWEN_API_KEY
+        sync: false
+      # The demo agent's key: an approved honest review sends 0.10 dUSDC from
+      # Baret's demo vault on Monad testnet.
+      - key: BARET_DEMO_AGENT_PRIVATE_KEY
+        sync: false
+      - key: BARET_REVIEW_SEND
+        value: "1"

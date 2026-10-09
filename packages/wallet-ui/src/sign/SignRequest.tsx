@@ -1,7 +1,8 @@
-import { common, sign } from "@baret/content";
+import { common, explain, sign } from "@baret/content";
 import { Button, ChangeRow, VerdictTag } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
+import { PlainWordsBody } from "@baret/web-ui/components/PlainWords";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { counted, cx, fill } from "@baret/web-ui/lib/util";
@@ -307,6 +308,7 @@ export function SignRequest({
   explorer,
   canOverride = true,
   sessionNote,
+  explainId,
 }: {
   request: Request;
   /** True while Baret's answer is on its way; left out, a sample timer stands in. */
@@ -361,6 +363,12 @@ export function SignRequest({
   canOverride?: boolean;
   /** Live: one muted line under the decision, such as how long the session runs. */
   sessionNote?: string;
+  /**
+   * Live: Baret's request id for a checked request, which KIMI words in
+   * plain language under the findings. Left out, nothing is asked. After
+   * Check again the fresh request's own id is asked about instead.
+   */
+  explainId?: string;
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
@@ -849,6 +857,16 @@ export function SignRequest({
                 >
                   <Findings items={request.findings} />
                 </Section>
+              ) : null}
+
+              {explainId && !unreachable ? (
+                <PlainWordsBody
+                  // After Check again the fresh request is the one on screen, so
+                  // KIMI words its verdict, not the one the surface passed.
+                  requestId={fresh && fresh.over === given ? request.id : explainId}
+                  verdict={request.verdict}
+                  frame={(body) => <Section title={explain.title}>{body}</Section>}
+                />
               ) : null}
 
               {!unreachable ? (

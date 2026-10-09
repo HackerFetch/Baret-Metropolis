@@ -11,9 +11,10 @@ import { PageHero } from "../shared/PageHero.js";
 
 /**
  * /docs, an index, not a doc. Four blocks (owner's order, 2026-10-03): where
- * the check happens (with the two timelines), the eleven files in four
- * groups, the known limitations, and the way to see it work. Every card
- * opens its file on GitHub.
+ * the check happens (with the two timelines), thirteen files in five
+ * groups (H9, 2026-10-09: "For developers" adds the two package READMEs),
+ * the known limitations, and the way to see it work. Every card opens its
+ * file on GitHub.
  */
 export function Component() {
   const { hero, cta } = docs;

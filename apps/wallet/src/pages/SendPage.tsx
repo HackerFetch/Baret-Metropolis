@@ -227,6 +227,8 @@ export function Component() {
                 }
               : {})}
             {...(sessionNote ? { sessionNote } : {})}
+            // KIMI words a checked answer only: its id is Baret's requestId.
+            {...(live && review.verdict !== "unreachable" ? { explainId: review.id } : {})}
             onLog={(item) =>
               // Live balances are read from Monad after the send, never worked out here.
               !live && (item.kind === "sent" || item.kind === "overridden")

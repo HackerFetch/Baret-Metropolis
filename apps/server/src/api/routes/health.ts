@@ -7,12 +7,16 @@ import type { NetworkConfig } from "../../config/env.js";
  * Which optional settings a network has. Booleans and counts only: never a
  * URL, key or address, so this is safe on an open endpoint.
  */
-function configured(n: NetworkConfig, config: AnalyzeDeps["config"]) {
+function configured(n: NetworkConfig, deps: AnalyzeDeps) {
+  const { config } = deps;
   return {
     nansen: config.nansenApiKey !== null,
     cleanverse: n.cleanverse !== null,
     indexer: config.envioEndpoint !== null,
     explain: config.explain !== null,
+    policyDraft: deps.policyDrafter != null,
+    review: deps.review != null,
+    reviewSends: deps.review?.sends ?? false,
     separateTraceRpc: n.traceRpcUrl !== n.rpcUrl,
     usdc: n.usdcAddress !== null,
     reputationRegistry: n.reputationRegistryAddress !== null,
@@ -37,14 +41,14 @@ export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) =
             network: n.network,
             ok: chainId === n.chainId,
             chainId,
-            configured: configured(n, deps.config),
+            configured: configured(n, deps),
           };
         } catch {
           return {
             network: n.network,
             ok: false,
             chainId: null,
-            configured: configured(n, deps.config),
+            configured: configured(n, deps),
           };
         }
       }),

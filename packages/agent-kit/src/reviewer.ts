@@ -37,7 +37,37 @@ export const reviewSchema = z
   })
   .strict();
 
-export type Review = z.infer<typeof reviewSchema>;
+/** One tool call the agentic reviewer made, in the order it made them. */
+export interface ReviewStep {
+  tool: string;
+  arguments: unknown;
+  ok: boolean;
+  result: unknown;
+  ms: number;
+}
+
+/** What the agentic reviewer planned and looked at, kept for the operator's log. */
+export interface ReviewTranscript {
+  model: { provider: string; name: string };
+  plan: readonly string[];
+  /** The tool calls in order. */
+  steps: readonly ReviewStep[];
+  ms: number;
+}
+
+export type Review = z.infer<typeof reviewSchema> & { readonly transcript?: ReviewTranscript };
+
+/** A reviewer that failed part way, with what it planned and read before it stopped. */
+export class ReviewFailedError extends Error {
+  constructor(
+    message: string,
+    readonly transcript: ReviewTranscript,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.name = "ReviewFailedError";
+  }
+}
 
 export interface Reviewer {
   review(input: ReviewInput): Promise<Review>;
@@ -127,7 +157,7 @@ export function llmReviewer(client: Pick<LlmClient, "json">): Reviewer {
   };
 }
 
-/** The reviewer Baret ships with: Qwen on Alibaba Cloud Model Studio. */
+/** The reviewer Baret ships with: Qwen on QwenCloud (Alibaba Cloud). */
 export function qwenReviewer(options: {
   apiKey: string;
   baseUrl?: string;
@@ -174,6 +204,7 @@ export async function requireApproval(
       decision: "veto",
       reason: `The reviewer gave no answer (${cause instanceof Error ? cause.message : "unknown error"}).`,
       mismatches: [],
+      ...(cause instanceof ReviewFailedError ? { transcript: cause.transcript } : {}),
     });
   }
   if (review.decision !== "approve") throw new ReviewerVetoError(review);

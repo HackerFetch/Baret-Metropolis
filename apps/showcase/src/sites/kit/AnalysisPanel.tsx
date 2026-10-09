@@ -11,6 +11,7 @@ import {
   TheAsk,
 } from "@baret/web-ui/components/CheckBlocks";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { PlainWords } from "@baret/web-ui/components/PlainWords";
 import { StaggerItem } from "@baret/web-ui/components/Reveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
@@ -29,6 +30,9 @@ import type { CheckState } from "./useCheck.js";
  * - live: Baret's verdict first, a line saying whether it matches the
  *   expected one, then the same blocks from the server's answer;
  * - failed: Blocked, and a note that the check did not finish.
+ *
+ * A sample result offers "Check it live" (useCheck sets it): the same
+ * request through Baret's server from a demo address, then labelled so.
  *
  * Shared by all six demo sites: each one passes its own copy.
  */
@@ -81,6 +85,9 @@ export function AnalysisPanel({
   // to send focus back to. Remember the control that opened it (a layout
   // effect runs before the sheet moves focus inside) and return there.
   const opener = useRef<HTMLElement | null>(null);
+  // "Check it live" unmounts itself; focus moves to the header first so a
+  // keyboard or screen-reader user is not dropped to <body>.
+  const header = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
     if (!open) return;
     const el = document.activeElement;
@@ -101,7 +108,11 @@ export function AnalysisPanel({
         }}
         className="gap-0 overflow-y-auto p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[520px]"
       >
-        <header className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5">
+        <header
+          ref={header}
+          tabIndex={-1}
+          className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5 outline-none"
+        >
           <div className="flex">
             <Tag tone="brand" size="sm">
               {common.brand.wordmark}
@@ -113,6 +124,25 @@ export function AnalysisPanel({
                 after a sample check does not relabel that sample. */}
             {(result ? result.source !== "sample" : live) ? panel.liveNote : panel.sample}
           </SheetDescription>
+          {/* A visitor with no wallet can still ask Baret's server: the same
+              request from a demo address, labelled as such. */}
+          {state.phase === "done" && state.demo ? (
+            <p className={`${T.small} text-[color:var(--fg)]`}>{panel.checkLive.note}</p>
+          ) : null}
+          {state.phase === "done" && state.checkLive ? (
+            <div className="flex">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  header.current?.focus();
+                  state.checkLive?.();
+                }}
+              >
+                {panel.checkLive.label}
+              </Button>
+            </div>
+          ) : null}
         </header>
 
         {/* The verdict is announced once it is ready; focus stays put. */}
@@ -172,7 +202,21 @@ export function AnalysisPanel({
               <StaggerItem index={1} className="grid">
                 <FindingList items={result.findings} />
               </StaggerItem>
-              <StaggerItem index={2} className="grid">
+              {/* KIMI's plain-words reading of a live verdict; nothing when it is unavailable. */}
+              {result.source === "live" && result.requestId ? (
+                <PlainWords
+                  requestId={result.requestId}
+                  verdict={result.verdict}
+                  // The wrapper exists only while the block renders, so a 503
+                  // leaves the panel's gaps exactly as before.
+                  wrap={(block) => (
+                    <StaggerItem index={2} className="grid">
+                      {block}
+                    </StaggerItem>
+                  )}
+                />
+              ) : null}
+              <StaggerItem index={3} className="grid">
                 <ChangeList rows={result.changes} approvals={result.approvals} />
               </StaggerItem>
               <ClaimsList claims={copy.claims} />

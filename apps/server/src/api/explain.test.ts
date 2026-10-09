@@ -7,7 +7,8 @@ import {
   explainPayload,
   kimiExplainer,
 } from "../application/explain.js";
-import { deps, FakeRpc } from "../testing/fake.js";
+import { ExplanationCache, VerdictCache } from "../application/verdicts.js";
+import { deps, FakeRpc, PEER, tx } from "../testing/fake.js";
 import { buildApp } from "./app.js";
 
 const SPENDER = "0xeB9EBB97BcD146FF1a4424490cbE8e19b7983888";
@@ -71,8 +72,18 @@ const explanation = {
   advice: "Approve only the amount this action needs, or do not sign.",
 };
 
-function appWith(explainer: Explainer | null) {
-  return buildApp({ ...deps(new FakeRpc()), explainer });
+function appWith(
+  explainer: Explainer | null,
+  caches: { verdicts?: VerdictCache; explanations?: ExplanationCache } = {},
+) {
+  const verdicts = caches.verdicts ?? new VerdictCache();
+  verdicts.remember(verdict);
+  return buildApp({
+    ...deps(new FakeRpc()),
+    explainer,
+    verdicts,
+    explanations: caches.explanations ?? new ExplanationCache(),
+  });
 }
 
 const fake = (explain: Explainer["explain"]): Explainer => ({
@@ -80,11 +91,14 @@ const fake = (explain: Explainer["explain"]): Explainer => ({
   explain,
 });
 
+const post = (app: Awaited<ReturnType<typeof appWith>>, payload: unknown) =>
+  app.inject({ method: "POST", url: "/v1/explain", payload: payload as object });
+
 describe("POST /v1/explain", () => {
   it("returns the model's words and the verdict's own decision", async () => {
     const explain = vi.fn(async () => explanation);
     const app = await appWith(fake(explain));
-    const res = await app.inject({ method: "POST", url: "/v1/explain", payload: { verdict } });
+    const res = await post(app, { requestId: "r-1" });
 
     expect(res.statusCode).toBe(200);
     const body = explainResponseSchema.parse(res.json());
@@ -94,26 +108,120 @@ describe("POST /v1/explain", () => {
       language: "en",
       model: { provider: "kimi", name: "kimi-k3" },
     });
+    expect(body.requestId).not.toBe("r-1");
     expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en");
   });
 
-  it("passes the language on", async () => {
+  it("explains its own copy of a posted verdict, never the posted one", async () => {
     const explain = vi.fn(async () => explanation);
     const app = await appWith(fake(explain));
-    const res = await app.inject({
-      method: "POST",
-      url: "/v1/explain",
-      payload: { verdict, language: "tr" },
-    });
-    expect(res.json().language).toBe("tr");
-    expect(explain).toHaveBeenCalledWith(verdict, "tr");
+    const forged = { ...verdict, decision: "safe", findings: [], firedRules: [] };
+    const res = await post(app, { verdict: forged });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().decision).toBe("blocked");
+    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en");
   });
 
-  it("answers 503 when no model is configured, never an invented explanation", async () => {
+  it("explains a verdict that came out of /v1/analyze", async () => {
+    const explain = vi.fn(async () => explanation);
+    const app = await appWith(fake(explain));
+    const analyzed = await app.inject({
+      method: "POST",
+      url: "/v1/analyze",
+      payload: tx({ to: PEER, value: "1" }),
+    });
+    expect(analyzed.statusCode).toBe(200);
+    const { meta, decision } = analyzed.json();
+    const res = await post(app, { requestId: meta.requestId });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().decision).toBe(decision);
+  });
+
+  it("answers 404 for a requestId this server never returned, without a model call", async () => {
+    const explain = vi.fn(async () => explanation);
+    const app = await appWith(fake(explain));
+    for (const payload of [
+      { requestId: "never-seen" },
+      { verdict: { ...verdict, meta: { ...verdict.meta, requestId: "never-seen" } } },
+    ]) {
+      const res = await post(app, payload);
+      expect(res.statusCode).toBe(404);
+      expect(res.json()).toEqual({
+        error: "verdict_unknown",
+        message: "this server has no verdict with that requestId; analyze the transaction again",
+      });
+    }
+    expect(explain).not.toHaveBeenCalled();
+  });
+
+  it("makes one model call for two requests that arrive together", async () => {
+    let release: (e: typeof explanation) => void = () => {};
+    const explain = vi.fn(
+      () =>
+        new Promise<typeof explanation>((resolve) => {
+          release = resolve;
+        }),
+    );
+    const app = await appWith(fake(explain));
+    const both = Promise.all([post(app, { requestId: "r-1" }), post(app, { requestId: "r-1" })]);
+    await vi.waitFor(() => expect(explain).toHaveBeenCalled());
+    release(explanation);
+    const [a, b] = await both;
+
+    expect(a.statusCode).toBe(200);
+    expect(b.json().explanation).toEqual(a.json().explanation);
+    expect(explain).toHaveBeenCalledOnce();
+  });
+
+  it("passes the language on, and keeps each language apart", async () => {
+    const explain = vi.fn(async () => explanation);
+    const app = await appWith(fake(explain));
+    const tr = await post(app, { requestId: "r-1", language: "tr" });
+    const zh = await post(app, { requestId: "r-1", language: "zh" });
+    expect(tr.json().language).toBe("tr");
+    expect(zh.json().language).toBe("zh");
+    expect(explain).toHaveBeenNthCalledWith(1, verdict, "tr");
+    expect(explain).toHaveBeenNthCalledWith(2, verdict, "zh");
+  });
+
+  it("does not keep a failed answer: the next request asks the model again", async () => {
+    const explain = vi
+      .fn<Explainer["explain"]>()
+      .mockRejectedValueOnce(new LlmUnavailableError("kimi answered 429", 429))
+      .mockResolvedValueOnce(explanation);
+    const app = await appWith(fake(explain));
+
+    expect((await post(app, { requestId: "r-1" })).statusCode).toBe(503);
+    expect((await post(app, { requestId: "r-1" })).statusCode).toBe(200);
+    expect(explain).toHaveBeenCalledTimes(2);
+  });
+
+  it("forgets verdicts and explanations after ten minutes", async () => {
+    let now = 0;
+    const clock = () => now;
+    const verdicts = new VerdictCache({ now: clock });
+    const explanations = new ExplanationCache({ now: clock });
+    const explain = vi.fn(async () => explanation);
+    const app = await appWith(fake(explain), { verdicts, explanations });
+
+    await post(app, { requestId: "r-1" });
+    now += 9 * 60_000;
+    expect((await post(app, { requestId: "r-1" })).statusCode).toBe(200);
+    expect(explain).toHaveBeenCalledOnce();
+
+    now += 2 * 60_000;
+    expect((await post(app, { requestId: "r-1" })).statusCode).toBe(404);
+    expect(explanations.size).toBeLessThanOrEqual(1);
+  });
+
+  it("answers 503 when no model is configured, before looking the verdict up", async () => {
     const app = await appWith(null);
-    const res = await app.inject({ method: "POST", url: "/v1/explain", payload: { verdict } });
-    expect(res.statusCode).toBe(503);
-    expect(res.json().error).toBe("explain_unavailable");
+    for (const payload of [{ requestId: "r-1" }, { requestId: "never-seen" }]) {
+      const res = await post(app, payload);
+      expect(res.statusCode).toBe(503);
+      expect(res.json().error).toBe("explain_unavailable");
+    }
   });
 
   it("answers 503 when the model gives no usable answer", async () => {
@@ -122,7 +230,7 @@ describe("POST /v1/explain", () => {
         throw new LlmUnavailableError("kimi answered 429", 429);
       }),
     );
-    const res = await app.inject({ method: "POST", url: "/v1/explain", payload: { verdict } });
+    const res = await post(app, { verdict });
     expect(res.statusCode).toBe(503);
     expect(res.json().error).toBe("explain_unavailable");
   });
@@ -130,12 +238,14 @@ describe("POST /v1/explain", () => {
   it.each([
     ["no verdict", {}],
     ["a verdict off the analyze contract", { verdict: { decision: "blocked" } }],
-    ["an unknown language", { verdict, language: "xx" }],
+    ["an empty requestId", { requestId: "" }],
+    ["both forms at once", { requestId: "r-1", verdict }],
+    ["an unknown language", { requestId: "r-1", language: "xx" }],
     ["an extra field", { verdict, decision: "safe" }],
   ])("rejects %s", async (_name, payload) => {
     const explain = vi.fn(async () => explanation);
     const app = await appWith(fake(explain));
-    const res = await app.inject({ method: "POST", url: "/v1/explain", payload });
+    const res = await post(app, payload);
     expect(res.statusCode).toBe(400);
     expect(explain).not.toHaveBeenCalled();
   });
@@ -144,6 +254,18 @@ describe("POST /v1/explain", () => {
     const app = await appWith(null);
     const ready = await app.inject({ method: "GET", url: "/health/ready" });
     expect(ready.json().networks[0].configured.explain).toBe(false);
+  });
+});
+
+describe("the explanation cache", () => {
+  it("drops the oldest verdict past its size cap", () => {
+    const cache = new VerdictCache({ maxEntries: 2 });
+    for (const id of ["a", "b", "c"]) {
+      cache.remember({ ...verdict, meta: { ...verdict.meta, requestId: id } });
+    }
+    expect(cache.get("a")).toBeUndefined();
+    expect(cache.get("c")?.meta.requestId).toBe("c");
+    expect(cache.size).toBe(2);
   });
 });
 
@@ -192,7 +314,26 @@ describe("kimiExplainer", () => {
     expect(explainer.model).toEqual({ provider: "kimi", name: "kimi-k3" });
     const [url, init] = vi.mocked(doFetch).mock.calls[0] ?? [];
     expect(url).toBe("https://api.moonshot.ai/v1/chat/completions");
-    expect(JSON.parse(String(init?.body)).messages[0].content).toBe(EXPLAIN_SYSTEM_PROMPT);
+    const body = JSON.parse(String(init?.body));
+    expect(body.messages[0].content).toBe(EXPLAIN_SYSTEM_PROMPT);
+    expect(body).toMatchObject({ reasoning_effort: "low", max_completion_tokens: 3000 });
+  });
+
+  it("switches reasoning off for a k2 model set through KIMI_MODEL", async () => {
+    const doFetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ choices: [{ message: { content: JSON.stringify(explanation) } }] }),
+        ),
+    ) as unknown as typeof fetch;
+    const explainer = kimiExplainer({ apiKey: "test-key", model: "kimi-k2.6", fetch: doFetch });
+
+    await expect(explainer.explain(verdict, "en")).resolves.toEqual(explanation);
+    expect(explainer.model).toEqual({ provider: "kimi", name: "kimi-k2.6" });
+    const body = JSON.parse(String(vi.mocked(doFetch).mock.calls[0]?.[1]?.body));
+    expect(body).toMatchObject({ thinking: { type: "disabled" }, max_tokens: 3000 });
+    expect(body).not.toHaveProperty("reasoning_effort");
+    expect(body).not.toHaveProperty("max_completion_tokens");
   });
 
   it("has no answer when the model tries to return a decision of its own", async () => {

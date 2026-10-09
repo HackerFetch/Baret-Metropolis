@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
-import { asVerdict } from "./components/CheckBlocks.js";
+import { asVerdict, FindingList } from "./components/CheckBlocks.js";
 import { CopyButton } from "./components/CopyButton.js";
 import { Disclosures } from "./components/Disclosures.js";
 import { LinkButton } from "./components/LinkButton.js";
@@ -26,6 +26,18 @@ describe("web-ui helpers", () => {
 
   it("derives a section's heading id from its anchor", () => {
     expect(titleIdOf("agents")).toBe("agents-title");
+  });
+
+  it("fills a finding's title as well as its sentence", () => {
+    const html = renderToStaticMarkup(
+      <FindingList
+        items={[
+          { code: "POST_BALANCE_TOO_LOW", values: { actual: "0", limit: "0.1", asset: "MON" } },
+        ]}
+      />,
+    );
+    expect(html).toContain("Below your MON floor");
+    expect(html).not.toContain("{asset}");
   });
 });
 

@@ -1,21 +1,23 @@
 /**
  * /docs on apps/showcase. An index, not a doc.
  *
- * Section order (page plan, 2026-09-28): hero, eleven doc cards in a grouped
+ * Section order (page plan, 2026-09-28): hero, thirteen doc cards in a grouped
  * grid, summary with known limitations, CTA.
  *
  * Research notes:
  *  - The best docs indexes put a router group first, then expand. Under 20
- *    cards reads as curated, over 40 reads as a sitemap. We have 11.
+ *    cards reads as curated, over 40 reads as a sitemap. We have 13.
  *  - A good card is a noun the reader is already searching for, plus one
  *    sentence that starts with a verb and names an artifact.
  *  - Groups are named after jobs, not after the folder they live in.
  *  - The page renders each group's title as its anchor, so renaming a group
  *    changes its link. /agents links to #contracts-and-payments.
  *
- * Every card points at a real file in docs/, one card per file, matching
- * docs/FRONTEND.md section 4.2. When a file is added there, add a card here in
- * the same commit.
+ * Every card points at a real file in this repository, one card per file,
+ * matching docs/FRONTEND.md section 4.2. Eleven cards point into docs/; "For
+ * developers" (H9, 2026-10-09) points at the two package READMEs instead,
+ * since those are the quickstart a developer calling the API actually wants.
+ * When a file is added there, add a card here in the same commit.
  */
 
 export const docs = {
@@ -138,6 +140,22 @@ export const docs = {
           title: "Decision log",
           body: "Read each architecture and scope decision with its reason and the options it ruled out.",
           file: "docs/DECISIONS.md",
+        },
+      ],
+    },
+    {
+      title: "For developers",
+      body: "Calling Baret from your own code, with or without the SDK.",
+      cards: [
+        {
+          title: "Guard SDK",
+          body: "Install, the smallest working call against the live API, and what fail-closed means for your code.",
+          file: "packages/guard/README.md",
+        },
+        {
+          title: "Agent kit",
+          body: "Give an agent a signer that cannot sign past Baret's verdict, plus the baret CLI.",
+          file: "packages/agent-kit/README.md",
         },
       ],
     },

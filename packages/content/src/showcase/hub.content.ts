@@ -266,6 +266,14 @@ export const hub = {
       lesson: "Take this with you",
       /** Under the title when the answer came from Baret's server. */
       liveNote: "Baret's answer from its server, for this exact request on Monad testnet.",
+      /**
+       * On a prepared answer: the same request through Baret's server from a
+       * fixed testnet address, for a visitor with no wallet.
+       */
+      checkLive: {
+        label: "Check it live",
+        note: "Checked live from a demo address, not your wallet.",
+      },
       /** When the check did not finish: no answer means Blocked. */
       failed: {
         title: "The check did not finish",

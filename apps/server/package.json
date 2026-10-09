@@ -13,6 +13,7 @@
     "verify:wallet": "tsx scripts/verify-wallet.ts"
   },
   "dependencies": {
+    "@baret/agent-kit": "workspace:*",
     "@baret/content": "workspace:*",
     "@baret/guard": "workspace:*",
     "@baret/llm": "workspace:*",
@@ -24,7 +25,6 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@baret/agent-kit": "workspace:*",
     "@baret/demo": "workspace:*",
     "@baret/wallet-core": "workspace:*",
     "@types/node": "24.10.1",

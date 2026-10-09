@@ -250,7 +250,7 @@ describe("what the model is shown", () => {
 });
 
 describe("qwenReviewer", () => {
-  it("asks Qwen on Model Studio and accepts only the review shape", async () => {
+  it("asks Qwen on QwenCloud and accepts only the review shape", async () => {
     const doFetch = vi.fn(
       async () =>
         new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(veto) } }] })),
@@ -266,7 +266,7 @@ describe("qwenReviewer", () => {
       }),
     ).resolves.toEqual(veto);
     const [url, init] = vi.mocked(doFetch).mock.calls[0] ?? [];
-    expect(String(url)).toContain("dashscope-intl.aliyuncs.com/compatible-mode/v1");
+    expect(String(url)).toContain("maas.qwencloudapi.com/compatible-mode/v1");
     expect(JSON.parse(String(init?.body)).model).toBe("qwen3.8-max");
   });
 
