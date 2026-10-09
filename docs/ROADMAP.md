@@ -82,7 +82,7 @@ Two things, and both are needed:
 ### Where things stand (checked 2026-10-08 against the live system, commit `2965c57`)
 
 - Live: the API on Render, the showcase and the wallet site on Vercel, the extension zips, the Envio indexer. `verify:demo` agrees with the live API on 20 of 20 scenarios. CI on `main` is green.
-- **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`).
+- **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`). Since M1 (2026-10-09, branch `novaswap-sign`) NovaSwap is the exception: "Sign with your wallet" sends the checked request through the connected wallet on Monad testnet. The other five sites still sign nothing.
 - **Baret is a panel on the page, not a wallet that refuses.** The extension's background and provider are empty stubs (cut). `apps/wallet` runs on sample data: no app imports `@baret/wallet-core`. No site can open the wallet's connect or sign window.
 - No screen reads `/v1/audit/*`. The agents playground answers its six actions from samples.
 - Two of the six attacks answered Caution under Balanced (OrbitYield's silent pool, LaunchPad's proxy sale). Since D-033 (2026-10-09) both are Blocked.
@@ -134,7 +134,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving | Fri 9 | | main track |
+| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving. **Built 2026-10-09** on branch `novaswap-sign`, checked end to end on a fork of Monad testnet; live once merged | Fri 9 | | main track |
 | M2 | The comparison flow and its copy: same site, same button, two wallets | Fri 9 | M1 | main track |
 | M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it | Sat 10 | E3, M1 | main track, Mera UX |
 | M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | Fri 9 to Sat 10 | E7 for production | KIMI |

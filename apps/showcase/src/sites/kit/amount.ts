@@ -15,16 +15,28 @@ export function parseAmount(raw: string): number | null {
 }
 
 /**
+ * An amount in a token's base units, for a live request: plain digits with
+ * at most `decimals` decimals ("20", "1,5"). Exponents, hex, signs and zero
+ * are refused (null), so what the wallet sends is exactly what the visitor
+ * typed.
+ */
+export function toUnits(raw: string, decimals: number): bigint | null {
+  const text = raw.replace(",", ".").trim();
+  const pattern = decimals > 0 ? new RegExp(`^\\d+(?:\\.\\d{1,${decimals}})?$`) : /^\d+$/;
+  if (!pattern.test(text)) return null;
+  const [whole = "0", fraction = ""] = text.split(".");
+  const units =
+    BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction.padEnd(decimals, "0") || "0");
+  return units > 0n ? units : null;
+}
+
+/**
  * The same amount in wei, for a live request: plain digits with at most 18
  * decimals ("12.5", "12,5"). Exponents, hex and signs are refused (null),
  * so what Baret checks is exactly what the visitor typed.
  */
 export function toWei(raw: string): bigint | null {
-  const text = raw.replace(",", ".").trim();
-  if (!/^\d+(?:\.\d{1,18})?$/.test(text)) return null;
-  const [whole = "0", fraction = ""] = text.split(".");
-  const wei = BigInt(whole) * 10n ** 18n + BigInt(fraction.padEnd(18, "0"));
-  return wei > 0n ? wei : null;
+  return toUnits(raw, 18);
 }
 
 /** Two decimals, no grouping: what the cards and the panel print. */

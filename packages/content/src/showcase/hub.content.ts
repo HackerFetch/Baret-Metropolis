@@ -163,7 +163,7 @@ export const hub = {
      */
     wallet: {
       title: "Connect a wallet",
-      body: "Baret checks each request on this page from the address you connect. Nothing is signed or sent.",
+      body: "Baret checks each request on this page from the address you connect. Nothing is signed unless you sign it in your wallet.",
       looking: "Looking for wallets in this browser...",
       baret: {
         name: "Baret",
@@ -303,6 +303,47 @@ export const hub = {
       },
       again: { label: "Try the other version" },
       share: { label: "Copy the result", done: "Copied" },
+    },
+
+    /**
+     * A site's second button beside its main one: the same request, sent
+     * straight to the connected wallet with no Baret check first. Shared by
+     * every site that has it, NovaSwap first. {wallet} is the wallet's own name.
+     */
+    sign: {
+      action: "Sign with your wallet",
+      note: "Sends this request straight to your wallet, with no Baret check. These are real transactions on Monad testnet, with test tokens that have no value.",
+      title: "In your wallet",
+      status: {
+        waiting: "Next",
+        confirm: "Confirm in {wallet}...",
+        pending: "Waiting for Monad testnet...",
+        done: "Confirmed",
+        declined: "Declined",
+        unconfirmed: "Not confirmed yet",
+        failed: "Failed",
+      },
+      /** The block explorer a transaction hash opens in. */
+      explorer: "https://testnet.monadexplorer.com",
+      view: "View {hash} on the explorer",
+      balance: "{token} in your wallet: {before} before, {after} after.",
+      /** Why a press did not start: shown under the button with the action that fixes it. */
+      needs: {
+        wallet: "Connect a wallet to sign. The sample wallet cannot sign.",
+        network: "Your wallet is on another network. Switch it to Monad testnet to sign.",
+      },
+      errors: {
+        rejected: "You declined in {wallet}. Nothing more was sent.",
+        pending: "{wallet} already has a request open. Finish it there, then try again.",
+        network: "Your wallet is on another network. Switch it to Monad testnet, then try again.",
+        funds: "Your wallet does not hold enough test MON for the network fee.",
+        account: "The connected account changed. Press the button again.",
+        reverted: "Monad testnet ran the transaction and it failed. Nothing more was sent.",
+        timeout: "Monad testnet has not confirmed it yet. Follow it on the explorer.",
+        failed: "The wallet did not send it. Try again in a moment.",
+      },
+      /** Read out when a step changes: "Step 1 of 2, Confirmed". */
+      announce: "Step {n} of {total}, {status}",
     },
   },
 } as const;
