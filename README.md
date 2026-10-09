@@ -10,7 +10,7 @@ This repository and this document set are meant for **live** tracking. They were
 
 | Area | Status |
 |---|---|
-| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Open: the demo sites sign nothing yet, the wallet app is on sample data, no screen reads the indexer, no developer quickstart. **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
+| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Open: only NovaSwap signs through the wallet (M1, 2026-10-09; the other demo sites sign nothing yet), the wallet app is on sample data, no screen reads the indexer, no developer quickstart. **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 46 files in `packages/content`, one per page or frame, complete |

@@ -104,6 +104,13 @@ function map(response: AnalyzeResponse, context: SignContext, now: number): Sign
     .flatMap((c) => {
       const delta = BigInt(c.delta);
       if (delta === 0n) return [];
+      // The wallet's own MON going out includes gas, and the fee has its own
+      // row: show the call's value instead, and no row when it sends none.
+      if (c.asset.kind === "native" && delta < 0n) {
+        const sent = BigInt(context.raw.value);
+        if (sent <= 0n) return [];
+        return [{ direction: "out", value: display(sent, c.asset.decimals), unit: "MON" } as const];
+      }
       return [
         {
           direction: delta < 0n ? "out" : "in",

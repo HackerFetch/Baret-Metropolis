@@ -1,5 +1,6 @@
 import { hub } from "@baret/content";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Reveal } from "@baret/web-ui/components/Reveal";
 import { Section, titleIdOf } from "@baret/web-ui/components/Section";
 import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
@@ -9,11 +10,11 @@ import type { JSX } from "react";
 import { HUB_ART } from "../shared/assets.js";
 
 /**
- * Same site, same button, two wallets: a real table with one row per
- * aspect, the plain wallet's answer muted and Baret's in --fg. Two blank
- * tags on black sit beside it from 1024 px (two wallets, one request). On
- * phones the table keeps its three columns at a smaller size, so nothing
- * scrolls sideways at 320 px.
+ * Same request, with and without a check: a real table with one row per
+ * aspect, the plain wallet's answer muted and Baret's in --fg, then the way
+ * to NovaSwap, where both paths run (M2). Two blank tags on black sit beside
+ * it from 1024 px (two paths, one request). On phones the table keeps its
+ * three columns at a smaller size, so nothing scrolls sideways at 320 px.
  */
 
 const ID = "difference";
@@ -73,6 +74,15 @@ export function Difference(): JSX.Element {
               ))}
             </tbody>
           </table>
+          <div className="mt-8">
+            <LinkButton
+              href={comparison.action.href}
+              label={comparison.action.label}
+              size="lg"
+              icon="arrow-right"
+              fullOnPhone
+            />
+          </div>
         </Reveal>
       </div>
     </Section>

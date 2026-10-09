@@ -11,6 +11,19 @@ export const walletHome = {
       "Your MON on Monad testnet. Testnet tokens have no price, so there is no USD estimate.",
     unavailable: "Price unavailable",
     error: "Can't read your balance from Monad. Try again in a moment.",
+    /** Live: before the first read answers. Never a zero in its place. */
+    loading: "Reading your balance from Monad.",
+  },
+
+  /** Right after onboarding: the card a new wallet shows until the user hides it. */
+  setup: {
+    title: "Your wallet is ready",
+    passkey: "This passkey is the only way in. Keep it: there is no phrase to fall back on.",
+    fund: "Network fees are paid in testnet MON, which the Monad faucet gives away. Copy your address, then open the faucet.",
+    watching: "Watching your address. MON from the faucet shows up here on its own.",
+    rules: "Baret checks every request against the Balanced rules. You can change any rule later.",
+    rulesAction: { label: "See your rules", href: "/policies" },
+    dismiss: "Hide this",
   },
 
   actions: {
@@ -56,11 +69,16 @@ export const walletHome = {
       label: "Revoke",
       note: "Revoking sends a transaction, so it costs a small network fee.",
     },
+    /** Live: no revoke call exists on this page yet. */
+    noteLive:
+      "Your agent is managed on its own page. Token allowances you gave sites are not listed here yet.",
     disconnect: "Disconnect",
     manageAgent: { label: "Manage your agent", href: "/agents" },
     empty: {
       title: "No open permissions",
       body: "When you give a site an allowance or set up an agent, it shows up here with a revoke button.",
+      /** Live: only the agent is listed, with a link to its page. */
+      bodyLive: "When you set up an agent, it shows up here with a link to manage it.",
     },
   },
 

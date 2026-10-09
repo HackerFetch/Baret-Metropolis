@@ -9,13 +9,19 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { Check, X } from "lucide-react";
 import { type JSX, useId, useState } from "react";
-import { RequestFrame, SamplePicker } from "../request/RequestFrame.js";
+import { useLive } from "../live/live.js";
+import { RequestFrame, SamplePicker, SiteStatus } from "../request/RequestFrame.js";
+import { useSiteRequest } from "../request/siteRequest.js";
 
 /**
  * /connect, the window a site opens to ask for the account's address. It says
  * what the site will be able to do and, with the same weight, what it will
  * not. The site address is the one the browser reports. Two samples: a first
  * visit over a secure connection, and a site with no secure connection.
+ *
+ * Live, a site opened it (request/siteRequest.tsx): the same screen for the
+ * site's origin, and Connect or Decline goes back to the site. Live with no
+ * site, the window says how it is opened.
  */
 
 const OPTIONS = [
@@ -23,7 +29,7 @@ const OPTIONS = [
   { value: "insecure", label: connect.warnings.insecure.title },
 ] as const satisfies readonly { value: ConnectRequest["id"]; label: string }[];
 
-type Result = "connected" | "connectedOnce" | "declined";
+type Result = "connected" | "connectedOnce" | "connectedSite" | "declined";
 
 function Points({
   title,
@@ -61,9 +67,20 @@ function Points({
 function Request({
   request,
   onAgain,
+  onAnswer,
+  site = false,
 }: {
   request: ConnectRequest;
-  onAgain: () => void;
+  /**
+   * A site's own window: the site keeps the connection, and a fresh window
+   * cannot know an earlier visit, so no "Don't ask again" and no "first
+   * time" warning.
+   */
+  site?: boolean;
+  /** The sample: back to the picker from the result. */
+  onAgain?: () => void;
+  /** Live: tells the site the answer; the window then says it went back. */
+  onAnswer?: (connected: boolean) => void;
 }): JSX.Element {
   const { state, dispatch } = useWallet();
   const titleId = useId();
@@ -72,6 +89,7 @@ function Request({
   const origin = request.origin.replace(/^https?:\/\//, "");
 
   function answer(next: Result): void {
+    onAnswer?.(next === "connected");
     if (next === "connected") {
       const item = {
         id: `connect-${origin}-${Date.now()}`,
@@ -83,9 +101,9 @@ function Request({
         changes: [],
       };
       // Only "Don't ask again" keeps the site as a permission; otherwise it is logged and asks next time.
-      if (remember) dispatch({ type: "connect", origin, item });
+      if (remember && !site) dispatch({ type: "connect", origin, item });
       else dispatch({ type: "log", item });
-      setResult(remember ? "connected" : "connectedOnce");
+      setResult(site ? "connectedSite" : remember ? "connected" : "connectedOnce");
       return;
     }
     setResult(next);
@@ -106,11 +124,13 @@ function Request({
         <p role="status" className={T.body}>
           {fill(connect.result[result], { origin })}
         </p>
-        <div className="flex">
-          <Button type="button" variant="ghost" onClick={onAgain}>
-            {common.actions.back}
-          </Button>
-        </div>
+        {onAgain ? (
+          <div className="flex">
+            <Button type="button" variant="ghost" onClick={onAgain}>
+              {common.actions.back}
+            </Button>
+          </div>
+        ) : null}
       </article>
     );
   }
@@ -145,12 +165,14 @@ function Request({
             <p className={T.body}>{connect.warnings.insecure.body}</p>
           </div>
         ) : null}
-        <div className="grid gap-1 border-l-4 border-[color:var(--rule-strong)] pl-4">
-          <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
-            {connect.warnings.firstTime.title}
-          </p>
-          <p className={T.body}>{connect.warnings.firstTime.body}</p>
-        </div>
+        {site ? null : (
+          <div className="grid gap-1 border-l-4 border-[color:var(--rule-strong)] pl-4">
+            <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
+              {connect.warnings.firstTime.title}
+            </p>
+            <p className={T.body}>{connect.warnings.firstTime.body}</p>
+          </div>
+        )}
         <p className="text-base text-[color:var(--fg)]">{connect.note}</p>
       </div>
 
@@ -166,16 +188,20 @@ function Request({
             {truncateAddress(state.address)}
           </span>
         </p>
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-[color:var(--fg)]">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(event) => setRemember(event.currentTarget.checked)}
-            className="size-5 accent-[color:var(--fg)]"
-          />
-          {connect.remember.label}
-        </label>
-        <p className={T.small}>{connect.remember.hint}</p>
+        {site ? null : (
+          <>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-[color:var(--fg)]">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(event) => setRemember(event.currentTarget.checked)}
+                className="size-5 accent-[color:var(--fg)]"
+              />
+              {connect.remember.label}
+            </label>
+            <p className={T.small}>{connect.remember.hint}</p>
+          </>
+        )}
       </div>
 
       <footer className="grid gap-3 border-t border-[color:var(--rule-strong)] px-5 py-5 sm:grid-cols-2 md:px-6">
@@ -190,7 +216,51 @@ function Request({
   );
 }
 
-export function Component() {
+/** A connection that is not secure, unless it stays on this device. */
+function secureOf(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    if (url.protocol === "https:") return true;
+    return ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** The site's request: its origin as the browser reports it, answered once. */
+function SiteConnect(): JSX.Element {
+  const { state } = useWallet();
+  const site = useSiteRequest();
+  const incoming = site.request?.type === "connect" ? site.request : null;
+  const origin = site.origin;
+  if (!incoming || !origin) return <SiteStatus status="waiting" />;
+  const secure = secureOf(origin);
+  return (
+    <>
+      <Request
+        site
+        request={{ id: secure ? "firstTime" : "insecure", origin, secure }}
+        onAnswer={(connected) =>
+          site.reply(
+            connected && state.address
+              ? { type: "connected", id: incoming.id, address: state.address as `0x${string}` }
+              : {
+                  type: "refused",
+                  id: incoming.id,
+                  reason: "declined",
+                  address: null,
+                  findings: [],
+                },
+          )
+        }
+      />
+      {site.answered ? <SiteStatus status="answered" origin={origin} /> : null}
+    </>
+  );
+}
+
+/** The sample: two sites, one with no secure connection. */
+function Sample(): JSX.Element {
   const [id, setId] = useState<ConnectRequest["id"]>("firstTime");
   const [run, setRun] = useState(0);
   const request = CONNECT_REQUESTS.find((r) => r.id === id) ?? CONNECT_REQUESTS[0];
@@ -199,6 +269,17 @@ export function Component() {
       {request ? (
         <Request key={`${id}-${run}`} request={request} onAgain={() => setRun((n) => n + 1)} />
       ) : null}
+    </RequestFrame>
+  );
+}
+
+export function Component() {
+  const live = useLive();
+  const { site } = useSiteRequest();
+  if (!live) return <Sample />;
+  return (
+    <RequestFrame picker={null}>
+      {site ? <SiteConnect /> : <SiteStatus status="none" />}
     </RequestFrame>
   );
 }

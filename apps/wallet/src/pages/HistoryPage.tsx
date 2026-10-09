@@ -191,8 +191,26 @@ export function Component() {
   const [open, setOpen] = useState<string | null>(null);
   const rows = state.activity.filter((item) => matches(item, filter));
 
+  // Live with MON read and at zero: nothing can be sent yet, so the first step
+  // is the faucet, in a new tab so this session stays open. Unread is not zero.
+  const mon = state.assets.find((asset) => asset.symbol === "MON");
+  const noFunds =
+    state.live && ready(state, "balances") && mon !== undefined && Number(mon.balance) === 0;
+
   const empty =
-    state.activity.length === 0 ? (
+    state.activity.length === 0 && noFunds ? (
+      <Empty
+        title={history.empty.all.title}
+        body={history.empty.noFunds.body}
+        action={
+          <LinkButton
+            href={walletFrame.links.faucet}
+            label={history.empty.noFunds.action.label}
+            newTab
+          />
+        }
+      />
+    ) : state.activity.length === 0 ? (
       <Empty
         title={history.empty.all.title}
         body={history.empty.all.body}
@@ -273,7 +291,12 @@ export function Component() {
 
         <div className={loaded ? "grid gap-2" : "hidden"}>
           <div className="flex">
-            <Button type="button" variant="ghost" onClick={() => download(toCsv(state.activity))}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={state.activity.length === 0}
+              onClick={() => download(toCsv(state.activity))}
+            >
               {history.export.label}
             </Button>
           </div>
