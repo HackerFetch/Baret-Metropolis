@@ -109,10 +109,16 @@ export const hub = {
   comparison: {
     /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "The difference",
-    title: "Same site, same button, two wallets.",
-    body: "Every site works with any wallet in the picker. Run the attack version with the wallet you use today, then again with Baret. No wallet is singled out here. The difference is what gets read before you sign.",
-    columns: { without: "A wallet with no pre-sign check", with: "Baret" },
+    title: "Same request, with and without a check.",
+    body: "On NovaSwap the attack's request can go two ways. Sign with your wallet sends it straight to the wallet you use today; sign both steps and the dUSDC leaves. The site's own button sends the same request through Baret's check first, and it is stopped before anything is signed. No wallet is singled out here. Baret is a check any wallet can call before it signs.",
+    columns: { without: "A wallet with no pre-sign check", with: "With Baret's check" },
     rows: [
+      {
+        aspect: "The NovaSwap attack",
+        without:
+          "Two requests to sign. The second takes the whole dUSDC balance to the look-alike.",
+        with: "Stopped at the first request: an unlimited allowance to a reported spender. Nothing is signed.",
+      },
       {
         aspect: "What you see",
         without: "A contract address, an amount and a confirm button.",
@@ -134,6 +140,8 @@ export const hub = {
         with: "Can't reach Baret. It counts as Blocked and nothing is signed.",
       },
     ],
+    /** Under the table: the site where both paths run. */
+    action: { label: "Try both on NovaSwap", href: "/novaswap" },
   },
 
   cta: {
@@ -290,7 +298,7 @@ export const hub = {
     outcome: {
       stopped: {
         title: "Nothing was signed",
-        body: "The transaction was never sent. Your funds never moved.",
+        body: "Through Baret, this transaction was never sent, so nothing moved.",
       },
       declined: {
         title: "You declined",
@@ -311,6 +319,8 @@ export const hub = {
      * every site that has it, NovaSwap first. {wallet} is the wallet's own name.
      */
     sign: {
+      /** Above the second button: what the site's main button does instead. */
+      checked: "The site's button above goes through Baret's check first.",
       action: "Sign with your wallet",
       note: "Sends this request straight to your wallet, with no Baret check. These are real transactions on Monad testnet, with test tokens that have no value.",
       title: "In your wallet",
