@@ -41,9 +41,19 @@ export function toolSummary(step: ToolStep): string {
   if (!step.ok) return typeof step.result === "string" ? step.result : copy.toolError;
   const result = step.result as Record<string, unknown> | null;
   if (!result || typeof result !== "object") {
-    // A result cut at 2000 chars does not parse; keep the summary to one line.
+    // A result cut at 2000 chars does not parse; its first fields still read.
     const text = String(step.result ?? "");
+    const fits = /"fits":(true|false)/.exec(text)?.[1];
+    if (step.tool === "read_vault" && fits)
+      return fits === "true" ? copy.summary.fits : copy.summary.doesNotFit;
     return text.length > 120 ? `${text.slice(0, 117)}...` : text;
+  }
+  if (step.tool === "check_reputation") {
+    return result.listed === true ? copy.summary.listed : copy.summary.notListed;
+  }
+  if (step.tool === "read_vault") {
+    const fits = (result.thisPayment as { fits?: unknown } | null | undefined)?.fits;
+    if (typeof fits === "boolean") return fits ? copy.summary.fits : copy.summary.doesNotFit;
   }
   if (step.tool === "decode_transaction") {
     const args = (result.args ?? {}) as Record<string, unknown>;

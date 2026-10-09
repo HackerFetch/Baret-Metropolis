@@ -348,13 +348,14 @@ export function reviewTools(input: ReviewInput, options: ReviewToolsOptions): Ll
         const payments = Array.isArray(body.payments) ? body.payments : [];
         const paid = paidInWindows(payments, now);
         return {
+          // First: the fact the decision turns on, and what a cut result keeps.
+          thisPayment: thisPayment(input, address, body.vault, paid),
           now,
           vault: body.vault,
           recentActivity: newest(body.activity),
           paidByMerchant: paid,
           // At the limit, older payments inside the window may be missing.
           windowsComplete: payments.length < PAYMENT_LIMIT,
-          thisPayment: thisPayment(input, address, body.vault, paid),
         };
       },
     },

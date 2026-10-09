@@ -1,3 +1,4 @@
+import { review as copy } from "@baret/content";
 import { describe, expect, it, vi } from "vitest";
 import { progressLine } from "../pages/ReviewPage.js";
 import { IDLE, reduce, type TimelineAction, type TimelineState } from "./reducer.js";
@@ -170,6 +171,29 @@ describe("timeline reducer", () => {
     expect(toolSummary(step).length).toBeLessThanOrEqual(120);
   });
 
+  it("sums up the reputation and vault reads in plain words, even from a cut result", () => {
+    const step = (tool: string, result: unknown) => ({
+      tool,
+      arguments: {},
+      ok: true,
+      result,
+      ms: 1,
+    });
+    expect(toolSummary(step("check_reputation", { listed: false }))).toBe(
+      copy.timeline.summary.notListed,
+    );
+    expect(toolSummary(step("check_reputation", { listed: true, entry: {} }))).toBe(
+      copy.timeline.summary.listed,
+    );
+    expect(toolSummary(step("read_vault", { thisPayment: { fits: true }, now: 1 }))).toBe(
+      copy.timeline.summary.fits,
+    );
+    const cut = JSON.stringify({ thisPayment: { fits: false }, vault: { x: "y".repeat(3000) } });
+    expect(toolSummary(step("read_vault", cut.slice(0, 2000)))).toBe(
+      copy.timeline.summary.doesNotFit,
+    );
+  });
+
   it("reports a send that never left the server as failed, with no hash", () => {
     const state = replay([
       { type: "begin", scenario: "honest" },
@@ -214,7 +238,7 @@ describe("timeline reducer", () => {
 describe("recorded runs", () => {
   it("keeps the real tx for the honest case and nothing sent for the others", () => {
     expect(RECORDED.honest.sent?.hash).toBe(
-      "0x206bbd5cc3ee0ee092b52076d9da054b53e50b134c173427f87a7dc08821095d",
+      "0xb4339027d5b38d32a04c15424ca2a4501c996dad462efef728aa9be3b054e528",
     );
     expect(RECORDED.honest.review?.decision).toBe("approve");
     expect(RECORDED.overpay.review?.decision).toBe("veto");

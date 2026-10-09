@@ -66,6 +66,13 @@ export const review = {
     toolOk: "ok",
     toolError: "error",
     fullResult: "Full result",
+    /** One-line summaries of what a tool answered. */
+    summary: {
+      listed: "Listed in the reputation registry",
+      notListed: "Not listed in the reputation registry",
+      fits: "This payment fits the merchant's caps",
+      doesNotFit: "This payment does not fit the merchant's caps",
+    },
     noTools: "The model decided from its plan and the intent, without calling a tool.",
     decision: "The decision",
     approve: "Approve",
