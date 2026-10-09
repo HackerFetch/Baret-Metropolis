@@ -21,7 +21,13 @@ export function fileUrl(file: string, repo: string = REPO): string {
   return `${repo}/blob/main/${file.replace(/^\/+/, "")}`;
 }
 
-/** "docs/ARCHITECTURE.md" -> "ARCHITECTURE.md", for the card's mono foot. */
+/**
+ * "docs/ARCHITECTURE.md" -> "ARCHITECTURE.md", for the card's mono foot. A
+ * README keeps its folder ("packages/guard/README.md" -> "guard/README.md"),
+ * so two package READMEs never read the same.
+ */
 export function fileName(file: string): string {
-  return file.split("/").pop() ?? file;
+  const parts = file.split("/").filter(Boolean);
+  const last = parts.at(-1) ?? file;
+  return /^readme\.md$/i.test(last) && parts.length > 1 ? `${parts.at(-2)}/${last}` : last;
 }

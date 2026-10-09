@@ -21,6 +21,9 @@ describe("the docs index", () => {
 
   it("names the file without its folder", () => {
     expect(fileName("docs/BRAND.md")).toBe("BRAND.md");
+    expect(fileName("packages/guard/README.md")).toBe("guard/README.md");
+    expect(fileName("packages/agent-kit/README.md")).toBe("agent-kit/README.md");
+    expect(fileName("README.md")).toBe("README.md");
   });
 
   it("has a picture for every card, except the package READMEs (no art yet, H9 2026-10-09)", () => {
