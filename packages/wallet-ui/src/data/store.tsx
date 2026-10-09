@@ -117,6 +117,8 @@ export type WalletAction =
   | { type: "unlock" }
   | { type: "setting"; key: keyof WalletState["settings"]; value: boolean }
   | { type: "log"; item: ActivityItem }
+  /** The vault's history from the indexer: replaces its earlier rows, keeps the wallet's own. */
+  | { type: "history"; items: readonly ActivityItem[] }
   | { type: "send"; asset: string; amount: string; fee: string; item: ActivityItem }
   | { type: "revoke"; id: string; item: ActivityItem }
   | { type: "connect"; origin: string; item: ActivityItem }
@@ -297,6 +299,15 @@ export function reduce(
       return { ...state, settings: { ...state.settings, [action.key]: action.value } };
     case "log":
       return { ...state, activity: [action.item, ...state.activity] };
+    case "history": {
+      const own = state.activity.filter((item) => item.source !== "indexer");
+      const time = (item: ActivityItem) => Date.parse(item.at) || 0;
+      // Newest first, as the log is written; the sort is stable, so equal times keep their order.
+      return {
+        ...state,
+        activity: [...own, ...action.items].sort((a, b) => time(b) - time(a)),
+      };
+    }
     case "send": {
       const assets = state.assets.map((asset) => {
         const balance = toUnits(asset.balance, asset.decimals) ?? 0n;

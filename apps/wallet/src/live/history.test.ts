@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activityOf } from "./history.js";
+import { activityOf, merchantNames } from "./history.js";
 
 const MERCHANT = "0x1365566191bAA9872A64AcDce963751d5343ff49";
 const AGENT = "0x454ae28357FeD61f732d368133d09D1887805c31";
@@ -32,6 +32,7 @@ describe("activityOf", () => {
         changes: [{ direction: "out", value: "0.25", unit: "USDC" }],
         hash: HASH,
         block: "69000000",
+        source: "indexer",
       },
     ]);
   });
@@ -62,15 +63,15 @@ describe("activityOf", () => {
 
   it("falls back to an id from the hash or the merchant and time, never undefined", () => {
     const row = { kind: "paid", merchant: MERCHANT, amount: "1000", timestamp: 100 };
-    const [withHash] = activityOf({ activity: [{ ...row, txHash: HASH }] });
+    const [withHash] = activityOf({ activity: [{ ...row, txHash: HASH }] }) ?? [];
     expect(withHash?.id).toBe(HASH);
-    const [withoutHash] = activityOf({ activity: [row] });
-    expect(withoutHash?.id).toBe(`${MERCHANT}-${new Date(100_000).toISOString()}`);
+    const [withoutHash] = activityOf({ activity: [row] }) ?? [];
+    expect(withoutHash?.id).toBe(`${MERCHANT.toLowerCase()}-${new Date(100_000).toISOString()}`);
   });
 
   it("leaves hash and block off the item when they are not a valid hash or number", () => {
     const row = { kind: "paid", merchant: MERCHANT, amount: "1000", timestamp: 100, txHash: "0x1" };
-    const [item] = activityOf({ activity: [row] });
+    const [item] = activityOf({ activity: [row] }) ?? [];
     expect(item?.hash).toBeUndefined();
     expect(item?.block).toBeUndefined();
   });
@@ -140,7 +141,7 @@ describe("activityOf", () => {
         },
       ],
     };
-    const items = activityOf(body);
+    const items = activityOf(body) ?? [];
     expect(items).toHaveLength(2);
     expect(items.map((i) => i.kind)).toEqual(["payment", "payment"]);
     expect(items[0]).toMatchObject({
@@ -155,10 +156,54 @@ describe("activityOf", () => {
     });
   });
 
-  it("reads nothing from a missing, malformed or empty body", () => {
-    expect(activityOf(null)).toEqual([]);
-    expect(activityOf({})).toEqual([]);
-    expect(activityOf({ activity: "not an array" })).toEqual([]);
+  it("fails closed on an answer that is not the audit route's: null, never an empty history", () => {
+    expect(activityOf(null)).toBeNull();
+    expect(activityOf("<!doctype html>")).toBeNull();
+    expect(activityOf({})).toBeNull();
+    expect(activityOf({ error: "indexer_unavailable" })).toBeNull();
+    expect(activityOf({ activity: "not an array" })).toBeNull();
+    // A vault the indexer knows with nothing in it is a real empty history.
     expect(activityOf({ activity: [] })).toEqual([]);
+  });
+
+  it("shows a sub-cent payment as it was, never as 0.00", () => {
+    const row = { kind: "paid", merchant: MERCHANT, timestamp: 100, txHash: HASH };
+    const [milli] = activityOf({ activity: [{ ...row, id: "a", amount: "1000" }] }) ?? [];
+    expect(milli?.values.amount).toBe("0.001");
+    expect(milli?.changes[0]?.value).toBe("0.001");
+    const [unit] = activityOf({ activity: [{ ...row, id: "b", amount: "1" }] }) ?? [];
+    expect(unit?.values.amount).toBe("0.000001");
+    const [whole] = activityOf({ activity: [{ ...row, id: "c", amount: "12000000" }] }) ?? [];
+    expect(whole?.values.amount).toBe("12.00");
+  });
+
+  it("names the merchant as the Delegation page does, by any casing of its address", () => {
+    const row = {
+      id: "x",
+      kind: "paid",
+      merchant: MERCHANT.toLowerCase(),
+      amount: "1",
+      timestamp: 1,
+    };
+    const names = merchantNames([{ address: MERCHANT, origin: "scrybe.example" }]);
+    expect(activityOf({ activity: [row] }, names)?.[0]?.values.merchant).toBe("scrybe.example");
+    // A merchant with no name of its own keeps its address; the row shortens it.
+    const unnamed = merchantNames([{ address: MERCHANT, origin: MERCHANT }]);
+    expect(unnamed).toEqual({});
+    expect(activityOf({ activity: [row] }, unnamed)?.[0]?.values.merchant).toBe(
+      MERCHANT.toLowerCase(),
+    );
+  });
+
+  it("reads one event once, even when the answer repeats it", () => {
+    const row = { id: "69543063-37", kind: "paid", merchant: MERCHANT, amount: "1", timestamp: 1 };
+    expect(activityOf({ activity: [row, { ...row }] })).toHaveLength(1);
+  });
+
+  it("keeps a block only when it is a block number", () => {
+    const row = { id: "x", kind: "paid", merchant: MERCHANT, amount: "1", timestamp: 1 };
+    expect(activityOf({ activity: [{ ...row, block: "69543063" }] })?.[0]?.block).toBe("69543063");
+    expect(activityOf({ activity: [{ ...row, block: "latest" }] })?.[0]?.block).toBeUndefined();
+    expect(activityOf({ activity: [{ ...row, block: 1.5 }] })?.[0]?.block).toBeUndefined();
   });
 });

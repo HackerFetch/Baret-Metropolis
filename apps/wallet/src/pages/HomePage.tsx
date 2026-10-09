@@ -15,7 +15,7 @@ import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { WALLET_ART } from "../assets.js";
-import { useLive } from "../live/live.js";
+import { useHistoryRead, useLive } from "../live/live.js";
 import { useWatch } from "../live/useWatch.js";
 import { routes } from "../routes.js";
 
@@ -195,6 +195,9 @@ export function Component() {
   // Live only: "loading" is not a failure yet, so it gets no error in its place.
   const balancesLoading = live !== null && state.status.balances === "loading";
   const analyzerLoading = live !== null && state.status.analyzer === "loading";
+  const activityLoading = live !== null && state.status.activity === "loading";
+  // Live: the vault's history from the indexer joins the wallet's own log.
+  useHistoryRead();
   const { polling } = useWatch(live, showSetup || noFunds);
 
   function revoke(permission: Permission): void {
@@ -334,7 +337,11 @@ export function Component() {
               </Link>
             }
           >
-            {!ready(state, "activity") ? (
+            {activityLoading ? (
+              <p role="status" aria-live="polite" className={T.small}>
+                {history.loading}
+              </p>
+            ) : !ready(state, "activity") ? (
               <Problem title={history.errors.load.title} body={history.errors.load.body} />
             ) : recent.length === 0 ? (
               <Empty

@@ -57,6 +57,11 @@ export interface ActivityItem {
   readonly block?: string;
   /** In MON. */
   readonly fee?: string;
+  /**
+   * "indexer" for a row read from the vault's on-chain history; absent for
+   * what this wallet logged itself. A new read replaces only the indexer's rows.
+   */
+  readonly source?: "indexer";
 }
 
 /** Something that can spend from the account without asking again. */

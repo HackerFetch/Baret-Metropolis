@@ -10,6 +10,7 @@ import {
   reduce,
   type WalletState,
 } from "./store.js";
+import type { ActivityItem } from "./types.js";
 
 const usdc = (state: WalletState) => state.assets.find((a) => a.symbol === "USDC")?.balance;
 const agentRow = (state: WalletState) => state.permissions.find((p) => p.kind === "agent");
@@ -147,5 +148,59 @@ describe("the agent's permission row", () => {
       created: "2026-10-04",
     });
     expect(agentRow(again)?.values.count).toBe("1");
+  });
+});
+
+describe("the vault's history from the indexer", () => {
+  const own = (id: string, at: string): ActivityItem => ({
+    id,
+    kind: "sent",
+    at,
+    values: { amount: "1", asset: "MON", recipient: ADDRESS.friend },
+    verdict: "safe",
+    findings: [],
+    changes: [],
+  });
+  const paid = (id: string, at: string): ActivityItem => ({
+    id,
+    kind: "payment",
+    at,
+    values: { amount: "0.10", asset: "USDC", merchant: ADDRESS.weather },
+    verdict: null,
+    findings: [],
+    changes: [],
+    source: "indexer",
+  });
+  const start = { ...initialState("Main account", "empty"), live: true };
+
+  it("joins the wallet's own log, newest first, and keeps every verdict it logged", () => {
+    const logged = reduce(
+      reduce(start, { type: "log", item: own("sent-1", "2026-10-09T10:00:00.000Z") }),
+      { type: "log", item: own("blocked-1", "2026-10-09T12:00:00.000Z") },
+    );
+    const read = reduce(logged, {
+      type: "history",
+      items: [paid("p2", "2026-10-09T13:00:00.000Z"), paid("p1", "2026-10-09T11:00:00.000Z")],
+    });
+    expect(read.activity.map((item) => item.id)).toEqual(["p2", "blocked-1", "p1", "sent-1"]);
+  });
+
+  it("replaces only its own earlier rows on a new read", () => {
+    const first = reduce(
+      reduce(start, { type: "log", item: own("sent-1", "2026-10-09T10:00:00.000Z") }),
+      {
+        type: "history",
+        items: [paid("p1", "2026-10-09T11:00:00.000Z")],
+      },
+    );
+    const again = reduce(first, {
+      type: "history",
+      items: [paid("p1", "2026-10-09T11:00:00.000Z"), paid("p2", "2026-10-09T12:00:00.000Z")],
+    });
+    expect(again.activity.map((item) => item.id)).toEqual(["p2", "p1", "sent-1"]);
+    // No vault: the indexer's rows go, the wallet's own stay.
+    expect(reduce(again, { type: "history", items: [] }).activity.map((item) => item.id)).toEqual([
+      "sent-1",
+    ]);
   });
 });

@@ -16,7 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { activityOf } from "./history.js";
+import { activityOf, merchantNames } from "./history.js";
 import {
   clearStored,
   type PasskeyProblem,
@@ -105,9 +105,11 @@ export interface Live {
   /** Forgets everything this browser holds about the account. The passkey itself stays. */
   forget(): void;
   /**
-   * Reads the vault's activity from the indexer into the store, for the
-   * History page. A vault that does not exist yet (`state.vault.address`
-   * empty) is read as "ok" with no rows, never as unavailable.
+   * Reads the vault's history from the indexer into the store (screens call
+   * it through `useHistoryRead`). Its rows join the wallet's own log; a newer
+   * call supersedes one in flight. An account with no vault reads as "ok"
+   * with only its own log; a vault not read yet, or an indexer that did not
+   * answer, never reads as an empty history.
    */
   loadHistory(): Promise<void>;
   /**
@@ -145,6 +147,26 @@ const LiveContext = createContext<Live | null>(null);
 export function useLive(): Live | null {
   return use(LiveContext);
 }
+
+/**
+ * Reads the vault's history from the indexer while a screen that shows the
+ * log is open, and again when the account, its vault or the vault's status
+ * changes. Nothing on the sample, nothing while locked.
+ */
+export function useHistoryRead(): void {
+  const load = useLive()?.loadHistory;
+  const { state } = useWallet();
+  const key =
+    state.live && !state.locked
+      ? `${state.address}|${state.status.vault}|${state.vault.address}`
+      : null;
+  useEffect(() => {
+    if (key !== null) void load?.();
+  }, [key, load]);
+}
+
+/** How long the history read may take before it reads as unavailable. */
+const HISTORY_TIMEOUT_MS = 15_000;
 
 const RPC_URL: string =
   import.meta.env.VITE_MONAD_TESTNET_RPC_URL || "https://testnet-rpc.monad.xyz";
@@ -336,30 +358,52 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
   stateRef.current = state;
 
   /**
-   * The History page's own read: the vault's activity from the indexer. Not
-   * part of `open()`'s first reads (`status.activity` starts "ok" with an
-   * empty log there) — the comment on that patch says the indexer's history
-   * is for the history screen to read, so it reads it on its own mount.
+   * The vault's history from the indexer, read by the screens that show the
+   * log (`useHistoryRead`), not by unlock. Its rows join the wallet's own log
+   * in the store ("history" keeps what this wallet logged). Fail-closed: the
+   * vault's address counts only once the vault was read; a 404 (the indexer
+   * has not seen the vault yet), a 503 (no indexer), a network error, a
+   * timeout or an answer of the wrong shape all read as "error".
    */
+  const historyRun = useRef<AbortController | null>(null);
   const loadHistory = useCallback(async (): Promise<void> => {
     const open = session.current;
     if (!open) return;
-    const vaultAddress = stateRef.current.vault.address;
-    if (!vaultAddress) {
-      patch({ activity: [], status: statusWith(statusRef, { activity: "ok" }) });
+    // A newer read supersedes one in flight: only the latest may write.
+    historyRun.current?.abort();
+    const run = new AbortController();
+    historyRun.current = run;
+    const latest = () => session.current === open && historyRun.current === run;
+    const { status, vault } = stateRef.current;
+    if (status.vault !== "ok") {
+      // Unread is not "no vault": loading stays loading, a failed read is an error.
+      patch({ status: statusWith(statusRef, { activity: status.vault }) });
+      return;
+    }
+    if (!vault.address) {
+      // No vault: the indexer has nothing for this account, only the wallet's own log.
+      dispatch({ type: "history", items: [] });
+      patch({ status: statusWith(statusRef, { activity: "ok" }) });
       return;
     }
     patch({ status: statusWith(statusRef, { activity: "loading" }) });
+    const timer = window.setTimeout(() => run.abort(), HISTORY_TIMEOUT_MS);
     try {
-      const res = await fetch(`/api/v1/audit/vault/${vaultAddress}?limit=50`);
+      const res = await fetch(`/api/v1/audit/vault/${vault.address}?limit=100`, {
+        signal: run.signal,
+      });
       if (!res.ok) throw new Error(String(res.status));
-      const body: unknown = await res.json();
-      if (session.current !== open) return;
-      patch({ activity: activityOf(body), status: statusWith(statusRef, { activity: "ok" }) });
+      const items = activityOf(await res.json(), merchantNames(vault.merchants));
+      if (!items) throw new Error("not an audit answer");
+      if (!latest()) return;
+      dispatch({ type: "history", items });
+      patch({ status: statusWith(statusRef, { activity: "ok" }) });
     } catch {
-      if (session.current === open) patch({ status: statusWith(statusRef, { activity: "error" }) });
+      if (latest()) patch({ status: statusWith(statusRef, { activity: "error" }) });
+    } finally {
+      window.clearTimeout(timer);
     }
-  }, [patch]);
+  }, [dispatch, patch]);
 
   /** An unlocked session arrives: the account, the wallet that signs, the first reads. */
   const open = useCallback(
@@ -389,7 +433,10 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         return;
       }
       const rules = readRules();
+      // Another account than the one on screen: its log is not this one's.
+      const other = stateRef.current.address !== next.address;
       patch({
+        ...(other ? { activity: [] } : {}),
         address: next.address,
         locked: false,
         sessionEndsAt: new Date(ends).toISOString(),

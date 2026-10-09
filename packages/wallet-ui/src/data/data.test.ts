@@ -178,6 +178,16 @@ describe("the activity log", () => {
   it("writes each row's sentence with short addresses and the rule's own label", () => {
     expect(rowText(row(2))).toBe("Sent 2.50 MON to 0x4b1d...0c0d");
     expect(rowText(row(6))).toBe("Signed with an override of Largest loss per request");
+    // An agent payment read from the indexer names its merchant by address.
+    const live = {
+      ...row(0),
+      values: { amount: "0.10", asset: "USDC", merchant: ADDRESS.weather },
+    };
+    expect(rowText(live)).toMatch(
+      /^Your agent paid 0\.10 USDC to 0x[0-9a-fA-F]{4}\.\.\.[0-9a-fA-F]{4}$/,
+    );
+    // A merchant named by the reader keeps its name, as the sample's does.
+    expect(rowText(row(0))).toBe("Your agent paid 0.50 USDC to scrybe.example");
   });
 
   it("exports a quoted CSV, one line per row plus the header", () => {
