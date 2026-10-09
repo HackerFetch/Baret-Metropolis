@@ -10,7 +10,7 @@ This repository and this document set are meant for **live** tracking. They were
 
 | Area | Status |
 |---|---|
-| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Open: only NovaSwap signs through the wallet (M1, 2026-10-09; the other demo sites sign nothing yet), the wallet app is on sample data, no screen reads the indexer, no developer quickstart. **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
+| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Since 2026-10-09: NovaSwap signs through a connected wallet and through the Baret wallet window (M1, M3; the other demo sites sign nothing yet); the wallet runs on a live passkey account (M6); KIMI explains every live verdict and drafts rules from a sentence, and the Qwen agent reviews agent payments on `/review` (M4, M5; live once the keys are on Render, E7); developer quickstarts for `guard` and `agent-kit` (H9). Open: the history screen reading the indexer (H5), another team trying the quickstart (H9). **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
 | Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
 | Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
 | Copy | 46 files in `packages/content`, one per page or frame, complete |
@@ -39,6 +39,8 @@ Update this table at every major phase transition (when the repo is created, on 
 | [`docs/RESOURCES.md`](docs/RESOURCES.md) | Which sponsor tool is used where and how, claim tracking, env var list | When starting an integration |
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Smart contract specifications, deploy table, security checklist | When writing/deploying contracts |
 | [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | x402 payment flow and facilitator design | When touching the x402/agent payment layer |
+| [`packages/guard/README.md`](packages/guard/README.md) | Developer quickstart for the pre-sign check: install, the smallest working call, what fail-closed means for the caller | Calling `/v1/analyze` from your own app, with or without the SDK |
+| [`packages/agent-kit/README.md`](packages/agent-kit/README.md) | Developer quickstart for the guarded agent wallet and the `baret` CLI | Giving an agent a signer that cannot sign past Baret's verdict |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6-week calendar, weekly checklist, progress | Update at the start/end of every week |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architecture/scope decisions taken and their rationale (ADR log) | Check here first before taking a new decision, then add it |
 | [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Comparative review of the 5 previous Baret versions (EVM, Stellar, Casper, Midnight, OKX): what gets reused, which mistakes are not repeated | Read the relevant section before starting to write a module |

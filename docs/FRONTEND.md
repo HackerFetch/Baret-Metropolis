@@ -234,9 +234,9 @@ Footnote: "A per-agent audit monitor requires authenticated server-side access, 
 
 | Surface | Status | Where |
 |---|---|---|
-| Docs `/docs` | **Built** (2026-10-03), four blocks (owner-approved cut of five): (1) split hero with l-33 (a tower model on a drafting table) and, under it, the two timelines (a standard wallet against Baret, Baret's two added steps in ink); (2) the eleven files in four anchored groups (`#start-here`, `#what-you-see`, `#contracts-and-payments`, `#plan-and-decisions`), each card a whole-card link to its file on GitHub with its d-02 line drawing (`DOCS_CARD_ART`, keyed by file); (3) known limitations beside l-18 (one tag fallen from the wire); (4) the closing band with d-04 (the site office at night). Cut: "The short version" pipeline (`docs.summary`, kept in content, marked not rendered). The URL builder and the group slugs are tested. **Audit (2026-10-04):** the hero picture was lazy, above the fold and the 1254 px original on phones, and painted long after the text; it now loads at high priority with an accurate `sizes` and a preload and paints with the text at 3.1 s, and the cards ask for the copy their column needs. | `apps/showcase/src/pages/DocsPage.tsx`, `apps/showcase/src/docs/` |
+| Docs `/docs` | **Built** (2026-10-03), four blocks (owner-approved cut of five): (1) split hero with l-33 (a tower model on a drafting table) and, under it, the two timelines (a standard wallet against Baret, Baret's two added steps in ink); (2) thirteen files in five anchored groups (`#start-here`, `#what-you-see`, `#contracts-and-payments`, `#plan-and-decisions`, `#for-developers`), each card a whole-card link to its file on GitHub with its d-02 line drawing (`DOCS_CARD_ART`, keyed by file; the two "For developers" cards have none yet); (3) known limitations beside l-18 (one tag fallen from the wire); (4) the closing band with d-04 (the site office at night). Cut: "The short version" pipeline (`docs.summary`, kept in content, marked not rendered). The URL builder and the group slugs are tested. **Audit (2026-10-04):** the hero picture was lazy, above the fold and the 1254 px original on phones, and painted long after the text; it now loads at high priority with an accurate `sizes` and a preload and paints with the text at 3.1 s, and the cards ask for the copy their column needs. **H9 (2026-10-09):** added "For developers", the two developer quickstarts (`packages/guard/README.md`, `packages/agent-kit/README.md`), which §4.2 now also lists; both cards still need their d-02 drawing, and `docs.test.ts` skips this group until they have one. | `apps/showcase/src/pages/DocsPage.tsx`, `apps/showcase/src/docs/` |
 
-**Purpose:** Access to every document describing how Baret works from a single index. Each card points to a real file in this project's `docs/` tree (GitHub link).
+**Purpose:** Access to every document describing how Baret works from a single index. Each card points to a real file in this repository (GitHub link) — eleven in `docs/`, two in the package quickstarts (`packages/guard/README.md`, `packages/agent-kit/README.md`).
 
 ### 4.1 Hero
 Headline: "How Baret works, in detail." Description: "The specs, protocols and design notes behind every claim on the home page. Every entry below corresponds to a file in the project's `docs/` tree."
@@ -258,6 +258,8 @@ The real files the Docs page points to for this project (must stay in sync with 
 | Roadmap | Weekly plan and progress tracking | `ROADMAP.md` |
 | Decisions | Architecture/scope decisions taken and their rationale | `DECISIONS.md` |
 | Brand | Brand identity, tone, design tokens | `BRAND.md` |
+| Guard SDK | Developer quickstart: install, the smallest working call, fail-closed | `packages/guard/README.md` |
+| Agent kit | Developer quickstart: the guarded agent wallet and the `baret` CLI | `packages/agent-kit/README.md` |
 
 ### 4.3 Known limitations and bottom CTA
 The six `docs.limitations.items` sit in their own block before the CTA.

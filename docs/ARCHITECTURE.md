@@ -274,7 +274,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 - `/agents` page: live playground for agent-kit + PaymentGuard + (if available) the Qwen adversarial reviewer.
 
 ### 8.5 `packages/guard`
-`TransactionGuard.evaluate({ transaction, userWallet, policy })` → `{ decision, blockingReasons, analysis }`. **Never signs/submits** — only returns a decision.
+`new TransactionGuard({ baseUrl, apiKey? }).evaluate(request)` posts an `/v1/analyze` request (checked with `analyzeRequestSchema` before it is sent, so a bad request throws a `ZodError`) and returns the server's full answer, `AnalyzeResponse` (decision, findings, fired rules, suggestions, confidence, balance changes, approvals, sources, `expiresAt`, `meta.requestId`), checked against `analyzeResponseSchema`. No answer, a non-2xx status or an answer off the schema throws `GuardUnreachableError`: the caller treats it as Blocked. `isSafe(verdict)` and `isSignable(verdict)` (anything but Blocked) are the two helpers. **Never signs or submits**: it only returns the verdict. The quickstart is `packages/guard/README.md`.
 
 ### 8.6 `packages/agent-kit`
 An agent's wallet that cannot sign what Baret has not cleared (built 2026-10-05, checked on testnet).
