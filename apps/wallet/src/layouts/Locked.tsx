@@ -24,6 +24,18 @@ export interface LockedProps {
    * what time, so an expiry reads as neither a crash nor the user's own doing.
    */
   readonly expiredAt?: string | null;
+  /**
+   * Live, in a request window a site opened: the site, as the browser reports
+   * it, once its request is in. The screen names it.
+   */
+  readonly origin?: string | null;
+  /** Live: tells the site the request was declined. The screen says so either way. */
+  readonly onDecline?: () => void;
+  /**
+   * Live, with no passkey known on this device: creating the wallet becomes
+   * the main action, and unlocking (a passkey from another device) the second.
+   */
+  readonly onCreate?: () => void;
 }
 
 /** What a locked wallet shows instead of the app or a pending request. */
@@ -33,6 +45,9 @@ export function Locked({
   busy = false,
   problem = null,
   expiredAt = null,
+  origin = null,
+  onDecline,
+  onCreate,
 }: LockedProps): JSX.Element {
   const { locked } = walletFrame;
   const [declined, setDeclined] = useState(false);
@@ -65,20 +80,42 @@ export function Locked({
         </div>
       ) : null}
       {request ? (
-        <p className={T.body}>{locked.request}</p>
+        <p className={`${T.body} [overflow-wrap:anywhere]`}>
+          {origin ? fill(locked.requestFrom, { origin }) : locked.request}
+        </p>
       ) : expiredAt ? null : (
         <p className={T.body}>{locked.body}</p>
       )}
       {problem ? (
         <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
       ) : null}
+      {declined || !onCreate ? null : <p className={T.body}>{locked.createNote}</p>}
       {declined ? null : (
         <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="primary" size="lg" disabled={busy} onClick={onUnlock}>
+          {onCreate ? (
+            <Button type="button" variant="primary" size="lg" disabled={busy} onClick={onCreate}>
+              {locked.create}
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant={onCreate ? "ghost" : "primary"}
+            size="lg"
+            disabled={busy}
+            onClick={onUnlock}
+          >
             {locked.action}
           </Button>
           {request ? (
-            <Button type="button" variant="ghost" size="lg" onClick={() => setDeclined(true)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              onClick={() => {
+                onDecline?.();
+                setDeclined(true);
+              }}
+            >
               {locked.decline}
             </Button>
           ) : null}
@@ -89,6 +126,18 @@ export function Locked({
         <p ref={answer} tabIndex={-1} aria-live="polite" className={`${T.body} outline-none`}>
           {declined ? locked.declined : ""}
         </p>
+      ) : null}
+      {/* A site's window: once its answer went back, the window can close. */}
+      {declined && origin ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="lg"
+          className="justify-self-start"
+          onClick={() => window.close()}
+        >
+          {walletFrame.request.close}
+        </Button>
       ) : null}
     </main>
   );

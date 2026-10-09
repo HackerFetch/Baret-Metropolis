@@ -57,8 +57,15 @@ export const walletFrame = {
     action: "Unlock with your passkey",
     /** In a request window: the request waits behind the lock. */
     request: "A site is waiting for an answer. Unlock to read the request, or decline it now.",
+    /** In a request window, once a site's request is in: {origin} is that site. */
+    requestFrom:
+      "{origin} is waiting for your answer. Open your wallet with your passkey to read the request, or decline it now.",
     decline: "Decline the request",
     declined: "Request declined. Nothing was signed or shared.",
+    /** In a request window on a device with no passkey for this wallet yet. */
+    create: "Create my wallet",
+    createNote:
+      "No Baret wallet on this device yet? Create one with a passkey, then read the request.",
     /** Live: the 15 minute session ran out, so the wallet locked itself. */
     expired: {
       title: "Your session ended",
@@ -108,6 +115,17 @@ export const walletFrame = {
   },
   /** Values the sample account starts with. */
   sampleData: { accountName: "Main account" },
+  /**
+   * Live: a request window a site opened. The site sends its request by
+   * postMessage; {origin} is the site, as the browser reports it.
+   */
+  request: {
+    waiting: "Waiting for the site to send its request.",
+    /** Live, but no site opened this window. */
+    none: "This window opens when a site asks your Baret wallet for something. Go back to the site and press its button.",
+    answered: "Your answer went back to {origin}. You can close this window.",
+    close: "Close this window",
+  },
   /** The picker that loads each sample request on the request screens. */
   samples: {
     legend: "Sample request",

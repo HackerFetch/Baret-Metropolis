@@ -13,10 +13,11 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { Wallet } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
-import { Link } from "react-router";
 import {
+  connectBaret,
   connectWallet,
   disconnectWallet,
+  forgetBaret,
   onPickerRequest,
   prefetch,
   refreshBalance,
@@ -33,8 +34,10 @@ import { DEMO_FROM, formatMon, MONAD_TESTNET_ID } from "./useDemoWallet.js";
  * its address opens the wallet's menu. A site that ran on the sample wallet
  * shows that chip instead, and it opens the picker too.
  *
- * The picker lists Baret first (found or not), then every wallet the browser
- * announced over EIP-6963, then the sample wallet, which needs no extension.
+ * The picker lists the Baret wallet first: it opens in its own window (a
+ * passkey only works on the wallet's own site), and once it answers, the
+ * chip shows its address. Then every wallet the browser announced over
+ * EIP-6963, then the sample wallet, which needs no extension.
  * Connected, Baret checks each request from that address, live, and nothing
  * is signed unless the visitor signs it in the wallet (a card's "Sign with
  * your wallet", which opens this picker when no wallet is connected). The
@@ -80,20 +83,90 @@ function WalletIcon({ option, size = 28 }: { option: WalletOption; size?: number
   );
 }
 
+/** What the last connect through the Baret wallet window said, "" when nothing. */
+const BARET_LINE: Record<WalletState["baretStatus"], string> = {
+  idle: "",
+  connecting: copy.baret.connecting,
+  declined: copy.baret.declined,
+  closed: copy.baret.closed,
+  blocked: copy.baret.blocked,
+  busy: copy.baret.busy,
+};
+
+/** The Baret wallet's row: connect through its window, or the connected address with a way to forget it. */
+function BaretRow({
+  wallet,
+  onBaret,
+  onForget,
+}: {
+  wallet: WalletState;
+  onBaret: () => void;
+  onForget: () => void;
+}): JSX.Element {
+  const { baret, baretStatus } = wallet;
+  const busy = baretStatus === "connecting";
+  return (
+    <div className="grid gap-2">
+      {baret ? (
+        <div className="flex gap-3 border border-[color:var(--rule-strong)] px-4 py-3">
+          <Mark size={28} slit="var(--surface)" decorative />
+          <div className="grid gap-2">
+            <p className="font-medium text-[color:var(--fg)]">{copy.baret.name}</p>
+            <p className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+              {baret.address}
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              className="justify-self-start"
+              onClick={onForget}
+            >
+              {copy.baret.forget}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={`${ROW} aria-disabled:cursor-not-allowed aria-disabled:opacity-40`}
+          aria-disabled={busy || undefined}
+          onClick={() => {
+            // The window must open from this press, so nothing waits before it.
+            if (!busy) onBaret();
+          }}
+        >
+          <Mark size={28} slit="var(--surface)" decorative />
+          <span className="grid">
+            <span className="font-medium text-[color:var(--fg)]">{copy.baret.name}</span>
+            <span className={T.small}>{copy.baret.window}</span>
+          </span>
+        </button>
+      )}
+      <p role="status" className={`${T.small} empty:hidden`}>
+        {BARET_LINE[baretStatus]}
+      </p>
+    </div>
+  );
+}
+
 function Picker({
   wallet,
   onPick,
+  onBaret,
+  onForget,
   onSample,
 }: {
   wallet: WalletState;
   onPick: (option: WalletOption) => void;
+  onBaret: () => void;
+  onForget: () => void;
   onSample: () => void;
 }): JSX.Element {
   const othersId = useId();
-  const baret = wallet.options.find((o) => o.baret) ?? null;
-  const others = [...wallet.options.filter((o) => !o.baret)].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  // A wallet that announces Baret's name is listed like any other here: the
+  // Baret wallet itself is the row above, in its own window.
+  const others = [...wallet.options].sort((a, b) => a.name.localeCompare(b.name));
   const pendingId = wallet.connection.status === "connecting" ? wallet.connection.id : null;
   const pending = pendingId ? (wallet.options.find((o) => o.id === pendingId) ?? null) : null;
   const status = pending
@@ -111,27 +184,7 @@ function Picker({
         <DialogDescription className={T.small}>{copy.body}</DialogDescription>
       </div>
 
-      {baret ? (
-        <button type="button" className={ROW} onClick={() => onPick(baret)}>
-          <WalletIcon option={baret} />
-          <span className="grid">
-            <span className="font-medium text-[color:var(--fg)]">{copy.baret.name}</span>
-            <span className={T.small}>{copy.baret.found}</span>
-          </span>
-        </button>
-      ) : (
-        <div className="flex gap-3 border border-[color:var(--rule)] px-4 py-3">
-          <Mark size={28} slit="var(--surface)" decorative />
-          <div className="grid gap-1">
-            <p className="font-medium text-[color:var(--fg)]">{copy.baret.name}</p>
-            <p className={T.small}>{copy.baret.missing}</p>
-            <p className={T.small}>{copy.baret.note}</p>
-            <Link to={copy.baret.install.href} className={LINK}>
-              {copy.baret.install.label}
-            </Link>
-          </div>
-        </div>
-      )}
+      <BaretRow wallet={wallet} onBaret={onBaret} onForget={onForget} />
 
       <section aria-labelledby={othersId} className="grid gap-2">
         <h3 id={othersId} className={T.label}>
@@ -281,6 +334,28 @@ export function WalletControl({
 
   const address = connection.status === "connected" ? connection.address : null;
   const name = connection.status === "connected" ? connection.wallet.name : "";
+  const baretAddress = wallet.baret?.address ?? null;
+  // Set when the Baret row started a connect: its answer closes the picker
+  // and is read out, like a pick above.
+  const baretPicked = useRef(false);
+
+  useEffect(() => {
+    if (!baretAddress || !baretPicked.current) return;
+    baretPicked.current = false;
+    setOpen(false);
+    setSaid(
+      fill(copy.announce.connected, {
+        wallet: copy.baret.name,
+        address: truncateAddress(baretAddress),
+      }),
+    );
+  }, [baretAddress]);
+
+  // A decline, a closed or a blocked window keeps the picker open with its line.
+  useEffect(() => {
+    if (wallet.baretStatus !== "connecting" && wallet.baretStatus !== "idle")
+      baretPicked.current = false;
+  }, [wallet.baretStatus]);
 
   useEffect(() => {
     if (!address || !picked.current) return;
@@ -344,6 +419,24 @@ export function WalletControl({
               className={`size-2 rounded-full ${connection.chainId === MONAD_TESTNET_ID ? "bg-[color:var(--safe)]" : "bg-[color:var(--caution)]"}`}
             />
           </button>
+        ) : baretAddress ? (
+          <button
+            type="button"
+            className={CHIP}
+            aria-label={fill(copy.account.open, {
+              wallet: copy.baret.name,
+              address: truncateAddress(baretAddress),
+            })}
+            onPointerEnter={prefetch}
+            onFocus={prefetch}
+            onClick={openWith}
+          >
+            <Mark size={20} slit="var(--surface)" decorative />
+            <span className="font-mono text-sm text-[color:var(--fg)]">
+              {truncateAddress(baretAddress)}
+            </span>
+            <span aria-hidden="true" className="size-2 rounded-full bg-[color:var(--safe)]" />
+          </button>
         ) : sample.connected ? (
           <button
             type="button"
@@ -397,6 +490,15 @@ export function WalletControl({
               onPick={(option) => {
                 picked.current = true;
                 void connectWallet(option.id);
+              }}
+              onBaret={() => {
+                baretPicked.current = true;
+                void connectBaret();
+              }}
+              onForget={() => {
+                forgetBaret();
+                setOpen(false);
+                setSaid(copy.announce.disconnected);
               }}
               onSample={() => {
                 sample.onUse();

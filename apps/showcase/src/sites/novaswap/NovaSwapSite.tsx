@@ -3,7 +3,7 @@ import { NOVASWAP } from "@baret/demo";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useRef, useState } from "react";
-import type { Address } from "viem";
+import { type Address, zeroAddress } from "viem";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { toUnits, toWei } from "../kit/amount.js";
 import { DemoBar } from "../kit/DemoBar.js";
@@ -13,6 +13,7 @@ import { Faq, Features, SiteFooter, Stats } from "../kit/site/Sections.js";
 import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { useCheck } from "../kit/useCheck.js";
+import { BaretCheck, useBaretCheck } from "../kit/wallet/BaretCheck.js";
 import { SignBlock } from "../kit/wallet/SignBlock.js";
 import { addressOf, requestPicker, switchToMonad } from "../kit/wallet/store.js";
 import {
@@ -28,7 +29,7 @@ import { DocsPage, PoolsPage, StatsPage } from "./Pages.js";
 import { NovaGlyph, VIEWS } from "./SiteHeader.js";
 import { SwapCard } from "./SwapCard.js";
 import { ART, balanceOf, parseAmount, SAMPLE } from "./sample.js";
-import { contractOf, faucetCall, SOURCE, signCalls } from "./source.js";
+import { buildRequest, contractOf, faucetCall, SOURCE, signCalls } from "./source.js";
 
 /**
  * NovaSwap: a believable swap venue in its own cobalt palette, with Baret's
@@ -44,6 +45,8 @@ import { contractOf, faucetCall, SOURCE, signCalls } from "./source.js";
  * the same request to the connected wallet, unchecked, on Monad testnet: the
  * attack signs the allowance and then the "swap" that drains the dUSDC the
  * visitor took from the faucet, and the card shows the balance before and after.
+ * Under it, "Check with Baret" sends the same request to the Baret wallet in
+ * its own window, which checks it and refuses the attack before any signature.
  */
 
 const { site, analysis } = novaswap;
@@ -67,6 +70,7 @@ export function NovaSwapSite(): JSX.Element {
   const { view, go } = useSiteView(VIEWS);
   const sign = useSendFlow();
   const faucet = useSendFlow();
+  const baret = useBaretCheck();
   const address = addressOf(wallet);
   const usdc = useTokenBalance(NOVASWAP.usdc, address);
   const walletName = wallet.connection.status === "connected" ? wallet.connection.wallet.name : "";
@@ -95,12 +99,14 @@ export function NovaSwapSite(): JSX.Element {
 
   /** The two versions spend different tokens, so each starts from its own amount. */
   function setMode(next: DemoMode): void {
-    if (next === mode) return;
+    // The Baret window still answers for this version: switching waits for it.
+    if (next === mode || baret.state.phase === "waiting") return;
     setModeState(next);
     setAmount(START[next]);
     setError(null);
     sign.reset();
     faucet.reset();
+    baret.reset();
     setNeed(null);
   }
 
@@ -188,6 +194,25 @@ export function NovaSwapSite(): JSX.Element {
     faucet.reset();
     const calls = signCalls(mode, toWei(amount) ?? 0n, units ?? 0n, owner);
     void sign.run(calls, { token: NOVASWAP.usdc, owner }).then(() => usdc.refresh());
+  }
+
+  /**
+   * "Check with Baret": the first call of the version switched on, to the
+   * Baret wallet's window. The window opens from this click, so nothing
+   * waits before askBaret. The calldata does not carry the sender, so any
+   * address builds it; the attack needs no dUSDC here, since Baret refuses
+   * it before any balance matters.
+   */
+  function onBaret(): void {
+    const errors = mode === "safe" ? site.panel.errors : site.attack.errors;
+    const wei = mode === "safe" ? toWei(amount) : 0n;
+    if (parseAmount(amount) === null || wei === null) {
+      setError(errors?.empty ?? null);
+      return;
+    }
+    setError(null);
+    const { to, value, data } = buildRequest(mode, wei, zeroAddress);
+    baret.ask({ to, value, data });
   }
 
   function onFaucet(): void {
@@ -302,6 +327,13 @@ export function NovaSwapSite(): JSX.Element {
                       stoppedNote={signMode === "danger" ? outcome.open : null}
                       busy={faucet.state.phase === "running"}
                       onSign={onSign}
+                    />
+                  }
+                  baret={
+                    <BaretCheck
+                      state={baret.state}
+                      busy={sign.state.phase === "running" || faucet.state.phase === "running"}
+                      onCheck={onBaret}
                     />
                   }
                 />
