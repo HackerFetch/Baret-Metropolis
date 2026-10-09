@@ -25,6 +25,12 @@ export type ResultSource = "sample" | "live" | "failed";
 export interface CheckFinding {
   readonly code: FindingCode;
   readonly values: Readonly<Record<string, string>>;
+  /**
+   * Extra facts a finding's wording can branch on (server `analyze.ts`
+   * `findingSchema.details`) — today only `asset`: set when an asset's own
+   * policy demands something, not the caller's rules (compliance.ts).
+   */
+  readonly details?: Readonly<Record<string, unknown>>;
 }
 
 /** One "What changes" row, already in display units. */

@@ -5,6 +5,7 @@ import { findings as findingCopy } from "@baret/content/shared/findings.content"
 import { sign } from "@baret/content/wallet/sign.content";
 import { ChangeRow, truncateAddress, VerdictTag } from "@baret/ui";
 import { amount } from "@baret/wallet-ui/data/format";
+import { bodyOf } from "@baret/web-ui/components/CheckBlocks";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { ExternalLink } from "lucide-react";
@@ -104,9 +105,10 @@ export function ActivityDisclosure({
               <ul className="grid gap-2">
                 {item.findings.map((finding) => {
                   const words = findingCopy[finding.code];
-                  const values = Object.fromEntries(
-                    Object.entries(finding.values).map(([k, v]) => [k, short(v)]),
-                  );
+                  const short_ = (values: Readonly<Record<string, string>>) =>
+                    Object.fromEntries(Object.entries(values).map(([k, v]) => [k, short(v)]));
+                  const values = short_(finding.values);
+                  const { template, values: bodyValues } = bodyOf(words, finding);
                   return (
                     <li
                       key={finding.code}
@@ -116,7 +118,7 @@ export function ActivityDisclosure({
                         {fill(words.title, values)}
                       </span>
                       <span className={`${T.small} [overflow-wrap:anywhere]`}>
-                        {fill(words.body, values)}
+                        {fill(template, short_(bodyValues))}
                       </span>
                     </li>
                   );

@@ -23,6 +23,8 @@ export const ACTIONS = [
   "lookalikeToken",
   "operatorApproval",
   "flaggedAddress",
+  "cleanverseVerified",
+  "cleanverseNoCredential",
 ] as const;
 export type ActionId = (typeof ACTIONS)[number];
 
@@ -71,6 +73,7 @@ const ASKED = "0x2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e";
 const DRAINER = "0x7e2b44d1c0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5";
 const COLLECTION = "0x3a9f6c2e8d1b7a4f0e5c9d2b6a8f1e3c7d0b4a92";
 const FAKE_USDC = "0x8f3e2d1c0b9a7f6e5d4c3b2a1f0e9d8c7b6a5f40";
+const UNVERIFIED = "0x4d3c2b1a0f9e8d7c6b5a4f3e2f1e0d9c8b7a6f5e";
 
 export interface SampleAnswer {
   readonly findings: readonly CheckFinding[];
@@ -117,6 +120,23 @@ export const SAMPLES: Record<ActionId, SampleAnswer> = {
   flaggedAddress: {
     findings: [{ code: "KNOWN_MALICIOUS_ADDRESS", values: { address: DRAINER } }],
     changes: [{ direction: "out", value: "5", unit: "MON" }],
+    approvals: [],
+  },
+  cleanverseVerified: {
+    findings: [],
+    changes: [{ direction: "out", value: "1.00", unit: "aUSDC" }],
+    approvals: [],
+  },
+  cleanverseNoCredential: {
+    findings: [
+      { code: "SIMULATION_FAILED", values: {} },
+      {
+        code: "COMPLIANCE_NO_CREDENTIAL",
+        values: { recipient: UNVERIFIED },
+        details: { side: "recipient", asset: "aUSDC" },
+      },
+    ],
+    changes: [],
     approvals: [],
   },
 };

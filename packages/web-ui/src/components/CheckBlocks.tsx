@@ -107,6 +107,39 @@ export function hasValues(template: string, values: Readonly<Record<string, stri
   return [...template.matchAll(/\{(\w+)\}/g)].every(([, key]) => Boolean(key && values[key]));
 }
 
+type BodyCopy = {
+  body: string;
+  bodySelf?: string;
+  bodyAsset?: string;
+  bodySelfAsset?: string;
+};
+
+/**
+ * The finding's sentence and the values to fill it: `details.side === "self"`
+ * picks `bodySelf` over `body`, `details.asset` (a compliant asset's own
+ * policy, not the user's rule) picks the `*Asset` variant and folds the
+ * asset's symbol into `{asset}`. A finding with neither just reads `body`.
+ * Shared by the showcase's `FindingList` and the wallet's `Findings`.
+ */
+export function bodyOf(
+  copy: BodyCopy,
+  item: Pick<CheckFinding, "values" | "details">,
+): { readonly template: string; readonly values: Readonly<Record<string, string>> } {
+  const self = item.details?.side === "self";
+  const asset = item.details?.asset;
+  const hasAsset = typeof asset === "string";
+  const template =
+    self && hasAsset && copy.bodySelfAsset
+      ? copy.bodySelfAsset
+      : hasAsset && copy.bodyAsset
+        ? copy.bodyAsset
+        : self && copy.bodySelf
+          ? copy.bodySelf
+          : copy.body;
+  const values = hasAsset ? { ...item.values, asset } : item.values;
+  return { template, values };
+}
+
 /** Findings rendered from their codes: title, the filled sentence, the fix when it applies. */
 export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.Element {
   return (
@@ -117,13 +150,14 @@ export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.
         <ul className="grid gap-4">
           {items.map((item) => {
             const copy = findings[item.code];
+            const { template, values } = bodyOf(copy, item);
             return (
               <li
                 key={item.code}
                 className="grid gap-1 border-l-4 border-[color:var(--blocked)] pl-3"
               >
                 <p className={`${T.h3} text-[color:var(--fg)]`}>{fill(copy.title, item.values)}</p>
-                <p className={T.body}>{fill(copy.body, item.values)}</p>
+                <p className={T.body}>{fill(template, values)}</p>
                 {"fix" in copy && copy.fix && hasValues(copy.fix, item.values) ? (
                   <p className={T.small}>{fill(copy.fix, item.values)}</p>
                 ) : null}

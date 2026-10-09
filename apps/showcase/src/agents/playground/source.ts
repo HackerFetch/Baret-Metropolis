@@ -1,4 +1,4 @@
-import { agents } from "@baret/demo";
+import { agents, CLEANVERSE, cleanverse } from "@baret/demo";
 import { FAILED } from "@baret/web-ui/lib/check";
 import type { CheckResult, CheckSource } from "@baret/web-ui/lib/check-types";
 import { type Address, getAddress } from "viem";
@@ -12,20 +12,22 @@ import { type ActionId, type PolicyName, SAMPLES, verdictFor } from "./sample.js
  * and the source of the answer.
  *
  * With `VITE_BARET_PLAYGROUND=live` both paths go to Baret's `/v1/analyze`
- * and fail closed: the six actions through `@baret/demo`'s `agents`
- * builders, "paste your own" with the picked policy. Without the flag the
- * six actions answer from the prepared samples, and a pasted transaction is
- * NOT_SENT: fail-closed like a failed check, but the page says nothing was
- * sent instead of "can't reach Baret".
+ * and fail closed: the eight actions through `@baret/demo`'s `agents` and
+ * `cleanverse` builders, "paste your own" with the picked policy. Without
+ * the flag the eight actions answer from the prepared samples, and a pasted
+ * transaction is NOT_SENT: fail-closed like a failed check, but the page
+ * says nothing was sent instead of "can't reach Baret".
  *
- * The six actions all sign from `VITE_BARET_PLAYGROUND_AGENT`, a wallet kept
- * funded with MON, real test USDC and fake USDC (same need as
+ * The six non-Cleanverse actions sign from `VITE_BARET_PLAYGROUND_AGENT`, a
+ * wallet kept funded with MON, real test USDC and fake USDC (same need as
  * `verify-demo`'s own `--from`): the engine's loss rule and its post-balance
  * floor cannot be computed from a zero balance and fail closed when they
  * cannot, which would turn "pay" and "the wrong address" into Blocked no
- * matter what they are built to show. Unset or invalid, the six actions
- * answer from the prepared samples even with the live flag, and only a
- * pasted transaction goes live.
+ * matter what they are built to show. Unset or invalid, every action
+ * answers from the prepared samples even with the live flag, and only a
+ * pasted transaction goes live. The two Cleanverse actions sign from a real,
+ * already verified wallet instead (`CLEANVERSE_HOLDER`) — see
+ * `liveActionResult`.
  */
 
 export type PlaygroundInput =
@@ -115,9 +117,10 @@ export const LIVE = env === "live";
 const agentEnv: unknown = import.meta.env.VITE_BARET_PLAYGROUND_AGENT;
 
 /**
- * The address the six live actions sign from: the funded wallet named by
- * `VITE_BARET_PLAYGROUND_AGENT`, else null (`env` is only a parameter so a
- * test can pick the branch directly).
+ * The address the six non-Cleanverse live actions sign from (and the two
+ * Cleanverse ones' stand-in "no credential" recipient): the funded wallet
+ * named by `VITE_BARET_PLAYGROUND_AGENT`, else null (`env` is only a
+ * parameter so a test can pick the branch directly).
  */
 export function agentAddress(env: unknown = agentEnv): Address | null {
   return typeof env === "string" && isAddress(env) ? getAddress(env) : null;
@@ -126,7 +129,7 @@ export function agentAddress(env: unknown = agentEnv): Address | null {
 /** The funded agent of this build, or null when none is set. */
 export const AGENT = agentAddress();
 
-/** True when the six actions go live: the flag and a funded agent address. */
+/** True when the eight actions go live: the flag and a funded agent address. */
 export const LIVE_ACTIONS = LIVE && AGENT !== null;
 
 /**
@@ -174,11 +177,24 @@ async function liveResult(
   return parsed.success ? fromAnalyzeResponse(parsed.data, from) : FAILED;
 }
 
+/** The real, pre-verified Cleanverse wallets the two Cleanverse actions simulate
+ *  from: not ours, never signed for (`packages/demo/src/cleanverse.ts`). */
+const CLEANVERSE_HOLDER = getAddress(CLEANVERSE.verifiedHolder);
+const CLEANVERSE_RECIPIENT = getAddress(CLEANVERSE.verifiedRecipient);
+/** 1.00 aUSDC, 6 decimals — matches `verify-demo`'s own Cleanverse scenarios. */
+const CLEANVERSE_AMOUNT = 1_000_000n;
+
 /**
- * One of the six actions, live: `@baret/demo`'s builder for it, with the
+ * One of the eight actions, live: `@baret/demo`'s builder for it, with the
  * picked template as `policyTemplate` (the server fills in full rules). The
  * two shapes split exactly as `analyzeRequestSchema` expects them: an x402
  * builder's `{ typedData, payment }` spread as is, never under `transaction`.
+ *
+ * The two Cleanverse actions are simulated from `CLEANVERSE_HOLDER`, not from
+ * the funded playground agent: a compliant asset (aUSDC) is checked by its
+ * own policy, not by whoever happens to be asking, so a real, already
+ * verified wallet is what the scenario needs. `from` (the playground agent)
+ * stands in for "a wallet with no credential" — any address works there.
  */
 function liveActionResult(
   action: ActionId,
@@ -186,6 +202,15 @@ function liveActionResult(
   from: Address,
   signal: AbortSignal,
 ): Promise<CheckResult> {
+  if (action === "cleanverseVerified" || action === "cleanverseNoCredential") {
+    const to = action === "cleanverseVerified" ? CLEANVERSE_RECIPIENT : from;
+    const tx = cleanverse.transfer(CLEANVERSE_HOLDER, to, CLEANVERSE_AMOUNT);
+    return analyze(
+      { transaction: tx, userWallet: CLEANVERSE_HOLDER, policyTemplate: policy },
+      CLEANVERSE_HOLDER,
+      signal,
+    );
+  }
   const built = agents[action](from);
   return "typedData" in built
     ? analyze(
@@ -202,8 +227,8 @@ function liveActionResult(
 
 /**
  * Picks the answer for one run; `runCheck` turns any failure into Blocked.
- * The six actions go live only with a funded agent address as well: from an
- * unfunded one the loss rules fail closed and the verdicts would mislead.
+ * The eight actions go live only with a funded agent address as well: from
+ * an unfunded one the loss rules fail closed and the verdicts would mislead.
  */
 export function sourceFor(
   live: boolean,

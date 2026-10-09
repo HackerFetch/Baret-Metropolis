@@ -17,10 +17,10 @@ import { outcomeOf } from "./terminal.js";
  * Watch an agent ask first. Pick what the agent tries and a starting policy,
  * then check it: the terminal prints the exchange and the answer appears
  * with its findings. A pasted transaction goes to Baret with
- * VITE_BARET_PLAYGROUND=live; the six actions need VITE_BARET_PLAYGROUND_AGENT
- * (a funded wallet) as well. Otherwise the six answer from prepared samples
- * and say so under the button, a pasted transaction sends nothing and the
- * answer is the fail-closed one. The agent address only
+ * VITE_BARET_PLAYGROUND=live; the eight actions need VITE_BARET_PLAYGROUND_AGENT
+ * (a funded wallet) as well. Otherwise the eight answer from prepared
+ * samples and say so under the button, a pasted transaction sends nothing
+ * and the answer is the fail-closed one. The agent address only
  * shows for a pasted transaction, the one run that reads it. One status
  * region announces each verdict; nothing runs until the button is pressed.
  */
@@ -221,7 +221,7 @@ export function Playground({
               {playground.action.label}
             </Button>
             {/* What actually happens on this run when it is not live: prepared
-                answers for the six actions, and for a pasted transaction a
+                answers for the eight actions, and for a pasted transaction a
                 plain "not sent". What goes live, the footer note says. */}
             {choice !== "custom" ? (
               LIVE_ACTIONS ? null : (

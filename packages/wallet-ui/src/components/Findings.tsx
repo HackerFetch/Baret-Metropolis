@@ -1,6 +1,6 @@
 import { findings as findingCopy, sign } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
-import { hasValues } from "@baret/web-ui/components/CheckBlocks";
+import { bodyOf, hasValues } from "@baret/web-ui/components/CheckBlocks";
 import type { CheckFinding } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
@@ -30,6 +30,7 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
             value.startsWith("0x") && value.length === 42 ? truncateAddress(value) : value,
           ]),
         );
+        const { template, values } = bodyOf(words, item);
         return (
           <li
             key={item.code}
@@ -39,7 +40,7 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
             <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
               {fill(words.title, titleValues)}
             </p>
-            <p className={`${T.body} [overflow-wrap:anywhere]`}>{fill(words.body, item.values)}</p>
+            <p className={`${T.body} [overflow-wrap:anywhere]`}>{fill(template, values)}</p>
             {"fix" in words && words.fix && hasValues(words.fix, item.values) ? (
               <p className={`${T.small} [overflow-wrap:anywhere]`}>
                 {fill(words.fix, item.values)}
