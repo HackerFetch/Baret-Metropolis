@@ -16,7 +16,8 @@ import { AGENTS_ART, LCP_SIZES } from "../shared/assets.js";
  * 35 % graphite veil and drift a little with the scroll; below 1024 px the
  * photo is a band on top and the copy follows on graphite. The claim, one
  * paragraph (first sentence in chalk), the way to the quickstart (the one
- * orange) and to the playground, and the planned install line with its status.
+ * orange) and to the playground, and the install line (a clone of the
+ * repository) with its status.
  */
 
 const ID = "hero";
@@ -74,8 +75,8 @@ export function AgentsHero(): JSX.Element {
                 fullOnPhone
               />
             </div>
-            {/* The kit is not on npm yet: the line shows the planned command
-                without a copy button, so nobody runs it today. */}
+            {/* The kit is not on npm yet: the line is the clone that gets it,
+                and the status under it says what to run next. */}
             <div className="mt-8 max-w-[420px] border border-chalk/25 bg-ink/40 px-4 py-3">
               <code className="block break-all font-mono text-sm text-chalk">{hero.install}</code>
               <p className="mt-1 text-sm text-chalk/70">{hero.installStatus}</p>

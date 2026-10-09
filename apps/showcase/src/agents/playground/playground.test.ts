@@ -279,15 +279,14 @@ describe("the terminal", () => {
 });
 
 describe("the quickstart code follows the picked policy", () => {
-  it("swaps the template in the SDK and CLI samples only", async () => {
+  it("swaps the template in the SDK and CLI samples, leaves the HTTP sample alone", async () => {
     const { agents } = await import("@baret/content");
     const { withPolicy } = await import("../code.js");
-    expect(withPolicy(agents.quickstart.sdk.code, "strict")).toContain('policy: "strict"');
+    expect(withPolicy(agents.quickstart.sdk.code, "strict")).toContain('policyTemplate: "strict"');
     const cli = withPolicy(agents.quickstart.cli.code, "permissive");
-    expect(cli).toContain("--policy permissive");
-    expect(cli).toContain("# Strict, Balanced, Permissive");
-    expect(withPolicy(agents.quickstart.mcp.code, "strict")).toBe(
-      agents.quickstart.mcp.code.join("\n"),
+    expect(cli).toContain("BARET_POLICY_TEMPLATE=permissive");
+    expect(withPolicy(agents.quickstart.http.code, "strict")).toBe(
+      agents.quickstart.http.code.join("\n"),
     );
   });
 });

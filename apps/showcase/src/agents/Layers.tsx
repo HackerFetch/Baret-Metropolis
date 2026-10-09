@@ -14,7 +14,8 @@ import { AGENTS_ART } from "../shared/assets.js";
  * box), the vault (a covered switch with a tag: caps and the kill switch).
  * Each: the drawing, the title, one paragraph, its points on hairlines. The
  * vault's revoke and the fail-closed rule live in the points and the FAQ,
- * not in blocks of their own.
+ * not in blocks of their own. On the deep ground since the live agent (on
+ * the plain ground) follows it, so the grounds keep alternating.
  */
 
 const ID = "layers";
@@ -23,7 +24,7 @@ const ART = [AGENTS_ART.check, AGENTS_ART.signer, AGENTS_ART.vault] as const;
 
 export function Layers(): JSX.Element {
   return (
-    <Section id={ID} ground="ground">
+    <Section id={ID} ground="deep">
       <SectionHeader titleId={titleIdOf(ID)} title={layers.title} body={layers.body} />
       <ul className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-6 lg:gap-8">
         {layers.items.map((item, i) => (
