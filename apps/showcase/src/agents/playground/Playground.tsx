@@ -16,12 +16,12 @@ import { outcomeOf } from "./terminal.js";
 /**
  * Watch an agent ask first. Pick what the agent tries and a starting policy,
  * then check it: the terminal prints the exchange and the answer appears
- * with its findings. The six actions always answer from prepared samples and
- * say so under the button. A pasted transaction goes to Baret only with
- * VITE_BARET_PLAYGROUND=live; without it nothing is sent, the page says so,
- * and the answer is the fail-closed one. The agent address only shows for a
- * pasted transaction, the one run that reads it. One status region announces
- * each verdict; nothing runs until the button is pressed.
+ * with its findings. Both the six actions and a pasted transaction go to
+ * Baret only with VITE_BARET_PLAYGROUND=live; without it the six answer from
+ * prepared samples and say so under the button, a pasted transaction sends
+ * nothing and the answer is the fail-closed one. The agent address only
+ * shows for a pasted transaction, the one run that reads it. One status
+ * region announces each verdict; nothing runs until the button is pressed.
  */
 
 const ID = "playground";
@@ -219,11 +219,14 @@ export function Playground({
             <Button type="submit" variant="primary" size="lg" className="w-full md:w-auto">
               {playground.action.label}
             </Button>
-            {/* What actually happens on this run: prepared answers for the six
-                actions, and for a pasted transaction a plain "not sent" when
-                this build does not send it. */}
+            {/* What actually happens on this run, without VITE_BARET_PLAYGROUND=live:
+                prepared answers for the six actions, and for a pasted
+                transaction a plain "not sent". With the flag both go live,
+                and the footer note below says so instead. */}
             {choice !== "custom" ? (
-              <p className={T.small}>{playground.sample}</p>
+              LIVE ? null : (
+                <p className={T.small}>{playground.sample}</p>
+              )
             ) : LIVE ? null : (
               <p className={T.small}>{playground.notSent}</p>
             )}

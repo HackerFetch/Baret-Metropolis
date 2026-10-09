@@ -1,22 +1,30 @@
+import { agents } from "@baret/demo";
 import { FAILED } from "@baret/web-ui/lib/check";
 import type { CheckResult, CheckSource } from "@baret/web-ui/lib/check-types";
+import { type Address, getAddress } from "viem";
 // By file, like sample.ts: this module imports types only, so zod stays out of the chunk.
 import { createPolicy } from "../../../../../packages/guard/src/policy-templates.js";
-import { ANALYZE_URL, fromAnalyzeResponse } from "../../sites/kit/live.js";
-import { type ActionId, type PolicyName, SAMPLES, verdictFor } from "./sample.js";
+import { ANALYZE_URL, analyze, fromAnalyzeResponse } from "../../sites/kit/live.js";
+import { type ActionId, type PolicyName, randomAddress, SAMPLES, verdictFor } from "./sample.js";
 
 /**
  * Where "Check it as the agent" goes. The one place that knows the request
  * and the source of the answer.
  *
- * The six actions always answer from the prepared samples: their requests
- * would need builders in `@baret/demo` (not shipped yet), and the frontend
- * never writes calldata by hand. "Paste your own" is a real transaction: with
- * `VITE_BARET_PLAYGROUND=live` it goes to Baret's `/v1/analyze` with the
- * picked policy; without it nothing is sent, and since nothing was checked,
- * the answer is NOT_SENT: fail-closed like a failed check, but the page says
- * nothing was sent instead of "can't reach Baret". With the defaults the page
- * never calls the API.
+ * With `VITE_BARET_PLAYGROUND=live` both paths go to Baret's `/v1/analyze`
+ * and fail closed: the six actions through `@baret/demo`'s `agents`
+ * builders, "paste your own" with the picked policy. Without the flag the
+ * six actions answer from the prepared samples, and a pasted transaction is
+ * NOT_SENT: fail-closed like a failed check, but the page says nothing was
+ * sent instead of "can't reach Baret".
+ *
+ * The six actions all sign from `VITE_BARET_PLAYGROUND_AGENT`, a wallet kept
+ * funded with MON, real test USDC and fake USDC (same need as
+ * `verify-demo`'s own `--from`): the engine's loss rule and its post-balance
+ * floor cannot be computed from a zero balance and fail closed when they
+ * cannot, which would turn "pay" and "the wrong address" into Blocked no
+ * matter what they are built to show. Unset (local development only), a
+ * fresh unfunded address is used instead and the matrix will not match.
  */
 
 export type PlaygroundInput =
@@ -103,6 +111,17 @@ const env: unknown = import.meta.env.VITE_BARET_PLAYGROUND;
 /** True only when the env flag asks for live answers. */
 export const LIVE = env === "live";
 
+const agentEnv: unknown = import.meta.env.VITE_BARET_PLAYGROUND_AGENT;
+
+/**
+ * The address the six live actions sign from: the funded wallet named by
+ * `VITE_BARET_PLAYGROUND_AGENT`, else a fresh address with no balance
+ * (`env` is only a parameter so a test can pick the branch directly).
+ */
+export function agentAddress(env: unknown = agentEnv): Address {
+  return typeof env === "string" && isAddress(env) ? getAddress(env) : getAddress(randomAddress());
+}
+
 /**
  * A pasted transaction this build did not send. A failed check (Blocked), kept
  * as its own object so the page can say why: `runCheck` resolves the source's
@@ -148,10 +167,40 @@ async function liveResult(
   return parsed.success ? fromAnalyzeResponse(parsed.data, from) : FAILED;
 }
 
+/**
+ * One of the six actions, live: `@baret/demo`'s builder for it, with the
+ * picked template as `policyTemplate` (the server fills in full rules). The
+ * two shapes split exactly as `analyzeRequestSchema` expects them: an x402
+ * builder's `{ typedData, payment }` spread as is, never under `transaction`.
+ */
+function liveActionResult(
+  action: ActionId,
+  policy: PolicyName,
+  signal: AbortSignal,
+): Promise<CheckResult> {
+  const from = agentAddress();
+  const built = agents[action](from);
+  return "typedData" in built
+    ? analyze(
+        { typedData: built.typedData, payment: built.payment, policyTemplate: policy },
+        built.typedData.signer,
+        signal,
+      )
+    : analyze(
+        { transaction: built, userWallet: built.from, policyTemplate: policy },
+        built.from,
+        signal,
+      );
+}
+
 /** Picks the answer for one run; `runCheck` turns any failure into Blocked. */
 export function sourceFor(live: boolean): CheckSource<PlaygroundInput> {
   return async (input, signal) => {
-    if (input.kind === "action") return sampleResult(input.action, input.policy);
+    if (input.kind === "action") {
+      return live
+        ? liveActionResult(input.action, input.policy, signal)
+        : sampleResult(input.action, input.policy);
+    }
     if (!live) return NOT_SENT;
     return liveResult(input.transaction, input.from, input.policy, signal);
   };
