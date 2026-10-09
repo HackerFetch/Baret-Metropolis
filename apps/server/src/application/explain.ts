@@ -60,12 +60,39 @@ function shortAddress(a: string): string {
   return /^0x[0-9a-fA-F]{40}$/.test(a) ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
+interface FindingWords {
+  title: string;
+  body: string;
+  bodySelf?: string;
+  bodyAsset?: string;
+  bodySelfAsset?: string;
+  why?: string;
+  fix?: string;
+}
+
+/**
+ * The sentence the screens show for a finding (`bodyOf()` in @baret/web-ui
+ * makes the same choice): `details.side === "self"` picks the user's-own-account
+ * wording, and `details.asset` the wording of an asset whose own policy, not the
+ * user's rules, asks for the credential. Without it the model would be told
+ * "your rules require one" under a finding that says the asset does.
+ */
+function bodyFor(
+  entry: FindingWords | undefined,
+  details: Readonly<Record<string, unknown>> | undefined,
+): string | undefined {
+  if (!entry) return undefined;
+  const self = details?.side === "self";
+  const asset = typeof details?.asset === "string";
+  if (self && asset && entry.bodySelfAsset) return entry.bodySelfAsset;
+  if (asset && entry.bodyAsset) return entry.bodyAsset;
+  if (self && entry.bodySelf) return entry.bodySelf;
+  return entry.body;
+}
+
 /** What the model is shown: the verdict's facts plus Baret's own wording for each code. */
 export function explainPayload(verdict: AnalyzeResponse, language: ExplainLanguage) {
-  const copy = findingCopy as Record<
-    string,
-    { title: string; body: string; why?: string; fix?: string } | undefined
-  >;
+  const copy = findingCopy as Record<string, FindingWords | undefined>;
   return {
     language: LANGUAGE_NAMES[language],
     decision: verdict.decision,
@@ -80,7 +107,7 @@ export function explainPayload(verdict: AnalyzeResponse, language: ExplainLangua
         severity: f.severity,
         blocks: f.blocking,
         title: entry?.title ?? f.code,
-        what: fill(entry?.body, values),
+        what: fill(bodyFor(entry, f.details), values),
         why: fill(entry?.why, values),
         fix: fill(entry?.fix, values),
       };

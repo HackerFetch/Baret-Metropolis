@@ -13,9 +13,17 @@
  *             send each one. Nothing else is interpolated.
  *   title     the line in the findings list.
  *   body      what this request does, with its numbers.
- *   bodySelf  only on two compliance codes: rendered instead of `body` when the
+ *   bodySelf  only on compliance codes: rendered instead of `body` when the
  *             account in question is the user's own. The server says which
  *             side it is in the finding's details.
+ *   bodyAsset, bodySelfAsset  only on compliance codes: rendered instead of
+ *             `body` / `bodySelf` when the finding's `details.asset` is set.
+ *             A compliant asset's own policy demands the credential there,
+ *             not a rule the user chose, so the sentence names the asset's
+ *             rule instead of "your rules". `details.asset` is the asset's
+ *             address, so these sentences say "this asset" and never print
+ *             it. `bodyOf()` in `@baret/web-ui/components/CheckBlocks` picks
+ *             the right one.
  *   why       opens on "Why this matters". One or two sentences.
  *   fix       what the reader can do, when there is something to do.
  *
@@ -78,6 +86,9 @@ interface Finding {
   title: string;
   body: string;
   bodySelf?: string;
+  /** Rendered instead of `body` (or `bodySelf`) when `details.asset` is set. */
+  bodyAsset?: string;
+  bodySelfAsset?: string;
   why: string;
   fix?: string;
 }
@@ -240,7 +251,13 @@ export const findings = {
     title: "No verified identity",
     body: "{recipient} has no Cleanverse identity credential, and your rules require one.",
     bodySelf: "Your account has no Cleanverse identity credential, and your rules require one.",
-    why: "Your compliance rule lets a transfer through only between verified accounts. Cleanverse issues the credential and Baret reads it.",
+    /** Shown instead of `body` when the finding's `details.asset` is set: the
+     *  asset's own policy demands this, not a rule the user chose. */
+    bodyAsset:
+      "{recipient} has no Cleanverse identity credential, and this asset only moves between verified wallets.",
+    bodySelfAsset:
+      "Your account has no Cleanverse identity credential, and this asset only moves between verified wallets.",
+    why: "A compliant asset checks the identity on both sides of every transfer itself, and your own compliance rule can ask for the same check on other assets. Cleanverse issues the credential and Baret reads it.",
     fix: "The account without a credential needs to verify with Cleanverse first.",
   },
   COMPLIANCE_EXPIRED: {
@@ -249,7 +266,11 @@ export const findings = {
     title: "Verification has expired",
     body: "The Cleanverse credential on {recipient} has expired.",
     bodySelf: "The Cleanverse credential on your account has expired.",
-    why: "Credentials have an end date. Until it is renewed, your rules treat the account as unverified.",
+    bodyAsset:
+      "The Cleanverse credential on {recipient} has expired, and this asset only moves between verified wallets.",
+    bodySelfAsset:
+      "The Cleanverse credential on your account has expired, and this asset only moves between verified wallets.",
+    why: "Credentials have an end date. Until it is renewed, a compliant asset or your own rule treats the account as unverified.",
     fix: "The account owner renews it with Cleanverse. The transfer can go through after that.",
   },
   COMPLIANCE_TIER_INSUFFICIENT: {
@@ -273,6 +294,8 @@ export const findings = {
     values: [],
     title: "Identity check did not load",
     body: "Cleanverse did not answer, so the identity on each side of this transfer was not checked.",
+    bodyAsset:
+      "Cleanverse did not answer, so the identity check this asset requires on each side of the transfer did not run.",
     why: "A rule that cannot be checked counts as failed, not passed. No rule turns this off.",
     fix: "Check again in a moment.",
   },

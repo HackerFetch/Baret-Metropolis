@@ -25,6 +25,14 @@ export type ResultSource = "sample" | "live" | "failed";
 export interface CheckFinding {
   readonly code: FindingCode;
   readonly values: Readonly<Record<string, string>>;
+  /**
+   * Extra facts the server attaches to a finding (`findingSchema.details` in
+   * packages/guard). The wording branches on two of them (`bodyOf()`): `side`,
+   * "self" when the finding is about the user's own account, and `asset`, the
+   * address of a compliant asset whose own policy, not the caller's rules,
+   * demands the credential (apps/server compliance.ts).
+   */
+  readonly details?: Readonly<Record<string, unknown>>;
 }
 
 /** One "What changes" row, already in display units. */

@@ -1,7 +1,7 @@
 import { agents, findings as findingCopy, sign } from "@baret/content";
 import { ChangeRow } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
-import { hasValues } from "@baret/web-ui/components/CheckBlocks";
+import { bodyOf, hasValues } from "@baret/web-ui/components/CheckBlocks";
 import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
@@ -76,6 +76,7 @@ export function Result({
             <ul className="grid gap-4">
               {result.findings.map((item, i) => {
                 const words = findingCopy[item.code];
+                const { template, values } = bodyOf(words, item);
                 return (
                   <li
                     // biome-ignore lint/suspicious/noArrayIndexKey: a live answer can repeat a code, and the list never reorders.
@@ -85,9 +86,7 @@ export function Result({
                     <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
                       {fill(words.title, item.values)}
                     </p>
-                    <p className={`${T.body} [overflow-wrap:anywhere]`}>
-                      {fill(words.body, item.values)}
-                    </p>
+                    <p className={`${T.body} [overflow-wrap:anywhere]`}>{fill(template, values)}</p>
                     {"fix" in words && words.fix && hasValues(words.fix, item.values) ? (
                       <p className={T.small}>{fill(words.fix, item.values)}</p>
                     ) : null}

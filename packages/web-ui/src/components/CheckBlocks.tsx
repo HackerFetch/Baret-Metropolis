@@ -107,6 +107,40 @@ export function hasValues(template: string, values: Readonly<Record<string, stri
   return [...template.matchAll(/\{(\w+)\}/g)].every(([, key]) => Boolean(key && values[key]));
 }
 
+type BodyCopy = {
+  body: string;
+  bodySelf?: string;
+  bodyAsset?: string;
+  bodySelfAsset?: string;
+};
+
+/**
+ * The finding's sentence and the values to fill it: `details.side === "self"`
+ * picks `bodySelf` over `body`, and `details.asset` (a compliant asset's own
+ * policy, not the user's rule) picks the `*Asset` variant. The server sends
+ * the asset's address there, so those sentences say "this asset" and the
+ * values stay exactly as the server sent them. A finding with neither just
+ * reads `body`. Shared by every finding list: the showcase's `FindingList`,
+ * the playground's `Result`, the wallet's `Findings` and the extension's
+ * activity log.
+ */
+export function bodyOf(
+  copy: BodyCopy,
+  item: Pick<CheckFinding, "values" | "details">,
+): { readonly template: string; readonly values: Readonly<Record<string, string>> } {
+  const self = item.details?.side === "self";
+  const hasAsset = typeof item.details?.asset === "string";
+  const template =
+    self && hasAsset && copy.bodySelfAsset
+      ? copy.bodySelfAsset
+      : hasAsset && copy.bodyAsset
+        ? copy.bodyAsset
+        : self && copy.bodySelf
+          ? copy.bodySelf
+          : copy.body;
+  return { template, values: item.values };
+}
+
 /** Findings rendered from their codes: title, the filled sentence, the fix when it applies. */
 export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.Element {
   return (
@@ -115,15 +149,17 @@ export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.
         <p className={T.body}>{panel.noFindings}</p>
       ) : (
         <ul className="grid gap-4">
-          {items.map((item) => {
+          {items.map((item, i) => {
             const copy = findings[item.code];
+            const { template, values } = bodyOf(copy, item);
             return (
               <li
-                key={item.code}
+                // biome-ignore lint/suspicious/noArrayIndexKey: an answer can repeat a code (both sides of a compliance check), and the list never reorders.
+                key={`${item.code}-${i}`}
                 className="grid gap-1 border-l-4 border-[color:var(--blocked)] pl-3"
               >
                 <p className={`${T.h3} text-[color:var(--fg)]`}>{fill(copy.title, item.values)}</p>
-                <p className={T.body}>{fill(copy.body, item.values)}</p>
+                <p className={T.body}>{fill(template, values)}</p>
                 {"fix" in copy && copy.fix && hasValues(copy.fix, item.values) ? (
                   <p className={T.small}>{fill(copy.fix, item.values)}</p>
                 ) : null}
