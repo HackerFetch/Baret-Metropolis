@@ -1,8 +1,10 @@
-import { onboarding, walletFrame } from "@baret/content";
+import { walletFrame } from "@baret/content";
 import { Button, Mark } from "@baret/ui";
 import { Problem } from "@baret/wallet-ui/components/Block";
 import { T } from "@baret/web-ui/lib/type";
+import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useRef, useState } from "react";
+import { sessionTime } from "../live/session.js";
 
 export interface LockedProps {
   readonly onUnlock: () => void;
@@ -14,8 +16,14 @@ export interface LockedProps {
   readonly request?: boolean;
   /** Live: the passkey prompt is open, so the button waits. */
   readonly busy?: boolean;
-  /** Live: why the last passkey prompt did not unlock, in the onboarding's words. */
+  /** Live: why the last passkey prompt did not unlock, in the unlock's own words. */
   readonly problem?: "cancelled" | "unsupported" | "notCompatible" | null;
+  /**
+   * Live: when the session's deadline locked the wallet (ISO), or null after
+   * a manual lock or a reload. Set, the screen says the session ended and at
+   * what time, so an expiry reads as neither a crash nor the user's own doing.
+   */
+  readonly expiredAt?: string | null;
 }
 
 /** What a locked wallet shows instead of the app or a pending request. */
@@ -24,10 +32,17 @@ export function Locked({
   request = false,
   busy = false,
   problem = null,
+  expiredAt = null,
 }: LockedProps): JSX.Element {
   const { locked } = walletFrame;
   const [declined, setDeclined] = useState(false);
   const answer = useRef<HTMLParagraphElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  // After an expiry the screen replaced whatever was open, so focus starts at
+  // its title rather than at the top of an empty document.
+  useEffect(() => {
+    if (expiredAt) heading.current?.focus();
+  }, [expiredAt]);
   // The buttons go away on decline, so focus moves to the answer that replaces them.
   useEffect(() => {
     if (declined) answer.current?.focus();
@@ -37,13 +52,25 @@ export function Locked({
       <div className="flex size-24 items-center justify-center border border-[color:var(--rule-strong)] bg-[color:var(--surface)]">
         <Mark size={56} slit="var(--surface)" />
       </div>
-      <h1 className={`${T.h2} text-[color:var(--fg)]`}>{locked.title}</h1>
-      <p className={T.body}>{request ? locked.request : locked.body}</p>
+      {/* Polite, so a screen reader hears that the session ended on its own. */}
+      <div aria-live="polite" className="grid gap-6">
+        <h1 ref={heading} tabIndex={-1} className={`${T.h2} text-[color:var(--fg)] outline-none`}>
+          {expiredAt ? locked.expired.title : locked.title}
+        </h1>
+      </div>
+      {expiredAt ? (
+        <div className="grid gap-3">
+          <p className={T.body}>{fill(locked.expired.body, { time: sessionTime(expiredAt) })}</p>
+          <p className={T.body}>{locked.expired.unsent}</p>
+        </div>
+      ) : null}
+      {request ? (
+        <p className={T.body}>{locked.request}</p>
+      ) : expiredAt ? null : (
+        <p className={T.body}>{locked.body}</p>
+      )}
       {problem ? (
-        <Problem
-          title={onboarding.passkey.errors[problem].title}
-          body={onboarding.passkey.errors[problem].body}
-        />
+        <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
       ) : null}
       {declined ? null : (
         <div className="flex flex-wrap gap-3">

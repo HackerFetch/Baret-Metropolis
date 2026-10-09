@@ -77,7 +77,13 @@ export interface Live {
   create(name: string): Promise<boolean>;
   /** One passkey prompt: the account back from its passkey, stored credential or not. */
   unlock(): Promise<boolean>;
-  lock(): void;
+  /** Ends the session: "you" for the reader's own lock, "expired" for the deadline. */
+  lock(reason?: "you" | "expired"): void;
+  /**
+   * When the deadline locked the wallet, its ISO time; null after a lock by
+   * the reader, a reload, and once a new session opens.
+   */
+  readonly expiredAt: string | null;
   /** Reads the balances again; resolves when they are in the store. */
   refresh(): Promise<void>;
   /** Builds a transfer and asks Baret about it. */
@@ -153,6 +159,19 @@ function shown(amount: bigint, decimals: number): string {
   return fromUnits(amount, decimals, { min: 2, max: 6 });
 }
 
+/**
+ * The status with one part changed. The ref is moved on at once, so reads
+ * that answer before the next render (health, balances, vault) do not undo
+ * each other.
+ */
+function statusWith(
+  ref: { current: WalletState["status"] },
+  part: Partial<WalletState["status"]>,
+): WalletState["status"] {
+  ref.current = { ...ref.current, ...part };
+  return ref.current;
+}
+
 /** The most the network may charge for the call, in MON; "0" when it cannot be estimated. */
 async function feeOf(from: string | undefined, call: WalletCall): Promise<string> {
   if (!from) return "0";
@@ -183,6 +202,10 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<PasskeyProblem | null>(null);
   const [deadline, setDeadline] = useState<number | null>(null);
+  const [expiredAt, setExpiredAt] = useState<string | null>(null);
+  // The deadline as sign() sees it, without waiting for a render.
+  const deadlineRef = useRef<number | null>(null);
+  deadlineRef.current = deadline;
 
   const patch = useCallback(
     (next: Partial<Omit<WalletState, "sample" | "live">>) =>
@@ -190,13 +213,18 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     [dispatch],
   );
 
-  const lock = useCallback(() => {
-    session.current?.lock();
-    session.current = null;
-    wallet.current = null;
-    setDeadline(null);
-    patch({ locked: true, sessionEndsAt: null });
-  }, [patch]);
+  const lock = useCallback(
+    (reason: "you" | "expired" = "you") => {
+      session.current?.lock();
+      session.current = null;
+      wallet.current = null;
+      const ended = deadlineRef.current;
+      setExpiredAt(reason === "expired" && ended !== null ? new Date(ended).toISOString() : null);
+      setDeadline(null);
+      patch({ locked: true, sessionEndsAt: null });
+    },
+    [patch],
+  );
 
   const refresh = useCallback(async () => {
     const open = session.current;
@@ -212,11 +240,11 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
           decimals: b.decimals,
           contract: b.token,
         })),
-        status: { ...statusRef.current, balances: "ok" },
+        status: statusWith(statusRef, { balances: "ok" }),
       });
     } catch {
       if (session.current === open)
-        patch({ assets: [], status: { ...statusRef.current, balances: "error" } });
+        patch({ assets: [], status: statusWith(statusRef, { balances: "error" }) });
     }
   }, [patch]);
 
@@ -232,7 +260,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
           patch({
             vault: { address: "", asset: VAULT_ASSET, balance: "0.00", merchants: [], agent: null },
             agentPayments: [],
-            status: { ...statusRef.current, vault: "ok" },
+            status: statusWith(statusRef, { vault: "ok" }),
           });
         return true;
       }
@@ -260,7 +288,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
               },
             ]
           : [],
-        status: { ...statusRef.current, vault: "ok" },
+        status: statusWith(statusRef, { vault: "ok" }),
       });
       return true;
     } catch {
@@ -281,7 +309,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       if (!(await vaultRead())) {
         await new Promise((resolve) => window.setTimeout(resolve, 1500));
         if (!(await vaultRead()) && session.current === open)
-          patch({ status: { ...statusRef.current, vault: "error" } });
+          patch({ status: statusWith(statusRef, { vault: "error" }) });
       }
     })().finally(() => {
       vaultInFlight.current = null;
@@ -299,6 +327,11 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
   const open = useCallback(
     async (next: WalletSession, credential: StoredCredential) => {
       const { Wallet: WalletClass, createWalletChain } = await import("@baret/wallet-core");
+      // A passkey asked again while unlocked (every signature, or Unlock
+      // again): the old session's keys are wiped, not left for the GC.
+      const previous = session.current;
+      if (previous && previous !== next) previous.lock();
+      const same = previous?.address === next.address;
       session.current = next;
       wallet.current = new WalletClass({
         session: next,
@@ -309,7 +342,14 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       writeCredential(credential);
       setKnown(true);
       const ends = Date.now() + SESSION_MS;
+      deadlineRef.current = ends;
       setDeadline(ends);
+      setExpiredAt(null);
+      // The same account again: a new deadline, and the screens stay as they are.
+      if (same) {
+        patch({ sessionEndsAt: new Date(ends).toISOString() });
+        return;
+      }
       const rules = readRules();
       patch({
         address: next.address,
@@ -319,8 +359,22 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         ...(rules ? { policy: rules.policy, template: rules.template } : {}),
         // The log of what this wallet did lives in memory; the indexer's
         // history is read by the history screen.
-        status: { analyzer: "ok", balances: "loading", activity: "ok", vault: "loading" },
+        status: statusWith(statusRef, {
+          analyzer: "loading",
+          balances: "loading",
+          activity: "ok",
+          vault: "loading",
+        }),
       });
+      // Baret's server is asked, not assumed: a health check that fails or
+      // does not answer reads as unreachable (fail-closed).
+      void fetch("/api/health")
+        .then((res) => res.ok)
+        .catch(() => false)
+        .then((ok) => {
+          if (session.current === next)
+            patch({ status: statusWith(statusRef, { analyzer: ok ? "ok" : "error" }) });
+        });
       void refresh().then(vaultRefresh);
     },
     [patch, refresh, vaultRefresh, state.accountName],
@@ -339,7 +393,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
           kind === "create"
             ? await core.createWallet({ rpId, rpName: "Baret", userName: name })
             : await core.unlockWallet({ rpId, ...(stored ? { credential: stored } : {}) });
-        if (kind === "create") writeName(name);
+        // `name` is the passkey's own label in the browser's passkey list;
+        // the account keeps its display name.
         await open(got.session, got.credential);
         return true;
       } catch (error) {
@@ -352,14 +407,23 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     [busy, open],
   );
 
-  // The session ends on an absolute deadline, so a sleeping tab cannot outlive it.
+  // The session ends on an absolute deadline, always, so a sleeping tab cannot
+  // outlive it: checked every 5 s and again when the tab is shown.
   useEffect(() => {
-    if (deadline === null || !state.settings.lockAfterInactivity) return;
-    const id = window.setInterval(() => {
-      if (Date.now() >= deadline) lock();
-    }, 5000);
-    return () => window.clearInterval(id);
-  }, [deadline, lock, state.settings.lockAfterInactivity]);
+    if (deadline === null) return;
+    const check = () => {
+      if (Date.now() >= deadline) lock("expired");
+    };
+    const id = window.setInterval(check, 5000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [deadline, lock]);
 
   // Rules and the name are kept as the reader changes them.
   useEffect(() => {
@@ -374,7 +438,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       if (!signer) return { request: unreachable(context), signable: null };
       try {
         const verdict = await signer.check(call);
-        patch({ status: { ...statusRef.current, analyzer: "ok" } });
+        patch({ status: statusWith(statusRef, { analyzer: "ok" }) });
         const request = fromAnalyze(verdict, context);
         return {
           request,
@@ -382,7 +446,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         };
       } catch {
         // No verdict: nothing to sign with.
-        patch({ status: { ...statusRef.current, analyzer: "error" } });
+        patch({ status: statusWith(statusRef, { analyzer: "error" }) });
         return { request: unreachable(context), signable: null };
       }
     },
@@ -427,6 +491,10 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     ): Promise<SignReceipt> => {
       const signer = wallet.current;
       if (!signer) throw new Error("the wallet is locked");
+      // A tab that slept past the deadline may still hold the keys for the few
+      // seconds before the interval locks it: refuse rather than sign.
+      const ends = deadlineRef.current;
+      if (ends === null || Date.now() >= ends) throw new Error("the session ended");
       const { createWalletChain } = await import("@baret/wallet-core");
       // The reader has the verdict and its findings on screen and pressed
       // sign: that is the acknowledgement a Caution needs. The wallet still
@@ -484,8 +552,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         if (!factory) throw new Error("no vault factory on this network");
         return step(
           calls.create(factory, USDC),
-          "contractCall",
-          { contract: factory },
+          "vaultCreate",
+          {},
           "nothing",
           "createVault(token)",
         );
@@ -506,9 +574,9 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
             const to = await address();
             return step(
               calls.deposit(to, USDC, units(amount))[0],
-              "approval",
+              "vaultApproval",
               { spender: to, amount, asset: VAULT_ASSET },
-              "approval",
+              "vaultApproval",
               "approve(spender, amount)",
             );
           },
@@ -518,7 +586,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
               calls.deposit(await address(), USDC, units(amount))[1],
               "vaultDeposit",
               { amount, asset: VAULT_ASSET },
-              "unknown",
+              "vaultDeposit",
               "deposit(amount)",
             );
           },
@@ -530,7 +598,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
             calls.withdraw(await address(), units(amount)),
             "vaultWithdraw",
             { amount, asset: VAULT_ASSET },
-            "unknown",
+            "vaultWithdraw",
             "withdraw(amount)",
           );
         },
@@ -559,8 +627,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
           const to = await address();
           return step(
             calls.setMerchantPaused(to, merchant as `0x${string}`, paused),
-            "contractCall",
-            { contract: to },
+            paused ? "vaultPauseMerchant" : "vaultResumeMerchant",
+            { merchant },
             "nothing",
             "setMerchantPaused(merchant, paused)",
           );
@@ -586,7 +654,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
             return step(
               calls.setAgent(await address(), agent as `0x${string}`),
               "vaultAgentKey",
-              {},
+              { agent },
               "nothing",
               "setAgentSigner(agent)",
             );
@@ -635,6 +703,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       create: (name) => prompt("create", name),
       unlock: () => prompt("unlock", ""),
       lock,
+      expiredAt,
       refresh,
       transfer,
       recheck: check,
@@ -642,7 +711,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       forget,
       vault,
     }),
-    [known, busy, problem, prompt, lock, refresh, transfer, check, sign, forget, vault],
+    [known, busy, problem, prompt, lock, expiredAt, refresh, transfer, check, sign, forget, vault],
   );
 
   return <LiveContext value={value}>{children}</LiveContext>;
