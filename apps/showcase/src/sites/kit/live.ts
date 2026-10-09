@@ -31,8 +31,14 @@ export interface DemoPayment {
   readonly payment: Record<string, unknown>;
 }
 
-/** One request to Baret, read back with the visitor's wallet as the one whose changes show. */
-async function analyze(
+/**
+ * One request to Baret, read back with the visitor's wallet as the one whose
+ * changes show. Exported so a caller that needs a field neither
+ * `analyzeCall` nor `analyzePayment` sends (the agents playground's
+ * `policyTemplate`) can still go through this same fetch and response
+ * mapping, not a second copy of it.
+ */
+export async function analyze(
   body: Record<string, unknown>,
   wallet: string,
   signal: AbortSignal,

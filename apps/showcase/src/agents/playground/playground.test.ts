@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ACTIONS, randomAddress, SAMPLES, verdictFor } from "./sample.js";
 import {
+  agentAddress,
   isAddress,
   isNotSent,
   parseTransaction,
@@ -141,6 +142,102 @@ describe("the playground source", () => {
 
   it("makes a 0x address of 40 hex digits", () => {
     expect(randomAddress()).toMatch(/^0x[0-9a-f]{40}$/);
+  });
+});
+
+/** A stand-in for VITE_BARET_PLAYGROUND_AGENT, the funded agent wallet. */
+const FUNDED = "0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d";
+
+describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
+  const signal = new AbortController().signal;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function okResponse(decision: "safe" | "caution" | "blocked") {
+    return new Response(
+      JSON.stringify({
+        decision,
+        findings: [],
+        firedRules: [],
+        suggestions: [],
+        confidence: "high",
+        estimatedChanges: [],
+        approvals: [],
+        sources: [],
+        expiresAt: "2026-10-09T12:00:00Z",
+        meta: {
+          requestId: "r1",
+          analysisVersion: "1",
+          network: "testnet",
+          chainId: 10143,
+          analyzedAt: "2026-10-09T11:59:00Z",
+          blockNumber: "1",
+          traced: false,
+        },
+      }),
+    );
+  }
+
+  it("sends an x402 action as typedData and payment, never under transaction", async () => {
+    const fetch = vi.fn(async () => okResponse("safe"));
+    vi.stubGlobal("fetch", fetch);
+    const result = await sourceFor(true, FUNDED)(
+      { kind: "action", action: "pay", policy: "balanced" },
+      signal,
+    );
+    expect(result.verdict).toBe("safe");
+    expect(result.source).toBe("live");
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({ network: "testnet", policyTemplate: "balanced" });
+    expect(body.typedData).toBeDefined();
+    expect(body.payment).toBeDefined();
+    expect(body.transaction).toBeUndefined();
+  });
+
+  it("sends a plain-call action as a transaction, with userWallet and policyTemplate", async () => {
+    const fetch = vi.fn(async () => okResponse("blocked"));
+    vi.stubGlobal("fetch", fetch);
+    const result = await sourceFor(true, FUNDED)(
+      { kind: "action", action: "flaggedAddress", policy: "strict" },
+      signal,
+    );
+    expect(result.verdict).toBe("blocked");
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({ network: "testnet", policyTemplate: "strict" });
+    expect(body.transaction).toBeDefined();
+    expect(body.userWallet).toBe(body.transaction.from);
+    expect(body.typedData).toBeUndefined();
+  });
+
+  it("signs from VITE_BARET_PLAYGROUND_AGENT when it is a valid address", () => {
+    expect(agentAddress(FUNDED)).toBe(FUNDED);
+    expect(agentAddress(undefined)).toBeNull();
+    expect(agentAddress("not an address")).toBeNull();
+  });
+
+  it("answers the six actions from samples when live but no agent is set", async () => {
+    const fetch = vi.fn(async () => okResponse("safe"));
+    vi.stubGlobal("fetch", fetch);
+    const result = await sourceFor(true, null)(
+      { kind: "action", action: "pay", policy: "balanced" },
+      signal,
+    );
+    expect(result.source).toBe("sample");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("fails closed on a non-2xx status, like the demo sites", async () => {
+    vi.stubGlobal("fetch", async () => new Response("down", { status: 503 }));
+    const result = await sourceFor(true, FUNDED)(
+      { kind: "action", action: "pay", policy: "balanced" },
+      signal,
+    );
+    expect(result.verdict).toBe("blocked");
+    expect(result.source).toBe("failed");
   });
 });
 
