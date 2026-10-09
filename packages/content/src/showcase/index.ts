@@ -18,5 +18,7 @@ export type { OrbityieldContent } from "./orbityield.content.js";
 export { orbityield } from "./orbityield.content.js";
 export type { PixeldropContent } from "./pixeldrop.content.js";
 export { pixeldrop } from "./pixeldrop.content.js";
+export type { ReviewContent, ReviewScenarioId } from "./review.content.js";
+export { review } from "./review.content.js";
 export type { ScrybeContent } from "./scrybe.content.js";
 export { scrybe } from "./scrybe.content.js";

@@ -6,6 +6,7 @@ import { when } from "@baret/wallet-ui/data/format";
 import { changedFields, diffFields, fromTemplate } from "@baret/wallet-ui/data/rules";
 import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { GuardPolicy } from "@baret/wallet-ui/data/types";
+import { DraftFromSentence } from "@baret/wallet-ui/rules/DraftFromSentence";
 import { fromJson, type Preview, preview, valueText } from "@baret/wallet-ui/rules/fields";
 import { RuleEditor } from "@baret/wallet-ui/rules/RuleEditor";
 import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
@@ -147,6 +148,16 @@ export function Component() {
             </p>
             <p className={T.small}>{policy.intro.failClosed}</p>
           </div>
+          {/* KIMI suggests, the person ticks, the draft takes it; Save below still decides. Live only. */}
+          {state.live ? (
+            <DraftFromSentence
+              draft={draft}
+              onApply={(next) => {
+                replace(next);
+                setNotice(null);
+              }}
+            />
+          ) : null}
           <TemplateCards
             value={template}
             onPick={(name) => {

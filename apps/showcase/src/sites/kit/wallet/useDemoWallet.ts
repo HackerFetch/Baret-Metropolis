@@ -17,6 +17,13 @@ const envFrom: unknown = import.meta.env.VITE_BARET_DEMO_FROM;
 export const DEMO_FROM: Address | null =
   typeof envFrom === "string" && isAddress(envFrom) ? envFrom : null;
 
+/**
+ * The address "Check it live" simulates from when a visitor has no wallet:
+ * VITE_BARET_DEMO_FROM when set, else a fixed testnet address. Baret only
+ * simulates, so no key is involved and nothing is ever signed from it.
+ */
+export const DEMO_CHECK_FROM: Address = DEMO_FROM ?? "0x5aE13F1028144842f0384d09091067D6184F8197";
+
 /** The chain every live check runs on: Monad testnet. */
 export const MONAD_TESTNET_ID = 10143;
 

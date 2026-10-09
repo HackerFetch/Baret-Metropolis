@@ -291,6 +291,13 @@ describe("reviewTools", () => {
       recentActivity: [1, 2, 3, 4, 5],
       paidByMerchant: {},
       windowsComplete: true,
+      // The vault lists no merchant, so this call's payment cannot fit.
+      thisPayment: {
+        merchant: MERCHANT.toLowerCase(),
+        amountBaseUnits: "1000000",
+        listed: false,
+        fits: false,
+      },
     });
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe(`${BARET}/v1/audit/vault/${VAULT}?limit=100`);
@@ -322,6 +329,55 @@ describe("reviewTools", () => {
       [MERCHANT.toLowerCase()]: { lastHour: "500000", lastDay: "1100000" },
       [SPENDER.toLowerCase()]: { lastHour: "70000", lastDay: "70000" },
     });
+  });
+
+  it("works out in code whether this call's payment fits the merchant's caps now", async () => {
+    // The call pays 1 USDC (1_000_000). Caps: 1.5 per payment, 2 per hour, 5 per day.
+    const vault = (paused = false) => ({
+      id: VAULT,
+      merchants: [
+        {
+          address: MERCHANT.toLowerCase(),
+          perTxCap: "1500000",
+          hourlyCap: "2000000",
+          dailyCap: "5000000",
+          paused,
+          active: true,
+        },
+      ],
+    });
+    const paidLastHour = (amount: string) => [{ merchant: MERCHANT, amount, timestamp: NOW - 60 }];
+    type Result = {
+      thisPayment: { fits: boolean; roomBaseUnits?: string; listed: boolean } | null;
+    };
+    const read = async (body: unknown, overrides: Partial<ReviewInput> = {}) =>
+      (await tools(respond(200, body), overrides)("read_vault", { address: VAULT })) as Result;
+
+    const fits = await read({ vault: vault(), activity: [], payments: paidLastHour("500000") });
+    expect(fits.thisPayment).toMatchObject({ fits: true, roomBaseUnits: "1500000", listed: true });
+
+    const overHour = await read({
+      vault: vault(),
+      activity: [],
+      payments: paidLastHour("1500000"),
+    });
+    expect(overHour.thisPayment).toMatchObject({ fits: false, roomBaseUnits: "500000" });
+
+    const paused = await read({ vault: vault(true), activity: [], payments: [] });
+    expect(paused.thisPayment?.fits).toBe(false);
+
+    const unlisted = await read({
+      vault: { id: VAULT, merchants: [] },
+      activity: [],
+      payments: [],
+    });
+    expect(unlisted.thisPayment).toMatchObject({ listed: false, fits: false });
+
+    const notThisVault = await read(
+      { vault: vault(), activity: [], payments: [] },
+      { call: { to: SPENDER, data: "0x" } },
+    );
+    expect(notThisVault.thisPayment).toBeNull();
   });
 
   it("names the registry, not a vault, when the reputation read fails", async () => {

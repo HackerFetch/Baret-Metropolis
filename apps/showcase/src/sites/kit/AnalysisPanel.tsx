@@ -31,6 +31,9 @@ import type { CheckState } from "./useCheck.js";
  *   expected one, then the same blocks from the server's answer;
  * - failed: Blocked, and a note that the check did not finish.
  *
+ * A sample result offers "Check it live" (useCheck sets it): the same
+ * request through Baret's server from a demo address, then labelled so.
+ *
  * Shared by all six demo sites: each one passes its own copy.
  */
 
@@ -82,6 +85,9 @@ export function AnalysisPanel({
   // to send focus back to. Remember the control that opened it (a layout
   // effect runs before the sheet moves focus inside) and return there.
   const opener = useRef<HTMLElement | null>(null);
+  // "Check it live" unmounts itself; focus moves to the header first so a
+  // keyboard or screen-reader user is not dropped to <body>.
+  const header = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
     if (!open) return;
     const el = document.activeElement;
@@ -102,7 +108,11 @@ export function AnalysisPanel({
         }}
         className="gap-0 overflow-y-auto p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[520px]"
       >
-        <header className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5">
+        <header
+          ref={header}
+          tabIndex={-1}
+          className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5 outline-none"
+        >
           <div className="flex">
             <Tag tone="brand" size="sm">
               {common.brand.wordmark}
@@ -114,6 +124,25 @@ export function AnalysisPanel({
                 after a sample check does not relabel that sample. */}
             {(result ? result.source !== "sample" : live) ? panel.liveNote : panel.sample}
           </SheetDescription>
+          {/* A visitor with no wallet can still ask Baret's server: the same
+              request from a demo address, labelled as such. */}
+          {state.phase === "done" && state.demo ? (
+            <p className={`${T.small} text-[color:var(--fg)]`}>{panel.checkLive.note}</p>
+          ) : null}
+          {state.phase === "done" && state.checkLive ? (
+            <div className="flex">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  header.current?.focus();
+                  state.checkLive?.();
+                }}
+              >
+                {panel.checkLive.label}
+              </Button>
+            </div>
+          ) : null}
         </header>
 
         {/* The verdict is announced once it is ready; focus stays put. */}

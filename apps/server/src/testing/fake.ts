@@ -60,6 +60,10 @@ export const config: AppConfig = {
   nansenMode: "funder",
   envioEndpoint: null,
   explain: null,
+  policyDraftRateLimitPerMinute: 1000,
+  kimiDailyLimit: 500,
+  reviewRateLimitPerMinute: 1000,
+  review: null,
 };
 
 /** An in-memory chain. Everything defaults to an empty, healthy state. */

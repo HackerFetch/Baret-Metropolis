@@ -1,5 +1,6 @@
 import { MONAD_NETWORKS, type MonadNetwork } from "@baret/guard";
-import { getAddress, isAddress } from "viem";
+import { type Address, getAddress, type Hex, isAddress } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 
 const optionalAddress = z
@@ -82,7 +83,39 @@ const envSchema = z.object({
   KIMI_API_KEY: z.string().optional(),
   KIMI_BASE_URL: z.string().url().optional(),
   KIMI_MODEL: z.string().optional(),
+  /** KIMI also drafts rules from a sentence (POST /v1/policy/draft); paid credit, its own limit. */
+  BARET_POLICY_DRAFT_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  /** Fresh KIMI calls per UTC day, explain and policy drafts together. */
+  BARET_KIMI_DAILY_LIMIT: z.coerce.number().int().positive().default(500),
+
+  /** Qwen (QwenCloud) is the agent reviewer behind POST /v1/review. */
+  QWEN_API_KEY: z.string().optional(),
+  QWEN_BASE_URL: z.string().url().optional(),
+  QWEN_MODEL: z.string().optional(),
+  /** "0" turns /v1/review off without removing the key. */
+  BARET_REVIEW_ENABLED: z.enum(["0", "1"]).default("1"),
+  /** "1" lets an approved honest run send the payment from the demo vault. */
+  BARET_REVIEW_SEND: z.enum(["0", "1"]).default("0"),
+  /** /v1/review spends model credit and testnet MON: a tight limit and a daily cap. */
+  BARET_REVIEW_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(6),
+  BARET_REVIEW_DAILY_LIMIT: z.coerce.number().int().positive().default(200),
+  /** Where the reviewer's tools reach this server. Default: http://127.0.0.1:PORT. */
+  BARET_SELF_URL: z.string().url().optional(),
+  BARET_DEMO_VAULT: optionalAddress,
+  BARET_DEMO_MERCHANT: optionalAddress,
+  BARET_DEMO_AGENT: optionalAddress,
+  /** The demo agent's key. Unset: /v1/review reviews but never sends. */
+  BARET_DEMO_AGENT_PRIVATE_KEY: z
+    .string()
+    .trim()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "must be a 0x-prefixed 32-byte hex key")
+    .optional(),
 });
+
+/** Baret's own demo vault on Monad testnet (PaymentGuard, dUSDC, caps 1 / 2 / 5 a payment / hour / day). */
+export const DEMO_VAULT = getAddress("0x46F159DA1aD40A78526d35ea1Adb8531aDa52158");
+export const DEMO_MERCHANT = getAddress("0x1365566191bAA9872A64AcDce963751d5343ff49");
+export const DEMO_AGENT = getAddress("0x227ba9d7B649988C48662Ac42360727bA971647E");
 
 export interface NetworkConfig {
   network: MonadNetwork;
@@ -121,6 +154,26 @@ export interface AppConfig {
   envioEndpoint: string | null;
   /** Null: /v1/explain answers 503. */
   explain: { apiKey: string; baseUrl: string | null; model: string | null } | null;
+  policyDraftRateLimitPerMinute: number;
+  /** Fresh KIMI calls per UTC day (explain and policy drafts share it). */
+  kimiDailyLimit: number;
+  reviewRateLimitPerMinute: number;
+  /** Null (no Qwen key, or turned off): /v1/review answers 503. */
+  review: ReviewConfig | null;
+}
+
+export interface ReviewConfig {
+  apiKey: string;
+  baseUrl: string | null;
+  model: string | null;
+  selfUrl: string;
+  dailyLimit: number;
+  vault: Address;
+  merchant: Address;
+  /** The address of `agentPrivateKey` when it is set. */
+  agent: Address;
+  /** Set only when sends are on: the key and BARET_REVIEW_SEND=1. */
+  agentPrivateKey: Hex | null;
 }
 
 function cleanverse(apass: `0x${string}` | null, policy: `0x${string}` | null) {
@@ -134,6 +187,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     throw new Error(`Invalid environment:\n${lines.join("\n")}`);
   }
   const e = parsed.data;
+  const key = (e.BARET_DEMO_AGENT_PRIVATE_KEY as Hex | undefined) ?? null;
+  const demoAgent = key ? privateKeyToAccount(key).address : (e.BARET_DEMO_AGENT ?? DEMO_AGENT);
 
   const networks: AppConfig["networks"] = {
     testnet: {
@@ -185,5 +240,22 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     explain: e.KIMI_API_KEY
       ? { apiKey: e.KIMI_API_KEY, baseUrl: e.KIMI_BASE_URL ?? null, model: e.KIMI_MODEL ?? null }
       : null,
+    policyDraftRateLimitPerMinute: e.BARET_POLICY_DRAFT_RATE_LIMIT_PER_MINUTE,
+    kimiDailyLimit: e.BARET_KIMI_DAILY_LIMIT,
+    reviewRateLimitPerMinute: e.BARET_REVIEW_RATE_LIMIT_PER_MINUTE,
+    review:
+      e.QWEN_API_KEY && e.BARET_REVIEW_ENABLED === "1"
+        ? {
+            apiKey: e.QWEN_API_KEY,
+            baseUrl: e.QWEN_BASE_URL ?? null,
+            model: e.QWEN_MODEL ?? null,
+            selfUrl: e.BARET_SELF_URL ?? `http://127.0.0.1:${e.PORT}`,
+            dailyLimit: e.BARET_REVIEW_DAILY_LIMIT,
+            vault: e.BARET_DEMO_VAULT ?? DEMO_VAULT,
+            merchant: e.BARET_DEMO_MERCHANT ?? DEMO_MERCHANT,
+            agent: demoAgent,
+            agentPrivateKey: e.BARET_REVIEW_SEND === "1" ? key : null,
+          }
+        : null,
   };
 }

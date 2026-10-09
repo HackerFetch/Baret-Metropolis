@@ -34,7 +34,8 @@ export const QWEN: LlmProvider = {
   baseUrl: "https://maas.qwencloudapi.com/compatible-mode/v1",
   model: "qwen3.8-max",
   // qwen3.8-max thinks by default, and the API refuses JSON mode while it thinks.
-  extraBody: { enable_thinking: false },
+  // Temperature 0: the reviewer's decision should not change from run to run.
+  extraBody: { enable_thinking: false, temperature: 0 },
 };
 
 export const KIMI: LlmProvider = {

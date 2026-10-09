@@ -29,6 +29,8 @@ import { decodeTransaction, type NormalizedTx } from "../simulation/decode.js";
 import { type CallTrace, parseCallTrace } from "../simulation/trace.js";
 import type { Sources } from "../sources/types.js";
 import type { Explainer } from "./explain.js";
+import type { KimiBudget, PolicyDrafter } from "./policy-draft.js";
+import type { ReviewService } from "./review.js";
 import type { ExplanationCache, VerdictCache } from "./verdicts.js";
 
 export const ANALYSIS_VERSION = "1";
@@ -53,6 +55,12 @@ export interface AnalyzeDeps {
   verdicts?: VerdictCache | null;
   /** Explanations already written, so one verdict costs one model call. */
   explanations?: ExplanationCache | null;
+  /** Runs /v1/review's demo. Absent or null: that route answers 503. */
+  review?: ReviewService | null;
+  /** Writes /v1/policy/draft's proposals. Absent or null: that route answers 503. */
+  policyDrafter?: PolicyDrafter | null;
+  /** Fresh KIMI calls per day, shared by explain and policy drafts. Absent: no daily cap. */
+  kimiBudget?: KimiBudget | null;
 }
 
 async function lookup<T>(

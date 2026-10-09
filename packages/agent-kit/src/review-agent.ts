@@ -47,7 +47,7 @@ You work in two phases.
 The tools:
 - decode_transaction: the call decoded against the PaymentGuard vault, ERC-20 and ERC-721 ABIs: function name and named arguments.
 - get_baret_verdict: the Baret firewall's verdict on this call: decision, findings, fired rules, the simulated balance changes of every account (isAgent says which one is the agent), approvals, and the checks that were unavailable.
-- read_vault {address}: a PaymentGuard vault's state (agent, token, caps, merchants, paused), its newest activity, the current time (now, unix seconds) and, per merchant, what the vault already paid it in the last hour and the last 24 hours (base units).
+- read_vault {address}: a PaymentGuard vault's state (agent, token, caps, merchants, paused), its newest activity, the current time (now, unix seconds), per merchant what the vault already paid it in the last hour and the last 24 hours (base units), and thisPayment: for this call's payment, the merchant, the amount, the room left under its caps and fits (true or false), worked out in code. For the caps, rely on thisPayment.fits rather than your own arithmetic on long numbers.
 - check_reputation {address}: whether an address is listed in the Baret reputation registry, with its entry and history.
 
 Vault payments: the transaction calls PaymentGuard.pay(merchant, amount, ref) on the vault. The merchant and the amount are in the decoded call, and the tokens leave the vault, not the agent (balanceChanges with isAgent false).
@@ -217,6 +217,73 @@ function paidInWindows(payments: unknown[], now: number) {
   );
 }
 
+/**
+ * Whether this call's payment fits the merchant's caps now, worked out in code
+ * from the vault's state and the paid-in-window sums, so the model compares
+ * no long numbers itself (a misread cap once vetoed an honest payment).
+ * Null when the call is not a pay on this vault.
+ */
+function thisPayment(
+  input: ReviewInput,
+  address: string,
+  vault: unknown,
+  paid: Record<string, { lastHour: string; lastDay: string }>,
+) {
+  const decoded = decode(input);
+  if (decoded.function !== "pay" || input.call.to.toLowerCase() !== address.toLowerCase()) {
+    return null;
+  }
+  const args = decoded.args as Record<string, string>;
+  const merchant = String(args.merchant ?? "").toLowerCase();
+  let amount: bigint;
+  try {
+    amount = BigInt(args.amount ?? "");
+  } catch {
+    return null;
+  }
+  const merchants = (vault as { merchants?: unknown } | null)?.merchants;
+  const entry = (Array.isArray(merchants) ? merchants : []).find(
+    (m) => String((m as { address?: unknown })?.address ?? "").toLowerCase() === merchant,
+  ) as
+    | {
+        perTxCap?: unknown;
+        hourlyCap?: unknown;
+        dailyCap?: unknown;
+        paused?: unknown;
+        active?: unknown;
+      }
+    | undefined;
+  if (!entry) return { merchant, amountBaseUnits: amount.toString(), listed: false, fits: false };
+  const big = (v: unknown) => {
+    try {
+      return BigInt(String(v));
+    } catch {
+      return null;
+    }
+  };
+  const perTx = big(entry.perTxCap);
+  const hourly = big(entry.hourlyCap);
+  const daily = big(entry.dailyCap);
+  const lastHour = big(paid[merchant]?.lastHour ?? "0") ?? 0n;
+  const lastDay = big(paid[merchant]?.lastDay ?? "0") ?? 0n;
+  if (perTx === null || hourly === null || daily === null) {
+    return { merchant, amountBaseUnits: amount.toString(), listed: true, fits: false };
+  }
+  const rooms = [perTx, daily - lastDay, ...(hourly > 0n ? [hourly - lastHour] : [])];
+  const room = rooms.reduce((a, b) => (b < a ? b : a));
+  const active = entry.active !== false;
+  const paused = entry.paused === true;
+  return {
+    merchant,
+    amountBaseUnits: amount.toString(),
+    listed: true,
+    active,
+    paused,
+    roomBaseUnits: (room < 0n ? 0n : room).toString(),
+    fits: active && !paused && amount > 0n && amount <= room,
+  };
+}
+
 /** The four read-only tools the agentic reviewer may call for one transaction. */
 export function reviewTools(input: ReviewInput, options: ReviewToolsOptions): LlmTool[] {
   const fetchImpl = options.fetch ?? globalThis.fetch;
@@ -268,7 +335,7 @@ export function reviewTools(input: ReviewInput, options: ReviewToolsOptions): Ll
     {
       name: "read_vault",
       description:
-        "A PaymentGuard vault's state (agent, token, caps, merchants, paused), its 5 newest activities, the current time and what it paid each merchant in the last hour and 24 hours.",
+        "A PaymentGuard vault's state (agent, token, caps, merchants, paused), its 5 newest activities, the current time, what it paid each merchant in the last hour and 24 hours, and thisPayment: whether this call's payment fits the merchant's caps now (fits), worked out in code.",
       parameters: ADDRESS_ARGUMENT,
       run: async (args, signal) => {
         const address = addressArgument(args);
@@ -279,13 +346,15 @@ export function reviewTools(input: ReviewInput, options: ReviewToolsOptions): Ll
         );
         const now = Math.floor((options.now ?? Date.now)() / 1000);
         const payments = Array.isArray(body.payments) ? body.payments : [];
+        const paid = paidInWindows(payments, now);
         return {
           now,
           vault: body.vault,
           recentActivity: newest(body.activity),
-          paidByMerchant: paidInWindows(payments, now),
+          paidByMerchant: paid,
           // At the limit, older payments inside the window may be missing.
           windowsComplete: payments.length < PAYMENT_LIMIT,
+          thisPayment: thisPayment(input, address, body.vault, paid),
         };
       },
     },

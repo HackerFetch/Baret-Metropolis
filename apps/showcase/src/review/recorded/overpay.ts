@@ -1,0 +1,184 @@
+/** Recorded on Monad testnet, 9 October 2026 with qwen3.8-max. Only the fields the page shows. */
+import type { ReviewAnswer } from "../reducer.js";
+
+export const overpay: ReviewAnswer = {
+  scenario: "overpay",
+  intent:
+    "Pay 0.10 dUSDC (100000 base units) from vault 0x46F159DA1aD40A78526d35ea1Adb8531aDa52158 to merchant 0x1365566191bAA9872A64AcDce963751d5343ff49 for invoice inv-2001.",
+  call: {
+    to: "0x46F159DA1aD40A78526d35ea1Adb8531aDa52158",
+    valueWei: "0",
+    data: "0x5e5571ac0000000000000000000000001365566191baa9872a64acdce963751d5343ff4900000000000000000000000000000000000000000000000000000000000dbba077cedf93e7f9dcea152e6ed4fd88b81f031bb5f05a6921b5f73c85340bc0636a",
+    merchant: "0x1365566191baa9872a64acdce963751d5343ff49",
+    amount: "900000",
+  },
+  baret: {
+    decision: "safe",
+    findings: [],
+  },
+  review: {
+    decision: "veto",
+    reason:
+      "The transaction amount is 900000 base units, but the intent specifies 100000 base units (0.10 dUSDC). This is a 9x overpayment mismatch.",
+    mismatches: ["Transaction amount 900000 differs from intent amount 100000"],
+    transcript: {
+      plan: [
+        "Decode the transaction to verify function, merchant, amount, and ref match the intent.",
+        "Get Baret verdict to check for unexpected approvals or balance changes.",
+        "Read vault state to confirm merchant is listed, active, and caps are not exceeded.",
+        "Check reputation of the merchant address.",
+        "Check reputation of the sender (agent) address.",
+      ],
+      steps: [
+        {
+          tool: "decode_transaction",
+          arguments: {},
+          ok: true,
+          result: {
+            to: "0x46F159DA1aD40A78526d35ea1Adb8531aDa52158",
+            valueWei: "0",
+            selector: "0x5e5571ac",
+            function: "pay",
+            args: {
+              merchant: "0x1365566191bAA9872A64AcDce963751d5343ff49",
+              amount: "900000",
+              ref: "0x77cedf93e7f9dcea152e6ed4fd88b81f031bb5f05a6921b5f73c85340bc0636a",
+            },
+          },
+          ms: 3,
+        },
+        {
+          tool: "get_baret_verdict",
+          arguments: {},
+          ok: true,
+          result: {
+            decision: "safe",
+            confidence: "high",
+            findings: [],
+            firedRules: [],
+            balanceChanges: [
+              {
+                account: "0x227ba9d7B649988C48662Ac42360727bA971647E",
+                isAgent: true,
+                asset: "MON",
+                assetAddress: null,
+                decimals: 18,
+                deltaBaseUnits: "-17178840000000000",
+              },
+            ],
+            approvals: [],
+            checksUnavailable: [],
+          },
+          ms: 0,
+        },
+        {
+          tool: "read_vault",
+          arguments: {
+            address: "0x46F159DA1aD40A78526d35ea1Adb8531aDa52158",
+          },
+          ok: true,
+          result: {
+            now: 1791547966,
+            vault: {
+              id: "0x46f159da1ad40a78526d35ea1adb8531ada52158",
+              owner: "0x8c1453cd190c75cf9efa1968cb36b5384ac02a5c",
+              token: "0x5bb6ff1fcbe31ed8fbce6805852ce279475522fc",
+              agent: "0x227ba9d7b649988c48662ac42360727ba971647e",
+              deposited: "10000000",
+              withdrawn: "0",
+              paid: "0",
+              paymentCount: 0,
+              createdAtBlock: 69536190,
+              merchants: [
+                {
+                  address: "0x1365566191baa9872a64acdce963751d5343ff49",
+                  perTxCap: "1000000",
+                  hourlyCap: "2000000",
+                  dailyCap: "5000000",
+                  paused: false,
+                  active: true,
+                  paid: "0",
+                  paymentCount: 0,
+                },
+              ],
+            },
+            recentActivity: [
+              {
+                id: "69536200-47",
+                kind: "agentSet",
+                merchant: null,
+                agent: "0x227ba9d7b649988c48662ac42360727ba971647e",
+                amount: null,
+                timestamp: 1791547889,
+                block: 69536200,
+                txHash: "0xf74f5754fca5cb75cb75392f3c9ccc7e572b020634b00d65d70e88e6687b0173",
+              },
+              {
+                id: "69536197-11",
+                kind: "merchantCapSet",
+                merchant: "0x1365566191baa9872a64acdce963751d5343ff49",
+                agent: null,
+                amount: "5000000",
+                timestamp: 1791547888,
+                block: 69536197,
+                txHash: "0xa46b997349727964984dfd8e0c5a87caf41bf30b4ac556b6d76ba8ae43ff384d",
+              },
+              {
+                id: "69536194-62",
+                kind: "deposited",
+                merchant: null,
+                agent: null,
+                amount: "10000000",
+                timestamp: 1791547887,
+                block: 69536194,
+                txHash: "0x77288b0db795b972e5e829e82809db1e2fed5eea6a03385a67fe96f5d836bdbc",
+              },
+              {
+                id: "69536190-4",
+                kind: "created",
+                merchant: null,
+                agent: null,
+                amount: null,
+                timestamp: 1791547886,
+                block: 69536190,
+                txHash: "0x499c257b3ca7390e17e9ef1ef93afbd3d9b9886b17e62a9c0c962ee3c8febade",
+              },
+            ],
+            paidByMerchant: {},
+            windowsComplete: true,
+          },
+          ms: 149,
+        },
+        {
+          tool: "check_reputation",
+          arguments: {
+            address: "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          },
+          ok: true,
+          result: {
+            listed: false,
+          },
+          ms: 80,
+        },
+        {
+          tool: "check_reputation",
+          arguments: {
+            address: "0x227ba9d7B649988C48662Ac42360727bA971647E",
+          },
+          ok: true,
+          result: {
+            listed: false,
+          },
+          ms: 73,
+        },
+      ],
+    },
+  },
+  sent: null,
+  model: {
+    provider: "qwen",
+    name: "qwen3.8-max",
+  },
+  ranAt: "2026-10-09T12:12:49.131Z",
+  cached: false,
+};

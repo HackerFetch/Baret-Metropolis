@@ -7,7 +7,10 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./reviewer": "./src/reviewer.ts",
+    "./review-agent": "./src/review-agent.ts",
+    "./abi": "./src/abi.ts"
   },
   "bin": {
     "baret": "./src/cli.ts"

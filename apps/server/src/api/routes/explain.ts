@@ -4,6 +4,8 @@ import { LlmUnavailableError } from "@baret/llm";
 import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
 
+class ExplainDailyLimitError extends Error {}
+
 export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
   /**
    * A verdict this server returned, in plain language. The words come from a
@@ -38,7 +40,12 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
       });
     }
     const language = body.data.language ?? "en";
-    const write = () => explainer.explain(verdict, language);
+    // A fresh model call counts against the daily KIMI cap; a cached one does not.
+    // Over the cap: 503, so the screens keep showing the findings as they do.
+    const write = () => {
+      if (deps.kimiBudget && !deps.kimiBudget.take()) throw new ExplainDailyLimitError();
+      return explainer.explain(verdict, language);
+    };
     try {
       const explanation = deps.explanations
         ? await deps.explanations.getOrCreate(requestId, language, write)
@@ -52,6 +59,12 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
       };
       return answer;
     } catch (err) {
+      if (err instanceof ExplainDailyLimitError) {
+        return reply.code(503).send({
+          error: "explain_unavailable",
+          message: "today's explanations are used up",
+        });
+      }
       if (err instanceof LlmUnavailableError) {
         req.log.warn({ err: err.message, status: err.status }, "explanation model unavailable");
         return reply.code(503).send({
