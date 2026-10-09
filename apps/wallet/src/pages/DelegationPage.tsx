@@ -694,6 +694,11 @@ export function Component() {
                     // The wallet does not sign a block: the way past is the rule.
                     canOverride={false}
                     {...(sessionNote ? { sessionNote } : {})}
+                    // KIMI words a checked answer only: its id is Baret's requestId.
+                    // An unreachable one is passed too, so a Check again that
+                    // succeeds is worded; SignRequest asks about the request it
+                    // shows and never about an unreachable one.
+                    {...(!flow.pending ? { explainId: flow.request.id } : {})}
                     passkey={state.settings.passkeyEverySignature}
                     onDecline={() => close(flow.sent, flow.steps.length)}
                     onAgain={() => close(flow.sent, flow.steps.length)}

@@ -53,12 +53,17 @@ export const config: AppConfig = {
   apiKeys: [],
   corsOrigins: [],
   rateLimitPerMinute: 1000,
+  explainRateLimitPerMinute: 1000,
   requestTimeoutMs: 1000,
   verdictTtlSeconds: 30,
   nansenApiKey: null,
   nansenMode: "funder",
   envioEndpoint: null,
   explain: null,
+  policyDraftRateLimitPerMinute: 1000,
+  kimiDailyLimit: 500,
+  reviewRateLimitPerMinute: 1000,
+  review: null,
 };
 
 /** An in-memory chain. Everything defaults to an empty, healthy state. */

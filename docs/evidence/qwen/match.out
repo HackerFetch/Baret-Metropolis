@@ -1,0 +1,185 @@
+plan: 1. Decode the transaction to verify function, merchant, amount, and ref match the intent. 2. Get Baret verdict to check balance changes, approvals, and findings. 3. Read vault state to confirm merchant is listed, active, and caps are not exceeded. 4. Check reputation of the merchant address. 5. Check reputation of the agent (from) address. 6. Compare all gathered facts against the intent for mismatches.
+tool decode_transaction -> ok (3 ms)
+tool get_baret_verdict -> ok (0 ms)
+tool read_vault 0x0A82...A35 -> ok (157 ms)
+tool check_reputation 0x1365...f49 -> ok (135 ms)
+tool check_reputation 0x3067...353 -> ok (68 ms)
+decision: approve: The decoded pay call matches the intent's merchant, amount (100000), and vault; the merchant is active, not paused, and within per-tx/hourly/daily caps; neither party is in the reputation registry; only expected gas fees leave the agent.
+Transcript written to docs/evidence/qwen/match.json
+{
+  "decision": "safe",
+  "review": {
+    "decision": "approve",
+    "reason": "The decoded pay call matches the intent's merchant, amount (100000), and vault; the merchant is active, not paused, and within per-tx/hourly/daily caps; neither party is in the reputation registry; only expected gas fees leave the agent.",
+    "mismatches": [],
+    "transcript": {
+      "model": {
+        "provider": "qwen",
+        "name": "qwen3.8-max"
+      },
+      "plan": [
+        "Decode the transaction to verify function, merchant, amount, and ref match the intent.",
+        "Get Baret verdict to check balance changes, approvals, and findings.",
+        "Read vault state to confirm merchant is listed, active, and caps are not exceeded.",
+        "Check reputation of the merchant address.",
+        "Check reputation of the agent (from) address.",
+        "Compare all gathered facts against the intent for mismatches."
+      ],
+      "steps": [
+        {
+          "tool": "decode_transaction",
+          "arguments": {},
+          "ok": true,
+          "result": {
+            "to": "0x0A82671420114E47c672D5e8e23017DdCE850A35",
+            "valueWei": "0",
+            "selector": "0x5e5571ac",
+            "function": "pay",
+            "args": {
+              "merchant": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+              "amount": "100000",
+              "ref": "0x09ba48030a0f1dee1cf57d6969aa1ec1057749dbe7297e820ae578d2599eb0f6"
+            }
+          },
+          "ms": 3
+        },
+        {
+          "tool": "get_baret_verdict",
+          "arguments": {},
+          "ok": true,
+          "result": {
+            "decision": "safe",
+            "confidence": "high",
+            "findings": [],
+            "firedRules": [],
+            "balanceChanges": [
+              {
+                "account": "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",
+                "isAgent": true,
+                "asset": "MON",
+                "assetAddress": null,
+                "decimals": 18,
+                "deltaBaseUnits": "-17720664000000000"
+              }
+            ],
+            "approvals": [],
+            "checksUnavailable": []
+          },
+          "ms": 0
+        },
+        {
+          "tool": "read_vault",
+          "arguments": {
+            "address": "0x0A82671420114E47c672D5e8e23017DdCE850A35"
+          },
+          "ok": true,
+          "result": {
+            "now": 1791546894,
+            "vault": {
+              "id": "0x0a82671420114e47c672d5e8e23017ddce850a35",
+              "owner": null,
+              "token": "0x534b2f3a21130d7a60830c2df862319e593943a3",
+              "agent": "0x306707be3cd50b1cca5e27f838afcfc4fd84c353",
+              "deposited": "5000000",
+              "withdrawn": "0",
+              "paid": "500000",
+              "paymentCount": 2,
+              "createdAtBlock": 68462899,
+              "merchants": [
+                {
+                  "address": "0x1365566191baa9872a64acdce963751d5343ff49",
+                  "perTxCap": "500000",
+                  "hourlyCap": "1000000",
+                  "dailyCap": "2000000",
+                  "paused": false,
+                  "active": true,
+                  "paid": "500000",
+                  "paymentCount": 2
+                }
+              ]
+            },
+            "recentActivity": [
+              {
+                "id": "68466682-2",
+                "kind": "paid",
+                "merchant": "0x1365566191baa9872a64acdce963751d5343ff49",
+                "agent": "0x306707be3cd50b1cca5e27f838afcfc4fd84c353",
+                "amount": "250000",
+                "timestamp": 1791223039,
+                "block": 68466682,
+                "txHash": "0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3"
+              },
+              {
+                "id": "68466640-2",
+                "kind": "agentRevoked",
+                "merchant": null,
+                "agent": "0xb05ac3af10934d45c44e4fcbfd01ad856729266b",
+                "amount": null,
+                "timestamp": 1791223026,
+                "block": 68466640,
+                "txHash": "0xb58f89b122ba5cf7ddc1c44550b9c05311a050f4e41f81c405fc9e3d4800d8e3"
+              },
+              {
+                "id": "68466640-3",
+                "kind": "agentSet",
+                "merchant": null,
+                "agent": "0x306707be3cd50b1cca5e27f838afcfc4fd84c353",
+                "amount": null,
+                "timestamp": 1791223026,
+                "block": 68466640,
+                "txHash": "0xb58f89b122ba5cf7ddc1c44550b9c05311a050f4e41f81c405fc9e3d4800d8e3"
+              },
+              {
+                "id": "68462966-75",
+                "kind": "paid",
+                "merchant": "0x1365566191baa9872a64acdce963751d5343ff49",
+                "agent": "0xb05ac3af10934d45c44e4fcbfd01ad856729266b",
+                "amount": "250000",
+                "timestamp": 1791221916,
+                "block": 68462966,
+                "txHash": "0x0b01928b2ec0edc8fa325a89c702cea78268582621c4db4f16a02df8de4e845b"
+              },
+              {
+                "id": "68462904-1",
+                "kind": "merchantCapSet",
+                "merchant": "0x1365566191baa9872a64acdce963751d5343ff49",
+                "agent": null,
+                "amount": "2000000",
+                "timestamp": 1791221898,
+                "block": 68462904,
+                "txHash": "0xcf3b53b93fe4a08ea0f442dac60981769c90ad46d1dad2573d1aab7cabb35947"
+              }
+            ],
+            "paidByMerchant": {},
+            "windowsComplete": true
+          },
+          "ms": 157
+        },
+        {
+          "tool": "check_reputation",
+          "arguments": {
+            "address": "0x1365566191bAA9872A64AcDce963751d5343ff49"
+          },
+          "ok": true,
+          "result": {
+            "listed": false
+          },
+          "ms": 135
+        },
+        {
+          "tool": "check_reputation",
+          "arguments": {
+            "address": "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353"
+          },
+          "ok": true,
+          "result": {
+            "listed": false
+          },
+          "ms": 68
+        }
+      ],
+      "ms": 8714
+    }
+  },
+  "signed": false
+}

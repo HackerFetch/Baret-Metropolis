@@ -42,6 +42,31 @@ export const policies = {
     import: "Import rules",
   },
 
+  /**
+   * Rules from a sentence (live wallet only): KIMI turns a sentence into
+   * suggested changes. Nothing applies here: ticked changes go into the
+   * draft, and the page's own Save gate decides. A change that loosens a
+   * rule starts unticked. When the server can't draft, one quiet line and
+   * the block hides itself.
+   */
+  draft: {
+    label: "Write a rule in your own words",
+    placeholder: "Never let a single payment go over 20 dUSDC",
+    submit: "Suggest changes",
+    running: "KIMI is reading your sentence...",
+    byline: "Drafted by KIMI, a language model. Nothing changes until you save.",
+    changesTitle: "Suggested changes",
+    change: "{from} to {to}",
+    loosens: "This loosens a rule, so it starts unticked. Tick it only if you mean it.",
+    refusedTitle: "Not changed",
+    unknownRule: "A rule Baret does not have",
+    badValue: "Baret can't read the value KIMI suggested.",
+    none: "KIMI found no rule to change in that sentence. Try saying it another way.",
+    apply: "Add to my draft",
+    applied: "Added to your draft. Check the form and the preview, then save.",
+    unavailable: "Drafting from a sentence is not available right now.",
+  },
+
   preview: {
     title: "Before you save",
     body: "Your last {count} requests, checked again under these rules.",

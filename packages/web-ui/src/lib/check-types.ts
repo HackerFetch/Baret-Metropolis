@@ -51,6 +51,8 @@ export interface CheckResult {
   readonly findings: readonly CheckFinding[];
   readonly changes: readonly CheckChange[];
   readonly approvals: readonly CheckApproval[];
+  /** Live answers only: Baret's meta.requestId, which /v1/explain takes. */
+  readonly requestId?: string;
 }
 
 /**

@@ -1,7 +1,9 @@
 import { runCheck } from "@baret/web-ui/lib/check";
 import type { CheckResult, CheckSource } from "@baret/web-ui/lib/check-types";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Address } from "viem";
+import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
 
 /**
  * The panel's state: idle, then a walk through the analysis phases, then the
@@ -10,12 +12,47 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * is over and the answer is in: a fast answer waits for the walk, a slow one
  * keeps the last phase lit until it lands or the check times out. Reduced
  * motion skips the walk and waits on the last phase.
+ *
+ * A prepared sample (no address to simulate from) offers "Check it live":
+ * the same input again from DEMO_CHECK_FROM, so a visitor with no wallet
+ * still sees Baret's server answer, and KIMI's plain words with it. Nothing
+ * is fetched until that press.
  */
 
 export type CheckState =
   | { readonly phase: "idle" }
   | { readonly phase: "checking"; readonly step: number; readonly result: CheckResult | null }
-  | { readonly phase: "done"; readonly result: CheckResult };
+  | {
+      readonly phase: "done";
+      readonly result: CheckResult;
+      /** True when this answer was simulated from the demo address, not the visitor's. */
+      readonly demo?: boolean;
+      /** Set on a sample whose input had no address: runs it live from the demo address. */
+      readonly checkLive?: () => void;
+    };
+
+/** What every site's input carries: the address a live check simulates from, null for the sample. */
+export interface FromInput {
+  readonly from: Address | null;
+}
+
+/** The same input, simulated from the demo address. Pure, exported for tests. */
+export function demoInput<I extends FromInput>(input: I): I {
+  return { ...input, from: DEMO_CHECK_FROM };
+}
+
+/**
+ * An input that carries `from: null`: a site check with no address. Inputs
+ * of another shape (the agents playground's) never offer the live check.
+ */
+function noAddress(input: unknown): input is FromInput {
+  return typeof input === "object" && input !== null && "from" in input && input.from === null;
+}
+
+/** Whether "Check it live" is offered: a sample answer to an input with no address. */
+export function offersLive(state: CheckState, input: unknown): boolean {
+  return state.phase === "done" && state.result.source === "sample" && noAddress(input);
+}
 
 export const STEP_MS = 160;
 
@@ -46,6 +83,9 @@ export function useCheck<I>(
   // aborts the one before.
   const run = useRef(0);
   const controller = useRef<AbortController | null>(null);
+  // The input of the last run, which "Check it live" sends again.
+  const last = useRef<I | null>(null);
+  const [demo, setDemo] = useState(false);
 
   const stop = useCallback(() => {
     run.current += 1;
@@ -53,9 +93,11 @@ export function useCheck<I>(
     controller.current = null;
   }, []);
 
-  const start = useCallback(
-    (input: I) => {
+  const begin = useCallback(
+    (input: I, fromDemo: boolean) => {
       stop();
+      last.current = input;
+      setDemo(fromDemo);
       const id = run.current;
       const ctrl = new AbortController();
       controller.current = ctrl;
@@ -66,6 +108,14 @@ export function useCheck<I>(
     },
     [reduce, steps, source, stop],
   );
+
+  const start = useCallback((input: I) => begin(input, false), [begin]);
+
+  const checkLive = useCallback(() => {
+    const input = last.current;
+    // Same shape as the input, only `from` changed, so it is still an I.
+    if (noAddress(input)) begin(demoInput(input) as I, true);
+  }, [begin]);
 
   const reset = useCallback(() => {
     stop();
@@ -80,5 +130,10 @@ export function useCheck<I>(
 
   useEffect(() => stop, [stop]);
 
-  return { state, start, reset };
+  const shown = useMemo<CheckState>(() => {
+    if (state.phase !== "done") return state;
+    return offersLive(state, last.current) ? { ...state, demo, checkLive } : { ...state, demo };
+  }, [state, demo, checkLive]);
+
+  return { state: shown, start, reset };
 }

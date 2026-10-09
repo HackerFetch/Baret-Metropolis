@@ -3,6 +3,8 @@ import { type AnalyzeResponse, FINDING_CODES } from "@baret/guard";
 import { FAILED, runCheck } from "@baret/web-ui/lib/check";
 import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { SOURCE as NOVASWAP_SOURCE } from "../novaswap/source.js";
+import { SOURCE as SCRYBE_SOURCE } from "../scrybe/source.js";
 import {
   analyzeCall,
   analyzePayment,
@@ -10,7 +12,8 @@ import {
   fromAnalyzeResponse,
   shortAddress,
 } from "./live.js";
-import { advance, type CheckState, settle } from "./useCheck.js";
+import { advance, type CheckState, demoInput, offersLive, settle } from "./useCheck.js";
+import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
 
 const WALLET = "0x7a3f9e21c84b5d06f13a2e9b7c40d58e6f21c21e";
 const OTHER = "0xac9517a70c88480c9fA7E9a280DA485F7f552C29";
@@ -179,7 +182,7 @@ describe("live answer", () => {
 
   it("keeps the visitor's own changes and allowances, whatever the address case", () => {
     const result = fromAnalyzeResponse(response(), WALLET);
-    expect(result).toMatchObject({ source: "live", verdict: "blocked" });
+    expect(result).toMatchObject({ source: "live", verdict: "blocked", requestId: "r1" });
     expect(result.findings).toEqual([
       {
         code: "ERC20_APPROVAL_UNLIMITED",
@@ -240,5 +243,62 @@ describe("live answer", () => {
 
   it("has words for every finding code the server can send", () => {
     for (const code of FINDING_CODES) expect(findings[code], code).toBeDefined();
+  });
+});
+
+describe("check it live, with no wallet", () => {
+  const done = (result: CheckResult): CheckState => ({ phase: "done", result });
+
+  it("is offered only on a sample answer to an input with no address", () => {
+    expect(offersLive(done(SAFE), { from: null })).toBe(true);
+    expect(offersLive(done(SAFE), { from: WALLET })).toBe(false);
+    expect(offersLive(done({ ...SAFE, source: "live" }), { from: null })).toBe(false);
+    expect(offersLive(done(FAILED), { from: null })).toBe(false);
+    expect(offersLive({ phase: "idle" }, { from: null })).toBe(false);
+    expect(offersLive(done(SAFE), null)).toBe(false);
+  });
+
+  it("sends the same input from the demo address, a valid testnet address", () => {
+    const input = { mode: "safe", amount: "2.5", wei: 1n, from: null } as const;
+    expect(demoInput(input)).toEqual({ ...input, from: DEMO_CHECK_FROM });
+    expect(DEMO_CHECK_FROM).toMatch(/^0x[0-9a-fA-F]{40}$/);
+  });
+
+  it("fetches nothing for the sample, then posts from the demo address on the press", async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify(response({ decision: "safe" }))));
+    vi.stubGlobal("fetch", fetch);
+    const input = {
+      mode: "safe",
+      amount: "2.5",
+      wei: 2_500_000_000_000_000_000n,
+      from: null,
+    } as const;
+    const signal = new AbortController().signal;
+    expect((await NOVASWAP_SOURCE(input, signal)).source).toBe("sample");
+    expect(fetch).not.toHaveBeenCalled();
+
+    const result = await NOVASWAP_SOURCE(demoInput(input), signal);
+    expect(result).toMatchObject({ source: "live", verdict: "safe", requestId: "r1" });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/v1/analyze");
+    const body = JSON.parse(String(init.body));
+    expect(body.transaction.from).toBe(DEMO_CHECK_FROM);
+    expect(body.userWallet).toBe(DEMO_CHECK_FROM);
+  });
+
+  it("works for an x402 payment too: the demo address is the signer", async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify(response({ decision: "safe" }))));
+    vi.stubGlobal("fetch", fetch);
+    const input = { mode: "safe", cap: 250_000n, from: null } as const;
+    const result = await SCRYBE_SOURCE(demoInput(input), new AbortController().signal);
+    expect(result.source).toBe("live");
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).typedData.signer).toBe(DEMO_CHECK_FROM);
+  });
+
+  it("fails closed when the server is down: Blocked, not the sample", async () => {
+    vi.stubGlobal("fetch", async () => new Response("down", { status: 503 }));
+    const input = { mode: "danger", amount: "20", wei: 0n, from: null } as const;
+    expect(await NOVASWAP_SOURCE(demoInput(input), new AbortController().signal)).toBe(FAILED);
   });
 });

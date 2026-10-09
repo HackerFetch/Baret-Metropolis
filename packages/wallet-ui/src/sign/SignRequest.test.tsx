@@ -1,7 +1,8 @@
-import { sign } from "@baret/content";
+import { explain, sign } from "@baret/content";
+import { clearExplainCache } from "@baret/web-ui/lib/explain";
 import { fill } from "@baret/web-ui/lib/util";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SIGN_REQUESTS } from "../data/sample.js";
 import type { SignRequest as Request } from "../data/types.js";
 import { SignRequest } from "./SignRequest.js";
@@ -335,5 +336,78 @@ describe("SignRequest, live only", () => {
     fireEvent.click(screen.getByRole("button", { name: SEND }));
     await waitFor(() => expect(spoken().textContent).toBe(sign.status.passkeyCancelled));
     expect(screen.getByRole("button", { name: SEND })).toBeTruthy();
+  });
+});
+
+describe("SignRequest, in plain words", () => {
+  afterEach(() => {
+    clearExplainCache();
+    vi.unstubAllGlobals();
+  });
+
+  it("shows KIMI's explanation under the findings for a checked live request", async () => {
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" });
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            decision: "safe",
+            explanation: {
+              headline: "The spender is new",
+              summary: "It was deployed today.",
+              points: [],
+              advice: "Lower the amount.",
+            },
+            language: "en",
+            model: { provider: "kimi", name: "kimi-k2" },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <SignRequest request={sample("safe")} pending={false} explainId="req-1" onLog={vi.fn()} />,
+    );
+    expect(await screen.findByText("The spender is new")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: explain.title })).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows nothing when the answer is about another verdict", async () => {
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" });
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            decision: "safe",
+            explanation: {
+              headline: "All clear",
+              summary: "Nothing found.",
+              points: [],
+              advice: "Go on.",
+            },
+            language: "en",
+            model: { provider: "kimi", name: "kimi-k2" },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <SignRequest request={sample("caution")} pending={false} explainId="req-2" onLog={vi.fn()} />,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByRole("heading", { name: explain.title })).toBeNull());
+    expect(screen.queryByText("All clear")).toBeNull();
+  });
+
+  it("asks nothing without an explain id", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    render(<SignRequest request={sample("safe")} pending={false} onLog={vi.fn()} />);
+    expect(screen.queryByRole("heading", { name: explain.title })).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
