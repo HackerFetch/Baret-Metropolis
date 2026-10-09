@@ -1,4 +1,4 @@
-import { send } from "@baret/content";
+import { receive, send, sign, walletFrame } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import { Block, Problem, Rows } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
@@ -16,6 +16,7 @@ import {
   transferRequest,
 } from "@baret/wallet-ui/send/send";
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
@@ -23,6 +24,8 @@ import { type JSX, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { type LiveRequest, useLive } from "../live/live.js";
+import { sessionTime } from "../live/session.js";
+import { signWithSettings } from "../live/signWithSettings.js";
 import { routes } from "../routes.js";
 import { unchecked } from "./unchecked.js";
 
@@ -103,7 +106,23 @@ export function Component() {
     const reason = ready(state, "balances") ? send.errors.noAssets : send.errors.balance;
     return (
       <Screen title={send.title} body={send.body} picture={WALLET_ART.send}>
-        <Problem title={reason.title} body={reason.body} />
+        <Problem
+          title={reason.title}
+          body={reason.body}
+          {...(reason === send.errors.noAssets
+            ? {
+                // A new tab, so the open session is still here on the way back.
+                action: (
+                  <LinkButton
+                    href={walletFrame.links.faucet}
+                    label={receive.faucet.action.label}
+                    icon="arrow-up-right"
+                    newTab
+                  />
+                ),
+              }
+            : {})}
+        />
       </Screen>
     );
   }
@@ -123,9 +142,12 @@ export function Component() {
   const fee = feeFor(asset.symbol);
   const units = toUnits(value, asset.decimals);
   const shown = units === null ? "0.00" : fromUnits(units, asset.decimals, { group: true });
+  // Live: the fee is read from the chain on the sign request, so the summary
+  // does not guess it; the sample keeps its constant.
   const left = (() => {
     const balance = toUnits(asset.balance, asset.decimals) ?? 0n;
-    const spend = (units ?? 0n) + (asset.symbol === "MON" ? (toUnits(fee, 18) ?? 0n) : 0n);
+    const feeUnits = asset.symbol === "MON" && !live ? (toUnits(fee, 18) ?? 0n) : 0n;
+    const spend = (units ?? 0n) + feeUnits;
     return fromUnits(balance - spend, asset.decimals, { group: true });
   })();
 
@@ -156,14 +178,28 @@ export function Component() {
   }
 
   /** Live: signs and sends what Baret cleared, after the passkey when the setting asks for it. */
-  async function signLive(outcome: "sent" | "overridden", sending: () => void) {
+  async function signLive(
+    outcome: "sent" | "overridden",
+    sending: () => void,
+    progress: (step: "signing" | "sending") => void,
+  ) {
     const cleared = signable.current;
     if (!live || !cleared) throw new Error("nothing was cleared to sign");
-    if (state.settings.passkeyEverySignature && !(await live.unlock())) {
-      throw new Error("the passkey was not given");
-    }
-    return live.sign(cleared, outcome, sending);
+    return signWithSettings(
+      live,
+      state.settings.passkeyEverySignature,
+      cleared,
+      outcome,
+      sending,
+      progress,
+    );
   }
+
+  // Live: an open session signs without a prompt, and the request says until when.
+  const sessionNote =
+    live && state.sessionEndsAt && !state.settings.passkeyEverySignature
+      ? fill(sign.session.note, { time: sessionTime(state.sessionEndsAt) })
+      : null;
 
   if (review) {
     return (
@@ -180,7 +216,19 @@ export function Component() {
               setTried(false);
               setRun((n) => n + 1);
             }}
-            {...(live ? { pending, onCheckAgain: ask, onSign: signLive } : {})}
+            {...(live
+              ? {
+                  pending,
+                  onCheckAgain: ask,
+                  onSign: signLive,
+                  explorer: (hash: string) => `${walletFrame.links.explorer}/tx/${hash}`,
+                  // The wallet does not sign a block: the way past is the rule.
+                  canOverride: false,
+                }
+              : {})}
+            {...(sessionNote ? { sessionNote } : {})}
+            // KIMI words a checked answer only: its id is Baret's requestId.
+            {...(live && review.verdict !== "unreachable" ? { explainId: review.id } : {})}
             onLog={(item) =>
               // Live balances are read from Monad after the send, never worked out here.
               !live && (item.kind === "sent" || item.kind === "overridden")
@@ -344,11 +392,12 @@ export function Component() {
                   ),
                 },
                 { label: summary.amount, value: `${shown} ${asset.symbol}` },
-                { label: summary.fee, value: `${amount(fee)} MON` },
+                { label: summary.fee, value: live ? summary.feeLater : `${amount(fee)} MON` },
                 {
                   label: summary.total,
-                  value:
-                    asset.symbol === "MON"
+                  value: live
+                    ? fill(summary.totalPlusFee, { amount: `${shown} ${asset.symbol}` })
+                    : asset.symbol === "MON"
                       ? `${amount(fromUnits((units ?? 0n) + (toUnits(fee, 18) ?? 0n), 18))} MON`
                       : `${shown} ${asset.symbol} + ${amount(fee)} MON`,
                 },

@@ -71,6 +71,11 @@ export const history = {
       body: "No request has broken your rules so far. Check that your rules say what you want.",
       action: { label: "Review your rules", href: "/policies" },
     },
+    /** Live: no MON yet, so the first step is the faucet (walletFrame.links.faucet). */
+    noFunds: {
+      body: "Every verdict lands here. Get free testnet MON first, then send some to see Baret check it.",
+      action: { label: "Get testnet MON" },
+    },
   },
 
   export: {

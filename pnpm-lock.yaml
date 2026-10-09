@@ -111,6 +111,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@baret/agent-kit':
+        specifier: workspace:*
+        version: link:../../packages/agent-kit
       '@baret/content':
         specifier: workspace:*
         version: link:../../packages/content
@@ -139,9 +142,6 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@baret/agent-kit':
-        specifier: workspace:*
-        version: link:../../packages/agent-kit
       '@baret/demo':
         specifier: workspace:*
         version: link:../../packages/demo
@@ -172,6 +172,9 @@ importers:
       '@baret/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@baret/wallet-core':
+        specifier: workspace:*
+        version: link:../../packages/wallet-core
       '@baret/web-ui':
         specifier: workspace:*
         version: link:../../packages/web-ui

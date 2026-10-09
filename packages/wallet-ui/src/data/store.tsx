@@ -62,17 +62,10 @@ export interface WalletStatus {
  * - empty: a new account with no assets, activity or permissions.
  * - offline: Baret unreachable, balances and activity failed to load.
  * - drift: the default account plus a drift alert.
- * - passkey-error, fund-timeout: the default account; onboarding reads
- *   them to fail its passkey or its funding step.
+ * - passkey-error: the default account; onboarding reads it to fail its
+ *   passkey step.
  */
-export const SAMPLES = [
-  "default",
-  "empty",
-  "offline",
-  "drift",
-  "passkey-error",
-  "fund-timeout",
-] as const;
+export const SAMPLES = ["default", "empty", "offline", "drift", "passkey-error"] as const;
 export type Sample = (typeof SAMPLES)[number];
 
 /** The sample a query string names; anything unknown is the default one. */

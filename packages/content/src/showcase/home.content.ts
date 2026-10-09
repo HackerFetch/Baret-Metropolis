@@ -173,8 +173,10 @@ export const home = {
     /** The verdict check row between the header and the columns (H1, with the
      *  rule switch from H2). Sample data, never a live check. The verdict per
      *  sample comes from `verdictOf`; the "If signed" sentence is the matching
-     *  `examples[].impact`. Each sample links to the showcase site that runs
-     *  the same check for real. */
+     *  `examples[].impact`. Each sample links to a showcase site that runs a
+     *  related request for real. Since D-033 (2026-10-09) no site answers
+     *  Caution under Balanced, so the swap sample's link says what OrbitYield
+     *  shows: an unknown pool, blocked because it keeps what you send. */
     demo: {
       legend: "Try a sample request",
       samples: [
@@ -187,7 +189,7 @@ export const home = {
         {
           id: "swap",
           label: "Swap 100 USDC via an unverified contract",
-          tryLabel: "Try it on OrbitYield",
+          tryLabel: "See an unknown pool blocked on OrbitYield",
           href: "/orbityield",
         },
         {
@@ -387,7 +389,7 @@ export const home = {
         name: "OrbitYield",
         category: "Staking",
         hook: "Stake for yield. See who has verified the pool.",
-        verdict: "caution",
+        verdict: "blocked",
         href: "/orbityield",
       },
       {
@@ -401,7 +403,7 @@ export const home = {
         name: "LaunchPad",
         category: "Token sale",
         hook: "Buy into a token sale. See who still holds the controls.",
-        verdict: "caution",
+        verdict: "blocked",
         href: "/launchpad",
       },
     ],

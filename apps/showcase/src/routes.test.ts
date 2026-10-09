@@ -33,6 +33,12 @@ describe("registry", () => {
     ]);
   });
 
+  it("keeps /review out of the nav, with its own title", () => {
+    expect(routes.review.path).toBe("/review");
+    expect(routes.review.title).toBe("Qwen reviews an agent's payment · Baret");
+    expect(navRoutes(routes, "marketing").some((route) => route.path === "/review")).toBe(false);
+  });
+
   it("knows all six demo paths", () => {
     expect(DEMO_PATHS.size).toBe(6);
     expect(DEMO_PATHS.has("/scrybe")).toBe(true);
@@ -52,6 +58,7 @@ describe("links in the copy", () => {
       agents: content.agents,
       docs: content.docs,
       install: content.install,
+      review: content.review,
       common: content.common,
     };
 

@@ -31,7 +31,7 @@ merge to main ────────► CI on main ──── all checks gre
                                                          └─► Vercel production deploy of each changed app
 ```
 
-- **CI is the gate for the API:** `render.yaml` uses `autoDeployTrigger: checksPass`, so Render deploys a `main` commit only after its GitHub checks pass. `buildFilter` skips API deploys for commits that touch only the frontend.
+- **CI is the gate for the API:** `render.yaml` uses `autoDeployTrigger: checksPass`, so Render deploys a `main` commit only after its GitHub checks pass. `buildFilter` skips API deploys for commits that touch only the frontend: it deploys only on changes to `apps/server/**`, `packages/guard/**`, `packages/content/**`, `packages/llm/**`, `packages/agent-kit/**`, `pnpm-lock.yaml` or `render.yaml`.
 - **Vercel builds on its own** through the Git integration. `ignoreCommand` skips a build when neither the app nor `packages/` nor the lockfile changed since the last successful deploy of that branch (`VERCEL_GIT_PREVIOUS_SHA`); when that commit is unknown or not in the clone, it builds. To make Vercel also wait for CI, turn on the required checks in GitHub (step 2.4 below).
 - **Secrets never live in the repo.** Render env vars marked `sync: false` and Vercel env vars are entered in the dashboards.
 
@@ -51,6 +51,7 @@ merge to main ────────► CI on main ──── all checks gre
    - `BARET_CORS_ORIGINS` — leave empty for now (the extension calls the API from its own origin).
    - `BARET_API_KEYS` — **leave empty** while the showcase calls the API from the browser: a static site cannot keep a key secret. Rate limiting (120/min per IP) still applies. Keys come with agent-kit.
    - The rest (registry, Nansen, Cleanverse) — empty until those land; their rules fail closed.
+   - `KIMI_API_KEY` for `/v1/explain` and `/v1/policy/draft`, `QWEN_API_KEY` for `/v1/review`, and `BARET_DEMO_AGENT_PRIVATE_KEY`, the demo agent's key for the payment an approved honest review sends from Baret's demo vault on Monad testnet (`render.yaml` sets `BARET_REVIEW_SEND=1`). Without a key its route answers 503; without the agent key `/v1/review` reviews but never sends. Not set yet (E7): nothing of D-037 or D-038 is in production until they are and the merge deploys. `/health/ready` then shows `explain`, `policyDraft`, `review` and `reviewSends` true. The limits and the kill switch (`BARET_REVIEW_ENABLED`) keep their defaults from `apps/server/src/config/env.ts` unless set (`docs/ARCHITECTURE.md` §9).
 4. Apply. `/health` shows the running commit (`commit`) and `/health/ready` shows which optional settings each network has (`configured`: USDC, registry, number of known contracts) — booleans and counts only, no values. Use them to confirm an env change actually reached the running service.
    When it is live, open `https://baret-monad-api.onrender.com/health/ready` → `{"status":"ready",...}`.
 5. If Render assigned another name (e.g. `baret-monad-api-x1y2`), put that URL into both `vercel.json` rewrites.

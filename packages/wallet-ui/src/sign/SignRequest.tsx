@@ -1,7 +1,8 @@
-import { common, sign } from "@baret/content";
+import { common, explain, sign } from "@baret/content";
 import { Button, ChangeRow, VerdictTag } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
+import { PlainWordsBody } from "@baret/web-ui/components/PlainWords";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { counted, cx, fill } from "@baret/web-ui/lib/util";
@@ -9,7 +10,7 @@ import { type JSX, type ReactNode, useEffect, useId, useRef, useState } from "re
 import { Findings } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
-import type { ActivityItem, SignRequest as Request } from "../data/types.js";
+import type { ActivityItem, SignRequest as Request, SignSource } from "../data/types.js";
 import { HoldButton } from "./HoldButton.js";
 import {
   actionParts,
@@ -47,20 +48,45 @@ import {
  *   result and the log show. A rejection before `sending()` goes back to the
  *   decision; one after it keeps the screen on Sending, so nothing is signed
  *   twice. Left out, timers stand in and the sample block is shown. Nothing
- *   is sent.
+ *   is sent. A third argument, `progress`, moves the status on from the
+ *   passkey step; a rejection still on that step reads as a cancelled passkey.
+ * - Given `onCheckAgain`, the screen is live in one more way: Baret's answer
+ *   running out at review leaves the request stale, to be checked again,
+ *   instead of declining it, and the countdown shows only near its end.
+ * - `explorer`, `canOverride` and `sessionNote`: the result's explorer link,
+ *   a Blocked request with no override, and a line under the decision.
  */
 
 type Phase =
   | { readonly kind: "checking" }
   | { readonly kind: "review" }
   | { readonly kind: "override" }
-  | { readonly kind: "retrying" }
+  /** Live: Baret's answer ran out at review; signing waits for a fresh check. */
+  | { readonly kind: "stale" }
+  /** `stale`: the check was asked from the stale state, so a miss goes back there. */
+  | { readonly kind: "retrying"; readonly stale?: boolean }
   | {
       readonly kind: "signing";
       readonly step: "passkey" | "signing" | "sending";
       readonly outcome: Outcome;
     }
-  | { readonly kind: "result"; readonly outcome: Outcome; readonly block: string };
+  | {
+      readonly kind: "result";
+      readonly outcome: Outcome;
+      readonly block: string;
+      /** Live: the transaction, for the explorer link. */
+      readonly hash?: string;
+    };
+
+/** Live: the countdown line shows only once this few seconds are left. */
+const FRESH_SHOWN = 10;
+
+/** Live: which line each source the server asked gets under Checked by. */
+const SOURCE_LINES: Partial<Record<SignSource["name"], string>> = {
+  nansen: sign.verdict.checkedBy.live.nansen,
+  "reputation-registry": sign.verdict.checkedBy.live.registry,
+  cleanverse: sign.verdict.checkedBy.live.cleanverse,
+};
 
 /** What a live signature returns: the transaction and the block that took it. */
 export interface SignReceipt {
@@ -126,6 +152,28 @@ function verdictWords(request: Request): { title: string; summary: string } {
       : request.verdict === "blocked"
         ? { title: verdict.blocked.title, summary: blockedSummary(request) }
         : { title: verdict.unreachable.title, summary: verdict.unreachable.summary };
+}
+
+/**
+ * Who checked it. Live, only the sources the server reports as answered,
+ * plus a could-not-be-reached line for each that did not; a skipped source
+ * is never claimed. The sample has no sources: the static list.
+ */
+function checkedLines(request: Request): string[] {
+  if (!request.sources) return Object.values(sign.verdict.checkedBy.sources);
+  return request.sources.flatMap((source) => {
+    const line = SOURCE_LINES[source.name];
+    if (!line || source.status === "skipped") return [];
+    return source.status === "ok"
+      ? [line]
+      : [fill(sign.verdict.checkedBy.unavailable, { source: line })];
+  });
+}
+
+/** The simulation line names Alchemy: shown unless the server says Alchemy did not answer. */
+function checkedAlchemy(request: Request): boolean {
+  const alchemy = request.sources?.find((source) => source.name === "alchemy");
+  return !alchemy || alchemy.status === "ok";
 }
 
 /**
@@ -196,11 +244,14 @@ function Result({
   block,
   onAgain,
   againLabel,
+  explorer,
 }: {
   outcome: Outcome;
   block: string;
   onAgain?: () => void;
   againLabel: string;
+  /** Live: the transaction's page on the explorer, opened in a new tab. */
+  explorer?: string;
 }): JSX.Element {
   const words = sign.result[outcome];
   const title = useRef<HTMLParagraphElement>(null);
@@ -218,11 +269,18 @@ function Result({
         {words.title}
       </p>
       <p className={T.body}>{fill(words.body, { block })}</p>
-      {onAgain ? (
-        <div className="flex pt-2">
-          <Button type="button" variant="ghost" onClick={onAgain}>
-            {againLabel}
-          </Button>
+      {onAgain || explorer ? (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
+          {onAgain ? (
+            <Button type="button" variant="ghost" onClick={onAgain}>
+              {againLabel}
+            </Button>
+          ) : null}
+          {explorer ? (
+            <a href={explorer} target="_blank" rel="noopener noreferrer" className={RULES_LINK}>
+              {sign.result.sent.action.label}
+            </a>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -247,14 +305,26 @@ export function SignRequest({
   framed = true,
   compact = false,
   network = "testnet",
+  explorer,
+  canOverride = true,
+  sessionNote,
+  explainId,
 }: {
   request: Request;
   /** True while Baret's answer is on its way; left out, a sample timer stands in. */
   pending?: boolean;
   /** Check again under Can't reach Baret: the new request, or null while still down. */
   onCheckAgain?: () => Promise<Request | null>;
-  /** Signs and sends; calls `sending` when the transaction leaves. */
-  onSign?: (outcome: "sent" | "overridden", sending: () => void) => Promise<SignReceipt>;
+  /**
+   * Signs and sends; calls `sending` when the transaction leaves. With the
+   * passkey asked for, the screen stays on the passkey step until `progress`
+   * (or `sending`) moves it on.
+   */
+  onSign?: (
+    outcome: "sent" | "overridden",
+    sending: () => void,
+    progress: (step: "signing" | "sending") => void,
+  ) => Promise<SignReceipt>;
   /** Writes the outcome to the account's log (Send also moves the balances). */
   onLog: (item: ActivityItem) => void;
   /** Called once with the outcome, after it is logged. */
@@ -284,6 +354,21 @@ export function SignRequest({
   compact?: boolean;
   /** The network the request is on, named in the header. */
   network?: "testnet" | "mainnet";
+  /** Live: a transaction's explorer page; the result links it once a hash exists. */
+  explorer?: (hash: string) => string;
+  /**
+   * False: a Blocked request has no override, only Decline and the way to
+   * the rules. The samples keep the press-and-hold override.
+   */
+  canOverride?: boolean;
+  /** Live: one muted line under the decision, such as how long the session runs. */
+  sessionNote?: string;
+  /**
+   * Live: Baret's request id for a checked request, which KIMI words in
+   * plain language under the findings. Left out, nothing is asked. After
+   * Check again the fresh request's own id is asked about instead.
+   */
+  explainId?: string;
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
@@ -308,8 +393,14 @@ export function SignRequest({
   const overrideTitle = useRef<HTMLParagraphElement>(null);
   const overrideTrigger = useRef<HTMLButtonElement>(null);
   const signingStatus = useRef<HTMLParagraphElement>(null);
-  // Where focus goes once the override opens or closes; null leaves it alone.
-  const [focusTo, setFocusTo] = useState<"override" | "trigger" | null>(null);
+  // Live: true from the surface's onSign call until it fails before leaving,
+  // so one decision never signs twice.
+  const signRun = useRef(false);
+  const staleTitle = useRef<HTMLParagraphElement>(null);
+  const headline = useRef<HTMLHeadingElement>(null);
+  // Where focus goes once the override opens or closes, or a stale request is
+  // fresh again; null leaves it alone.
+  const [focusTo, setFocusTo] = useState<"override" | "trigger" | "review" | null>(null);
 
   function openOverride(): void {
     setPhase({ kind: "override" });
@@ -324,7 +415,12 @@ export function SignRequest({
   // The pressed control is replaced: focus follows to its replacement.
   useEffect(() => {
     if (focusTo === null) return;
-    (focusTo === "override" ? overrideTitle : overrideTrigger).current?.focus();
+    (focusTo === "override"
+      ? overrideTitle
+      : focusTo === "review"
+        ? headline
+        : overrideTrigger
+    ).current?.focus();
     setFocusTo(null);
   }, [focusTo]);
 
@@ -349,7 +445,11 @@ export function SignRequest({
     const item = logFor(request, outcome, new Date().toISOString(), block);
     onLog(receipt ? { ...item, hash: receipt.hash } : item);
     // The result focuses its own title, so the status region stays quiet.
-    setPhase({ kind: "result", outcome, block });
+    setPhase(
+      receipt
+        ? { kind: "result", outcome, block, hash: receipt.hash }
+        : { kind: "result", outcome, block },
+    );
     onDone?.(outcome);
   }
 
@@ -382,12 +482,16 @@ export function SignRequest({
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per retry.
   useEffect(() => {
     if (phase.kind !== "retrying") return;
+    // From the stale state, a check that does not answer leaves it stale:
+    // the old answer is never signed again.
+    const missed = phase.stale ? () => setPhase({ kind: "stale" }) : stayDown;
     if (onCheckAgain) {
       onCheckAgain().then(
         (next) => {
           if (!alive.current) return;
           if (!next || next.verdict === "unreachable") {
-            stayDown();
+            missed();
+            if (phase.stale) setSaid(sign.offline.stillDown);
             return;
           }
           setFresh({ request: next, over: given });
@@ -395,9 +499,13 @@ export function SignRequest({
           setStillDown(false);
           setPhase({ kind: "review" });
           setSaid(common.verdicts[next.verdict].aria);
+          // The stale panel is gone: focus goes back to the request itself.
+          if (phase.stale) setFocusTo("review");
         },
         () => {
-          if (alive.current) stayDown();
+          if (!alive.current) return;
+          missed();
+          if (phase.stale) setSaid(sign.offline.stillDown);
         },
       );
       return;
@@ -410,16 +518,23 @@ export function SignRequest({
   // biome-ignore lint/correctness/useExhaustiveDependencies: finish reads the latest request.
   useEffect(() => {
     if (phase.kind !== "signing") return;
-    if (onSign && phase.step !== "passkey") {
-      // Live: the surface signs and sends; `sending` moves the status on.
-      if (phase.step !== "signing") return;
+    if (onSign) {
+      // Live: the surface signs and sends, once, from the first step (the
+      // passkey when it is asked for); `progress` and `sending` move the
+      // status on, so the passkey step lasts as long as the prompt does.
+      if (phase.step !== (passkey ? "passkey" : "signing") || signRun.current) return;
       const outcome = phase.outcome;
       if (outcome !== "sent" && outcome !== "overridden") return;
+      signRun.current = true;
+      let reached: "passkey" | "signing" | "sending" = phase.step;
       let gone = false;
-      onSign(outcome, () => {
-        gone = true;
-        if (alive.current) setPhase({ kind: "signing", step: "sending", outcome });
-      }).then(
+      const move = (next: "signing" | "sending") => {
+        if (next === "sending") gone = true;
+        if (reached === "sending" || reached === next) return;
+        reached = next;
+        if (alive.current) setPhase({ kind: "signing", step: next, outcome });
+      };
+      onSign(outcome, () => move("sending"), move).then(
         (receipt) => {
           if (alive.current) finish(outcome, receipt);
         },
@@ -432,9 +547,11 @@ export function SignRequest({
             setSaid(sign.status.unknown);
             return;
           }
-          // A failed signature goes back to the decision, and says so.
+          // A failed signature goes back to the decision, and says so: a
+          // passkey prompt that gave nothing has its own sentence.
+          signRun.current = false;
           setPhase({ kind: "review" });
-          setSaid(sign.status.failed);
+          setSaid(reached === "passkey" ? sign.status.passkeyCancelled : sign.status.failed);
         },
       );
       return;
@@ -460,18 +577,31 @@ export function SignRequest({
     if (step) setSaid(stepWords(step));
   }, [step]);
 
+  // Live (the surface checks again): Baret's answer has a shelf life. It
+  // counts down only once the answer is in, and running out leaves the
+  // request stale, to be checked again, instead of declining it.
+  const live = onCheckAgain !== undefined;
   // The countdown runs while the request waits for an answer.
-  const waiting = phase.kind === "review" || phase.kind === "override" || phase.kind === "checking";
+  const waiting =
+    phase.kind === "review" || phase.kind === "override" || (phase.kind === "checking" && !live);
   // biome-ignore lint/correctness/useExhaustiveDependencies: finish reads the latest request.
   useEffect(() => {
     if (!waiting) return;
     if (left <= 0) {
-      finish("expired");
+      // Live: the stale title takes focus, which reads it out.
+      if (live) setPhase({ kind: "stale" });
+      else finish("expired");
       return;
     }
     const id = window.setTimeout(() => setLeft((value) => value - 1), 1000);
     return () => window.clearTimeout(id);
   }, [waiting, left]);
+
+  // The decision buttons are gone once the answer runs out: focus moves to why.
+  const isStale = phase.kind === "stale";
+  useEffect(() => {
+    if (isStale) staleTitle.current?.focus();
+  }, [isStale]);
 
   function startSigning(outcome: Outcome): void {
     setPhase({
@@ -485,9 +615,15 @@ export function SignRequest({
   // Compact (the popup): the decision stays pinned at the foot of the window,
   // two buttons side by side; Blocked keeps Decline wide and the override small.
   const decisionSize = compact ? "md" : "lg";
-  const decisionGrid = compact ? compactGrid(request.verdict) : "grid gap-3 sm:grid-cols-2";
   const checking = phase.kind === "checking";
   const blocked = request.verdict === "blocked";
+  // Without the override, Decline is a Blocked request's one action, full width.
+  const decisionGrid =
+    blocked && !canOverride
+      ? "grid gap-3"
+      : compact
+        ? compactGrid(request.verdict)
+        : "grid gap-3 sm:grid-cols-2";
   const unreachable = request.verdict === "unreachable";
   const rows = ruleRows(request);
 
@@ -540,9 +676,11 @@ export function SignRequest({
     </Button>
   );
 
-  const countdown = counted(left, sign.countdown.label, sign.countdown.labelOne, {
-    seconds: String(left),
-  });
+  const countdown = live
+    ? counted(left, sign.countdown.fresh, sign.countdown.freshOne, { seconds: String(left) })
+    : counted(left, sign.countdown.label, sign.countdown.labelOne, { seconds: String(left) });
+  // Live: the line shows only near the end, so a fresh answer reads calm.
+  const timed = waiting && (!live || left <= FRESH_SHOWN);
 
   // One status region for the whole life of the request, so each change is spoken.
   return (
@@ -558,6 +696,11 @@ export function SignRequest({
           <Result
             outcome={phase.outcome}
             block={phase.block}
+            {...(explorer &&
+            phase.hash &&
+            (phase.outcome === "sent" || phase.outcome === "overridden")
+              ? { explorer: explorer(phase.hash) }
+              : {})}
             againLabel={againLabel ?? common.actions.back}
             {...(onAgain ? { onAgain } : {})}
           />
@@ -572,8 +715,10 @@ export function SignRequest({
               </Tag>
             </div>
             <h1
+              ref={headline}
               id={titleId}
-              className="font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere]"
+              tabIndex={-1}
+              className={`font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere] ${FOCUS_TARGET}`}
             >
               <Parts parts={actionParts(request)} />
             </h1>
@@ -627,11 +772,13 @@ export function SignRequest({
                   </span>
                   <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
                 </p>
-                <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
+                {checkedAlchemy(request) ? (
+                  <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
+                ) : null}
                 <ul className="grid gap-0.5">
-                  {Object.values(sign.verdict.checkedBy.sources).map((source) => (
-                    <li key={source} className={T.small}>
-                      {source}
+                  {checkedLines(request).map((line) => (
+                    <li key={line} className={T.small}>
+                      {line}
                     </li>
                   ))}
                 </ul>
@@ -712,6 +859,16 @@ export function SignRequest({
                 </Section>
               ) : null}
 
+              {explainId && !unreachable ? (
+                <PlainWordsBody
+                  // After Check again the fresh request is the one on screen, so
+                  // KIMI words its verdict, not the one the surface passed.
+                  requestId={fresh && fresh.over === given ? request.id : explainId}
+                  verdict={request.verdict}
+                  frame={(body) => <Section title={explain.title}>{body}</Section>}
+                />
+              ) : null}
+
               {!unreachable ? (
                 <Section title={sign.rules.title}>
                   {rows.length === 0 ? (
@@ -747,7 +904,7 @@ export function SignRequest({
                     >
                       +
                     </span>
-                    {sign.raw.hint}
+                    {request.origin === null ? sign.raw.hintOwn : sign.raw.hint}
                   </summary>
                   <dl className="mt-4 grid gap-3 text-sm">
                     <div className="grid gap-1">
@@ -812,12 +969,58 @@ export function SignRequest({
               ) : (
                 overridePanel
               )
+            ) : phase.kind === "stale" || (phase.kind === "retrying" && phase.stale) ? (
+              // Live: the answer ran out. Nothing signs on it; one way on.
+              <div className="grid gap-3">
+                <p
+                  ref={staleTitle}
+                  tabIndex={-1}
+                  className={`font-display text-xl font-extrabold uppercase text-[color:var(--fg)] ${FOCUS_TARGET}`}
+                >
+                  {sign.stale.title}
+                </p>
+                <p className={T.body}>{sign.stale.body}</p>
+                {/* Declining stays possible while Baret does not answer. */}
+                <div className={decisionGrid}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size={decisionSize}
+                    onClick={() => finish("declined")}
+                  >
+                    {sign.verdict.safe.secondary}
+                  </Button>
+                  {/* Busy, not disabled: the pressed button keeps focus. */}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size={decisionSize}
+                    aria-disabled={phase.kind === "retrying" || undefined}
+                    className="aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+                    onClick={() => {
+                      if (phase.kind === "retrying") return;
+                      setPhase({ kind: "retrying", stale: true });
+                      setSaid(sign.offline.retrying);
+                    }}
+                  >
+                    {phase.kind === "retrying" ? sign.offline.retrying : sign.stale.action}
+                  </Button>
+                </div>
+              </div>
             ) : (
               <>
-                {blocked ? (
+                {blocked && canOverride ? (
                   <p id={noSignId} className={compact ? "sr-only" : T.small}>
                     {sign.verdict.blocked.noSign}
                   </p>
+                ) : blocked ? (
+                  // No override: the way past a block is the rule itself.
+                  <div className="grid gap-1">
+                    <p id={noSignId} className={T.small}>
+                      {sign.verdict.blocked.noOverride}
+                    </p>
+                    {editRules ? editRules(sign.verdict.blocked.editRule, RULES_LINK) : null}
+                  </div>
                 ) : null}
                 <div className={decisionGrid}>
                   {request.verdict === "safe" || request.verdict === "caution" ? (
@@ -841,6 +1044,8 @@ export function SignRequest({
                         {sign.verdict.safe.primary}
                       </Button>
                     </>
+                  ) : blocked && !canOverride ? (
+                    declineBlocked
                   ) : blocked ? (
                     compact ? (
                       // Compact: Decline first, in the tab order as on screen.
@@ -895,13 +1100,14 @@ export function SignRequest({
                     </Button>
                   </div>
                 ) : null}
+                {sessionNote ? <p className={T.small}>{sessionNote}</p> : null}
               </>
             )}
             {compact ? (
               // Compact: the countdown and the surface's note share one line.
-              waiting || footnote ? (
+              timed || footnote ? (
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  {waiting ? (
+                  {timed ? (
                     <>
                       <p
                         className={`font-mono text-xs text-[color:var(--fg)] ${T.num}`}
@@ -909,7 +1115,7 @@ export function SignRequest({
                       >
                         {countdown}
                       </p>
-                      <p className="sr-only">{sign.countdown.note}</p>
+                      {live ? null : <p className="sr-only">{sign.countdown.note}</p>}
                     </>
                   ) : null}
                   {footnote}
@@ -917,7 +1123,7 @@ export function SignRequest({
               ) : null
             ) : (
               <>
-                {waiting ? (
+                {timed ? (
                   <div className="grid gap-1">
                     <p
                       className={`font-mono text-sm text-[color:var(--fg)] ${T.num}`}
@@ -925,7 +1131,7 @@ export function SignRequest({
                     >
                       {countdown}
                     </p>
-                    <p className={T.small}>{sign.countdown.note}</p>
+                    {live ? null : <p className={T.small}>{sign.countdown.note}</p>}
                   </div>
                 ) : null}
                 {footnote}

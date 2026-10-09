@@ -10,6 +10,7 @@ import { Menu, X } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { SampleNotice } from "../components/SampleNotice.js";
+import { SessionLine } from "../components/SessionLine.js";
 import { useLive } from "../live/live.js";
 import { routes } from "../routes.js";
 import { Locked } from "./Locked.js";
@@ -21,9 +22,11 @@ const NAV = navRoutes(routes, "app");
  * network, the screens, then the account line and the lock at the foot. Below
  * it, a top bar with a menu that opens in place (a native disclosure button,
  * closed again by any navigation or Escape, and scrolling inside the viewport
- * when it is taller than the screen). Above every screen, the sample notice:
- * nothing here is connected yet, and the wallet says so on every screen. A
- * skip link is the first stop, past the sidebar to the screen itself.
+ * when it is taller than the screen). On the sample, the sample notice sits
+ * above every screen, since nothing there is sent. On live, the session line
+ * sits above the lock (and under the phone header), so the end of prompt-free
+ * signing shows on every screen. A skip link is the first stop, past the
+ * sidebar to the screen itself.
  *
  * The active screen is marked in ink, not orange: orange is kept for each
  * screen's own main action. In forced colours the rule is drawn in Highlight
@@ -57,7 +60,11 @@ function Nav(): JSX.Element {
   );
 }
 
-function Account(): JSX.Element {
+/**
+ * The account and the lock. `session` is off in the phone menu, whose header
+ * already shows the session line.
+ */
+function Account({ session = true }: { readonly session?: boolean }): JSX.Element {
   const { state, dispatch } = useWallet();
   const live = useLive();
   return (
@@ -76,6 +83,7 @@ function Account(): JSX.Element {
           />
         </div>
       </div>
+      {session ? <SessionLine /> : null}
       <Button
         type="button"
         variant="ghost"
@@ -121,6 +129,7 @@ export function Component() {
         onUnlock={() => (live ? void live.unlock() : dispatch({ type: "unlock" }))}
         busy={live?.busy ?? false}
         problem={live?.problem ?? null}
+        expiredAt={live?.expiredAt ?? null}
       />
     );
   }
@@ -169,6 +178,10 @@ export function Component() {
             <span className="sr-only">{open ? walletFrame.nav.close : walletFrame.nav.open}</span>
           </button>
         </div>
+        {/* Outside the menu, so the session's end shows on a phone without opening it. */}
+        <div className="px-4 pb-3 empty:hidden md:px-8">
+          <SessionLine />
+        </div>
         <div
           id={menuId}
           hidden={!open}
@@ -182,7 +195,7 @@ export function Component() {
               </Tag>
             </div>
             <Nav />
-            <Account />
+            <Account session={false} />
           </div>
         </div>
       </header>

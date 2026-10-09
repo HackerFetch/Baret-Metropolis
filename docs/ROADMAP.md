@@ -82,9 +82,10 @@ Two things, and both are needed:
 ### Where things stand (checked 2026-10-08 against the live system, commit `2965c57`)
 
 - Live: the API on Render, the showcase and the wallet site on Vercel, the extension zips, the Envio indexer. `verify:demo` agrees with the live API on 20 of 20 scenarios. CI on `main` is green.
-- **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`).
+- **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`). Since M1 (2026-10-09, branch `novaswap-sign`) NovaSwap is the exception: "Sign with your wallet" sends the checked request through the connected wallet on Monad testnet. The other five sites still sign nothing.
 - **Baret is a panel on the page, not a wallet that refuses.** The extension's background and provider are empty stubs (cut). `apps/wallet` runs on sample data: no app imports `@baret/wallet-core`. No site can open the wallet's connect or sign window.
 - No screen reads `/v1/audit/*`. The agents playground answers its six actions from samples.
+- **H4, built 2026-10-09: the playground's live answers need a funded sender.** The engine's loss rule and its post-balance floor cannot be computed from a zero balance and fail closed when they cannot (CLAUDE.md hard constraint 3) — a fresh, unfunded address turned "pay" and "the wrong address" into Blocked against `pnpm --filter @baret/server verify:demo --only Agents` run locally, and reusing the live Dynamic agent wallet (which has its own spend history against the vault's caps) made it worse, not better. The code is built and merge-ready: `VITE_BARET_PLAYGROUND_AGENT` picks the signer, falling back to a fresh address only when unset. E9 funds a dedicated wallet for it.
 - Two of the six attacks answered Caution under Balanced (OrbitYield's silent pool, LaunchPad's proxy sale). Since D-033 (2026-10-09) both are Blocked.
 - Off on the live API: Nansen (`nansen: false`), the explanation route (`explain: false`).
 - For the track's "Design & Craft": `packages/guard` and `packages/agent-kit` have no README. The landing says "MIT licence" and the repository has no `LICENSE` file.
@@ -105,8 +106,8 @@ Twelve prizes are selected on the project (the list Ezgin copied from the platfo
 | Best Use of Envio ($1,000) | A deployed indexer with a public config, schema and handlers; a frontend that consumes it; depth of schema | 🔶 Indexer and `/v1/audit/*` live; no screen reads them | H5, H6 |
 | Best Projects using Alchemy ($1,000 credits) | At least one Alchemy service, meaningfully | ✅ Every read goes through Alchemy (`alchemy: ok` on live answers). Thin, but it meets the text | H14 |
 | Best workflow with CRE ($3,000) | A blockchain joined to an external source; a successful simulation by the CRE CLI. **Demo video required (max 2 min)** | ✅ Built and simulated with a real write; the video is missing | H13 |
-| Best Builds Powered by KIMI ($3,000 credits, split across 10 teams) | KIMI driving a core feature, "not bolted on as a chatbot widget". **A published article is required** | ❌ Back in (D-031). The route exists and has never called the model | M4, E7, H12 |
-| Best Builds with Qwen 3.8 Max ($5,000 credits, "split across the top 3 Track 4 winners") | Planning, tool use, multi-step execution; deployed and demoable. **A published article is required** | ❌ Back in (D-031). A one-call reviewer exists and has never called the model | M5, H12 |
+| Best Builds Powered by KIMI ($3,000 credits, split across 10 teams) | KIMI driving a core feature, "not bolted on as a chatbot widget". **A published article is required** | 🔶 Working (D-036): `kimi-k3` writes the plain words under every live verdict in three languages, checked with the real key and in a browser. A judge with no wallet gets them through "Check it live" in the demo sites' panel; the wallet's Rules page turns a sentence into suggested rule changes (`/v1/policy/draft`: tightening ticked, loosening unticked with a warning, nothing saved until Save). Production waits on the key on Render | E7, H12, H16 |
+| Best Builds with Qwen 3.8 Max ($5,000 credits, "split across the top 3 Track 4 winners") | Planning, tool use, multi-step execution; deployed and demoable. **A published article is required** | 🔶 Working (D-035): the reviewer plans, calls four tools and vetoes or approves; on Monad testnet a mismatched payment vetoed and the matching one sent. Deployable as `POST /v1/review` (three fixed scenarios on the demo vault, streamed) and demoable on the showcase page `/review`, checked live in a browser against a local server (the honest payment approved and sent, overpay and injected vetoed). Production waits on the keys on Render | E7, H12, H16 |
 | Best Community Team Project ($5,000) | Every member names the campus group in the platform profile; the group is on the onboarded list | ❌ Not done | H2 |
 
 ### Who does what (redistributed 2026-10-09)
@@ -121,26 +122,27 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | Hale's wallet address | everything Hale does |
+| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | nothing (Hale's address sent 2026-10-09) | everything Hale does |
 | E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
 | E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Done 2026-10-09**, checked on the live URL with a virtual passkey | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Done 2026-10-09** (D-032), checked on the live URL with a virtual passkey | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
 | E5 | Decide and build: do the two Caution attacks become Blocked. **Done 2026-10-09**: Blocked (D-033); `verify:demo` 20 of 20 on the live API at commit `279bb3d` | Sat 10 | | main track |
-| E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts; a live settlement waits on the owner's A-Pass** | Sat 10 | an A-Pass | Cleanverse |
-| E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
+| E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts. Parked 2026-10-09: the owner has its A-Pass and the allowance is set; a live settlement waits only on test aUSDC, which Cleanverse has to send** | Sat 10 | an A-Pass | Cleanverse |
+| E7 | Account steps before recording: three keys on Render (`KIMI_API_KEY`, `QWEN_API_KEY`, `BARET_DEMO_AGENT_PRIVATE_KEY`), Render on Starter, `~/.baret/` backed up, the `LICENSE` file. The keys go in on Fri 9 or Sat 10, not Sunday, so H16 can test before recording | Fri 9 or Sat 10 | M4, M5 | KIMI, Qwen, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
+| E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges | Fri 9 to Sat 10 | H4 merged | main track (H4) |
 
 ### Meriç
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving | Fri 9 | | main track |
-| M2 | The comparison flow and its copy: same site, same button, two wallets | Fri 9 | M1 | main track |
-| M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it | Sat 10 | E3, M1 | main track, Mera UX |
-| M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | Fri 9 to Sat 10 | E7 for production | KIMI |
-| M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable. Dropped again if not working by Sat 10, 20:00 | Sat 10 | a key | Qwen |
-| M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice | Sat 10 | E3, E4 | Mera UX |
-| M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | Sun 11 | | main track |
+| M1 | NovaSwap: a real signature path. In attack mode the connected wallet signs and sends the attack, and the page shows the money leaving. **Done 2026-10-09** (#42, live); the live MetaMask run is Hale's H3 | Fri 9 | | main track |
+| M2 | The comparison flow and its copy: same site, same button, two wallets. **Done 2026-10-09** (#44); the MetaMask wording waits for H3 | Fri 9 | M1 | main track |
+| M3 | A site can open the wallet's connect and sign windows; NovaSwap gets "Check with Baret" through it. **Done 2026-10-09** (#46): the attack comes back Blocked with nothing signed, the honest swap is signed and confirmed; the live run is Hale's | Sat 10 | E3, M1 | main track, Mera UX |
+| M4 | KIMI live: a key, the first real call, the explanation as part of the verdict screen | **Built 2026-10-09**, checked with the real key; production after E7 | E7 for production | KIMI |
+| M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable | **Done 2026-10-09** on Monad testnet (D-035) | none | Qwen |
+| M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice. **Done 2026-10-09** (#45): 4 taps and about 6 s to a first confirmed send, the stateless test passes; real-device pass is H10 | Sat 10 | E3, E4 | Mera UX |
+| M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | **Done 2026-10-09** (`docs/submission/`) | | main track |
 
 ### Hale
 
@@ -149,7 +151,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H1 | First session: machine, `qa` branch, git identity into `CLAUDE.md`, a test wallet | Fri 9 morning | | |
 | H2 | The platform: all three profiles name the campus group; the twelve prizes are selected; the form's fields against §8.1 | Fri 9 | E1 | Community, all forms |
 | H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows | Fri 9 to Sat 10 | M1, E1 | main track |
-| H4 | Build: the agents playground's six actions answer from the live API | Fri 9 | | main track |
+| H4 | Build: the agents playground's six actions answer from the live API. **Built and checked against the real engine 2026-10-09**; needs E9 before it reproduces `verify:demo`'s matrix live (see "Where things stand") | Fri 9 | E9 to go live correctly | main track |
 | H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*` | Sat 10 | E3 for the live account | Envio, Mera UX |
 | H6 | Build: `/agents` matches what shipped, with the Dynamic agent's real payments read live from the indexer | Sat 10 | | Dynamic, Envio |
 | H7 | Build: the Cleanverse scenario on a screen, and the wording for a finding that comes from the asset | Sat 10 | | Cleanverse |
@@ -161,6 +163,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
 | H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
+| H16 | Test on the live URLs after the merge deploy and E7: `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
 
 ### What is cut first
 

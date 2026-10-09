@@ -57,8 +57,47 @@ export const walletFrame = {
     action: "Unlock with your passkey",
     /** In a request window: the request waits behind the lock. */
     request: "A site is waiting for an answer. Unlock to read the request, or decline it now.",
+    /** In a request window, once a site's request is in: {origin} is that site. */
+    requestFrom:
+      "{origin} is waiting for your answer. Open your wallet with your passkey to read the request, or decline it now.",
     decline: "Decline the request",
     declined: "Request declined. Nothing was signed or shared.",
+    /** In a request window on a device with no passkey for this wallet yet. */
+    create: "Create my wallet",
+    createNote:
+      "No Baret wallet on this device yet? Create one with a passkey, then read the request.",
+    /** Live: the 15 minute session ran out, so the wallet locked itself. */
+    expired: {
+      title: "Your session ended",
+      body: "The wallet locked itself at {time}, 15 minutes after you last unlocked it. Your passkey starts a new session.",
+      unsent: "Anything you had not signed was not sent.",
+    },
+    /** Live: why the passkey did not open the wallet, one per failure kind. */
+    errors: {
+      cancelled: {
+        title: "Still locked",
+        body: "The passkey prompt closed without an answer. If your browser offered no passkey, this site has none yet: create your wallet first.",
+      },
+      notCompatible: {
+        title: "This passkey can't open the account",
+        body: "This passkey provider can't give Mera what it needs. Try the device or password manager you made the wallet with.",
+      },
+      unsupported: {
+        title: "This browser can't use passkeys",
+        body: "Open the wallet in a recent Chrome, Safari, Edge or Firefox, on a device with a screen lock.",
+      },
+    },
+  },
+  /**
+   * Live only: the session an unlock opens. Inside it every signature goes
+   * without a prompt; at {time} the wallet locks itself.
+   */
+  session: {
+    line: "Signing without a prompt until {time}.",
+    /** With the passkey asked on every signature. */
+    lineAsk: "Your session ends at {time}. Every signature asks for your passkey.",
+    soon: "Your session ends at {time}. Then the wallet locks and asks for your passkey.",
+    renew: "Unlock again for 15 more minutes",
   },
   sample: {
     tag: "Sample data",
@@ -76,6 +115,17 @@ export const walletFrame = {
   },
   /** Values the sample account starts with. */
   sampleData: { accountName: "Main account" },
+  /**
+   * Live: a request window a site opened. The site sends its request by
+   * postMessage; {origin} is the site, as the browser reports it.
+   */
+  request: {
+    waiting: "Waiting for the site to send its request.",
+    /** Live, but no site opened this window. */
+    none: "This window opens when a site asks your Baret wallet for something. Go back to the site and press its button.",
+    answered: "Your answer went back to {origin}. You can close this window.",
+    close: "Close this window",
+  },
   /** The picker that loads each sample request on the request screens. */
   samples: {
     legend: "Sample request",

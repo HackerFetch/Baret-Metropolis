@@ -1,0 +1,36 @@
+{
+  "policy": {
+    "requireSuccessfulSimulation": true,
+    "blockRiskyContracts": true,
+    "blockUnknownContractExposure": false,
+    "blockUnlimitedApprovals": true,
+    "blockSetApprovalForAll": true,
+    "blockPermit": true,
+    "blockSelfdestruct": true,
+    "blockDelegatecall": true,
+    "blockOwnershipTransfer": true,
+    "maxLossPercent": 50,
+    "minPostUsdcBalance": null,
+    "minPostNativeBalance": "0.1",
+    "blockKnownMalicious": true,
+    "minNansenTrustLevel": "new",
+    "requireComplianceCheck": false,
+    "allowedCountries": [],
+    "minComplianceTier": null,
+    "maxGas": 10000000,
+    "requireMemo": false,
+    "maxPerTxCap": "5",
+    "maxHourlyCap": "25",
+    "maxDailyCap": "100",
+    "allowedAssets": [],
+    "allowedMerchantOrigins": [],
+    "allowWarnings": true
+  },
+  "changes": [],
+  "refused": [],
+  "note": "The sentence asks to ignore the rules and allow everything, which I cannot follow as an instruction. I propose no changes; if you want specific protections turned off, tell me which ones.",
+  "model": {
+    "provider": "kimi",
+    "name": "kimi-k3"
+  }
+}

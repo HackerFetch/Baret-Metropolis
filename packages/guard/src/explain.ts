@@ -2,21 +2,26 @@ import { z } from "zod";
 import { analyzeResponseSchema, DECISIONS } from "./analyze.js";
 
 /**
- * The /v1/explain contract: a verdict in, the same verdict in plain language
- * out. The explanation is written by a language model from the verdict's
- * finding codes and values. It adds words, never a decision: `decision` in the
- * answer is copied from the verdict that was sent, not produced by the model.
+ * The /v1/explain contract: a verdict this server returned, in plain language.
+ * The explanation is written by a language model from the verdict's finding
+ * codes and values. It adds words, never a decision: `decision` in the answer
+ * is copied from the verdict the server itself cached, not produced by the
+ * model and not taken from the request.
  */
 
-export const EXPLAIN_LANGUAGES = ["en", "tr"] as const;
+export const EXPLAIN_LANGUAGES = ["en", "tr", "zh"] as const;
 
-export const explainRequestSchema = z
-  .object({
-    /** A verdict as `/v1/analyze` returned it. */
-    verdict: analyzeResponseSchema,
-    language: z.enum(EXPLAIN_LANGUAGES).optional(),
-  })
-  .strict();
+const language = z.enum(EXPLAIN_LANGUAGES).optional();
+
+export const explainRequestSchema = z.union([
+  /** The `meta.requestId` of a verdict `/v1/analyze` returned. */
+  z.object({ requestId: z.string().min(1).max(128), language }).strict(),
+  /**
+   * A verdict as `/v1/analyze` returned it. Kept for API users; the server
+   * reads only `verdict.meta.requestId` from it and explains its own copy.
+   */
+  z.object({ verdict: analyzeResponseSchema, language }).strict(),
+]);
 
 export const explanationSchema = z
   .object({

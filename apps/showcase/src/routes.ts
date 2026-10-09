@@ -103,6 +103,15 @@ export const routes = defineRoutes({
     load: () => import("./pages/KitPage.js"),
   },
 
+  /** Not in any nav. Qwen reviews an agent's payment, for the judges (M5). */
+  review: {
+    path: "/review",
+    title: "Qwen reviews an agent's payment · Baret",
+    group: "utility",
+    hidden: true,
+    load: () => import("./pages/ReviewPage.js"),
+  },
+
   notFound: {
     path: "/*",
     title: "Not found",

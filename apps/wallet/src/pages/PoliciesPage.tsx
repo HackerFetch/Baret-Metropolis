@@ -6,6 +6,7 @@ import { when } from "@baret/wallet-ui/data/format";
 import { changedFields, diffFields, fromTemplate } from "@baret/wallet-ui/data/rules";
 import { ready, useWallet } from "@baret/wallet-ui/data/store";
 import type { GuardPolicy } from "@baret/wallet-ui/data/types";
+import { DraftFromSentence } from "@baret/wallet-ui/rules/DraftFromSentence";
 import { fromJson, type Preview, preview, valueText } from "@baret/wallet-ui/rules/fields";
 import { RuleEditor } from "@baret/wallet-ui/rules/RuleEditor";
 import { TemplateCards } from "@baret/wallet-ui/rules/TemplateCards";
@@ -55,6 +56,8 @@ export function Component() {
 
   // Fail-closed: without Baret the rules can't be checked, so save and preview refuse.
   const analyzerReady = ready(state, "analyzer");
+  // Requests the preview can run over; with none, the run button has nothing to do.
+  const runnable = preview(state.activity, state.policy, draft).count;
   const unsaved = diffFields(state.policy, draft).length > 0 || template !== state.template;
   const changed = changedFields(draft, template);
   const jsonBad = tab === "json" && (notice?.kind === "json" || notice?.kind === "invalid");
@@ -145,6 +148,16 @@ export function Component() {
             </p>
             <p className={T.small}>{policy.intro.failClosed}</p>
           </div>
+          {/* KIMI suggests, the person ticks, the draft takes it; Save below still decides. Live only. */}
+          {state.live ? (
+            <DraftFromSentence
+              draft={draft}
+              onApply={(next) => {
+                replace(next);
+                setNotice(null);
+              }}
+            />
+          ) : null}
           <TemplateCards
             value={template}
             onPick={(name) => {
@@ -277,16 +290,15 @@ export function Component() {
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8">
           <Block title={policies.preview.title}>
             <p className={T.body}>
-              {counted(
-                preview(state.activity, state.policy, draft).count,
-                policies.preview.body,
-                policies.preview.bodyOne,
-              )}
+              {runnable === 0
+                ? policies.preview.empty
+                : counted(runnable, policies.preview.body, policies.preview.bodyOne)}
             </p>
             <div className="flex">
               <Button
                 type="button"
                 variant="ghost"
+                disabled={runnable === 0}
                 onClick={() => {
                   if (!analyzerReady) {
                     setPreviewed(null);
@@ -323,7 +335,9 @@ export function Component() {
 
           <Block title={policies.history.title}>
             {state.ruleChanges.length === 0 ? (
-              <p className={T.body}>{policies.history.empty}</p>
+              <p className={T.body}>
+                {state.live ? policies.history.emptyLive : policies.history.empty}
+              </p>
             ) : (
               <ul className="grid border-t border-[color:var(--rule)]">
                 {state.ruleChanges.map((change) => (
