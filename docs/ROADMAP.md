@@ -85,6 +85,7 @@ Two things, and both are needed:
 - **The demo sites sign nothing.** A wallet connects only so the site can read its address (`apps/showcase/src/sites/kit/wallet/engine.ts`). Since M1 (2026-10-09, branch `novaswap-sign`) NovaSwap is the exception: "Sign with your wallet" sends the checked request through the connected wallet on Monad testnet. The other five sites still sign nothing.
 - **Baret is a panel on the page, not a wallet that refuses.** The extension's background and provider are empty stubs (cut). `apps/wallet` runs on sample data: no app imports `@baret/wallet-core`. No site can open the wallet's connect or sign window.
 - No screen reads `/v1/audit/*`. The agents playground answers its six actions from samples.
+- **H4, built 2026-10-09: the playground's live answers need a funded sender.** The engine's loss rule and its post-balance floor cannot be computed from a zero balance and fail closed when they cannot (CLAUDE.md hard constraint 3) — a fresh, unfunded address turned "pay" and "the wrong address" into Blocked against `pnpm --filter @baret/server verify:demo --only Agents` run locally, and reusing the live Dynamic agent wallet (which has its own spend history against the vault's caps) made it worse, not better. The code is built and merge-ready: `VITE_BARET_PLAYGROUND_AGENT` picks the signer, falling back to a fresh address only when unset. E9 funds a dedicated wallet for it.
 - Two of the six attacks answered Caution under Balanced (OrbitYield's silent pool, LaunchPad's proxy sale). Since D-033 (2026-10-09) both are Blocked.
 - Off on the live API: Nansen (`nansen: false`), the explanation route (`explain: false`).
 - For the track's "Design & Craft": `packages/guard` and `packages/agent-kit` have no README. The landing says "MIT licence" and the repository has no `LICENSE` file.
@@ -121,7 +122,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | Hale's wallet address | everything Hale does |
+| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | nothing (Hale's address sent 2026-10-09) | everything Hale does |
 | E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
 | E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Done 2026-10-09**, checked on the live URL with a virtual passkey | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Done 2026-10-09** (D-032), checked on the live URL with a virtual passkey | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
@@ -129,6 +130,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts. Parked 2026-10-09: the owner has its A-Pass and the allowance is set; a live settlement waits only on test aUSDC, which Cleanverse has to send** | Sat 10 | an A-Pass | Cleanverse |
 | E7 | Account steps before recording: the KIMI key on Render, Render on Starter, `~/.baret/` backed up, the `LICENSE` file | Sun 11 morning | M4 | KIMI, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
+| E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges | Fri 9 to Sat 10 | H4 merged | main track (H4) |
 
 ### Meriç
 
@@ -149,7 +151,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H1 | First session: machine, `qa` branch, git identity into `CLAUDE.md`, a test wallet | Fri 9 morning | | |
 | H2 | The platform: all three profiles name the campus group; the twelve prizes are selected; the form's fields against §8.1 | Fri 9 | E1 | Community, all forms |
 | H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows | Fri 9 to Sat 10 | M1, E1 | main track |
-| H4 | Build: the agents playground's six actions answer from the live API | Fri 9 | | main track |
+| H4 | Build: the agents playground's six actions answer from the live API. **Built and checked against the real engine 2026-10-09**; needs E9 before it reproduces `verify:demo`'s matrix live (see "Where things stand") | Fri 9 | E9 to go live correctly | main track |
 | H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*` | Sat 10 | E3 for the live account | Envio, Mera UX |
 | H6 | Build: `/agents` matches what shipped, with the Dynamic agent's real payments read live from the indexer | Sat 10 | | Dynamic, Envio |
 | H7 | Build: the Cleanverse scenario on a screen, and the wording for a finding that comes from the asset | Sat 10 | | Cleanverse |
