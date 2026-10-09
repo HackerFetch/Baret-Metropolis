@@ -5,6 +5,7 @@ import { findings as findingCopy } from "@baret/content/shared/findings.content"
 import { sign } from "@baret/content/wallet/sign.content";
 import { ChangeRow, truncateAddress, VerdictTag } from "@baret/ui";
 import { amount } from "@baret/wallet-ui/data/format";
+import { bodyOf } from "@baret/web-ui/components/CheckBlocks";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { ExternalLink } from "lucide-react";
@@ -102,21 +103,23 @@ export function ActivityDisclosure({
             <div className="grid gap-2">
               <p className={T.label}>{detail.findings}</p>
               <ul className="grid gap-2">
-                {item.findings.map((finding) => {
+                {item.findings.map((finding, i) => {
                   const words = findingCopy[finding.code];
                   const values = Object.fromEntries(
                     Object.entries(finding.values).map(([k, v]) => [k, short(v)]),
                   );
+                  const { template } = bodyOf(words, finding);
                   return (
                     <li
-                      key={finding.code}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: an answer can repeat a code (both sides of a compliance check), and the list never reorders.
+                      key={`${finding.code}-${i}`}
                       className="grid gap-0.5 border-l-2 border-[color:var(--rule-strong)] pl-3"
                     >
                       <span className="text-sm font-medium text-[color:var(--fg)]">
                         {fill(words.title, values)}
                       </span>
                       <span className={`${T.small} [overflow-wrap:anywhere]`}>
-                        {fill(words.body, values)}
+                        {fill(template, values)}
                       </span>
                     </li>
                   );

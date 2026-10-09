@@ -436,9 +436,10 @@ export const agents = {
   },
 
   /**
-   * Nothing here is a result. The six actions answer from prepared samples; a
-   * pasted transaction goes to the analysis server only in a live build. Action descriptions say what
-   * the agent tries; they never say what Baret will find.
+   * Nothing here is a result. The eight actions answer from prepared samples;
+   * a pasted transaction goes to the analysis server only in a live build.
+   * Action descriptions say what the agent tries; they never say what Baret
+   * will find.
    */
   playground: {
     /** Not rendered on /agents since 2026-10-03. */
@@ -471,6 +472,14 @@ export const agents = {
         flaggedAddress: {
           label: "Send to a flagged address",
           body: "A transfer to an address on the ReputationRegistry's flagged list.",
+        },
+        cleanverseVerified: {
+          label: "Pay aUSDC to a verified wallet",
+          body: "A transfer of aUSDC, a compliant asset, between two wallets that hold a Cleanverse identity credential: the shape of a Travel Rule-compliant payment.",
+        },
+        cleanverseNoCredential: {
+          label: "Pay aUSDC to a wallet with no credential",
+          body: "A transfer of aUSDC to a wallet that holds no Cleanverse identity credential.",
         },
       },
       custom: {
@@ -563,12 +572,12 @@ export const agents = {
     note: "To check a real transaction, start the server locally and post it to /v1/analyze, as the HTTP API sample shows.",
     /** Shown only when this build sends live checks to the server. */
     liveNote:
-      "Every check here, the six actions and a pasted transaction alike, goes to the same /v1/analyze endpoint, on a rate-limited testnet server.",
+      "Every check here, the eight actions and a pasted transaction alike, goes to the same /v1/analyze endpoint, on a rate-limited testnet server.",
     /** Shown instead when this build sends only a pasted transaction live. */
     livePasteNote:
-      "A pasted transaction goes to the /v1/analyze endpoint, on a rate-limited testnet server. The six actions answer from prepared samples.",
-    /** Shown under the button while one of the six actions is picked, when this build does not send them live. */
-    sample: "Prepared sample answers. The six actions are not sent to Baret's server.",
+      "A pasted transaction goes to the /v1/analyze endpoint, on a rate-limited testnet server. The eight actions answer from prepared samples.",
+    /** Shown under the button while one of the eight actions is picked, when this build does not send them live. */
+    sample: "Prepared sample answers. The eight actions are not sent to Baret's server.",
     /** Shown under the button for a pasted transaction when this build sends nothing. */
     notSent:
       "This demo does not send pasted transactions yet. Nothing is checked, so the answer is Blocked.",

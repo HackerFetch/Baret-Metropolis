@@ -67,9 +67,17 @@ function display(raw: bigint, decimals: number): string {
   return fromUnits(raw, decimals, { min: 0, max: 4 });
 }
 
-function finding(code: string, values: Readonly<Record<string, string>>): CheckFinding {
+function finding(
+  code: string,
+  values: Readonly<Record<string, string>>,
+  details?: Readonly<Record<string, unknown>>,
+): CheckFinding {
   check(CODES.has(code), `finding ${code}`);
-  return { code: code as CheckFinding["code"], values: { ...values } };
+  return {
+    code: code as CheckFinding["code"],
+    values: { ...values },
+    ...(details ? { details } : {}),
+  };
 }
 
 function isRule(rule: string): rule is GuardPolicyField {
@@ -86,7 +94,7 @@ function map(response: AnalyzeResponse, context: SignContext, now: number): Sign
   check(DECISIONS.has(response.decision), "decision");
   check(CONFIDENCE.has(response.confidence), "confidence");
 
-  const findings = response.findings.map((f) => finding(f.code, f.values));
+  const findings = response.findings.map((f) => finding(f.code, f.values, f.details));
   // A blocking finding under anything but Blocked is an answer that disagrees with itself.
   check(response.decision === "blocked" || response.findings.every((f) => !f.blocking), "blocking");
 

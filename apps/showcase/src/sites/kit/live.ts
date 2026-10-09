@@ -142,7 +142,11 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
   return {
     source: "live",
     verdict: response.decision,
-    findings: response.findings.map((f) => ({ code: f.code, values: f.values })),
+    findings: response.findings.map((f) => ({
+      code: f.code,
+      values: f.values,
+      ...(f.details ? { details: f.details } : {}),
+    })),
     changes,
     approvals,
     requestId: response.meta.requestId,

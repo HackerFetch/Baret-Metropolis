@@ -1,5 +1,9 @@
+import { findings as findingCopy } from "@baret/content";
+import { CLEANVERSE } from "@baret/demo";
+import { bodyOf } from "@baret/web-ui/components/CheckBlocks";
+import { fill } from "@baret/web-ui/lib/util";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ACTIONS, randomAddress, SAMPLES, verdictFor } from "./sample.js";
+import { ACTIONS, randomAddress, SAMPLE_AUSDC, SAMPLES, verdictFor } from "./sample.js";
 import {
   agentAddress,
   isAddress,
@@ -12,6 +16,26 @@ import {
 } from "./source.js";
 import { outcomeOf, terminalLines } from "./terminal.js";
 
+describe("the Cleanverse sample reads like the live answer", () => {
+  it("names aUSDC by the address the server sends in details.asset", () => {
+    expect(SAMPLE_AUSDC).toBe(CLEANVERSE.aUsdc);
+  });
+
+  it("reads the asset's rule, not the user's, and never prints the asset's address", () => {
+    const finding = SAMPLES.cleanverseNoCredential.findings.find(
+      (f) => f.code === "COMPLIANCE_NO_CREDENTIAL",
+    );
+    expect(finding).toBeDefined();
+    if (!finding) return;
+    const { template, values } = bodyOf(findingCopy.COMPLIANCE_NO_CREDENTIAL, finding);
+    const sentence = fill(template, values);
+    expect(sentence).toContain("this asset only moves between verified wallets");
+    expect(sentence).not.toContain("your rules");
+    expect(sentence).not.toContain("{");
+    expect(sentence.toLowerCase()).not.toContain(CLEANVERSE.aUsdc.toLowerCase());
+  });
+});
+
 describe("the playground's verdicts follow the engine's rule", () => {
   /** Expected from the templates: toggles block when on, warnings only when allowWarnings is off. */
   const EXPECTED = {
@@ -21,6 +45,8 @@ describe("the playground's verdicts follow the engine's rule", () => {
     lookalikeToken: { strict: "blocked", balanced: "blocked", permissive: "blocked" },
     operatorApproval: { strict: "blocked", balanced: "blocked", permissive: "caution" },
     flaggedAddress: { strict: "blocked", balanced: "blocked", permissive: "blocked" },
+    cleanverseVerified: { strict: "safe", balanced: "safe", permissive: "safe" },
+    cleanverseNoCredential: { strict: "blocked", balanced: "blocked", permissive: "blocked" },
   } as const;
 
   for (const action of ACTIONS) {
@@ -117,7 +143,7 @@ describe("the live request", () => {
 describe("the playground source", () => {
   const signal = new AbortController().signal;
 
-  it("answers the six actions from the samples", async () => {
+  it("answers an action from the samples", async () => {
     const result = await sourceFor(false)(
       { kind: "action", action: "pay", policy: "strict" },
       signal,
@@ -213,13 +239,45 @@ describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
     expect(body.typedData).toBeUndefined();
   });
 
+  it("sends the Cleanverse actions from the real verified holder, not the playground agent", async () => {
+    const HOLDER = "0x888895E314BF33CEeBCF5320279061aed3a5E2bd";
+    const AUSDC = "0xaC0893567D43C3E7e6e35a72803df05416C1f20D";
+    const RECIPIENT = "0xc448042EdAC1899B023CaA0E9Da5e4a8833de873";
+    const fetch = vi.fn(async () => okResponse("safe"));
+    vi.stubGlobal("fetch", fetch);
+    await sourceFor(true, FUNDED)(
+      { kind: "action", action: "cleanverseVerified", policy: "balanced" },
+      signal,
+    );
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    // A plain aUSDC transfer: `to` is always the token contract, the
+    // recipient is encoded in `data` (`transfer(address,uint256)`).
+    expect(body.transaction.from.toLowerCase()).toBe(HOLDER.toLowerCase());
+    expect(body.transaction.to.toLowerCase()).toBe(AUSDC.toLowerCase());
+    expect(body.userWallet.toLowerCase()).toBe(HOLDER.toLowerCase());
+    expect(String(body.transaction.data).toLowerCase()).toContain(RECIPIENT.slice(2).toLowerCase());
+  });
+
+  it("sends the no-credential Cleanverse action to the playground agent as the recipient", async () => {
+    const fetch = vi.fn(async () => okResponse("blocked"));
+    vi.stubGlobal("fetch", fetch);
+    await sourceFor(true, FUNDED)(
+      { kind: "action", action: "cleanverseNoCredential", policy: "balanced" },
+      signal,
+    );
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(String(body.transaction.data).toLowerCase()).toContain(FUNDED.slice(2).toLowerCase());
+  });
+
   it("signs from VITE_BARET_PLAYGROUND_AGENT when it is a valid address", () => {
     expect(agentAddress(FUNDED)).toBe(FUNDED);
     expect(agentAddress(undefined)).toBeNull();
     expect(agentAddress("not an address")).toBeNull();
   });
 
-  it("answers the six actions from samples when live but no agent is set", async () => {
+  it("answers an action from samples when live but no agent is set", async () => {
     const fetch = vi.fn(async () => okResponse("safe"));
     vi.stubGlobal("fetch", fetch);
     const result = await sourceFor(true, null)(
