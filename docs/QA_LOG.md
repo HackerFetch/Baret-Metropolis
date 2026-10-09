@@ -24,10 +24,10 @@ Last updated: 2026-10-09 · by: Hale's agent (session 1)
 
 | | |
 |---|---|
-| **Done** | H1: machine proven on a clean `main` (`pnpm check`, `pnpm contracts:test` green), git identity in `CLAUDE.md`, `qa` branch opened, test wallet created and its address left for Ezgin |
-| **In progress** | H1's last piece (dUSDC from the faucet) — blocked on funding |
-| **Blocked on** | Ezgin (E1): platform team membership, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, a vault to test against |
-| **Next step** | Once E1 lands: H2 (platform), H3 (MetaMask rehearsal, also needs M1), H4 (build: playground from the live API, no dependency, can start now) |
+| **Done** | H1: machine proven on a clean `main` (`pnpm check`, `pnpm contracts:test` green), git identity in `CLAUDE.md`, `qa` branch opened, test wallet created and its address left for Ezgin. H4: the agents playground's six actions go live under `VITE_BARET_PLAYGROUND=live`, `pnpm check` green, checked against the real engine on a local server |
+| **In progress** | H1's last piece (dUSDC from the faucet) — blocked on funding. H4's own PR not yet opened/merged |
+| **Blocked on** | Ezgin (E1): platform team membership, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, a vault to test against. Ezgin (E9, found while building H4): a dedicated, funded wallet for the playground and two Vercel env vars, before H4 can be ticked done |
+| **Next step** | Open H4's pull request. Once E1 lands: H2 (platform), H3 (MetaMask rehearsal, also needs M1). Once E9 lands: re-check the live `/agents` matrix and tick H4 |
 | **Open bugs filed by Hale** | 0 |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
@@ -42,6 +42,8 @@ One entry per thing Hale has actually run. Each: what it is, the command, what i
 **`pnpm contracts:test`** (`cd contracts && forge test`) — needs Foundry (`forge`, `cast`). Good result: `Ran N test suites … N tests passed, 0 failed, 0 skipped`. On `main` at `ca59710`: 9 suites, 74 tests, incl. the `PaymentGuard` fuzz and invariant tests. Leaves an untracked `contracts/foundry.lock` (forge-std's pinned rev) after the first run; harmless, not committed.
 
 **`cast wallet new`** — generates a fresh keypair for the test wallet. The key goes in a local, gitignored `.env` at the repo root, never in a task file or the log.
+
+**Running the server locally** — `pnpm --filter @baret/server dev`, needs `apps/server/.env` (local, gitignored): `MONAD_TESTNET_RPC_URL=https://testnet-rpc.monad.xyz`, `MONAD_TESTNET_USDC_ADDRESS=0x534b2f3A21130d7a60830c2Df862319e593943A3`, `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS=0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`; the rest of `apps/server/.env.example` can stay empty for a read-only check (Nansen, Cleanverse, KIMI all fail closed or skip cleanly without their keys). Good result: `curl http://localhost:8080/health` answers `{"status":"ok",...}`. Useful to check a build against the real engine before trusting it against the live API: `pnpm --filter @baret/server verify:demo -- --api http://localhost:8080 --from <any address, no key needed> [--only <text>] [--skip-cleanverse]`.
 
 ---
 
@@ -72,7 +74,15 @@ Goal of the session: H1 — first session, machine setup, `qa` branch, identity,
   - Bugs filed: none.
   - Files changed: `.env` (not committed), `tasks/FOR_EZGIN.md`.
 
-End of session: tasks ticked in `tasks/FOR_HALE.md`: none ticked `[x]` (H1 is noted in progress, not complete — funding is outstanding). Left unfinished: dUSDC from the faucet (needs MON first), platform access (H2), everything depending on E1. Next session starts with: checking whether Ezgin funded the wallet and gave platform access; if not, start H4 (the playground, no dependency). §1 rewritten: yes.
+- **Piece: H4, the agents playground goes live** (task: "H4 · Build: the agents playground answers from the live API")
+  - What: `apps/showcase/src/agents/playground/source.ts` now sends the six built-in actions through `@baret/demo`'s `agents` builders when `VITE_BARET_PLAYGROUND=live`, reusing `live.ts`'s `analyze` (newly exported) rather than `analyzeCall`/`analyzePayment`, since neither of those has room for `policyTemplate` without changing what Scrybe already sends. Also touched: `Playground.tsx` (the "sample" note is now conditional on `LIVE`) and `agents.content.ts` (the footer note covers both paths, not only a pasted transaction).
+  - How it works: `pnpm check` from the repo root (lint, types, copy lint, tests). To see it live locally: `pnpm --filter @baret/server dev` with `apps/server/.env` filled in (`MONAD_TESTNET_RPC_URL`, `MONAD_TESTNET_USDC_ADDRESS=0x534b2f3A21130d7a60830c2Df862319e593943A3`, `MONAD_TESTNET_REPUTATION_REGISTRY_ADDRESS=0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`, local-only, gitignored), then `pnpm --filter @baret/server verify:demo -- --api http://localhost:8080 --from <address> --only Agents --skip-cleanverse`.
+  - Result: `pnpm check` 76/76 files, 717/717 tests. Against the real engine (local server, public testnet RPC): with a fresh unfunded address, only 0 of 6 Agents scenarios matched by code, though 4 of 6 matched by decision alone, because "pay" and "the wrong address" both came back wrongly Blocked — see the problem below. With the live Dynamic agent wallet (`0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`) as `--from`, 2 of 6 matched exactly; the rest still failed on extra findings, some from the same zero-USDC-balance cause, some from that wallet's own real spend history against the vault's caps leaking into an unrelated check.
+  - Problem: the engine's loss rule (`apps/server/src/policy/evaluate.ts`, `lossRule`) answers `LOSS_PERCENT_UNAVAILABLE` (a blocking finding) whenever an asset's pre-balance is 0 and the request would spend it — it cannot compute what percentage of nothing is lost, and CLAUDE.md's hard constraint 3 says missing data blocks. The post-balance floor (`minPostNativeBalance`) does the same for MON once gas is netted out. Cause: the six actions were built to sign from a fresh, randomly generated address every run, which holds no MON, USDC or fake USDC. Solution: read the signer from a new env var, `VITE_BARET_PLAYGROUND_AGENT` (`source.ts`'s `agentAddress`), so production can point it at a wallet Ezgin keeps funded; unset, it still falls back to a fresh address, which is fine for local development but will not reproduce the matrix. Recognise it by: `LOSS_PERCENT_UNAVAILABLE`, `POST_BALANCE_TOO_LOW` or `POST_BALANCE_UNAVAILABLE` showing up alongside the finding a scenario is actually testing.
+  - Bugs filed: none (not a bug in existing code — a new requirement this build surfaced). Task filed: 🐛-shaped but not a bug: `tasks/FOR_EZGIN.md` E9 (fund the wallet, set the two env vars), also added to the board (`docs/ROADMAP.md`, Ezgin's table and "Where things stand").
+  - Files changed: `apps/showcase/src/agents/playground/source.ts`, `apps/showcase/src/agents/playground/Playground.tsx`, `apps/showcase/src/agents/playground/playground.test.ts`, `apps/showcase/src/sites/kit/live.ts`, `packages/content/src/showcase/agents.content.ts`, `docs/ROADMAP.md`, `tasks/FOR_EZGIN.md`, `tasks/FOR_HALE.md`.
+
+End of session: tasks ticked in `tasks/FOR_HALE.md`: none ticked `[x]` yet. H1 is in progress (funding outstanding); H4 is built and checked against the real engine but not tickable until E9 funds the playground wallet. Left unfinished: dUSDC from the faucet (needs MON first), platform access (H2), H4's live verification (needs E9). Next session starts with: checking whether Ezgin funded the test wallet, gave platform access, and landed E9; if E9 is in, re-run `verify:demo`-style checks against the live showcase and tick H4. §1 rewritten: yes.
 
 ---
 
