@@ -3,6 +3,20 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
 
 /**
+ * Where the manifest's host_permissions points: the local server in dev, the
+ * deployed one for a store or judge build, so a package never carries a wider
+ * grant than it needs. Called inside `manifest` below, never at the top of
+ * this file: WXT loads `.env` files (`.env.example` in this folder) only after
+ * it has loaded this config, so a value from `.env.local` exists only by then.
+ * A variable set in the shell, as CI does, works either way.
+ */
+function baretApiOrigin(): string {
+  const env = import.meta.env as Record<string, string | undefined> | undefined;
+  const url = env?.WXT_BARET_API_URL || process.env.WXT_BARET_API_URL || "http://localhost:8080";
+  return new URL(url).origin;
+}
+
+/**
  * WXT was chosen over CRXJS for three concrete reasons, not for taste.
  *
  *  1. CRXJS 2.7.1 has an open, unfixed bug on Vite 8: an MV3 service worker
@@ -46,10 +60,9 @@ export default defineConfig({
       "storage", // keystore, activity, permissions ledger
       "alarms", // auto-lock deadline
       "notifications", // drift alerts
-      "scripting",
     ],
 
-    host_permissions: ["<all_urls>"],
+    host_permissions: [`${baretApiOrigin()}/*`],
 
     action: {
       default_title: "Baret",

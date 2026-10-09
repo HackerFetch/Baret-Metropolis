@@ -66,16 +66,21 @@ interface FindingWords {
   bodySelf?: string;
   bodyAsset?: string;
   bodySelfAsset?: string;
+  bodyReason?: string;
   why?: string;
   fix?: string;
 }
 
+/** Registry reason codes with their own sentence: the same set as `bodyOf()` in @baret/web-ui. */
+const NAMED_REGISTRY_REASONS: ReadonlySet<string> = new Set(["SCAMSNIFFER_BLACKLIST"]);
+
 /**
  * The sentence the screens show for a finding (`bodyOf()` in @baret/web-ui
  * makes the same choice): `details.side === "self"` picks the user's-own-account
- * wording, and `details.asset` the wording of an asset whose own policy, not the
- * user's rules, asks for the credential. Without it the model would be told
- * "your rules require one" under a finding that says the asset does.
+ * wording, `details.asset` the wording of an asset whose own policy, not the
+ * user's rules, asks for the credential, and a registry reason code with its own
+ * sentence names its source. Without it the model would be told a different
+ * sentence from the one shown above its explanation.
  */
 function bodyFor(
   entry: FindingWords | undefined,
@@ -84,9 +89,17 @@ function bodyFor(
   if (!entry) return undefined;
   const self = details?.side === "self";
   const asset = typeof details?.asset === "string";
+  const registry = details?.registry;
+  const reason =
+    registry && typeof registry === "object"
+      ? (registry as { reasonCode?: unknown }).reasonCode
+      : undefined;
   if (self && asset && entry.bodySelfAsset) return entry.bodySelfAsset;
   if (asset && entry.bodyAsset) return entry.bodyAsset;
   if (self && entry.bodySelf) return entry.bodySelf;
+  if (typeof reason === "string" && NAMED_REGISTRY_REASONS.has(reason) && entry.bodyReason) {
+    return entry.bodyReason;
+  }
   return entry.body;
 }
 

@@ -48,6 +48,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Zip the extension
+        # The published zips grant host access to the deployed API only (H8);
+        # without this they would point at the local server.
+        env:
+          WXT_BARET_API_URL: https://baret-monad-api.onrender.com
         run: |
           pnpm --filter @baret/extension zip
           pnpm --filter @baret/extension zip:firefox

@@ -112,14 +112,21 @@ type BodyCopy = {
   bodySelf?: string;
   bodyAsset?: string;
   bodySelfAsset?: string;
+  bodyReason?: string;
 };
+
+/** Registry reasonCodes `bodyOf()` names instead of the generic body. */
+const KNOWN_REGISTRY_REASONS: ReadonlySet<string> = new Set(["SCAMSNIFFER_BLACKLIST"]);
 
 /**
  * The finding's sentence and the values to fill it: `details.side === "self"`
  * picks `bodySelf` over `body`, and `details.asset` (a compliant asset's own
  * policy, not the user's rule) picks the `*Asset` variant. The server sends
  * the asset's address there, so those sentences say "this asset" and the
- * values stay exactly as the server sent them. A finding with neither just
+ * values stay exactly as the server sent them. `details.registry.reasonCode`
+ * naming a known source (`KNOWN_REGISTRY_REASONS`) picks `bodyReason`, a
+ * complete sentence with nothing interpolated, so an unrecognised code falls
+ * back to `body` instead of guessing. A finding with none of these just
  * reads `body`. Shared by every finding list: the showcase's `FindingList`,
  * the playground's `Result`, the wallet's `Findings` and the extension's
  * activity log.
@@ -130,6 +137,12 @@ export function bodyOf(
 ): { readonly template: string; readonly values: Readonly<Record<string, string>> } {
   const self = item.details?.side === "self";
   const hasAsset = typeof item.details?.asset === "string";
+  const registry = item.details?.registry;
+  const reasonCode =
+    registry && typeof registry === "object" && "reasonCode" in registry
+      ? (registry as { reasonCode: unknown }).reasonCode
+      : undefined;
+  const hasKnownReason = typeof reasonCode === "string" && KNOWN_REGISTRY_REASONS.has(reasonCode);
   const template =
     self && hasAsset && copy.bodySelfAsset
       ? copy.bodySelfAsset
@@ -137,7 +150,9 @@ export function bodyOf(
         ? copy.bodyAsset
         : self && copy.bodySelf
           ? copy.bodySelf
-          : copy.body;
+          : hasKnownReason && copy.bodyReason
+            ? copy.bodyReason
+            : copy.body;
   return { template, values: item.values };
 }
 
