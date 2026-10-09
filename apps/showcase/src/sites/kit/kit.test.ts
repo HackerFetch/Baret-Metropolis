@@ -179,7 +179,7 @@ describe("live answer", () => {
 
   it("keeps the visitor's own changes and allowances, whatever the address case", () => {
     const result = fromAnalyzeResponse(response(), WALLET);
-    expect(result).toMatchObject({ source: "live", verdict: "blocked" });
+    expect(result).toMatchObject({ source: "live", verdict: "blocked", requestId: "r1" });
     expect(result.findings).toEqual([
       {
         code: "ERC20_APPROVAL_UNLIMITED",

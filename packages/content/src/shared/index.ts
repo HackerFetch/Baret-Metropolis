@@ -1,5 +1,7 @@
 export type { Common } from "./common.content.js";
 export { common } from "./common.content.js";
+export type { ExplainContent } from "./explain.content.js";
+export { explain } from "./explain.content.js";
 export type { FindingCode, FindingsContent } from "./findings.content.js";
 export { findings } from "./findings.content.js";
 export type { PolicyContent } from "./policy.content.js";

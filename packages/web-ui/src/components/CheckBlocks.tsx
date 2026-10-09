@@ -122,7 +122,7 @@ export function FindingList({ items }: { items: readonly CheckFinding[] }): JSX.
                 key={item.code}
                 className="grid gap-1 border-l-4 border-[color:var(--blocked)] pl-3"
               >
-                <p className={`${T.h3} text-[color:var(--fg)]`}>{copy.title}</p>
+                <p className={`${T.h3} text-[color:var(--fg)]`}>{fill(copy.title, item.values)}</p>
                 <p className={T.body}>{fill(copy.body, item.values)}</p>
                 {"fix" in copy && copy.fix && hasValues(copy.fix, item.values) ? (
                   <p className={T.small}>{fill(copy.fix, item.values)}</p>

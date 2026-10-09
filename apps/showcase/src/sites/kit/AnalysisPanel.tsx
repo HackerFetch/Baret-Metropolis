@@ -11,6 +11,7 @@ import {
   TheAsk,
 } from "@baret/web-ui/components/CheckBlocks";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { PlainWords } from "@baret/web-ui/components/PlainWords";
 import { StaggerItem } from "@baret/web-ui/components/Reveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
@@ -172,7 +173,21 @@ export function AnalysisPanel({
               <StaggerItem index={1} className="grid">
                 <FindingList items={result.findings} />
               </StaggerItem>
-              <StaggerItem index={2} className="grid">
+              {/* KIMI's plain-words reading of a live verdict; nothing when it is unavailable. */}
+              {result.source === "live" && result.requestId ? (
+                <PlainWords
+                  requestId={result.requestId}
+                  verdict={result.verdict}
+                  // The wrapper exists only while the block renders, so a 503
+                  // leaves the panel's gaps exactly as before.
+                  wrap={(block) => (
+                    <StaggerItem index={2} className="grid">
+                      {block}
+                    </StaggerItem>
+                  )}
+                />
+              ) : null}
+              <StaggerItem index={3} className="grid">
                 <ChangeList rows={result.changes} approvals={result.approvals} />
               </StaggerItem>
               <ClaimsList claims={copy.claims} />

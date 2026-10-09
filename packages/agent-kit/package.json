@@ -15,7 +15,7 @@
   "scripts": {
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "baret": "tsx src/cli.ts"
+    "baret": "tsx --env-file-if-exists=.env src/cli.ts"
   },
   "dependencies": {
     "@baret/guard": "workspace:*",

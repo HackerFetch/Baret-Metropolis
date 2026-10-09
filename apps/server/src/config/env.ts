@@ -63,6 +63,8 @@ const envSchema = z.object({
   BARET_API_KEYS: csv,
   BARET_CORS_ORIGINS: csv,
   BARET_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
+  /** /v1/explain spends paid model credit, so it has a tighter limit of its own. */
+  BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(20),
   BARET_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
   BARET_VERDICT_TTL_SECONDS: z.coerce.number().int().positive().default(30),
 
@@ -110,6 +112,7 @@ export interface AppConfig {
   apiKeys: readonly string[];
   corsOrigins: readonly string[];
   rateLimitPerMinute: number;
+  explainRateLimitPerMinute: number;
   requestTimeoutMs: number;
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
@@ -173,6 +176,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     apiKeys: e.BARET_API_KEYS,
     corsOrigins: e.BARET_CORS_ORIGINS,
     rateLimitPerMinute: e.BARET_RATE_LIMIT_PER_MINUTE,
+    explainRateLimitPerMinute: e.BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE,
     requestTimeoutMs: e.BARET_REQUEST_TIMEOUT_MS,
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,

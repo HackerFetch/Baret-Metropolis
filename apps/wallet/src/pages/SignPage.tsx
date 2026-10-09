@@ -157,6 +157,8 @@ function SiteSign(): JSX.Element {
           // The wallet does not sign a block: the way past is the rule.
           canOverride={false}
           {...(sessionNote ? { sessionNote } : {})}
+          // KIMI words a checked answer only: its id is Baret's requestId.
+          {...(live && shown.verdict !== "unreachable" ? { explainId: shown.id } : {})}
           onLog={(item) => {
             dispatch({ type: "log", item });
             // Only a sent call carries a receipt hash; a contract call logs as

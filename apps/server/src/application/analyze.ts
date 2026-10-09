@@ -29,6 +29,7 @@ import { decodeTransaction, type NormalizedTx } from "../simulation/decode.js";
 import { type CallTrace, parseCallTrace } from "../simulation/trace.js";
 import type { Sources } from "../sources/types.js";
 import type { Explainer } from "./explain.js";
+import type { ExplanationCache, VerdictCache } from "./verdicts.js";
 
 export const ANALYSIS_VERSION = "1";
 /** Bounds the reads one request can cause. */
@@ -48,6 +49,10 @@ export interface AnalyzeDeps {
   now?: () => number;
   /** Writes /v1/explain's words. Absent or null: that route answers 503. */
   explainer?: Explainer | null;
+  /** The verdicts /v1/explain may explain. Absent or null: it knows none and answers 404. */
+  verdicts?: VerdictCache | null;
+  /** Explanations already written, so one verdict costs one model call. */
+  explanations?: ExplanationCache | null;
 }
 
 async function lookup<T>(

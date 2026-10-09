@@ -139,5 +139,6 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
     findings: response.findings.map((f) => ({ code: f.code, values: f.values })),
     changes,
     approvals,
+    requestId: response.meta.requestId,
   };
 }

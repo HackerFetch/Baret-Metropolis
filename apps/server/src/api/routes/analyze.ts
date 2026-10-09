@@ -13,7 +13,9 @@ export const analyzeRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
       });
     }
     try {
-      return await analyze(body.data, deps);
+      const result = await analyze(body.data, deps);
+      deps.verdicts?.remember(result);
+      return result;
     } catch (err) {
       if (err instanceof AnalyzeInputError) {
         return reply.code(400).send({ error: "invalid_request", message: err.message });
