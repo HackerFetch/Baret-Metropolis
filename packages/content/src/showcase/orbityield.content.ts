@@ -1,11 +1,12 @@
 import type { ScenarioSite } from "../types.js";
 
 /**
- * /orbityield on apps/showcase. Trust trap. Caution, on purpose.
+ * /orbityield on apps/showcase. Trust trap. Blocked under Balanced since
+ * D-033 (2026-10-09); it was Caution before.
  *
  * Story: a staking page that promises a receipt token for every MON staked.
- * Nothing here is provably an attack. The missing receipt is the only sign,
- * and it shows in the balance change, not on the page.
+ * The page shows nothing wrong. The missing receipt is the only sign, and it
+ * shows in the balance change, not on the page.
  *
  * Old versions claimed a check for "no unstake function" and "inflated TVL".
  * No detector does either, so this version is built on what the detectors
@@ -16,8 +17,11 @@ import type { ScenarioSite } from "../types.js";
  * Needs: the pool on a list Baret reads.
  *
  * Attack version: the same button calls a second pool that is on no list,
- * keeps the MON and sends no oMON. Expected Caution under Balanced ("Unknown
- * contracts show as Caution, not Blocked"). Blocked under Strict. Codes:
+ * keeps the MON and sends no oMON. Expected Blocked under Balanced: a
+ * payment an unknown contract keeps is blocked by blockRiskyContracts (D-033).
+ * Caution under Permissive. Codes:
+ *   VALUE_KEPT_BY_UNKNOWN_CONTRACT  MON out, nothing in, from a contract on
+ *                                no list; blockRiskyContracts
  *   UNKNOWN_CONTRACT_EXPOSURE    needs the known-contract list to be in use;
  *                                blockUnknownContractExposure (off in Balanced)
  *   ESTIMATED_LOSS_EXCEEDS_MAX   only when the amount typed crosses the
@@ -251,7 +255,7 @@ export const orbityield = {
     ],
     watch: {
       title: "Before you press Stake",
-      body: "Nothing here is provably a scam, and that is the point. Read the Caution, look at what arrives, and decide with the amount in front of you.",
+      body: "The page shows nothing wrong, and that is the point. Look at what arrives for what you send: here nothing does, so Balanced rules block it.",
     },
     without: {
       title: "If this were signed",

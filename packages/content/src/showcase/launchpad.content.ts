@@ -1,7 +1,8 @@
 import type { ScenarioSite } from "../types.js";
 
 /**
- * /launchpad on apps/showcase. Trust trap. Caution, on purpose.
+ * /launchpad on apps/showcase. Trust trap. Blocked under Balanced since
+ * D-033 (2026-10-09); it was Caution before.
  *
  * Story: a polished token sale. The tokens really arrive. The risk is what the
  * deployer can change after the sale, and that shows in the call trace, not
@@ -18,9 +19,10 @@ import type { ScenarioSite } from "../types.js";
  *
  * Attack version: the same button calls a sale proxy that delegatecalls into
  * an implementation its deployer can replace. LNTL still arrives. Expected
- * Caution under Balanced, Blocked under Strict. Codes:
+ * Blocked under Balanced, which blocks borrowed code since D-033; Caution
+ * under Permissive. Codes:
  *   DELEGATECALL_DETECTED        needs a call trace (debug_traceCall on the
- *                                Monad RPC); blockDelegatecall
+ *                                Monad RPC); blockDelegatecall, on in Balanced
  *   UNKNOWN_CONTRACT_EXPOSURE    proxy and implementation on no list;
  *                                blockUnknownContractExposure (off in Balanced)
  *   ESTIMATED_LOSS_EXCEEDS_MAX   only when the amount typed crosses the
@@ -241,7 +243,7 @@ export const launchpad = {
     ],
     watch: {
       title: "Before you press Contribute",
-      body: "Tokens that arrive today say little about next week. Read the Caution: it tells you whether the code that ran can be replaced.",
+      body: "Tokens that arrive today say little about next week. Read why Baret blocks it: the code that ran can be replaced after you pay.",
     },
     without: {
       title: "If this were signed",

@@ -9,7 +9,8 @@ import type { FlowState, StepStatus } from "./useSendFlow.js";
 /**
  * A site's "Sign with your wallet", the second button beside its main one:
  * the same request Baret's panel checks, sent straight to the connected
- * wallet with no check first. Under it, each step of the run with what the
+ * wallet with no check first. A line above it says the main button goes
+ * through Baret's check, so the two read as one request, two paths (M2). Under it, each step of the run with what the
  * wallet and Monad testnet said, a hash that opens on the explorer, and once
  * every step is confirmed the tracked token's balance before and after.
  *
@@ -114,6 +115,7 @@ export function SignBlock({
 
   return (
     <div className="grid gap-3">
+      <p className={T.small}>{copy.checked}</p>
       <Button
         type="button"
         variant="ghost"
