@@ -20,10 +20,18 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-10 · by: Hale's agent (session 3) · API commit `25b7581`
+Last updated: 2026-10-10 evening · by: Hale's agent (session 3) · API commit `a34e520`
 
 | | |
 |---|---|
+| **Done** | H1, H4–H8, H9 part 1, **H16** (KIMI and Qwen live), **the extension as a real wallet** (attack Blocked in its own window, honest swap confirmed, popup send, lock, restore), **H10 (1)** `verify:demo` 20/20 and the four x402 boxes, **Hale's demo vault** `0xA19A…0E3C` (inside the cap paid, over it Blocked) |
+| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; sealed settings checked with a virtual passkey, the two-device run left for a real passkey |
+| **Blocked on** | Ezgin: the platform team (E1 (1)) → H2; H3 (MetaMask) is Ezgin's since 2026-10-10 |
+| **Next step** | H14 (README and access instructions for judges, using `docs/SYSTEM_GAPS.md` G-13); Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
+| **Open bugs filed by Hale** | 6 — Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived", P2 over-cap reason "unknown" |
+| **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
+
+---|---|
 | **Done** | H1 (setup; funding still open), H4, H5 (indexer side), H6, H7, H8 (#57), H9 part 1, **H16** (2026-10-10: `/review` three scenarios live, honest sent `0x3d33…efe9` status 1; KIMI en/tr/zh on NovaSwap and in the wallet window; rules from a sentence; fail-closed with the API or explain down) |
 | **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
 | **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
