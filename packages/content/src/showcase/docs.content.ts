@@ -206,8 +206,8 @@ export const docs = {
     title: "Prefer to watch it work?",
     body: "The showcase has six fake sites, each with a trap built from a real transaction. Every sign request goes through the same analysis the wallet uses.",
     actions: {
-      primary: { label: "Open the showcase", href: "/showcase" },
-      secondary: { label: "Install the extension", href: "/install" },
+      primary: { label: "Open the web wallet", href: "https://baret-wallet.vercel.app" },
+      secondary: { label: "Try the demo", href: "/novaswap" },
     },
   },
 } as const;

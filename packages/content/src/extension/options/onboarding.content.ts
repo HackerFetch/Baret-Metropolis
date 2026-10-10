@@ -195,7 +195,7 @@ export const extOnboarding = {
       },
       {
         title: "Connect to a Monad site",
-        body: "Baret appears in the site's wallet list like any other wallet.",
+        body: "Not in this preview. Sites cannot reach Baret yet, so it does not appear in a site's wallet list.",
       },
       {
         title: "Pin Baret to your toolbar",

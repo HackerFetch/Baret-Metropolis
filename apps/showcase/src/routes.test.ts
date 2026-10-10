@@ -24,12 +24,12 @@ describe("registry", () => {
     }
   });
 
-  it("puts the five marketing pages in the header nav", () => {
+  it("groups the four marketing pages, the extension preview last", () => {
     expect(navRoutes(routes, "marketing").map((route) => route.label)).toEqual([
       "Showcase",
       "Agents",
       "Docs",
-      "Install",
+      "Extension",
     ]);
   });
 

@@ -28,8 +28,8 @@ export const hub = {
     title: "Six sites. Six threats. Read them before you sign.",
     body: "Each site looks finished and works like the real thing. Each one hides a different threat in the transaction it builds. Press its main button and see what Baret checks before anything is signed.",
     actions: {
-      primary: { label: "See the six sites", href: "#scenarios" },
-      secondary: { label: "Install the extension", href: "/install" },
+      primary: { label: "Open the web wallet", href: "https://baret-wallet.vercel.app" },
+      secondary: { label: "Start with NovaSwap", href: "/novaswap" },
     },
     notice:
       "These sites are simulations built for this showcase. They run on Monad testnet, where tokens have no value.",
@@ -148,8 +148,8 @@ export const hub = {
     title: "Pick a site. Press the button.",
     body: "Each site builds a real transaction on Monad testnet. The analysis appears before anything is signed.",
     actions: {
-      primary: { label: "Start with ClaimHub", href: "/claimhub" },
-      secondary: { label: "Install the extension", href: "/install" },
+      primary: { label: "Open the web wallet", href: "https://baret-wallet.vercel.app" },
+      secondary: { label: "Start with NovaSwap", href: "/novaswap" },
     },
   },
 
@@ -277,7 +277,7 @@ export const hub = {
       /** When the check did not finish: no answer means Blocked. */
       failed: {
         title: "The check did not finish",
-        body: "Baret could not reach its server, or the answer did not arrive in time. With no answer, the verdict is Blocked. Do not sign.",
+        body: "Baret did not answer in time: its server was busy or out of reach. With no answer, the verdict is Blocked. Do not sign.",
       },
     },
 

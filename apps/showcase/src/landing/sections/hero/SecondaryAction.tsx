@@ -2,10 +2,10 @@ import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import type { JSX } from "react";
 
 /**
- * The secondary action, "Install the extension". Below 768 px it reads
- * "Install on desktop" (same link), because the steps cannot be done on a
- * phone. The hidden copy is display:none, so only one link is ever in the
- * tab order and the accessibility tree.
+ * The secondary action, "Try the demo" (G-02: the web wallet is the first
+ * button, the demo the second). It keeps a phone label of its own; the
+ * hidden copy is display:none, so only one link is ever in the tab order and
+ * the accessibility tree.
  */
 export function SecondaryAction({
   action,

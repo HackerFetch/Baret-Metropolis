@@ -104,7 +104,7 @@ export const common = {
     viewOnExplorer: "View on the explorer",
     readTheDocs: "Read the docs",
     openShowcase: "Open the showcase",
-    installWallet: "Install the extension",
+    installWallet: "Open the web wallet",
     learnMore: "How this works",
   },
 
@@ -246,7 +246,16 @@ export const common = {
       { label: "Docs", href: "/docs" },
       { label: "Install", href: "/install" },
     ],
-    cta: { label: "Install the extension", href: "/install" },
+    /**
+     * The header action (RootLayout HeaderAction): the web wallet, the working
+     * product (G-02). The extension is a preview, so no header button installs it.
+     */
+    cta: {
+      label: "Open the web wallet",
+      /** Below 768 px, same link; short so the phone header fits from 320 px. */
+      labelPhone: "Wallet",
+      href: "https://baret-wallet.vercel.app",
+    },
   },
 
   /**
@@ -261,7 +270,7 @@ export const common = {
         title: "Product",
         links: [
           { label: "Showcase", href: "/showcase" },
-          { label: "Install", href: "/install" },
+          { label: "Extension preview", href: "/install" },
         ],
       },
       {

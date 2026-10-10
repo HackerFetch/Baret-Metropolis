@@ -57,12 +57,13 @@ export const home = {
     title: "Check it first. Then sign.",
     body: "Baret runs every Monad transaction without sending it, before you sign. It checks the result against your rules. Then it tells you what it found, in plain words. The same check covers your AI agents.",
     actions: {
-      primary: { label: "Open the showcase", href: "/showcase" },
+      /** The working product: the web wallet signs with a passkey and calls Baret first (G-02). */
+      primary: { label: "Open the web wallet", href: "https://baret-wallet.vercel.app" },
       secondary: {
-        label: "Install the extension",
-        /** Below 768 px, same link: the install steps need a desktop (D4). */
-        labelPhone: "Install on desktop",
-        href: "/install",
+        label: "Try the demo",
+        /** Below 768 px, same link. */
+        labelPhone: "Try the demo",
+        href: "/novaswap",
       },
     },
     // Not rendered on the landing since 2026-10-01.
@@ -79,7 +80,7 @@ export const home = {
     /** Sits beside the real Sign Request component. The caption is what
      *  makes the picture honest, so it stays only while that is true. */
     // Not rendered on the landing since 2026-10-01.
-    mockCaption: "The real sign request screen from the extension, not a drawing of one.",
+    mockCaption: "The real sign request screen, not a drawing of one.",
   },
 
   /** The scrolling strip. Every item maps to a finding code emitted by one of
@@ -459,7 +460,7 @@ export const home = {
       },
       {
         title: "Your keys stay on your device",
-        body: "The web wallet signs with a Mera passkey held by your device. The extension keeps its key encrypted in your browser. Neither one is ever sent to Baret.",
+        body: "The web wallet signs with a Mera passkey held by your device. The passkey is never sent to Baret.",
       },
       {
         title: "A simulation is a preflight, not a guarantee",
@@ -496,7 +497,7 @@ export const home = {
       {
         question: "Is it a wallet or an add-on?",
         answer:
-          "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use. Nothing needs uninstalling. There is also a web wallet that signs with a Mera passkey.",
+          "Neither. Baret is the check any wallet, dapp or agent calls before it signs. The web wallet signs with a Mera passkey and calls Baret first. The browser extension is a preview of its screens on sample data.",
       },
       {
         question: "Will I learn to click through it like every other warning?",
@@ -516,7 +517,7 @@ export const home = {
       {
         question: "Does it cost anything?",
         answer:
-          "The extension and the web wallet are free. Baret takes no cut of your transactions. Developers who call the analysis API directly may pay per check over x402.",
+          "The web wallet and the API are free to use on Monad testnet. Baret takes no cut of your transactions.",
       },
       {
         question: "Has Baret been audited?",
@@ -533,14 +534,14 @@ export const home = {
 
   cta: {
     title: "Sign with your eyes open.",
-    body: "Open the showcase and press Claim on a fake airdrop. Read what Baret finds before anything is signed.",
+    body: "Try the demo on a fake swap site. Read what Baret finds before anything is signed.",
     actions: {
-      primary: { label: "Open the showcase", href: "/showcase" },
+      primary: { label: "Open the web wallet", href: "https://baret-wallet.vercel.app" },
       secondary: {
-        label: "Install the extension",
-        /** Below 768 px, same link (D4). */
-        labelPhone: "Install on desktop",
-        href: "/install",
+        label: "Try the demo",
+        /** Below 768 px, same link. */
+        labelPhone: "Try the demo",
+        href: "/novaswap",
       },
     },
     note: "Free to use. Open source. On Monad testnet.",

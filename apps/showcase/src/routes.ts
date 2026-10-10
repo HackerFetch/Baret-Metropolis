@@ -45,8 +45,8 @@ export const routes = defineRoutes({
   },
   install: {
     path: "/install",
-    title: "Install Baret",
-    label: "Install",
+    title: "Baret extension preview",
+    label: "Extension",
     group: "marketing",
     load: () => import("./pages/InstallPage.js"),
   },

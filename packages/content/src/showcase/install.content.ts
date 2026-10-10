@@ -13,6 +13,12 @@
  *  - Quote the browser's own wording (buttons, warnings) exactly, so the
  *    reader can match the page to the screen in front of them.
  *
+ * The extension is a preview (G-02 option (a), 2026-10-10): every screen runs
+ * on a sample wallet, and provider.content.ts, relay.content and background.ts
+ * are still stubs. It holds no key, never appears in a site's wallet list and
+ * sees no sign request. The working product is the web wallet. Nothing on
+ * this page may claim more than that.
+ *
  * Minimum versions come from apps/extension/wxt.config.ts
  * (minimum_chrome_version, gecko strict_min_version). Keep them in sync.
  */
@@ -20,14 +26,14 @@
 export const install = {
   meta: {
     description:
-      "Install the Baret extension for Chrome, Brave, Edge or Firefox. It is a Monad wallet that simulates every sign request and checks it before you sign.",
+      "Load the Baret extension preview in Chrome, Brave, Edge or Firefox. Every screen runs on a sample wallet. To check real sign requests, use the Baret web wallet.",
   },
 
   hero: {
     /** Not rendered on /install since 2026-10-03. */
-    eyebrow: "Install",
-    title: "Add the check to your browser.",
-    body: "Baret is a Monad wallet that simulates each sign request and checks it against your rules before you sign. It is not in the browser stores yet, so it loads as a developer build. No account, no email.",
+    eyebrow: "Extension preview",
+    title: "Try the extension preview.",
+    body: "The preview shows every screen of the Baret extension on a sample wallet. It cannot connect to sites, hold a key or see a sign request yet. For real checks, open the web wallet at https://baret-wallet.vercel.app or try a demo site.",
     actions: {
       primary: { label: "Download for Chrome, Brave and Edge" },
       secondary: { label: "Download for Firefox" },
@@ -41,9 +47,10 @@ export const install = {
     /** The detected line while no build is published: there is nothing to pick. */
     detectedPending: {
       chromium:
-        "You are on a Chromium browser, such as Chrome, Brave or Edge. Build Baret for it from the source.",
-      firefox: "You are on Firefox. Build Baret for it from the source.",
-      unknown: "Baret runs in Chrome, Brave, Edge and Firefox. Build it for yours from the source.",
+        "You are on a Chromium browser, such as Chrome, Brave or Edge. Build the preview for it from the source.",
+      firefox: "You are on Firefox. Build the preview for it from the source.",
+      unknown:
+        "The preview runs in Chrome, Brave, Edge and Firefox. Build it for yours from the source.",
     },
   },
 
@@ -59,9 +66,9 @@ export const install = {
     other: "Also available for",
     /** Under a published build. */
     status:
-      "Not in the Chrome Web Store or Firefox Add-ons yet. Until it is, download it here or build it from source.",
+      "The preview is not in the Chrome Web Store or Firefox Add-ons. Download it here or build it from source.",
     /** Under the source link while no build is published. */
-    statusPending: "Not in the Chrome Web Store or Firefox Add-ons yet.",
+    statusPending: "The preview is not in the Chrome Web Store or Firefox Add-ons.",
     /** Shown in place of the download until a build is published. */
     pending: {
       body: "No downloadable build is published yet. Build it from source in a few minutes, then load the folder the same way.",
@@ -112,7 +119,7 @@ export const install = {
         {
           short: "Load",
           title: "Load unpacked",
-          body: "Press Load unpacked and pick the Baret folder from step 1. Pin Baret from the puzzle-piece icon in the toolbar, then click it to set up your wallet.",
+          body: "Press Load unpacked and pick the Baret folder from step 1. Pin Baret from the puzzle-piece icon in the toolbar, then click it to open the preview.",
         },
       ],
     },
@@ -137,7 +144,7 @@ export const install = {
         },
       ],
       warning:
-        "Back up your recovery phrase before you quit Firefox. If your wallet is gone after you load Baret again, restore it from that backup.",
+        "Firefox removes Baret when it quits. To load it again, open the debugging page and repeat step 3. The preview holds no key, so nothing is lost.",
     },
   },
 
@@ -146,7 +153,7 @@ export const install = {
     body: "Chrome loads an extension from a folder only when developer mode is on. It gives Baret no extra access and changes nothing about your other extensions.",
     warning:
       "Developer mode lets any folder load as an extension. Load only a build you made or downloaded yourself, from a source you trust.",
-    note: "Once Baret is in the store, install it from there instead.",
+    note: "The preview is not in any browser store, so a folder is the only way to load it.",
   },
 
   /** The section that does the most work on this page. Honest about the
@@ -158,33 +165,31 @@ export const install = {
     siteAccess: {
       /** Not rendered on /install since 2026-10-03. */
       title: "Why it asks for every site",
-      body: "Any site can send a sign request, so Baret runs on every page to catch it. Chrome words this as 'Read and change all your data on all websites'.",
+      body: "Catching a sign request means being on the page that sends it, so the manifest declares scripts for every page. Chrome words this as 'Read and change all your data on all websites'. In the preview those scripts load and do nothing.",
     },
     can: {
       title: "It can",
       points: [
-        "Read the sign request a site sends, before you sign it",
-        "Send the unsigned transaction, your address and the site's origin to the Baret server",
-        "Refuse to sign when one of your rules blocks it",
-        "Pay x402 requests on its own, but only inside caps you approved",
-        "Watch your address and alert you when something moves without you",
+        "Show every screen of the extension: popup, sign request, rules, allowances, activity and settings",
+        "Walk through each screen with a sample wallet and sample sign requests",
+        "Show how a Safe, Caution or Blocked verdict reads before you sign",
       ],
     },
     cannot: {
       title: "It cannot",
       points: [
-        "Send your key or recovery phrase off this device",
-        "Sign anything you did not approve, or pay past a cap you set",
-        "Add a fee to your transactions",
+        "Appear in a site's wallet list or connect to a site",
+        "Hold a key or a recovery phrase, or sign anything",
+        "See a sign request from a site, or send one anywhere",
+        "Make payments or watch a real address",
         "Work on any chain other than Monad",
       ],
     },
     others: {
       title: "Who else sees what",
       points: [
-        "Alchemy RPC runs the simulation, so it sees the unsigned transaction.",
-        "Nansen and Cleanverse see the addresses Baret asks them about.",
-        "Your key and recovery phrase stay on this device.",
+        "No one. The preview reads only its sample data and sends nothing to the Baret server or anyone else.",
+        "The web wallet does send checks. There, Alchemy RPC sees the unsigned transaction, and Nansen and Cleanverse see the addresses Baret asks about.",
       ],
     },
     audit: {
@@ -200,23 +205,19 @@ export const install = {
   afterInstall: {
     eyebrow: "After",
     title: "What happens next",
-    body: "Setup opens in its own tab. The popup is too small for it.",
+    body: "Onboarding opens in its own tab. The popup is too small for it.",
     items: [
       {
-        title: "Set a password",
-        body: "It encrypts your wallet on this device. There is no account and no recovery email, so pick one you will remember.",
+        title: "Walk through onboarding",
+        body: "Every step runs on a sample wallet. The preview holds no real key.",
       },
       {
-        title: "Back up your recovery phrase",
-        body: "Write it down once and keep it offline. It is the only way back in if you lose this browser.",
+        title: "Open the popup",
+        body: "Pin Baret and click it to see the home screen and a sample sign request.",
       },
       {
-        title: "Get testnet MON",
-        body: "Setup links to the Monad faucet. Testnet MON has no value and exists for exactly this.",
-      },
-      {
-        title: "Pick your rules",
-        body: "Start from Strict, Balanced or Permissive, and change any rule later. Balanced is the default.",
+        title: "Look at your rules",
+        body: "Strict, Balanced and Permissive are all there. Balanced is the default.",
       },
     ],
   },
@@ -226,16 +227,16 @@ export const install = {
     title: "What you get",
     items: [
       {
-        title: "A check before every signature",
-        body: "Each sign request is simulated, run through nine detectors and your rules, then explained one finding at a time.",
+        title: "The sign request screen",
+        body: "See how a sample request reads: the verdict, each finding, and what changes in the wallet.",
       },
       {
-        title: "Every allowance in one list",
-        body: "See which contracts can spend your tokens or move your NFTs, and revoke any of them.",
+        title: "The allowance list",
+        body: "See how a sample wallet's allowances are listed, one contract per line.",
       },
       {
-        title: "Caps on agent payments",
-        body: "Payments over HTTP 402 stop at the per-payment, hourly and daily caps you set.",
+        title: "The payment caps",
+        body: "See where the per-payment, hourly and daily caps for HTTP 402 payments are set.",
       },
     ],
   },
@@ -257,7 +258,7 @@ export const install = {
       },
       {
         symptom: "Baret is gone after Firefox restarted",
-        fix: "Firefox removes temporary add-ons when it quits. Load it again from the debugging page. If your wallet is empty, restore it from your recovery phrase.",
+        fix: "Firefox removes temporary add-ons when it quits. Load it again from the debugging page. The preview holds no key, so nothing is lost.",
       },
       {
         symptom: "The Baret icon is not in the toolbar",
@@ -268,7 +269,11 @@ export const install = {
         fix: "Baret needs a Chromium browser from version 111, or Firefox 128 or later. Update the browser, then load it again.",
       },
       {
-        symptom: "Every sign request says Can't reach Baret",
+        symptom: "A site does not list Baret as a wallet",
+        fix: "That is expected. The preview cannot connect to sites yet. To check a real sign request, use the web wallet at https://baret-wallet.vercel.app.",
+      },
+      {
+        symptom: "The web wallet says Can't reach Baret",
         fix: "Baret could not finish its check, so it treats the request as Blocked. Check your connection and try again in a moment.",
       },
     ],
@@ -276,7 +281,7 @@ export const install = {
 
   cta: {
     title: "Take it for a run.",
-    body: "Six fake sites set six traps. Open one with Baret installed and read the sign request before you decide.",
+    body: "Six fake sites set six traps. Open one in any browser and read the check before you decide. No extension needed.",
     actions: {
       primary: { label: "Open the showcase", href: "/showcase" },
       secondary: { label: "Read the docs", href: "/docs" },

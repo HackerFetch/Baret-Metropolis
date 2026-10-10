@@ -41,8 +41,12 @@ import { DEMO_PATHS, routes, warm } from "../routes.js";
  * under the 56 px header through the scroll-padding in tokens.css.
  */
 
-/** The header text links. Showcase is the header action instead (IMPROVE D2). */
-const NAV = navRoutes(routes, "marketing").filter((route) => route.key !== "showcase");
+/**
+ * The header text links: Showcase, Agents, Docs. The extension preview has no
+ * header link (G-02): /install is reached from the footer and the docs, and
+ * the header action is the web wallet.
+ */
+const NAV = navRoutes(routes, "marketing").filter((route) => route.key !== "install");
 
 /**
  * Every marketing page sits on the landing's frame (FRAME in @baret/web-ui
@@ -347,7 +351,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
               {route.label}
             </NavLink>
           ))}
-          <HeaderAction dark={dark} current={pathname === routes.showcase.path} />
+          <HeaderAction dark={dark} />
         </nav>
       </div>
     </header>
@@ -355,41 +359,23 @@ function SiteHeader({ pathname }: { pathname: string }) {
 }
 
 /**
- * The one persistent action, top right (IMPROVE D2): the Showcase link as a
- * small outline button. It follows the header tone but is never orange, so
- * the hero and closing buttons stay the only orange in their viewport. The
- * long label from 768 px, the short one on phones; the hidden copy is
- * display:none, so it is out of the tab order and the accessibility tree.
- * On /showcase itself it is the current page, so it becomes a nav item with
- * the active border and aria-current instead of a call to action.
+ * The one persistent action, top right (IMPROVE D2): the web wallet, the
+ * working product (G-02), as a small outline button. It follows the header
+ * tone but is never orange, so the hero and closing buttons stay the only
+ * orange in their viewport. The long label from 768 px, the short one on
+ * phones; the hidden copy is display:none, so it is out of the tab order and
+ * the accessibility tree. An https href renders as a plain anchor.
  */
-function HeaderAction({ dark, current }: { dark: boolean; current: boolean }) {
+function HeaderAction({ dark }: { dark: boolean }) {
   const variant = dark ? "ghostInverse" : "ghost";
-  const href = routes.showcase.path;
-  if (current) {
-    return (
-      <NavLink
-        to={href}
-        data-nav-item=""
-        viewTransition
-        className={`${navClass(true, dark)} min-[360px]:ml-1 md:ml-3`}
-      >
-        {routes.showcase.label}
-      </NavLink>
-    );
-  }
+  const { href, label, labelPhone } = common.nav.cta;
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: warms the chunk on intent; the link inside is the control
-    <span
-      className="inline-flex min-[360px]:ml-1 md:ml-3"
-      onPointerEnter={() => warm("showcase")}
-      onFocus={() => warm("showcase")}
-    >
+    <span className="inline-flex min-[360px]:ml-1 md:ml-3">
       <span className="hidden md:inline-flex">
-        <LinkButton href={href} label={common.actions.openShowcase} variant={variant} size="sm" />
+        <LinkButton href={href} label={label} variant={variant} size="sm" />
       </span>
       <span className="inline-flex md:hidden">
-        <LinkButton href={href} label={routes.showcase.label} variant={variant} size="sm" />
+        <LinkButton href={href} label={labelPhone} variant={variant} size="sm" />
       </span>
     </span>
   );
