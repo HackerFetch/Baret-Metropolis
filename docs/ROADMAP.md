@@ -153,7 +153,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 |---|---|---|---|---|
 | H1 | First session: machine, `qa` branch, git identity into `CLAUDE.md`, a test wallet | Fri 9 morning | | |
 | H2 | The platform: all three profiles name the campus group; the twelve prizes are selected; the form's fields against §8.1 | Fri 9 | E1 | Community, all forms |
-| H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows | Fri 9 to Sat 10 | M1, E1 | main track |
+| H3 | The MetaMask rehearsal: sign NovaSwap's attack with MetaMask and record exactly what MetaMask shows **Handed to Ezgin 2026-10-10** (Hale's decision): Ezgin runs it and writes what MetaMask showed into `docs/QA_LOG.md`; Hale then changes the **[H3]** lines of `docs/submission/SCRIPTS.md` | Fri 9 to Sat 10 | M1, E1 | main track |
 | H4 | Build: the agents playground's six actions answer from the live API. **Built and checked against the real engine 2026-10-09**; needs E9 before it reproduces `verify:demo`'s matrix live (see "Where things stand") | Fri 9 | E9 to go live correctly | main track |
 | H5 | Build: the wallet's history and the vault's merchants from `/v1/audit/*`. **Built in part 2026-10-09** (#52): History and Home read the vault's `paid` rows from the indexer; the other nine kinds are E10 | Sat 10 | E3 for the live account | Envio, Mera UX |
 | H6 | Build: `/agents` matches what shipped, with the Dynamic agent's real payments read live from the indexer. **Built 2026-10-09** (#55, with Meriç's review on the branch): the samples typecheck against the kit, the live block reads the vault's payments from `/v1/audit/vault` and fails closed | Sat 10 | | Dynamic, Envio |
