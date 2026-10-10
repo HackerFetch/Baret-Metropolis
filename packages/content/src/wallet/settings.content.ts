@@ -126,7 +126,7 @@ export const settings = {
     prompt: "The first of these in a session asks for your passkey.",
     busy: "Waiting for your passkey and Monad.",
     state: {
-      current: "The encrypted copy matches what you see here.",
+      current: "Nothing has changed here since your last save or restore.",
       changed: "You changed something since the last copy. Save again to keep it.",
     },
     outcome: {
@@ -134,7 +134,11 @@ export const settings = {
       restored: "Your rules and merchant names are back, from copy number {version}.",
       empty: "This passkey has no encrypted copy yet. Nothing was changed.",
       cancelled: "The passkey prompt was closed. Nothing was changed.",
+      /** Restore only: it fails before it writes anything. */
       failed: "That did not work. Nothing was changed. Try again.",
+      /** Save only: a 502 or a timeout can still land on Monad. */
+      saveFailed:
+        "The save did not finish. Monad may still confirm it. Wait a minute before you save again.",
     },
   },
 

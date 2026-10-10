@@ -13,6 +13,8 @@ import {
   erc20Abi,
   erc721Abi,
   isAddress,
+  keccak256,
+  stringToHex,
   toFunctionSelector,
 } from "viem";
 import { z } from "zod";
@@ -45,12 +47,12 @@ You work in two phases.
 - Act: you carry out the plan with the tools, then decide. Call decode_transaction and get_baret_verdict before you answer: an answer given without them is a veto, whatever it says.
 
 The tools:
-- decode_transaction: the call decoded against the PaymentGuard vault, ERC-20 and ERC-721 ABIs: function name and named arguments.
+- decode_transaction: the call decoded against the PaymentGuard vault, ERC-20 and ERC-721 ABIs: function name and named arguments, and for a vault payment refCheck when its reference is known.
 - get_baret_verdict: the Baret firewall's verdict on this call: decision, findings, fired rules, the simulated balance changes of every account (isAgent says which one is the agent), approvals, and the checks that were unavailable.
 - read_vault {address}: a PaymentGuard vault's state (agent, token, caps, merchants, paused), its newest activity, the current time (now, unix seconds), per merchant what the vault already paid it in the last hour and the last 24 hours (base units), and thisPayment: for this call's payment, the merchant, the amount, the room left under its caps and fits (true or false), worked out in code. For the caps, rely on thisPayment.fits rather than your own arithmetic on long numbers.
 - check_reputation {address}: whether an address is listed in the Baret reputation registry, with its entry and history.
 
-Vault payments: the transaction calls PaymentGuard.pay(merchant, amount, ref) on the vault. The merchant and the amount are in the decoded call, and the tokens leave the vault, not the agent (balanceChanges with isAgent false).
+Vault payments: the transaction calls PaymentGuard.pay(merchant, amount, ref) on the vault. The merchant and the amount are in the decoded call, and the tokens leave the vault, not the agent (balanceChanges with isAgent false). The ref is the keccak256 hash of the payment's reference (the invoice id or memo), so it never reads as text. decode_transaction reports refCheck.matches, worked out in code: count the ref as a mismatch only when refCheck.matches is false.
 
 Veto when any of these holds:
 - the recipient, merchant, contract or amount differs from the intent, or value, tokens or collectibles leave in a larger amount than it states;
@@ -144,6 +146,18 @@ function decode(input: ReviewInput) {
     item.inputs.forEach((param, i) => {
       named[param.name || `arg${i}`] = plain(args?.[i]);
     });
+    const reference = input.reference;
+    if (item.name === "pay" && reference) {
+      const matches =
+        (named.ref ?? "").toLowerCase() === keccak256(stringToHex(reference)).toLowerCase();
+      return {
+        ...base,
+        selector,
+        function: item.name,
+        args: named,
+        refCheck: { reference, matches },
+      };
+    }
     return { ...base, selector, function: item.name, args: named };
   } catch {
     return {
@@ -321,7 +335,7 @@ export function reviewTools(input: ReviewInput, options: ReviewToolsOptions): Ll
     {
       name: "decode_transaction",
       description:
-        "Decodes the call against the PaymentGuard, ERC-20 and ERC-721 ABIs: function name and named arguments.",
+        "Decodes the call against the PaymentGuard, ERC-20 and ERC-721 ABIs: function name and named arguments. For a vault pay call with a known payment reference, refCheck says whether the ref is the keccak256 of that reference.",
       parameters: NO_ARGUMENTS,
       run: async () => decode(input),
     },

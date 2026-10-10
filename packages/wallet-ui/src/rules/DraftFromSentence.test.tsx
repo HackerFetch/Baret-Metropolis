@@ -1,5 +1,5 @@
 import { policies, policy } from "@baret/content";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { fromTemplate } from "../data/rules.js";
 import type { GuardPolicy } from "../data/types.js";
@@ -11,7 +11,7 @@ import {
 } from "./DraftFromSentence.js";
 
 /** The model only suggests: tightening starts ticked, loosening never does,
- *  only ticked changes reach the draft, and any failure hides the block. */
+ *  only ticked changes reach the draft, and a failure keeps the form with one line. */
 
 const base: GuardPolicy = fromTemplate("balanced", []);
 
@@ -121,18 +121,63 @@ describe("DraftFromSentence", () => {
     expect(next?.blockPermit).toBe(!base.blockPermit);
   });
 
-  it("hides itself after one quiet line on 503", async () => {
-    await ask(stub(503, { error: "policy_draft_unavailable" }));
-    await screen.findByText(policies.draft.unavailable);
-    expect(screen.queryByLabelText(policies.draft.label)).toBeNull();
+  const sentence = "Cap each payment at 20";
+
+  /** The form, the typed sentence and the submit button are all still there. */
+  function expectFormKept() {
+    const input = screen.getByLabelText(policies.draft.label) as HTMLInputElement;
+    expect(input.value).toBe(sentence);
+    const submit = screen.getByRole("button", { name: policies.draft.submit }) as HTMLButtonElement;
+    expect(submit.disabled).toBe(false);
+  }
+
+  it("asks for other words on a 422 and keeps the form", async () => {
+    await ask(stub(422, { error: "policy_draft_invalid", message: "bad answer" }));
+    const line = await screen.findByText(policies.draft.failed.invalid);
+    expect(line.closest("[role=status]")).toBeTruthy();
+    expect(screen.queryByText(policies.draft.failed.other)).toBeNull();
+    expectFormKept();
   });
 
-  it("hides itself on a network error", async () => {
+  it.each([
+    [503, { error: "policy_draft_unavailable" }],
+    [429, { error: "policy_draft_daily_limit" }],
+    [429, { statusCode: 429, error: "Too Many Requests", message: "Rate limit exceeded" }],
+  ])("says try again on a %i and keeps the form", async (status, body) => {
+    await ask(stub(status, body));
+    const line = await screen.findByText(policies.draft.failed.other);
+    expect(line.closest("[role=status]")).toBeTruthy();
+    expectFormKept();
+  });
+
+  it("says try again on a network error and keeps the form", async () => {
     const fetchImpl = vi.fn(async () => {
       throw new TypeError("offline");
     }) as unknown as typeof fetch;
     await ask(fetchImpl);
-    await waitFor(() => expect(screen.getByText(policies.draft.unavailable)).toBeTruthy());
-    expect(screen.queryByRole("button", { name: policies.draft.submit })).toBeNull();
+    await screen.findByText(policies.draft.failed.other);
+    expectFormKept();
+  });
+
+  it("says try again on a body it can't read", async () => {
+    await ask(stub(200, { nope: true }));
+    await screen.findByText(policies.draft.failed.other);
+    expectFormKept();
+  });
+
+  it("sends a new request on the next submit and shows the answer", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "policy_draft_unavailable" }), { status: 503 }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify(answer), { status: 200 }));
+    await ask(fetchImpl as unknown as typeof fetch);
+    await screen.findByText(policies.draft.failed.other);
+    fireEvent.click(screen.getByRole("button", { name: policies.draft.submit }));
+    await screen.findByText(policies.draft.changesTitle);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText(policies.draft.failed.other)).toBeNull();
+    expectFormKept();
   });
 });

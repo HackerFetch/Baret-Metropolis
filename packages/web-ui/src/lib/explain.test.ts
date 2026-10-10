@@ -56,29 +56,58 @@ describe("parseExplainAnswer", () => {
 describe("fetchExplanation", () => {
   it("posts the request id and the language", async () => {
     const fetchImpl = vi.fn(async () => json(200, goodAnswer("tr")));
-    const answer = await fetchExplanation("req-1", "tr", undefined, fetchImpl);
-    expect(answer?.language).toBe("tr");
+    const result = await fetchExplanation("req-1", "tr", undefined, fetchImpl);
+    expect(result.ok && result.answer.language).toBe("tr");
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe(EXPLAIN_URL);
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({ requestId: "req-1", language: "tr" });
   });
 
-  it("is null on a 503", async () => {
-    const fetchImpl = vi.fn(async () => json(503, { error: "unavailable" }));
-    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toBeNull();
+  it.each([
+    [503, { error: "explain_unavailable" }, "explain_unavailable"],
+    [404, { error: "verdict_unknown" }, "verdict_unknown"],
+    [
+      429,
+      { statusCode: 429, error: "Too Many Requests", message: "Rate limit exceeded" },
+      "Too Many Requests",
+    ],
+  ])("reports a %i with the body's error code", async (status, body, code) => {
+    const fetchImpl = vi.fn(async () => json(status, body));
+    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toEqual({
+      ok: false,
+      status,
+      code,
+    });
   });
 
-  it("is null on a network error", async () => {
+  it("reports an error body that is not JSON with no code", async () => {
+    const fetchImpl = vi.fn(async () => new Response("bad gateway", { status: 502 }));
+    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toEqual({
+      ok: false,
+      status: 502,
+      code: null,
+    });
+  });
+
+  it("reports a network error as status 0", async () => {
     const fetchImpl = vi.fn(async () => {
       throw new TypeError("network");
     });
-    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toBeNull();
+    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toEqual({
+      ok: false,
+      status: 0,
+      code: null,
+    });
   });
 
-  it("is null on a bad body", async () => {
+  it("reports a bad body as a failure with its status", async () => {
     const fetchImpl = vi.fn(async () => json(200, { decision: "safe" }));
-    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toBeNull();
+    expect(await fetchExplanation("req-1", "en", undefined, fetchImpl)).toEqual({
+      ok: false,
+      status: 200,
+      code: null,
+    });
   });
 });
 

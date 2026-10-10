@@ -25,6 +25,11 @@ export interface ReviewInput {
   call: AgentCall;
   /** Baret's verdict on the same call. Always Safe or an accepted Caution here. */
   verdict: AnalyzeResponse;
+  /**
+   * The payment's reference (an invoice id or memo). Its keccak256 is the ref
+   * of a PaymentGuard.pay call, so the reviewer can check the ref in code.
+   */
+  reference?: string;
 }
 
 export const reviewSchema = z
