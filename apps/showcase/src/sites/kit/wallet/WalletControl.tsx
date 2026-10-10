@@ -13,6 +13,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { Wallet } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
+import { isBaretExtension, walletLabel } from "./baret.js";
 import {
   connectBaret,
   connectWallet,
@@ -166,11 +167,11 @@ function Picker({
   const othersId = useId();
   // A wallet that announces Baret's name is listed like any other here: the
   // Baret wallet itself is the row above, in its own window.
-  const others = [...wallet.options].sort((a, b) => a.name.localeCompare(b.name));
+  const others = [...wallet.options].sort((a, b) => walletLabel(a).localeCompare(walletLabel(b)));
   const pendingId = wallet.connection.status === "connecting" ? wallet.connection.id : null;
   const pending = pendingId ? (wallet.options.find((o) => o.id === pendingId) ?? null) : null;
   const status = pending
-    ? fill(copy.connecting, { wallet: pending.name })
+    ? fill(copy.connecting, { wallet: walletLabel(pending) })
     : wallet.error
       ? fill(copy.errors[wallet.error.kind], { wallet: wallet.error.name })
       : wallet.ready
@@ -197,7 +198,16 @@ function Picker({
               <li key={option.id}>
                 <button type="button" className={ROW} onClick={() => onPick(option)}>
                   <WalletIcon option={option} />
-                  <span className="font-medium text-[color:var(--fg)]">{option.name}</span>
+                  {isBaretExtension(option.id) ? (
+                    <span className="grid">
+                      <span className="font-medium text-[color:var(--fg)]">
+                        {copy.extension.name}
+                      </span>
+                      <span className={T.small}>{copy.extension.body}</span>
+                    </span>
+                  ) : (
+                    <span className="font-medium text-[color:var(--fg)]">{option.name}</span>
+                  )}
                 </button>
               </li>
             ))}
@@ -241,7 +251,7 @@ function Account({
       <div className="grid gap-2 border-t border-[color:var(--rule)] pt-4">
         <p className="flex items-center gap-3 font-medium text-[color:var(--fg)]">
           <WalletIcon option={connection.wallet} />
-          {connection.wallet.name}
+          {walletLabel(connection.wallet)}
         </p>
         <p className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
           {connection.address}
@@ -333,7 +343,7 @@ export function WalletControl({
   const picked = useRef(false);
 
   const address = connection.status === "connected" ? connection.address : null;
-  const name = connection.status === "connected" ? connection.wallet.name : "";
+  const name = connection.status === "connected" ? walletLabel(connection.wallet) : "";
   const baretAddress = wallet.baret?.address ?? null;
   // Set when the Baret row started a connect: its answer closes the picker
   // and is read out, like a pick above.
@@ -402,7 +412,7 @@ export function WalletControl({
             type="button"
             className={CHIP}
             aria-label={fill(copy.account.open, {
-              wallet: connection.wallet.name,
+              wallet: walletLabel(connection.wallet),
               address: truncateAddress(connection.address),
             })}
             onClick={() => {

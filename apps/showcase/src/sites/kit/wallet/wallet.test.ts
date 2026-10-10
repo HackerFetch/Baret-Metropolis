@@ -1,14 +1,18 @@
+import { hub } from "@baret/content";
 import { custom, decodeFunctionData, encodeFunctionResult, type Hex, multicall3Abi } from "viem";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  BARET_EXTENSION_RDNS,
   BARET_RDNS,
   connectErrorOf,
   isBaret,
+  isBaretExtension,
   isBlockNotFound,
   type SendError,
   SendRefused,
   safeIcon,
   sendErrorOf,
+  walletLabel,
 } from "./baret.js";
 import { start } from "./engine.js";
 import { hadWallet, INITIAL, type Push, type SendCall, type WalletState } from "./store.js";
@@ -191,6 +195,17 @@ function harness() {
 }
 
 describe("wallet helpers", () => {
+  it("names the Baret extension apart from the Baret wallet's window (D-040)", () => {
+    expect(isBaretExtension(BARET_EXTENSION_RDNS)).toBe(true);
+    expect(isBaretExtension("io.metamask")).toBe(false);
+    // The window row stays the only "Baret" the picker lists first.
+    expect(isBaret(BARET_EXTENSION_RDNS)).toBe(false);
+    expect(walletLabel({ id: BARET_EXTENSION_RDNS, name: "Baret" })).toBe(
+      hub.frame.wallet.extension.name,
+    );
+    expect(walletLabel({ id: "io.metamask", name: "MetaMask" })).toBe("MetaMask");
+  });
+
   it("knows Baret by its reverse-DNS name only", () => {
     expect(isBaret(BARET_RDNS)).toBe(true);
     expect(isBaret("io.metamask")).toBe(false);
