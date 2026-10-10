@@ -277,7 +277,7 @@ export const hub = {
       /** When the check did not finish: no answer means Blocked. */
       failed: {
         title: "The check did not finish",
-        body: "Baret could not reach its server, or the answer did not arrive in time. With no answer, the verdict is Blocked. Do not sign.",
+        body: "Baret did not answer in time: its server was busy or out of reach. With no answer, the verdict is Blocked. Do not sign.",
       },
     },
 

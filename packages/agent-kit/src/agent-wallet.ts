@@ -71,6 +71,11 @@ export interface SubmitResult {
 export interface SignOptions {
   /** The agent's own description of what the call is for. The reviewer compares against it. */
   intent?: string;
+  /**
+   * The payment's reference (an invoice id or memo) whose keccak256 is the ref
+   * of a PaymentGuard.pay call. The reviewer checks the ref against it.
+   */
+  reference?: string;
 }
 
 function rpcChain(rpcUrl: string, chainId: number): ChainClient {
@@ -175,6 +180,7 @@ export class AgentWallet {
           from: this.address,
           call,
           verdict,
+          ...(options.reference !== undefined ? { reference: options.reference } : {}),
         })
       : undefined;
     const tx = await this.chain.prepare(this.address, call);
@@ -208,6 +214,7 @@ export class AgentWallet {
       intent:
         p.intent ??
         `Pay ${p.amount} base units of the vault's token from vault ${p.vault} to merchant ${p.merchant} for "${p.reference}".`,
+      reference: p.reference,
     });
   }
 }

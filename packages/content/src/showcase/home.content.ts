@@ -516,7 +516,7 @@ export const home = {
       {
         question: "Does it cost anything?",
         answer:
-          "The extension and the web wallet are free. Baret takes no cut of your transactions. Developers who call the analysis API directly may pay per check over x402.",
+          "The extension and the web wallet are free. Baret takes no cut of your transactions.",
       },
       {
         question: "Has Baret been audited?",

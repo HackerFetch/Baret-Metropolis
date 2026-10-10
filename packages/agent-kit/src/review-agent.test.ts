@@ -10,7 +10,13 @@ import {
 } from "viem";
 import { describe, expect, it, vi } from "vitest";
 import { payCall } from "./agent-wallet.js";
-import { agentReviewer, planSchema, qwenAgentReviewer, reviewTools } from "./review-agent.js";
+import {
+  AGENT_REVIEWER_SYSTEM_PROMPT,
+  agentReviewer,
+  planSchema,
+  qwenAgentReviewer,
+  reviewTools,
+} from "./review-agent.js";
 import { type Review, ReviewerVetoError, type ReviewInput, requireApproval } from "./reviewer.js";
 
 const AGENT: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
@@ -227,6 +233,26 @@ describe("reviewTools", () => {
       function: "pay",
       args: { merchant: MERCHANT, amount: "1000000", ref: keccak256(stringToHex("order-42")) },
     });
+  });
+
+  it("reports refCheck.matches true when the ref is the keccak256 of the reference", async () => {
+    const decoded = await tools(undefined, { reference: "order-42" })("decode_transaction");
+    expect(decoded).toMatchObject({ refCheck: { reference: "order-42", matches: true } });
+  });
+
+  it("reports refCheck.matches false for another reference", async () => {
+    const decoded = await tools(undefined, { reference: "order-43" })("decode_transaction");
+    expect(decoded).toMatchObject({ refCheck: { reference: "order-43", matches: false } });
+  });
+
+  it("adds no refCheck when no reference is known", async () => {
+    const decoded = await tools()("decode_transaction");
+    expect(decoded).not.toHaveProperty("refCheck");
+  });
+
+  it("tells the model the ref is a keccak256 hash checked in code", () => {
+    expect(AGENT_REVIEWER_SYSTEM_PROMPT).toContain("keccak256");
+    expect(AGENT_REVIEWER_SYSTEM_PROMPT).toContain("refCheck.matches");
   });
 
   it("decodes an ERC-20 approve", async () => {

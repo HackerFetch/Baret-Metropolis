@@ -19,7 +19,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
 | G-06 | Nansen is off | Missing | P2 | Ezgin |
 | G-07 | No Cleanverse settlement has happened | Half done | P2 | Ezgin |
-| G-08 | Qwen's overpay veto sometimes names a mismatch that is not there | Wrong | P2 | Meriç |
+| G-08 | Qwen's overpay veto sometimes names a mismatch that is not there. **Fixed 2026-10-10** (#66); the live check follows the deploy | Wrong | P1 | Meriç |
 | G-09 | The CRE workflow runs only as a simulation from one machine | Half done | P2 | Ezgin |
 | G-10 | The server keeps its state in memory | Limit | P2 | Ezgin |
 | G-11 | The wallet's live side: what is still empty or lost on reload | Half done | P2 | Ezgin, Meriç |
@@ -97,6 +97,8 @@ The check works: the server reads the credential on chain and blocks a transfer 
 ### G-08 · Qwen's overpay veto sometimes names a mismatch that is not there
 
 Filed by Hale as P1 for Meriç (`tasks/FOR_MERIC.md`). On `overpay` the veto is right (900000 against 100000) and its reason sometimes adds that the ref does not match the invoice; it does (`ref` is `keccak256("inv-2001")`). The model is never told that. Seen at 11:03 UTC, not seen in the run at 09:10 UTC. The demo uses `injected` until it is fixed.
+
+**State (2026-10-10, #66, P1 as Hale filed it):** fixed. A payment reference now reaches the reviewer from all three callers (the server's `REVIEW_REF`, `AgentWallet.pay`, `baret review --ref`); for a `PaymentGuard.pay` call `decode_transaction` reports `refCheck { reference, matches }`, worked out in code, and the prompt says the ref is the keccak256 of the reference, a mismatch only when `refCheck.matches` is false. Sampled with the real key through `baret review` against the live API: overpay vetoed 8 of 8, each naming only the amount; honest approved 3 of 3. The live `/review` check after the deploy is the last step.
 
 ### G-09 · The CRE workflow runs only as a simulation
 

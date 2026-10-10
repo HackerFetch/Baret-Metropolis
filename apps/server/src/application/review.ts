@@ -287,6 +287,7 @@ export class ReviewService {
               from: config.agent,
               call: { to: call.to, data: call.data, value: 0n },
               verdict,
+              reference: REVIEW_REF,
             },
           );
         } catch (err) {

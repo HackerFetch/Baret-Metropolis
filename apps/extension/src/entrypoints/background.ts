@@ -301,11 +301,22 @@ function rejectAll(match: (pending: Pending) => boolean = () => true): Promise<v
   });
 }
 
-/** The request window was closed: whatever still waited was not approved. */
+/** A request this young cannot have been on screen when the window closed. */
+const JUST_ARRIVED_MS = 2000;
+
+/**
+ * The request window was closed: whatever waited in it was not approved.
+ * The window also closes itself after its last answer, and a site's next
+ * request can arrive in that same instant. Such a request was never shown, so
+ * it is kept and gets a window of its own.
+ */
 async function windowClosed(id: number): Promise<void> {
   if ((await session.window()) !== id) return;
   await session.setWindow(null);
-  await rejectAll();
+  const now = Date.now();
+  const shown = (pending: Pending) => now - Date.parse(pending.at) >= JUST_ARRIVED_MS;
+  await rejectAll(shown);
+  if ((await session.pending()).length > 0) await serial(showWindow);
 }
 
 async function tabClosed(tabId: number): Promise<void> {

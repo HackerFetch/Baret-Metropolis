@@ -318,7 +318,8 @@ async function main(argv: string[]): Promise<number> {
       run.from = from;
       // Same request as pay and submit would send, from a wallet that cannot sign.
       const w = await wallet({ signer: watchOnly(from) });
-      const call = values.vault ? payCall(paymentFrom(values)) : callFrom(values);
+      const payment = values.vault ? paymentFrom(values) : undefined;
+      const call = payment ? payCall(payment) : callFrom(values);
       run.call = call;
       const verdict = await w.evaluate(call);
       if (!w.allows(verdict)) {
@@ -331,7 +332,13 @@ async function main(argv: string[]): Promise<number> {
         });
         return EXIT.blocked;
       }
-      const review = await requireApproval(r, { intent, from, call, verdict });
+      const review = await requireApproval(r, {
+        intent,
+        from,
+        call,
+        verdict,
+        ...(payment ? { reference: payment.reference } : {}),
+      });
       writeTranscript(review, null);
       print({ decision: verdict.decision, review, signed: false });
       return EXIT.allowed;
