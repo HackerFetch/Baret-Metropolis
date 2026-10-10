@@ -286,7 +286,7 @@
 **Date:** 2026-10-11
 **Decision:** Nansen indexes Monad mainnet only, so on testnet a lookup reads the same address on mainnet (D-017). In `funder` mode a wallet with no funding record was read as a fresh wallet and warned about (`NANSEN_FLAGGED_FRESH_WALLET`). On testnet that record is missing for almost every address, so the warning said nothing. `NansenHttpSource` takes `absenceIsFresh`, true on mainnet and false on testnet (`apps/server/src/sources/index.ts`): with no record the profile is `new`, not flagged and not fresh. Everything Nansen does know still counts on testnet: a first funding in the last seven days, a funder named for theft, and in `labels` mode every label. The trust rule is unchanged: `minNansenTrustLevel` above `new` still stops a wallet nobody has seen.
 **Rationale:** The key went on Render on 2026-10-11 and `verify:demo` fell from 20 of 20 to 12 of 20: every honest scenario that pays a testnet wallet (the merchant, Scrybe, the verified Cleanverse wallet) read Caution with a fresh-wallet warning. A warning that fires for every counterparty is noise, and it made the product's own honest flows read as risky.
-**Status:** ✅ Built on branch `nansen-testnet-absence`; 177 server tests green. Live after the merge and a deploy; then `verify:demo` again.
+**Status:** ✅ Final. Merged (#80) and live on `6c4392b`: with Nansen on, `verify:demo` agrees on 20 of 20 again.
 
 ## Open Decisions (not yet taken — to be filled in as we progress)
 
