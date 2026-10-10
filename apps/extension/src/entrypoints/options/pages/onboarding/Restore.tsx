@@ -32,7 +32,8 @@ export function Restore({
   onRestored,
   onBack,
 }: {
-  onRestored: () => void;
+  /** The checked phrase, its words in order. */
+  onRestored: (phrase: string) => void;
   onBack: () => void;
 }): JSX.Element {
   const [text, setText] = useState("");
@@ -52,7 +53,7 @@ export function Restore({
     const problem = errorText(check);
     setError(problem);
     if (problem) field.current?.focus();
-    else onRestored();
+    else if (check.ok) onRestored(check.words.join(" "));
   }
 
   return (
