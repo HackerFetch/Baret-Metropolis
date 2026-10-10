@@ -189,7 +189,17 @@ End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and 
   - Bugs filed: none new. The demo avoids `/review`'s Overpayment while the P1 above is open.
   - Files changed: `docs/submission/SCRIPTS.md` (new), `docs/submission/README.md`, `tasks/FOR_HALE.md`, `tasks/FOR_EZGIN.md` (under E8), `tasks/FOR_MERIC.md` (review task), `docs/ROADMAP.md` (H11 line).
 
-End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 drafted, not ticked. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
+- **Piece: H3 handed to Ezgin** (task: "H3 · The MetaMask rehearsal")
+  - What: Hale's decision, 2026-10-10. Ezgin's task in `tasks/FOR_EZGIN.md` (top of the open list) has the steps and what to write down; the board's H3 line says so. Hale keeps rewriting the **[H3]** lines of `docs/submission/SCRIPTS.md` from Ezgin's notes.
+  - Files changed: `docs/ROADMAP.md`, `tasks/FOR_HALE.md`, `tasks/FOR_EZGIN.md`, `docs/QA_LOG.md`.
+
+- **Piece: H12, both articles drafted** (task: "H12 · Write and publish: the KIMI article and the Qwen article")
+  - What: `docs/articles/kimi.md` and `docs/articles/qwen.md`, ~1,100 words each, for a developer audience on dev.to / Medium / Mirror. KIMI: Baret decides, KIMI explains; the forged-verdict guard; three languages with the timings; rules from a sentence with loosening unticked; nothing shown when there is no model. Qwen: Baret first, veto only; the plan and four tools; the three live runs of 10 Oct with the sent tx `0x3d33…efe9`; the lesson "facts go in code" (the cap misread, and the ref hash).
+  - How it works: every claim traced to the live runs (H16) or Meriç's facts pack, the three code-level ones read in the source first (`explain.ts` lines 33–54, `policy-draft.ts` `loosens()`, `review-agent.ts` the approve→veto rule).
+  - Result: drafted, not published. Publishing needs Hale's own account; the links then go into the KIMI and Qwen forms and `tasks/FOR_HALE.md`.
+  - Files changed: `docs/articles/kimi.md`, `docs/articles/qwen.md` (new), `tasks/FOR_HALE.md`, `tasks/FOR_MERIC.md`, `docs/ROADMAP.md`.
+
+End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 and H12 drafted, not ticked; H3 handed to Ezgin. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 
 ### 2026-10-10 — session 2 (commit `3541122` on `qa`, off `main` `44bc1f9`)
 

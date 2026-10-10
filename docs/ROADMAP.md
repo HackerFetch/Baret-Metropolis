@@ -162,7 +162,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H9 | Write: the developer quickstart (READMEs for `guard` and `agent-kit`, "call Baret from your app"), and get one other team to try it | Sat 10 | | main track |
 | H10 | Test: the six sites and `verify:demo`, the suites once, the wallet end to end with Mera's stateless and cross-device tests, the Nansen label, the CRE checks | Sat 10 to Sun 11 morning | E1 to E4, M6 | all |
 | H11 | Write: the scripts. Demo (3 min), pitch (2 min), and the list of sponsor clips **Drafted 2026-10-10** in `docs/submission/SCRIPTS.md`; waits on H3 for the MetaMask lines, E1 for the vault-cap shot, H9 (2) and E8 for the pitch's traction and plan | Sat 10 evening | H3, E5 | all |
-| H12 | Write and publish: the KIMI article and the Qwen article, each only if its feature is live | Sun 11 to Mon 12 | M4, M5 | KIMI, Qwen |
+| H12 | Write and publish: the KIMI article and the Qwen article, each only if its feature is live **Drafted 2026-10-10** (`docs/articles/`); waits on Meriç's fact check and the 🐛 P1 for one paragraph, then Hale publishes | Sun 11 to Mon 12 | M4, M5 | KIMI, Qwen |
 | H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
 | H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
