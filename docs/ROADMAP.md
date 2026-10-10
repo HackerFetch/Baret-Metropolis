@@ -124,15 +124,15 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 | ID | Task | Day | Needs | Serves |
 |---|---|---|---|---|
-| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | nothing (Hale's address sent 2026-10-09) | everything Hale does |
+| E1 | Finish Hale's onboarding: platform team, funded test wallet, a vault to test against | Fri 9 | nothing. **2026-10-10:** Hale's wallet funded (5 MON, 2 test USDC); the platform team is left | everything Hale does |
 | E2 | Nansen: credits, `NANSEN_API_KEY` and `NANSEN_MODE=labels` on Render | Fri 9 | credits | Nansen |
 | E3 | Wallet live, part 1: passkey account (also with no stored credential), lock, balances, send, sign requests through `@baret/wallet-core`. **Done 2026-10-09**, checked on the live URL with a virtual passkey | Fri 9 | | Mera UX |
 | E4 | Wallet live, part 2: delegation calls, and agent keys from their own PRF namespace. **Done 2026-10-09** (D-032), checked on the live URL with a virtual passkey | Fri 9 to Sat 10 | E3 | Many Keys, Dynamic |
 | E5 | Decide and build: do the two Caution attacks become Blocked. **Done 2026-10-09**: Blocked (D-033); `verify:demo` 20 of 20 on the live API at commit `279bb3d` | Sat 10 | | main track |
 | E6 | Cleanverse contract side. **Contract built and deployed 2026-10-09 (D-034, branch `cleanverse-guard`), checked on a fork of the real contracts. Parked 2026-10-09: the owner has its A-Pass and the allowance is set; a live settlement waits only on test aUSDC, which Cleanverse has to send** | Sat 10 | an A-Pass | Cleanverse |
-| E7 | Account steps before recording: three keys on Render (`KIMI_API_KEY`, `QWEN_API_KEY`, `BARET_DEMO_AGENT_PRIVATE_KEY`), Render on Starter, `~/.baret/` backed up, the `LICENSE` file. The keys go in on Fri 9 or Sat 10, not Sunday, so H16 can test before recording | Fri 9 or Sat 10 | M4, M5 | KIMI, Qwen, videos |
+| E7 | Account steps before recording: three keys on Render (`KIMI_API_KEY`, `QWEN_API_KEY`, `BARET_DEMO_AGENT_PRIVATE_KEY`), Render on Starter, `~/.baret/` backed up, the `LICENSE` file. **Keys done 2026-10-10**: explain, policyDraft, review and reviewSends true on the live API, one real run of each route; `LICENSE` added; Starter and the backup are left | Fri 9 or Sat 10 | M4, M5 | KIMI, Qwen, videos |
 | E8 | Answer Hale's evidence questions and review the final README and the pitch script | Sun 11 to Mon 12 | H11, H14 | all forms |
-| E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges | Fri 9 to Sat 10 | H4 merged | main track (H4) |
+| E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges. **2026-10-10:** wallet `0x5AE98770795957F9a376083afcb775672FbD2C93` funded, 6 of 6 on the live API; the Vercel variables are left | Fri 9 to Sat 10 | H4 merged | main track (H4) |
 | E10 | Nine more activity kinds for the wallet's history, cosmetic (found by H5); a transaction the wallet already logged must not show twice | — | H5 merged | Envio, Mera UX |
 
 ### Meriç
@@ -166,7 +166,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
 | H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
-| H16 | Test on the live URLs after the merge deploy and E7 (**2026-10-09:** deployed with #51; waits only on E7): `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
+| H16 | Test on the live URLs after the merge deploy and E7 (**2026-10-10:** the keys are on Render, nothing left to wait on): `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
 
 ### What is cut first
 
