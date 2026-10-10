@@ -26,8 +26,8 @@ Last updated: 2026-10-10 · by: Hale's agent (session 3) · API commit `25b7581`
 |---|---|
 | **Done** | H1 (setup; funding still open), H4, H5 (indexer side), H6, H7, H8 (#57), H9 part 1, **H16** (2026-10-10: `/review` three scenarios live, honest sent `0x3d33…efe9` status 1; KIMI en/tr/zh on NovaSwap and in the wallet window; rules from a sentence; fail-closed with the API or explain down) |
 | **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
-| **Blocked on** | Ezgin (E1): platform team, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, a vault to test against → H2, H3, the demo's cap shot |
-| **Next step** | H3 as soon as E1 lands (it changes the demo's lines). Otherwise H12 (both model features are live, articles can be written from H16's runs and `docs/evidence/`), then H14's README |
+| **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
+| **Next step** | H3 now (Hale at the keyboard with MetaMask; it changes the demo's **[H3]** lines), then open a vault through the live wallet for the cap shot. H12 and H14 in between |
 | **Open bugs filed by Hale** | 1 — 🐛 P1 `/review` overpay names a false ref mismatch (`tasks/FOR_MERIC.md`) |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
