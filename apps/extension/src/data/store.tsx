@@ -57,8 +57,11 @@ import type {
 
 export type TemplateName = (typeof TEMPLATE_NAMES)[number];
 
-/** Which sample the page starts from: a few days of history, or a new wallet. */
-export type Scenario = "full" | "empty";
+/**
+ * Which sample the page starts from: a few days of history, or a new wallet.
+ * "live" is no sample: a real wallet, read from the extension's own storage.
+ */
+export type Scenario = "full" | "empty" | "live";
 
 export interface RuleChange {
   readonly field: GuardPolicyField;
@@ -149,7 +152,9 @@ export type ExtAction =
   | { type: "check" }
   | { type: "unlockFailed"; at: string }
   | { type: "unlocked" }
-  | { type: "reset" };
+  | { type: "reset" }
+  /** Live only: the state another page of the extension saved, or what the chain says. */
+  | { type: "patch"; patch: Partial<ExtState> };
 
 export interface StartOptions {
   readonly scenario: Scenario;
@@ -401,6 +406,8 @@ export function reduce(state: ExtState, action: ExtAction): ExtState {
       return { ...state, lock: { failures: 0, pausedUntil: null } };
     case "reset":
       return { ...initialState({ scenario: "empty" }), reachable: state.reachable };
+    case "patch":
+      return { ...state, ...action.patch };
   }
 }
 
@@ -431,14 +438,36 @@ interface Store {
 
 const ExtensionContext = createContext<Store | null>(null);
 
+/**
+ * What a live page gives the store in place of the sample (live/source.ts):
+ * the state it starts from, where each change is saved, the changes other
+ * pages of the extension made, and the real keystore and server.
+ */
+export interface LiveSource {
+  readonly initial: ExtState;
+  /** Called after every change; saves what is the wallet's own record. */
+  save(state: ExtState): void;
+  /** Calls `apply` with what another page saved. Returns the way to stop. */
+  subscribe(apply: (patch: Partial<ExtState>) => void): () => void;
+  /** Opens the keystore. False on a wrong passphrase. */
+  unlock(passphrase: string): Promise<boolean>;
+  /** Whether Baret's server answers right now. */
+  reach(): Promise<boolean>;
+}
+
 export function ExtensionProvider({
   start,
+  live,
   children,
 }: {
   start: StartOptions;
+  /** Present on a live page: the store then holds a real wallet, not the sample. */
+  live?: LiveSource;
   children: ReactNode;
 }): JSX.Element {
-  const [state, dispatch] = useReducer(reduce, start, startState);
+  const [state, dispatch] = useReducer(reduce, start, (options) =>
+    live ? live.initial : startState(options),
+  );
   const latest = useLatest(state);
   const answer = start.reachable === undefined ? true : start.reachable;
   const timers = useRef(new Set<number>());
@@ -449,6 +478,19 @@ export function ExtensionProvider({
       for (const id of pending) window.clearTimeout(id);
     };
   }, []);
+
+  // Live: every change is saved, what another page saved is taken in, and
+  // Baret's server is asked once at the start (unknown counts as unreachable).
+  useEffect(() => {
+    live?.save(state);
+  }, [live, state]);
+  useEffect(() => {
+    if (!live) return;
+    void live
+      .reach()
+      .then((value) => dispatch({ type: "reachable", value, at: new Date().toISOString() }));
+    return live.subscribe((patch) => dispatch({ type: "patch", patch }));
+  }, [live]);
 
   const store = useMemo<Store>(() => {
     function later(run: () => void): void {
@@ -469,8 +511,8 @@ export function ExtensionProvider({
             resolve({ ok: false, pausedUntil: lock.pausedUntil });
             return;
           }
-          later(() => {
-            if (passphrase.length >= SAMPLE_MIN) {
+          const answered = (ok: boolean) => {
+            if (ok) {
               dispatch({ type: "unlocked" });
               resolve({ ok: true });
               return;
@@ -485,16 +527,28 @@ export function ExtensionProvider({
                   ? next.pausedUntil
                   : null,
             });
-          });
+          };
+          // Live: the keystore decides. A keystore that cannot be asked opens nothing.
+          if (live) {
+            live.unlock(passphrase).then(answered, () => answered(false));
+            return;
+          }
+          later(() => answered(passphrase.length >= SAMPLE_MIN));
         }),
       check: () => {
         dispatch({ type: "check" });
+        if (live) {
+          void live
+            .reach()
+            .then((value) => dispatch({ type: "reachable", value, at: new Date().toISOString() }));
+          return;
+        }
         // The offline and loading previews keep their answer.
         if (answer === null) return;
         later(() => dispatch({ type: "reachable", value: answer, at: new Date().toISOString() }));
       },
     };
-  }, [state, answer, latest]);
+  }, [state, answer, latest, live]);
 
   return <ExtensionContext value={store}>{children}</ExtensionContext>;
 }

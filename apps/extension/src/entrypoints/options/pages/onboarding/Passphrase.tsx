@@ -50,7 +50,17 @@ function Meter({ id, value }: { id: string; value: string }): JSX.Element {
   );
 }
 
-export function Passphrase({ onSet }: { onSet: () => void }): JSX.Element {
+export function Passphrase({
+  onSet,
+}: {
+  /**
+   * The passphrase is set. Live, the keystore seals the wallet under it and
+   * may fail: the returned text is shown and the reader stays on the step.
+   */
+  onSet: (passphrase: string) => undefined | Promise<string | null>;
+}): JSX.Element {
+  const [failed, setFailed] = useState<string | null>(null);
+  const [working, setWorking] = useState(false);
   const [value, setValue] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<PassphraseErrors>(NO_ERRORS);
@@ -64,7 +74,17 @@ export function Passphrase({ onSet }: { onSet: () => void }): JSX.Element {
     setErrors(found);
     if (found.passphrase) first.current?.focus();
     else if (found.confirm) second.current?.focus();
-    else onSet();
+    else {
+      if (working) return;
+      const made = onSet(value);
+      if (!made) return;
+      setWorking(true);
+      setFailed(null);
+      void made.then((error) => {
+        setWorking(false);
+        setFailed(error);
+      });
+    }
   }
 
   return (
@@ -82,7 +102,7 @@ export function Passphrase({ onSet }: { onSet: () => void }): JSX.Element {
           }}
           inputRef={first}
           describedBy={meterId}
-          error={errors.passphrase ? words.errors[errors.passphrase] : null}
+          error={errors.passphrase ? words.errors[errors.passphrase] : failed}
         >
           <Meter id={meterId} value={value} />
         </TextField>

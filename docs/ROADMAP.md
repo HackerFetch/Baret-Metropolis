@@ -135,6 +135,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E9 | Fund a dedicated playground-agent wallet (MON, real test USDC, fake USDC; found by H4, see "Where things stand") and set `VITE_BARET_PLAYGROUND_AGENT` with `VITE_BARET_PLAYGROUND=live` on the showcase's Vercel project once H4 merges. **2026-10-10:** wallet `0x5AE98770795957F9a376083afcb775672FbD2C93` funded, 6 of 6 on the live API. **Done 2026-10-10:** the two variables are set and the showcase redeployed | Fri 9 to Sat 10 | H4 merged | main track (H4) |
 | E10 | Nine more activity kinds for the wallet's history, cosmetic (found by H5); a transaction the wallet already logged must not show twice | — | H5 merged | Envio, Mera UX |
 | E11 | Sealed settings for "One Passkey, Many Keys" (D-039): the SealedStore contract, the sealed namespace in `wallet-core`, `POST /v1/sealed`, the block in Settings. **Done 2026-10-10** (#60): live, checked through the live API and on the live wallet with a virtual passkey | Sat 10 | the relayer key on Render | Many Keys, Mera UX |
+| E12 | The extension as a real wallet (D-040): keystore, EIP-1193 and EIP-6963 provider, the request window on Baret's check, setup on a real key. **Built 2026-10-10** on branch `extension-live`, checked in a browser against the live API; the published zips follow the merge | Sat 10 | Meriç reads the changes in his screens | main track |
 
 ### Meriç
 

@@ -30,6 +30,8 @@ Last updated: 2026-10-09 (M6: the screens on live data, one-prompt onboarding, t
 
 ## Implementation status (`apps/extension`)
 
+**Live since 2026-10-10 (D-040, branch `extension-live`):** installed, the extension is a real wallet. It makes its own key in setup (a twelve-word phrase, sealed under the passphrase), announces itself to sites over EIP-6963, opens its connect and sign windows for a site's requests, asks Baret's server about every transaction and structured-data signature, and signs only what is cleared. The screens are the ones below; `?sample=`, `?phase=` and `?offline=` in the address still show them on the sample (the tests and the design states). Live code: `src/core/` (keystore, protocol, storage), `src/entrypoints/{background,provider.content,relay.content}`, `src/live/` (the store's live source, the request screens, the popup and options roots), `src/data/gate.ts` (the keystore's operations as the screens see them). Not live yet: a second account, the allowances list, alerts, the x402 payments page, Swap, a custom node, notifications. What follows describes the screens as built on the sample.
+
 Built 2026-10-04 on branch `extension-ui`, frontend only: every surface runs on a sample wallet, and nothing is signed or sent. The background, the keystore, the provider and the messaging (`src/entrypoints/background.ts`, `provider.content.ts`, `relay.content/`, `src/lib/messaging.ts`) are untouched and still to be wired (`tasks/FOR_EZGIN.md`).
 
 | Surface | Status | Where |
