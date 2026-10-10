@@ -12,7 +12,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 
 | # | Gap | Kind | Priority | Owner |
 |---|---|---|---|---|
-| G-01 | Every visitor shares one rate-limit bucket | Wrong | P1 | Ezgin |
+| G-01 | Every visitor shares one rate-limit bucket. **Fixed 2026-10-10** | Wrong | closed | Ezgin |
 | G-02 | The landing and `/install` describe the extension as a working wallet; it is a sample | Wrong claim | P1 | Meriç (copy), Ezgin (decision) |
 | G-03 | The API sleeps: the first request after idle takes 15 to 40 s | Half done | P1 | Ezgin |
 | G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
@@ -46,7 +46,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 
 **What it costs:** the limits are for the whole world, not per visitor: 120 requests a minute in total, and 6 a minute on `/v1/review` and on `/v1/sealed`. Three judges pressing "Run the review" in the same minute can get 429; the page then shows the recorded run of 9 October (which is labelled as recorded). One busy page also slows every other visitor.
 
-**State (2026-10-10):** fixed on branch `rate-limit-per-visitor`, live after its merge and the measurement repeated.
+**State (2026-10-10):** fixed and live on commit `8362924` (#63). Measured again: two senders have separate counters, and one visitor through the sites' proxies and directly is one bucket. What follows is the finding as first written.
 
 **Fix:** `trustProxy: true` in the Fastify options, so the limit keys on the `X-Forwarded-For` address Render and Vercel pass. A caller can then forge that header to dodge the per-minute limit; the daily caps (KIMI 500, review 200, sealed 200) still bound what that can spend. One line, plus a test; redeploy and repeat the measurement above from two networks.
 
@@ -178,7 +178,7 @@ Every end-to-end check of the wallet was a hand-written Playwright script in a s
 
 ## Suggested order before the freeze
 
-1. G-01 (one line and a redeploy).
+1. G-01: done.
 2. G-02 (decide the wording; a copy change).
 3. G-03 (the Starter plan, before recording).
 4. G-13 (with H14).
