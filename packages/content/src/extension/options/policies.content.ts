@@ -9,7 +9,7 @@
 
 export const optionsPolicies = {
   title: "Rules",
-  lead: "The 25 rules Baret checks every sign request against. You choose them, Baret runs them, and a change applies from the next request.",
+  lead: "The 25 rules Baret checks every transaction against. You choose them, Baret runs them, and a change applies from the next request.",
 
   templates: {
     title: "Start from a set",

@@ -67,7 +67,7 @@ export const popupHome = {
     },
     unreachable: {
       title: "Can't reach Baret",
-      body: "Until checks run again, every sign request is treated as Blocked.",
+      body: "Until checks run again, every transaction is treated as Blocked.",
       action: { label: "Try again" },
     },
     revoked: {

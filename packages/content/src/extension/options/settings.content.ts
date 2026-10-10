@@ -81,7 +81,7 @@ export const optionsSettings = {
     title: "Rules",
     row: {
       label: "Rule set",
-      hint: "{template} rules. Baret checks every sign request against them.",
+      hint: "{template} rules. Baret checks every transaction against them.",
     },
     action: { label: "Open Rules", href: "/rules" },
   },
