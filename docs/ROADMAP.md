@@ -157,6 +157,8 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M14 | One failed rule draft no longer removes the form: the sentence stays, with one inline line. **Done 2026-10-10** (#68), checked with a virtual PRF passkey | Sat 10 to Sun 11 before 12:00 | | KIMI |
 | M15 | The two sentences that call a 429 "no answer" (`hub.content.ts`, `sign.content.ts`) become true for a 429, a 5xx and a timeout; "Can't reach Baret" keeps its name. The wallet's half is in #69. **Done 2026-10-10**: the showcase half in #70 | Sun 11 before 12:00 | | main track |
 | M16 | The copy for Ezgin's typed-data fail-open fix, as commits on his branch, so guard, copy and server land together (P1, allowed after the freeze) | when his pull request opens | Ezgin's fix | main track |
+| M17 | 🐛 P1 (Hale): with the Baret extension connected, NovaSwap said "with no Baret check" under "Sign with your wallet", over the extension's own Blocked window. **Done 2026-10-10**: the line says the extension checks it with Baret (#77) | Sat 10 | E12 | main track |
+| M18 | 🐛 P2 (Hale): two wallets called "Baret" in the connect dialog. **Done 2026-10-10**: the extension reads "Baret extension", with one line on what it does (#77) | Sat 10 | E12 | main track |
 
 ### Hale
 

@@ -151,7 +151,7 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 - **Verdict:** Blocked (D-033, since 2026-10-09; Caution before)
 
 ### 2.4 "How It Works" (four steps, interactive)
-1. **Connect a wallet** — Pick Baret or any EIP-6963 wallet from the picker.
+1. **Connect a wallet** — Pick Baret or any EIP-6963 wallet from the picker. The Baret extension (D-040, rdns `dev.baret.wallet`) is listed among the wallets in this browser as "Baret extension", apart from the Baret wallet's window on top; connected, it is named so on the sites, and NovaSwap's "Sign with your wallet" says the extension checks the request with Baret before it signs, never that the request skips the check (Hale's 🐛 P1 and P2 of 2026-10-10).
 2. **Trigger an action** — Press Swap, Mint, Stake, Claim or Buy. The site builds the transaction.
 3. **Baret inspects** — Server-side simulation + nine detectors + your local policy run on the unsigned tx.
 4. **Verdict** — Safe / Caution / Blocked, every finding in plain language. You sign with your eyes open, or you reject.

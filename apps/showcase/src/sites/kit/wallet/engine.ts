@@ -20,7 +20,14 @@ import {
 } from "@wagmi/core";
 import { erc20Abi, type Hex, http, type Transport } from "viem";
 import { monadTestnet } from "viem/chains";
-import { connectErrorOf, isBaret, isBlockNotFound, SendRefused, safeIcon } from "./baret.js";
+import {
+  connectErrorOf,
+  isBaret,
+  isBlockNotFound,
+  SendRefused,
+  safeIcon,
+  walletLabel,
+} from "./baret.js";
 import type { Connection, Engine, Push, WalletOption, WalletState } from "./store.js";
 
 /**
@@ -187,7 +194,7 @@ export async function start(
         await connect(config, { connector });
       } catch (error) {
         push({
-          error: { kind: connectErrorOf(error), name: connector.name },
+          error: { kind: connectErrorOf(error), name: walletLabel(connector) },
           connection: connectionOf(getConnection(config)),
         });
       }
