@@ -23,6 +23,8 @@ export const LOADING_DELAY_MS = 600;
  * the verdict and cannot change it. An answer for another verdict than the
  * one on screen counts as unavailable (fail-closed). Once one answer has been
  * shown, a failed language keeps the frame and the switch, with a quiet line.
+ * A failure is asked again at most once a minute (see useExplanation), so a
+ * block that stayed hidden can still appear when KIMI answers later.
  */
 export function PlainWordsBody({
   requestId,

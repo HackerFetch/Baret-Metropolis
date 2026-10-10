@@ -14,15 +14,17 @@ import { kindOf, valueText } from "./fields.js";
  * Nothing is saved here. Ticked changes go into the page's draft, and the
  * page's own diff, preview and Save gate apply after that. A change that
  * loosens a rule starts unticked (D-028: a model never decides; the person
- * does). Any failure (no key, the daily cap, a bad answer, no network)
- * shows one quiet line and the form goes away, so the page reads as it did
- * before the model existed.
+ * does). A failure never removes the form: the input and the sentence
+ * stay, and one line in the status region says what to do. A 422 (the
+ * model's answer did not fit the rules) asks for other words; anything else
+ * (no key, no answer, a limit, a timeout, no network, a bad body) says to
+ * try again in a minute. Submitting again is the retry.
  */
 
 /** Both apps reach the server at /api: the Vite proxy in dev, a Vercel rewrite in production. */
 export const POLICY_DRAFT_URL = "/api/v1/policy/draft";
 
-/** The server gives the model its own timeout; past this the block gives up quietly. */
+/** The server gives the model its own timeout; past this the ask counts as failed. */
 const TIMEOUT_MS = 35_000;
 
 type Value = GuardPolicy[GuardPolicyField];
@@ -115,26 +117,55 @@ export function parseDraftAnswer(body: unknown): DraftAnswer | null {
   };
 }
 
-/** Asks the server once. Non-2xx, a bad body or a network error is null; never throws. */
+/**
+ * What one ask gave back. A failure keeps the HTTP status (0 for a network
+ * error, an abort or the timeout) and the body's `error` code when it parses.
+ */
+export type DraftResult =
+  | { ok: true; answer: DraftAnswer }
+  | { ok: false; status: number; code: string | null };
+
+/** The body's `error` code, or null when the body is not JSON or has none. */
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const body: unknown = await res.json();
+    return isObject(body) && typeof body.error === "string" ? body.error : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Asks the server once and never throws. */
 export async function fetchDraft(
   sentence: string,
   current: GuardPolicy,
   signal?: AbortSignal,
   fetchImpl: typeof fetch = fetch,
-): Promise<DraftAnswer | null> {
+): Promise<DraftResult> {
+  let res: Response;
   try {
-    const res = await fetchImpl(POLICY_DRAFT_URL, {
+    res = await fetchImpl(POLICY_DRAFT_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sentence, current }),
       signal: signal ?? null,
     });
-    if (!res.ok) return null;
-    return parseDraftAnswer(await res.json());
   } catch {
-    return null;
+    return { ok: false, status: 0, code: null };
   }
+  if (!res.ok) return { ok: false, status: res.status, code: await errorCode(res) };
+  let answer: DraftAnswer | null = null;
+  try {
+    answer = parseDraftAnswer(await res.json());
+  } catch {
+    // A body that is not JSON, or a read cut off by the timeout, reads as a bad body.
+  }
+  return answer ? { ok: true, answer } : { ok: false, status: res.status, code: null };
 }
+
+/** A 422 means the model's answer did not fit the rules; everything else is "try later". */
+const reasonOf = (result: { status: number; code: string | null }): "invalid" | "other" =>
+  result.status === 422 || result.code === "policy_draft_invalid" ? "invalid" : "other";
 
 /** The draft with only the ticked changes laid over it. */
 export function applyTicked(
@@ -162,7 +193,7 @@ type State =
   | { status: "loading" }
   | { status: "ready"; answer: DraftAnswer; ticked: Set<number> }
   | { status: "applied" }
-  | { status: "unavailable" };
+  | { status: "failed"; reason: "invalid" | "other" };
 
 export function DraftFromSentence({
   draft,
@@ -180,10 +211,6 @@ export function DraftFromSentence({
   const [state, setState] = useState<State>({ status: "idle" });
   const controller = useRef<AbortController | null>(null);
 
-  if (state.status === "unavailable") {
-    return <p className={T.small}>{policies.draft.unavailable}</p>;
-  }
-
   async function ask(): Promise<void> {
     const text = sentence.trim();
     if (text.length === 0 || state.status === "loading") return;
@@ -192,13 +219,13 @@ export function DraftFromSentence({
     controller.current = abort;
     const timer = setTimeout(() => abort.abort(), TIMEOUT_MS);
     setState({ status: "loading" });
-    const answer = await fetchDraft(text.slice(0, 400), draft, abort.signal, fetchImpl);
+    const result = await fetchDraft(text.slice(0, 400), draft, abort.signal, fetchImpl);
     clearTimeout(timer);
     if (controller.current !== abort) return;
     setState(
-      answer
-        ? { status: "ready", answer, ticked: defaults(answer.changes) }
-        : { status: "unavailable" },
+      result.ok
+        ? { status: "ready", answer: result.answer, ticked: defaults(result.answer.changes) }
+        : { status: "failed", reason: reasonOf(result) },
     );
   }
 
@@ -246,6 +273,7 @@ export function DraftFromSentence({
       <div role="status" className="text-sm text-[color:var(--fg)]">
         {state.status === "loading" ? <p>{policies.draft.running}</p> : null}
         {state.status === "applied" ? <p>{policies.draft.applied}</p> : null}
+        {state.status === "failed" ? <p>{policies.draft.failed[state.reason]}</p> : null}
       </div>
 
       {state.status === "ready" ? (
