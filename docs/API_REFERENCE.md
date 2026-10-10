@@ -40,7 +40,25 @@ A site opens the wallet with `window.open` (window name `baret-wallet`) and the 
 
 Only contract calls and transfers: there is no message-signing request (no `personal_sign`, no typed data) in this protocol.
 
-A site can also use an ordinary injected wallet: the demo sites list every wallet announced over EIP-6963 and send `eth_sendTransaction` through it. Baret then acts as a panel on the page, not as the signer.
+A site can also use an ordinary injected wallet: the demo sites list every wallet announced over EIP-6963 and send `eth_sendTransaction` through it. With another wallet, Baret acts as a panel on the page, not as the signer. The Baret extension is such a wallet, and it checks before it signs (below).
+
+### The extension's provider (D-040)
+
+The extension injects an EIP-1193 provider and announces it over EIP-6963 (`name` "Baret", `rdns` `dev.baret.wallet`); it takes `window.ethereum` only where no other wallet did. The page holds no key and no state: every request goes through the content script to the background, which reads the site's origin from the browser.
+
+| Method | What the wallet does |
+|---|---|
+| `eth_chainId`, `net_version` | `0x279f` / `10143` |
+| `eth_accounts` | The connected account, or `[]` when the site is not connected or the wallet is locked |
+| `eth_requestAccounts`, `wallet_requestPermissions` | Opens the connect window, unless the site is connected and the wallet open |
+| `wallet_switchEthereumChain`, `wallet_addEthereumChain` | `null` for chain 10143, error 4902 for any other |
+| `eth_sendTransaction` | Opens the request window: `/v1/analyze` with the reader's rules, then Safe can be signed, Caution only on the reader's press, Blocked never. Returns the hash once the transaction is sent; error 4001 when declined or blocked |
+| `eth_signTypedData_v4` | The same check on the structured data, then the signature |
+| `personal_sign` | Shows the message as text and signs on the reader's press; there is nothing to simulate |
+| `eth_call`, `eth_getBalance`, `eth_estimateGas`, `eth_getTransactionReceipt` and the other read methods | Passed to the Monad RPC as they are |
+| `eth_sign`, `eth_signTransaction`, anything else | Error 4200: refused |
+
+A site that is not connected gets error 4100 for a signing method. Events: `accountsChanged` when the answer to `eth_requestAccounts` or `eth_accounts` changes.
 
 ## 2. `@baret/wallet-core`: the wallet without its screens
 
@@ -214,5 +232,5 @@ Named in older documents and absent from the code:
 - `/mcp/tools`, `/mcp/call` (agent tools over MCP).
 - `/demo/paywall` and an x402 facilitator: `docs/X402_FACILITATOR.md` is a design. Baret checks an x402 payment (as typed data plus `payment`), and nothing settles one.
 - Batch, stream and replay variants of analyze.
-- An EIP-1193 provider in the browser extension: its background, provider and relay scripts are stubs.
+- In the extension: more than one account, the allowances list, alerts, the x402 payments page and its interceptor, Swap (`docs/DECISIONS.md` D-040).
 - Anything on Monad mainnet.

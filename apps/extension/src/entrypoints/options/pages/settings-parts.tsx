@@ -6,6 +6,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { counted, fill } from "@baret/web-ui/lib/util";
 import { ExternalLink } from "lucide-react";
 import { type JSX, type ReactNode, type Ref, useEffect, useId, useRef, useState } from "react";
+import { useGate } from "../../../data/gate.js";
 import { Dialog, INPUT, Select } from "../parts/kit.js";
 
 /**
@@ -337,12 +338,15 @@ export function ChangePassphrase({ onDone }: { onDone: () => void }): JSX.Elemen
   const [again, setAgain] = useState("");
   const [tried, setTried] = useState(false);
 
-  const currentError = current.length < MIN_PASSPHRASE ? passphrase.wrong : null;
+  const gate = useGate();
+  const [refused, setRefused] = useState(false);
+  const currentError = current.length < MIN_PASSPHRASE || refused ? passphrase.wrong : null;
   const nextError = next.length < MIN_PASSPHRASE ? passphrase.tooShort : null;
   const againError = again === next ? null : passphrase.mismatch;
 
   function close(): void {
     setOpen(false);
+    setRefused(false);
     setCurrent("");
     setNext("");
     setAgain("");
@@ -354,6 +358,20 @@ export function ChangePassphrase({ onDone }: { onDone: () => void }): JSX.Elemen
     const wrong = currentError ? currentRef : nextError ? nextRef : againError ? againRef : null;
     if (wrong) {
       wrong.current?.focus();
+      return;
+    }
+    // Live: the keystore opens with the current passphrase and seals again
+    // under the new one. A wrong current passphrase changes nothing.
+    if (gate) {
+      void gate.rekey(current, next).then((changed) => {
+        if (!changed) {
+          setRefused(true);
+          currentRef.current?.focus();
+          return;
+        }
+        close();
+        onDone();
+      });
       return;
     }
     close();
@@ -376,7 +394,10 @@ export function ChangePassphrase({ onDone }: { onDone: () => void }): JSX.Elemen
           ref={currentRef}
           label={passphrase.current}
           value={current}
-          onChange={setCurrent}
+          onChange={(value) => {
+            setRefused(false);
+            setCurrent(value);
+          }}
           hint={extFrame.lockedHint}
           error={tried ? currentError : null}
           autoComplete="current-password"
@@ -422,6 +443,9 @@ export function RevealPhrase({
   const [alone, setAlone] = useState(false);
   const [wrong, setWrong] = useState(false);
   const [shown, setShown] = useState(false);
+  const gate = useGate();
+  // The sample's preview words, or the wallet's own once the keystore gave them.
+  const [words, setWords] = useState<readonly { word: string; n: number }[]>(WORDS);
 
   function close(): void {
     setOpen(false);
@@ -429,6 +453,7 @@ export function RevealPhrase({
     setAlone(false);
     setWrong(false);
     setShown(false);
+    if (gate) setWords([]);
   }
 
   function confirm(): void {
@@ -440,6 +465,20 @@ export function RevealPhrase({
     if (value.length < MIN_PASSPHRASE) {
       setWrong(true);
       field.current?.focus();
+      return;
+    }
+    // Live: the keystore gives the words only to the right passphrase.
+    if (gate) {
+      void gate.reveal(value).then((phrase) => {
+        if (!phrase) {
+          setWrong(true);
+          field.current?.focus();
+          return;
+        }
+        setWords(phrase.map((word, index) => ({ word, n: index + 1 })));
+        setValue("");
+        setShown(true);
+      });
       return;
     }
     setValue("");
@@ -469,7 +508,7 @@ export function RevealPhrase({
               <p className={`${T.small} min-w-[20ch] flex-1`}>{extFrame.sampleWords}</p>
             </div>
             <ol className="grid grid-cols-2 gap-x-6 border-t border-[color:var(--rule)] sm:grid-cols-3">
-              {WORDS.map(({ word, n }) => (
+              {words.map(({ word, n }) => (
                 <li
                   key={n}
                   className="flex items-baseline gap-3 border-b border-[color:var(--rule)] py-2"
