@@ -194,6 +194,21 @@ describe("the reviewer in the agent wallet", () => {
     expect(seen[0]?.intent).toContain("inv-7");
   });
 
+  it("hands the payment's reference to the reviewer", async () => {
+    const seen: ReviewInput[] = [];
+    const { wallet } = setup(verdict("safe"), {
+      review: async (input) => {
+        seen.push(input);
+        return approve;
+      },
+    });
+    await wallet.pay({ vault: USDC, merchant: MERCHANT, amount: 250_000n, reference: "inv-7" });
+    expect(seen[0]?.reference).toBe("inv-7");
+
+    await wallet.guardedSubmit(call, { intent: "Pay the merchant 1 MON." });
+    expect(seen[1]).not.toHaveProperty("reference");
+  });
+
   it("works as before without a reviewer", async () => {
     const { wallet, sent } = setup(verdict("safe"));
     const result = await wallet.guardedSubmit(call);

@@ -1,5 +1,5 @@
 import { PAYMENT_GUARD_ABI } from "@baret/agent-kit/abi";
-import type { Reviewer } from "@baret/agent-kit/reviewer";
+import type { Reviewer, ReviewInput } from "@baret/agent-kit/reviewer";
 import type { AnalyzeRequest, AnalyzeResponse } from "@baret/guard";
 import { decodeFunctionData, type Hex, keccak256, stringToHex } from "viem";
 import { describe, expect, it, vi } from "vitest";
@@ -64,11 +64,14 @@ function verdict(decision: AnalyzeResponse["decision"]): AnalyzeResponse {
 }
 
 /** A reviewer that reports one plan and one tool step, then answers. */
-function fakeReviewer(answer: "approve" | "veto" | "throw"): ReviewerFactory & { calls: number } {
+function fakeReviewer(
+  answer: "approve" | "veto" | "throw",
+): ReviewerFactory & { calls: number; inputs: ReviewInput[] } {
   const factory = ((sink: StepSink) => {
     const reviewer: Reviewer = {
-      async review() {
+      async review(input) {
         factory.calls += 1;
+        factory.inputs.push(input);
         sink.plan(["Decode the call.", "Read Baret's verdict."]);
         sink.tool({
           tool: "decode_transaction",
@@ -86,8 +89,9 @@ function fakeReviewer(answer: "approve" | "veto" | "throw"): ReviewerFactory & {
       },
     };
     return reviewer;
-  }) as unknown as ReviewerFactory & { calls: number };
+  }) as unknown as ReviewerFactory & { calls: number; inputs: ReviewInput[] };
   factory.calls = 0;
+  factory.inputs = [];
   return factory;
 }
 
@@ -173,6 +177,15 @@ describe("ReviewService", () => {
       expect(answer.sent).toBeNull();
       expect(reviewer.calls).toBe(0);
       expect(send).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["honest", "overpay"] as const)(
+    "hands the reviewer the payment reference for %s",
+    async (scenario) => {
+      const { service, reviewer } = setup();
+      await service.run(scenario);
+      expect(reviewer.inputs[0]?.reference).toBe("inv-2001");
     },
   );
 
