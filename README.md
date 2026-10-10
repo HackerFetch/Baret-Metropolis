@@ -33,6 +33,8 @@ Update this table at every major phase transition (when the repo is created, on 
 |---|---|---|
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | What the product is, who it is for, what it does end to end, MVP scope | Anyone / any AI looking at the project for the first time should read this first |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture: monorepo layout, data flow, chain constants, environment variables | Before starting to write code / before changing a module |
+| [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) | Every interface end to end: the site-to-wallet window, `wallet-core`, the SDKs and CLI, the HTTP API, the outside services, the contracts, the indexer | Before calling or changing any interface between two parts |
+| [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md) | What is sample, missing, wrong or half done, with priority and owner (checked 2026-10-10) | Before the freeze, before writing a submission text, before claiming something works |
 | [`docs/WALLET.md`](docs/WALLET.md) | All surfaces, screens and flows of the wallet (extension + Mera-backed standalone) | Before touching the wallet UI |
 | [`docs/FRONTEND.md`](docs/FRONTEND.md) | Content specification for every page of the marketing/showcase site (Home, Showcase, Agents, Docs, Install) — contains no design/palette | When writing/updating a frontend page |
 | [`docs/BOUNTIES_AND_TRACKS.md`](docs/BOUNTIES_AND_TRACKS.md) | Track selection, targeted bounties, tier list, status tracking for each | When making scope decisions / when asking "should we do this?" |

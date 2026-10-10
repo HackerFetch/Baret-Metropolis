@@ -4,6 +4,7 @@ import { type JSX, useReducer, useState } from "react";
 import { unread } from "../../data/derive.js";
 import { CONNECTS, queueOf } from "../../data/sample.js";
 import { activeAccount, useExtension } from "../../data/store.js";
+import type { PopupRequest } from "../../data/types.js";
 import { type Start, scenarioQuery } from "../../lib/start.js";
 import { TabBar, TopStrip } from "./frame/Chrome.js";
 import { SamplePanel, SampleStrip } from "./frame/Sample.js";
@@ -41,12 +42,25 @@ import { Uninitialized } from "./screens/Uninitialized.js";
  * request screens (signing, connecting), which own the whole canvas.
  */
 
+/**
+ * What a live popup adds (live/LivePopup.tsx): the real lock and reset, and
+ * the screen that checks and signs the account's own transfer. Absent on the
+ * sample, where the store stands in for all three.
+ */
+export interface LiveHooks {
+  lock(): void;
+  reset(): void;
+  Transfer(props: { request: PopupRequest; onFinished: () => void }): JSX.Element | null;
+}
+
 export function PopupApp({
   start,
   onRestart,
+  live,
 }: {
   start: Start;
   onRestart: (start: Start) => void;
+  live?: LiveHooks;
 }): JSX.Element {
   const { state, dispatch, check } = useExtension();
   const [nav, go] = useReducer(reducePopup, {
@@ -83,6 +97,17 @@ export function PopupApp({
         values={{ count: String(state.settings.lockMinutes), origin: "" }}
         onOpen={ready}
         onReset={() => openOptionsPath("/onboarding", restore)}
+      />
+    );
+  } else if (nav.phase === "signing" && live && own?.[0]) {
+    // Live: the transfer goes to Baret's server and, cleared, to Monad.
+    body = (
+      <live.Transfer
+        request={own[0]}
+        onFinished={() => {
+          setOwn(null);
+          ready();
+        }}
       />
     );
   } else if (nav.phase === "signing") {
@@ -148,10 +173,12 @@ export function PopupApp({
                 <SettingsTab
                   onOpen={(link) => openOptions(link, query)}
                   onLock={() => {
+                    if (live) return live.lock();
                     setLockReason("manual");
                     go({ type: "phase", phase: "locked" });
                   }}
                   onReset={() => {
+                    if (live) return live.reset();
                     dispatch({ type: "reset" });
                     go({ type: "phase", phase: "uninitialized" });
                   }}
@@ -203,7 +230,7 @@ export function PopupApp({
 
   return (
     <div className="flex h-full flex-col bg-[color:var(--ground)] text-[color:var(--fg)]">
-      {nav.phase === "signing" || nav.phase === "connecting" ? null : (
+      {live || nav.phase === "signing" || nav.phase === "connecting" ? null : (
         <SampleStrip onOpen={() => setPicker(true)} />
       )}
       <main className="relative min-h-0 flex-1">{body}</main>

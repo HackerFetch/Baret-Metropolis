@@ -29,6 +29,7 @@ import {
   useRef,
 } from "react";
 import type { ImgAsset } from "../../../../assets.js";
+import { activeAccount, useExtension } from "../../../../data/store.js";
 import { INPUT } from "../../parts/kit.js";
 
 /** True once the reader has left the first screen: from then on, new headings take the focus. */
@@ -244,16 +245,16 @@ export function OutLink({
 
 /** The new account's address, whole and wrapped, with a copy button. */
 export function AddressLine(): JSX.Element {
+  const { state } = useExtension();
+  // Live: the account the keystore just made. The sample shows its own.
+  const address =
+    state.scenario === "live" ? (activeAccount(state)?.address ?? "") : ACCOUNT.address;
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
       <code className="min-w-0 font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
-        {ACCOUNT.address}
+        {address}
       </code>
-      <CopyButton
-        text={ACCOUNT.address}
-        label={extFrame.account.copy}
-        done={extFrame.account.copied}
-      />
+      <CopyButton text={address} label={extFrame.account.copy} done={extFrame.account.copied} />
     </div>
   );
 }

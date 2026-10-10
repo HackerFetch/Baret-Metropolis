@@ -31,6 +31,7 @@ import type { Sources } from "../sources/types.js";
 import type { Explainer } from "./explain.js";
 import type { KimiBudget, PolicyDrafter } from "./policy-draft.js";
 import type { ReviewService } from "./review.js";
+import type { SealedRelay } from "./sealed.js";
 import type { ExplanationCache, VerdictCache } from "./verdicts.js";
 
 export const ANALYSIS_VERSION = "1";
@@ -57,6 +58,8 @@ export interface AnalyzeDeps {
   explanations?: ExplanationCache | null;
   /** Runs /v1/review's demo. Absent or null: that route answers 503. */
   review?: ReviewService | null;
+  /** Relays /v1/sealed's writes. Absent or null: that route answers 503. */
+  sealed?: SealedRelay | null;
   /** Writes /v1/policy/draft's proposals. Absent or null: that route answers 503. */
   policyDrafter?: PolicyDrafter | null;
   /** Fresh KIMI calls per day, shared by explain and policy drafts. Absent: no daily cap. */
