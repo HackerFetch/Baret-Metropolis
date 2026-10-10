@@ -86,6 +86,8 @@ function Live(): JSX.Element | null {
   // Requests this window has finished with. The background takes one off the
   // queue a moment after its answer: it must not come up a second time.
   const finished = useRef(new Set<string>());
+  // The request on screen has its answer and only its result is still shown.
+  const [answered, setAnswered] = useState(false);
 
   const read = useCallback(async () => {
     const [next, waiting] = await Promise.all([sendMessage("status"), sendMessage("pending")]);
@@ -108,11 +110,17 @@ function Live(): JSX.Element | null {
   const refresh = useBalances(open);
 
   useEffect(() => {
-    if (!open || shown) return;
-    const next = pending.find((p) => !finished.current.has(p.id));
+    if (!open) return;
+    const next = pending.find((p) => !finished.current.has(p.id) && p.id !== shown?.id);
+    // A result left on screen gives way to the next request: a site that is
+    // waiting must not wait on a screen the reader has finished with.
+    if (shown && !(answered && next)) return;
+    if (shown) finished.current.add(shown.id);
+    setAnswered(false);
     if (next) setShown(next);
+    else if (shown) setShown(null);
     else if (REQUEST_WINDOW && status) window.close();
-  }, [open, shown, pending, status]);
+  }, [open, shown, pending, status, answered]);
 
   const hooks = useMemo<LiveHooks>(
     () => ({
@@ -165,7 +173,10 @@ function Live(): JSX.Element | null {
       />
     );
   } else if (shown) {
-    const answer = (outcome: RpcOutcome) => void sendMessage("resolve", { id: shown.id, outcome });
+    const answer = (outcome: RpcOutcome) => {
+      setAnswered(true);
+      void sendMessage("resolve", { id: shown.id, outcome });
+    };
     body = (
       <div className="flex h-full flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -176,6 +187,7 @@ function Live(): JSX.Element | null {
             onFinished={() => {
               finished.current.add(shown.id);
               refresh();
+              setAnswered(false);
               setShown(null);
             }}
           />
