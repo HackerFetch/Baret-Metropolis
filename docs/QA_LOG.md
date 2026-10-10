@@ -20,10 +20,18 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-10 · by: Hale's agent (session 2)
+Last updated: 2026-10-10 · by: Hale's agent (session 3) · API commit `25b7581`
 
 | | |
 |---|---|
+| **Done** | H1 (setup; funding still open), H4, H5 (indexer side), H6, H7, H8 (#57), H9 part 1, **H16** (2026-10-10: `/review` three scenarios live, honest sent `0x3d33…efe9` status 1; KIMI en/tr/zh on NovaSwap and in the wallet window; rules from a sentence; fail-closed with the API or explain down) |
+| **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
+| **Blocked on** | Ezgin (E1): platform team, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682`, a vault to test against → H2, H3, the demo's cap shot |
+| **Next step** | H3 as soon as E1 lands (it changes the demo's lines). Otherwise H12 (both model features are live, articles can be written from H16's runs and `docs/evidence/`), then H14's README |
+| **Open bugs filed by Hale** | 1 — 🐛 P1 `/review` overpay names a false ref mismatch (`tasks/FOR_MERIC.md`) |
+| **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
+
+---|---|
 | **Done** | H1 (machine, identity, `qa`, test wallet — funding still open), **H4** (ticked: 17/18 of the live `/agents` matrix exact), **H9 part 1** (both package READMEs, merged in #50), **H5** (wallet History page live from the indexer, merged in #52), **H6** (quickstart samples corrected, MCP removed, a live agent-payments section reading the agent's own vault, a link to `/review`; merged in #55), **H7** (two Cleanverse playground actions, asset-aware finding wording via `details`/`bodyOf()`; merged in #56, with a review fix for how the asset is named), **H8** (the ScamSniffer reason named on a `KNOWN_MALICIOUS_ADDRESS` finding, the landing and the delegation page say the same sentence about the agent's key, the extension's `host_permissions` scoped to a build-time `WXT_BARET_API_URL` instead of `<all_urls>`; `pnpm check` green, branch `small-copy-and-extension` pushed, PR not opened yet) |
 | **In progress** | H1's last piece (dUSDC from the faucet) — blocked on funding of Hale's own wallet. H9 (2), H5's real-passkey confirmation (H10) and opening H8's PR all need a human at the keyboard or an authenticated `gh`, not the agent |
 | **Blocked on** | Ezgin (E1): platform team membership, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682` |
@@ -173,6 +181,15 @@ Goal of the session: H1 — first session, machine setup, `qa` branch, identity,
 End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and H9 still have real progress noted inline but are not fully closed (H1 waits on funding, H5 on a real-passkey re-check in H10, H9 on part (2)). Left unfinished: dUSDC from the faucet (needs MON first), platform access (H2), H5's real-passkey check, `cleanverse-playground-screen`'s pull request still needs opening (`gh` not authenticated this session), H9's Discord outreach. Next session starts with: opening `cleanverse-playground-screen`'s pull request, then H8 (no open dependency), or H2/H3 if Ezgin's E1 has landed by then. §1 rewritten: yes.
 
 ---
+
+- **Piece: H11, the scripts drafted** (task: "H11 · Write: the scripts")
+  - What: `docs/submission/SCRIPTS.md` (new, linked from `docs/submission/README.md`): rules for every video, the demo (3:00, ten shots, the magic moment by 0:50), the pitch (2:00), the Cleanverse (≤5:00) and CRE (≤2:00) clips, six optional clips each with its gate.
+  - How it works: every shot names the URL, the click, and the spoken line; anything not checked live carries **[H3]** or **[gate: …]** and is cut rather than faked if its task is not done at recording. Checked before writing: the `/agents` playground calls `POST /api/v1/analyze` in production ("Pay a listed merchant" → Safe; so E9's live flag is set), and "A real agent, paying from a real vault" lists the 0.25 USDC payment of 5 October.
+  - Result: drafted, not ticked. Waits on H3 (MetaMask lines), E1 (a vault for the cap-refusal shot), H9 (2) (the pitch's traction sentence), E8 (adopters, post-event plan; nothing in the repo states a plan, so the draft proposes one from what is built and marks it for Ezgin).
+  - Bugs filed: none new. The demo avoids `/review`'s Overpayment while the P1 above is open.
+  - Files changed: `docs/submission/SCRIPTS.md` (new), `docs/submission/README.md`, `tasks/FOR_HALE.md`, `tasks/FOR_EZGIN.md` (under E8), `tasks/FOR_MERIC.md` (review task), `docs/ROADMAP.md` (H11 line).
+
+End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 drafted, not ticked. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 
 ### 2026-10-10 — session 2 (commit `3541122` on `qa`, off `main` `44bc1f9`)
 
