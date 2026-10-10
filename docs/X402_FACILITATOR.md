@@ -2,7 +2,7 @@
 
 > The implementation of the HTTP 402-based micropayment flow inside Baret. Goal: prevent an AI agent from **blind-signing** a 402 response — every payment is decoded and passed through the policy before it is sent.
 
-Last updated: 2026-09-13 · Status: **Design phase**
+Last updated: 2026-10-10 · Status: **design; only the check is built.** Baret checks an x402 payment (its shape, asset, destination and the caps) and returns a verdict, live and tested (§5). Nothing in this repository settles a payment: no facilitator, no paywall endpoint (`docs/SYSTEM_GAPS.md` G-05). The rest of this file is the design.
 
 ---
 

@@ -17,7 +17,7 @@ Last updated: 2026-10-09 · Currently: **the final week**. **Submission closes W
 ## Week 1 — Foundation + Decisions
 - [x] New git repo created (clean history, commits starting today)
 - [x] pnpm workspace skeleton (`apps/`, `packages/`, `contracts/`; `workflows/` and `indexer/` come with their modules)
-- [ ] Monad testnet RPC (Alchemy) + sponsor perks claimed (Tenderly, QuickNode, Zerion) — see `RESOURCES.md` §1
+- [ ] Monad testnet RPC (Alchemy) + sponsor perks claimed (Tenderly, QuickNode, Zerion) — see `RESOURCES.md` §1. **2026-10-10 (Hale):** the Alchemy RPC is live and every analysis read goes through it; the perks were not claimed and are not needed, so this box stays open on purpose
 - [x] `contracts/PaymentGuard.sol` written, tested, deployed to Monad testnet — `CONTRACTS.md` §2.6 filled in (2026-10-02, with ReputationRegistry)
 - [x] **Milestone demo:** catch and block a single risky transaction end to end (`verify:demo`, 18 of 18)
 
@@ -30,7 +30,7 @@ Last updated: 2026-10-09 · Currently: **the final week**. **Submission closes W
 - [x] Policy engine (all 25 rules) + `STRICT/BALANCED/PERMISSIVE` templates
 - [x] `packages/guard` SDK (TransactionGuard.evaluate)
 - [x] `apps/showcase`: at least 2 threat scenarios (all six have testnet contracts; NovaSwap is wired live)
-- [ ] **Milestone demo:** live analysis through the showcase, demonstrable in the browser
+- [x] **Milestone demo:** live analysis through the showcase, demonstrable in the browser (checked in a browser 2026-10-10: NovaSwap's panel shows the live verdict with no wallet, H16)
 
 **Notes:** _(to be filled in)_
 
@@ -40,17 +40,17 @@ Last updated: 2026-10-09 · Currently: **the final week**. **Submission closes W
 - [x] Nansen: `reputation.ts` connected to the real API (client and detector done; live use waits for credits)
 - [x] Envio: `indexer/` set up, PaymentGuard events being indexed, `/v1/audit/*` fed from here (live 2026-10-07)
 - [x] Alchemy: every read through the Alchemy Monad RPC, batched (traces go to the public RPC: the free tier has no `debug_traceCall`; webhooks and gas sponsorship not built)
-- [ ] Cleanverse: `compliance.ts` detector + at least one gated demo scenario
+- [x] Cleanverse: `compliance.ts` detector + at least one gated demo scenario (two scenarios, both live: `verify:demo` 20 of 20 on 2026-10-10; on screen in the `/agents` playground, H7)
 
 **Notes:** _(to be filled in)_
 
 ---
 
 ## Week 4 — Tier S Integrations (2/2)
-- [ ] Mera: `apps/wallet` moved to the passkey account layer (no seed phrase) — the account layer is `@baret/wallet-core`; wiring the screens is open
+- [x] Mera: `apps/wallet` moved to the passkey account layer (no seed phrase) — live since 2026-10-09 (E3, M6)
 - [x] Mera PRF sub-key → PaymentGuard agent signer flow working (checked on testnet with `verify:wallet`)
 - [x] Dynamic: `packages/agent-kit` autonomous/server wallet + delegation (a Dynamic wallet paid from the vault)
-- [ ] `apps/extension`: x402 interceptor finished, the 4 scenarios in `X402_FACILITATOR.md` §5 tested
+- [ ] `apps/extension`: x402 interceptor finished, the 4 scenarios in `X402_FACILITATOR.md` §5 tested. **2026-10-10:** the four scenarios are tested at the verdict level (`verify:demo`, ticked in §5); the extension is a real wallet (D-040) but has no x402 interceptor, so this box stays open
 - [ ] Best Community Team Project eligibility verified
 
 **Notes:** _(to be filled in)_
@@ -80,6 +80,8 @@ Two things, and both are needed:
 | **Wed 14 Oct, 06:59 (GMT+3)** | Submission closes. Bounty selections stay editable until then |
 
 ### Where things stand (checked 2026-10-08 against the live system, commit `2965c57`)
+
+**2026-10-10 evening (Hale; the API runs `16f5448`):** the bullets below from 2026-10-08 and the 2026-10-09 paragraph are history; today's facts: the wallet runs on a live passkey account and a site can open its windows (M3, M6); the extension is a real wallet that refuses a Blocked request in its own window (E12, D-040; checked end to end by Hale); KIMI and Qwen are live in production (E7; H16 checked `/review`, the plain words in three languages and rules from a sentence; M11's false ref mismatch fixed and verified live); the `/agents` playground answers from the live API (E9); the sealed settings are live (E11, D-039); `verify:demo` agrees on 20 of 20 (`--from 0x5AE9…2C93`, G-14); `pnpm check` 1,072 tests and forge 85 tests pass on `main`. Still off or not built: Nansen (`nansen: false`, E2), an x402 settlement (G-05), a Cleanverse settlement (E6), the CRE workflow on a DON. The README is rewritten for judges (H14). The `LICENSE` file is in.
 
 **2026-10-09 evening (the API runs commit `6abf326`):** today's merges made some bullets below false. The wallet window is merged (M3, #46): a site can open the Baret wallet's connect and sign window. The wallet runs on a live passkey account, not sample data (M6, #45). The wallet's Activity reads the vault's payments from the indexer (H5, #52); a headless check with a virtual PRF passkey showed the demo vault's 4 real payments on Home and Activity. The developer quickstarts for `guard` and `agent-kit` are written (H9 part 1, #50). The playground has eight actions since H7 (#56): two Cleanverse ones, a verified wallet (Safe) and a wallet with no credential (Blocked). They go live only with `VITE_BARET_PLAYGROUND=live` and `VITE_BARET_PLAYGROUND_AGENT` (H4, #49); E9 is pending, so it still answers from samples in production. KIMI and Qwen are deployed (#51, commit `f3b40ed`) and not live: the keys are not on Render (E7), so `/v1/explain`, `/v1/review` and `/v1/policy/draft` answer 503 "not configured" and `/review` shows its recorded run. Nansen is still off (`nansen: false`, E2). The older text is kept as written on 2026-10-08.
 
@@ -175,7 +177,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H11 | Write: the scripts. Demo (3 min), pitch (2 min), and the list of sponsor clips **Drafted 2026-10-10** in `docs/submission/SCRIPTS.md`; waits on H3 for the MetaMask lines, E1 for the vault-cap shot, H9 (2) and E8 for the pitch's traction and plan | Sat 10 evening | H3, E5 | all |
 | H12 | Write and publish: the KIMI article and the Qwen article, each only if its feature is live **Drafted 2026-10-10** (`docs/articles/`); waits on Meriç's fact check and the 🐛 P1 for one paragraph, then Hale publishes | Sun 11 to Mon 12 | M4, M5 | KIMI, Qwen |
 | H13 | Record: the demo and pitch videos, the Cleanverse clip, the CRE simulation clip, the optional sponsor clips | Sun 11 afternoon to Mon 12 | H11, E7 | all |
-| H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
+| H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize **2026-10-10:** (1)–(3) done: README for judges, ARCHITECTURE's endpoints, the status documents, the root notes checked; (4) the per-prize texts open | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
 | H16 | Test on the live URLs after the merge deploy and E7 (**2026-10-09:** deployed with #51; waits only on E7): `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page **Done 2026-10-10** (API `25b7581`): all three `/review` scenarios live (honest sent, status 1; overpay and injected vetoed), the recorded fallback labelled, KIMI's words in en/tr/zh on NovaSwap and in the wallet window with the verdict unchanged, rules from a sentence (loosening unticked, nothing saved), fail-closed with the API or explain down. One 🐛 P1 for Meriç: overpay's veto also names a false ref mismatch | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
 

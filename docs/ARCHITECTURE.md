@@ -234,18 +234,15 @@ The entire analysis engine lives here. Endpoints:
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/health`, `/health/ready` | Liveness / is the RPC ready |
-| POST | `/v1/analyze` | Single transaction analysis |
-| POST | `/v1/analyze/batch` | ≤25 transactions |
-| POST | `/v1/analyze/stream` | SSE result stream |
-| POST | `/v1/replay` | Re-simulation |
-| GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-backed) |
-| POST | `/v1/explain` | A verdict in plain language (KIMI) |
-| POST | `/v1/review` | The Qwen agent reviewer on one of three fixed demo scenarios |
+| GET | `/health`, `/health/ready` | Liveness and the running commit / the chain answers and which optional parts are configured |
+| POST | `/v1/analyze` | Simulates one transaction or typed-data signature and returns the verdict |
+| POST | `/v1/explain` | A verdict this server returned, in plain language (KIMI) |
 | POST | `/v1/policy/draft` | Rules from a sentence (KIMI), a proposal only |
+| POST | `/v1/review` | The Qwen agent reviewer on one of three fixed demo scenarios |
 | POST | `/v1/sealed` | Relays one signed, encrypted settings entry to the SealedStore and pays its gas (D-039) |
-| GET/POST | `/mcp/tools`, `/mcp/call` | AI agent tools |
-| GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
+| GET | `/v1/audit/recent`, `/v1/audit/vault/:address`, `/v1/audit/owner/:address`, `/v1/audit/reputation/:address` | Audit, read from the Envio indexer (§8.8) |
+
+Not built, though earlier versions of this table listed them: `/v1/analyze/batch`, `/v1/analyze/stream`, `/v1/replay`, `/v1/audit/aggregate`, `/v1/audit/contract/:address`, `/mcp/tools`, `/mcp/call`, `/demo/paywall` (`docs/API_REFERENCE.md` §8).
 
 Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8), `/v1/explain`, `/v1/review`, `/v1/policy/draft` (below), `/v1/sealed` (D-039: body `{ id, version, blob, signature }`; 400 for a bad shape, size or signature, 409 for a version the store already has, 429 over the daily cap, 502 when the write did not land, 503 when not configured). Batch, stream, replay, MCP and the demo paywall are not built.
 

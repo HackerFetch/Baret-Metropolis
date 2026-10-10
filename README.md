@@ -1,79 +1,189 @@
-# Baret — Monad Metropolis Hackathon
+# Baret
 
-> A Monad-specific transaction security / policy layer that simulates a transaction before it is signed and gives a reasoned answer to the question "is this safe or dangerous?"
+**A pre-sign check for Monad.** Before a wallet, a dapp or an AI agent signs a transaction, it asks Baret. Baret simulates the transaction on Monad, runs it through its risk detectors, applies the signer's own rules and answers **Safe**, **Caution** or **Blocked**, with the reasons. If a check cannot finish, the answer is Blocked.
 
-This repository and this document set are meant for **live** tracking. They were prepared before any code was written; as the project progresses, **these files must be updated too**. Anyone starting a new conversation / new AI session should read this README first, then the relevant file under `docs/` depending on what they need.
+Baret is a layer that other applications call, not a wallet. The Baret wallet, the browser extension and the six demo sites in this repository are applications built on that layer, to show it working end to end.
 
----
-
-## Status Summary (last updated: 2026-10-09)
-
-| Area | Status |
-|---|---|
-| Phase | Backend live on Monad testnet and verified end to end (`verify:demo` 20 of 20 on 2026-10-08). Since 2026-10-09: NovaSwap signs through a connected wallet and through the Baret wallet window (M1, M3; the other demo sites sign nothing yet); the wallet runs on a live passkey account (M6); KIMI explains every live verdict and drafts rules from a sentence, and the Qwen agent reviews agent payments on `/review` (M4, M5; live once the keys are on Render, E7); developer quickstarts for `guard` and `agent-kit` (H9). The Activity page reads the vault's payments from the indexer (H5). Open: another team trying the quickstart (H9). **The plan for all three people is one board: `docs/ROADMAP.md` "Final week — the board"**; what each prize's page asks is `docs/QA_AND_DELIVERY.md` §8.1 |
-| Track decision | **Trust, Identity & AI Infrastructure** ($30k) — see `docs/BOUNTIES_AND_TRACKS.md` |
-| Repo | `HackerFetch/Baret-Metropolis`. Frontend work lands on the `frontend` branch |
-| Copy | 46 files in `packages/content`, one per page or frame, complete |
-| Design system | 37 components in `packages/ui`; the web signature layer in `packages/web-ui` (type scale, motion, reveals, the eyelet cursor); the wallet pieces both wallets share in `packages/wallet-ui` (sign request, rule editor, findings, QR) |
-| Apps | Built on sample data, frontend only: `showcase` (landing, hub, agents, docs, install, kit, NovaSwap and five more demo sites), `wallet` (11 screens) and `extension` (12 popup surfaces, 10 options pages with setup). Frontend audit (2026-10-04, branch `frontend-audit`): the landing is prerendered (LCP on a throttled phone 2.74 s to 1.88 s), every route has its own head and preloads, no console warnings on any surface, WCAG AA contrast in both themes and all six demo palettes, fail-closed gaps closed (locked request windows, permits, reachability), copy that claims nothing the product cannot back. Live wiring is next (`docs/WALLET.md`, `tasks/FOR_EZGIN.md`) |
-| Server and contracts | Server: `/v1/analyze` (9 detectors, fail-closed policy engine, all 39 finding codes produced by a test), `/v1/audit/*`; 62 tests; 18 of 18 showcase scenarios agree with the live API (`verify:demo`). Contracts: PaymentGuard, its factory, ReputationRegistry, the CRE receiver in front of it and the demo contracts; 58 forge tests incl. fuzz and invariants. Packages: `guard`, `demo`, `agent-kit` (Dynamic server wallet), `wallet-core` (Mera passkey account). Packages also: `metamask-plugin` (MetaMask Agent Wallet: `mm baret check` / `mm baret send`). Workflows: the Chainlink CRE reputation oracle (`workflows/`), simulated with a real write to the registry on testnet. Open: Nansen credits, the Cleanverse contract side, KIMI and Qwen in production (keys on Render, E7). The MetaMask plugin is built and not entered |
-| KIMI and Qwen | Run against the real models on 2026-10-09, not yet live in production (keys on Render, E7; branch `model-prizes`). KIMI (`kimi-k3`) writes "In plain words" under a verdict it never decides, in English, Turkish and Chinese (`/v1/explain` by request id, D-036), and drafts policy changes from a sentence (`/v1/policy/draft`). Qwen (`qwen3.8-max`) reviews an agent's payment with a plan and four read-only tools and can only veto (D-035): on Monad testnet it vetoed a 9x overpayment and an injected intent, and approved the matching payment, which was sent (tx `0x206bbd5c...095d`); judges can run it at `/review` (`/v1/review`) once deployed. Evidence: `docs/evidence/` |
-| Contract deploy | Monad testnet: PaymentGuard, ReputationRegistry, ReputationOracleReceiver and the demo contracts of all six showcase sites, source verified — `docs/CONTRACTS.md` §2.6, §3.4, §3.5, §7 |
-| Indexer | Envio HyperIndex, hosted: vaults, agent payments and the registry's history, served at `/v1/audit/*` (`docs/ARCHITECTURE.md` §8.8) |
-| Hosting / CI | Live: `https://baret-metropolis.vercel.app` (showcase), `https://baret-wallet.vercel.app`, API `https://baret-monad-api.onrender.com`. GitHub Actions gates the API deploy; extension zips published on every push to `main` (`docs/DEPLOYMENT.md`) |
-| Week | Final week. Feature freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3). Plan: `docs/ROADMAP.md` "Final week — the board" |
-
-Update this table at every major phase transition (when the repo is created, on the first deploy, when the week changes). For detailed weekly progress: `docs/ROADMAP.md`.
+Built for Monad Metropolis, track **Trust, Identity & AI Infrastructure**, by Ezgin, Meriç and Hale. Everything runs on **Monad testnet (chain id 10143)**.
 
 ---
 
-## Document Map
+## Try it in two minutes (no wallet needed)
 
-| File | What it is for | When to read it |
+1. Open **<https://baret-metropolis.vercel.app/novaswap>**. It is a fake swap site.
+2. Turn on **"Suspicious swap"** and press **"Enable dUSDC trading"**.
+3. Baret's panel opens with the live verdict for that exact request: **Blocked**. The site asks for an unlimited dUSDC allowance to a look-alike address that is on Baret's reputation registry. Under the findings, **"In plain words"** explains it in English, Turkish or Chinese (KIMI).
+4. Turn "Suspicious swap" off and press the button again: the honest swap is **Safe**.
+
+The five other demo sites, OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe, each have an honest version and an attack: <https://baret-metropolis.vercel.app/showcase>.
+
+## The live product
+
+| What | Where | What to do there |
 |---|---|---|
-| [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | What the product is, who it is for, what it does end to end, MVP scope | Anyone / any AI looking at the project for the first time should read this first |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture: monorepo layout, data flow, chain constants, environment variables | Before starting to write code / before changing a module |
-| [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) | Every interface end to end: the site-to-wallet window, `wallet-core`, the SDKs and CLI, the HTTP API, the outside services, the contracts, the indexer | Before calling or changing any interface between two parts |
-| [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md) | What is sample, missing, wrong or half done, with priority and owner (checked 2026-10-10) | Before the freeze, before writing a submission text, before claiming something works |
-| [`docs/WALLET.md`](docs/WALLET.md) | All surfaces, screens and flows of the wallet (extension + Mera-backed standalone) | Before touching the wallet UI |
-| [`docs/FRONTEND.md`](docs/FRONTEND.md) | Content specification for every page of the marketing/showcase site (Home, Showcase, Agents, Docs, Install) — contains no design/palette | When writing/updating a frontend page |
-| [`docs/BOUNTIES_AND_TRACKS.md`](docs/BOUNTIES_AND_TRACKS.md) | Track selection, targeted bounties, tier list, status tracking for each | When making scope decisions / when asking "should we do this?" |
-| [`docs/RESOURCES.md`](docs/RESOURCES.md) | Which sponsor tool is used where and how, claim tracking, env var list | When starting an integration |
-| [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Smart contract specifications, deploy table, security checklist | When writing/deploying contracts |
-| [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | x402 payment flow and facilitator design | When touching the x402/agent payment layer |
-| [`packages/guard/README.md`](packages/guard/README.md) | Developer quickstart for the pre-sign check: install, the smallest working call, what fail-closed means for the caller | Calling `/v1/analyze` from your own app, with or without the SDK |
-| [`packages/agent-kit/README.md`](packages/agent-kit/README.md) | Developer quickstart for the guarded agent wallet and the `baret` CLI | Giving an agent a signer that cannot sign past Baret's verdict |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 6-week calendar, weekly checklist, progress | Update at the start/end of every week |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architecture/scope decisions taken and their rationale (ADR log) | Check here first before taking a new decision, then add it |
-| [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Comparative review of the 5 previous Baret versions (EVM, Stellar, Casper, Midnight, OKX): what gets reused, which mistakes are not repeated | Read the relevant section before starting to write a module |
-| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel (showcase, wallet) + Render (API) setup, the CI/CD pipeline, running it locally | Before touching `ci.yml`, `render.yaml`, `vercel.json` or deploying |
-| [`docs/QA_AND_DELIVERY.md`](docs/QA_AND_DELIVERY.md) | How Baret is tested, the bug report format, the submission checklist and tracker, the day-by-day plan to the 2026-10-13 deadline (Hale's working document) | Before testing, filing a bug, recording a video or filling in a submission form |
-| [`docs/QA_LOG.md`](docs/QA_LOG.md) | Hale's running record, one entry per session: what was done piece by piece, how each thing works, every problem and its solution, where QA and delivery stand today | To see what has been tested and what is open; Hale's agent reads it first and updates it in every session |
-| [`docs/BRAND.md`](docs/BRAND.md) | Brand spec BK-001 Rev 02: lockout/tagout identity, mark, tag device, palette, type, imagery brief, voice | Before touching any UI, marketing page or generated asset |
+| Demo sites | <https://baret-metropolis.vercel.app/showcase> | Six sites, honest and attack versions, each checked live |
+| Agents | <https://baret-metropolis.vercel.app/agents> | The playground: an agent asks Baret before eight kinds of payment. Below it, a real Dynamic agent's payments from its vault, read live from the Envio indexer |
+| Agent reviewer (Qwen) | <https://baret-metropolis.vercel.app/review> | Three payments an agent was asked to make. Qwen 3.8 Max plans, calls four read-only tools and can veto; the honest one is sent on testnet |
+| Baret wallet | <https://baret-wallet.vercel.app> | A passkey wallet (Mera): no seed phrase, every request checked before the sign button exists |
+| Browser extension | <https://baret-metropolis.vercel.app/install> | A wallet extension for Chrome that refuses a Blocked request in its own window |
+| API | <https://baret-monad-api.onrender.com/health> | The check itself; see "Call it from your app" below |
+
+## Access instructions for judges
+
+No accounts and no login credentials are needed. The demo sites and `/review` work with no wallet at all.
+
+- **Testnet MON.** Every signed transaction pays a small fee in testnet MON, which is free from the Monad faucet: <https://faucet.monad.xyz>. The demo sites' own **"Get 100 test dUSDC"** button gives the demo token.
+- **The Baret wallet** needs a passkey provider that supports the WebAuthn **PRF** extension, such as iCloud Keychain or Google Password Manager. "Create my wallet" is one passkey prompt. If the provider lacks PRF, the wallet says so on that screen. To run the stateless test, clear the site's storage and press "Open with my passkey": the same account comes back.
+- **The extension** is not in the Chrome Web Store. Download the zip from `/install`, unzip it, open `chrome://extensions`, turn on Developer mode and choose "Load unpacked". Set a passphrase, write down the twelve words, then send the new address a little testnet MON. On NovaSwap, choose "Connect wallet" → "Baret" under "Wallets in this browser", turn on the attack and press "Sign with your wallet": the extension shows Blocked and has no sign button.
+- **The API sleeps when idle.** The first request after a quiet spell can take up to a minute; open <https://baret-monad-api.onrender.com/health> first.
+
+Addresses to try in any check:
+
+| Address | What Baret says |
+|---|---|
+| `0xeB9EBB97BcD146FF1a4424490cbE8e19b7983888` | NovaSwap's look-alike drainer, on the reputation registry: Blocked |
+| `0xa8f3762b03ae73cbbdb9173d3537c632628727a4` | Written to the registry from ScamSniffer's blacklist by the Chainlink CRE workflow: Blocked |
+| `0xc448042EdAC1899B023CaA0E9Da5e4a8833de873` | Holds a Cleanverse A-Pass (verified, tier 5): an aUSDC payment to it is Safe |
+| `0x1365566191bAA9872A64AcDce963751d5343ff49` | No Cleanverse credential: an aUSDC payment to it is Blocked |
+
+## Call it from your app
+
+One HTTP call, no key:
+
+```bash
+curl -s https://baret-monad-api.onrender.com/v1/analyze \
+  -H 'content-type: application/json' \
+  -d '{
+    "network": "testnet",
+    "policyTemplate": "balanced",
+    "transaction": {
+      "from": "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",
+      "to":   "0xac9517a70c88480c9fA7E9a280DA485F7f552C29",
+      "value": "100000000000000000",
+      "data": "0x"
+    }
+  }'
+# {"decision":"blocked","findings":[{"code":"KNOWN_MALICIOUS_ADDRESS","severity":"critical",...}],...}
+```
+
+Or in TypeScript, with the SDK:
+
+```ts
+import { TransactionGuard } from "@baret/guard";
+
+const guard = new TransactionGuard({ baseUrl: "https://baret-monad-api.onrender.com" });
+const verdict = await guard.evaluate({ network: "testnet", transaction, policyTemplate: "balanced" });
+if (verdict.decision === "blocked") throw new Error("Baret blocked it"); // no answer also means blocked
+```
+
+For an agent, `@baret/agent-kit` wraps the signer: `guardedSubmit` signs a Safe transaction and refuses a Blocked one, and the `baret` CLI does the same from a terminal.
+
+- Quickstarts, with every snippet run against the live API: [`packages/guard/README.md`](packages/guard/README.md), [`packages/agent-kit/README.md`](packages/agent-kit/README.md)
+- Every endpoint, message and contract: [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
+
+## What happens inside one check
+
+1. **Simulate.** The call is traced on Monad (`debug_traceCall`). The trace gives every balance change, allowance and contract the transaction touches, for every account involved, not only the signer.
+2. **Detect.** Nine detectors read the trace: unlimited and collection-wide allowances, signed permits, unknown and risky contracts, borrowed code (`delegatecall`), ownership handovers, loss against the balance, the shape of an x402 payment, the reputation registry, Cleanverse identity, Nansen labels.
+3. **Decide.** The signer's policy, 25 rules starting from a Strict, Balanced or Permissive template, turns the findings into one verdict. A detector that cannot answer counts as a failed check, so missing data blocks.
+4. **Explain.** KIMI writes the verdict in plain words under the findings. It receives the verdict and cannot change it.
+
+For agents, money sits in a **PaymentGuard** vault on Monad: per-merchant caps per payment, per hour and per day, and a revoke the owner can pull. Baret checks each payment before the agent signs, and the contract enforces the caps if anything gets past.
+
+Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Sponsor technology, and where it does the work
+
+| Sponsor | Where in Baret | State on the live system |
+|---|---|---|
+| **Mera** | The Baret wallet's whole account layer: one passkey, no seed phrase; agent keys and the encrypted settings each come from their own PRF namespace (D-032, D-039) | Live |
+| **Dynamic** | The demo agent is a Dynamic server wallet, authorised on a PaymentGuard vault and paying from it | Live; its payments are listed on `/agents` |
+| **Envio** | HyperIndex indexes every vault, payment and registry change; the wallet's Activity, `/agents` and the Qwen reviewer read it through `/v1/audit/*` | Live |
+| **Chainlink CRE** | A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain reputation registry that every check reads | Simulated with the CRE CLI with a real write on testnet (`workflows/README.md`); not deployed to a DON |
+| **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live; a settlement through the contract waits on test aUSDC |
+| **KIMI** (`kimi-k3`) | The plain-words explanation under every live verdict, and rules from a sentence on the wallet's Rules page | Live |
+| **Qwen** (`qwen3.8-max`) | The agent reviewer on `/review`: plan, four tools, veto only | Live |
+| **Alchemy** | The analysis's chain reads (balances, code, the registry, the vaults) go through Alchemy's Monad RPC, batched; the trace goes to the public Monad RPC, which serves `debug_traceCall` | Live |
+| **Nansen** | Address labels as a detector input | Built; switched off on the live API (no credits) |
+
+## What is not live
+
+Said plainly, so that nothing above is read as more than it is:
+
+- **x402 payments are checked, not settled.** Baret checks an x402 payment's shape and destination; no facilitator in this repository settles one.
+- **Nansen is off** on the live API (`/health/ready` shows `nansen: false`).
+- **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
+- **No Cleanverse settlement has been made** through `CompliantPaymentGuard` yet.
+- **Mainnet:** nothing is deployed there.
+
+The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
+
+## Contracts (Monad testnet, source verified)
+
+| Contract | Address |
+|---|---|
+| `PaymentGuardFactory` | [`0xDe897d4dF6E1c34aB868948dE035AE29D32eA822`](https://testnet.monadexplorer.com/address/0xDe897d4dF6E1c34aB868948dE035AE29D32eA822) |
+| `PaymentGuard` (the demo agent's vault) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) |
+| `ReputationRegistry` | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) |
+| `ReputationOracleReceiver` (CRE) | [`0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d`](https://testnet.monadexplorer.com/address/0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d) |
+| `CompliantPaymentGuard` (Cleanverse) | [`0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`](https://testnet.monadexplorer.com/address/0x6E867b840f11cC1d9c6e16d1f76D737199bc907c) |
+| `SealedStore` (encrypted settings) | [`0xC094af68bE1039f70E1362C2f326542BB2DC21BB`](https://testnet.monadexplorer.com/address/0xC094af68bE1039f70E1362C2f326542BB2DC21BB) |
+
+The demo sites' contracts and every deployment's details: [`docs/CONTRACTS.md`](docs/CONTRACTS.md).
+
+## Run it locally
+
+Node 22 or later and pnpm 11 (`corepack enable`), Foundry for the contracts.
+
+```bash
+pnpm install
+pnpm check                                  # lint, types, copy lint, every test suite
+pnpm contracts:test                         # forge tests, including fuzz and invariants
+cp apps/server/.env.example apps/server/.env   # then fill in MONAD_TESTNET_RPC_URL at least
+pnpm --filter @baret/server dev             # the API on http://localhost:8080
+pnpm --filter @baret/server verify:demo -- --api http://localhost:8080 --from <a funded testnet address>
+```
+
+On 2026-10-10 `pnpm check` passed 1,072 tests in 99 files and `pnpm contracts:test` 85 forge tests. `verify:demo` sends all twenty demo scenarios (six sites, honest and attack, the agent and Cleanverse cases) to an API and checks each verdict; against the live API on 2026-10-10 it agreed on 20 of 20. Deployment: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `apps/server` | The analysis API: simulation, detectors, policy engine, the KIMI and Qwen routes |
+| `apps/showcase` | The landing page, the six demo sites, `/agents`, `/review`, the docs pages |
+| `apps/wallet` | The Baret wallet (Mera passkey account) |
+| `apps/extension` | The Baret browser extension (WXT, Manifest V3) |
+| `packages/guard` | The SDK for the pre-sign check |
+| `packages/agent-kit` | The guarded agent signer, the Qwen reviewer and the `baret` CLI |
+| `packages/wallet-core` | The wallet without its screens: account, signing, delegation |
+| `packages/llm` | The KIMI and Qwen clients |
+| `contracts/` | Solidity (Foundry): PaymentGuard, the registry, the CRE receiver, Cleanverse, SealedStore, the demo contracts |
+| `indexer/` | The Envio HyperIndex project |
+| `workflows/` | The Chainlink CRE workflow |
 
 ---
 
-## What Is This in One Sentence?
+## For the team
 
-Before a wallet, dApp or AI agent on Monad signs a transaction, Baret simulates it, runs it through independent risk detectors (approval drain, unknown contract, Nansen-based reputation, compliance, x402 payment shape), decides according to the user's own policy and returns `safe: true/false` together with the reasoning. For agents, instead of a raw private key it provides an on-chain spend-limited, revocable authorization (PaymentGuard vault + Mera PRF sub-key).
+This repository is also the three of us's working space. Status and plan: [`docs/ROADMAP.md`](docs/ROADMAP.md) ("Final week — the board"). Decisions and their reasons: [`docs/DECISIONS.md`](docs/DECISIONS.md). Prize requirements and the submission tracker: [`docs/QA_AND_DELIVERY.md`](docs/QA_AND_DELIVERY.md) §8. QA record: [`docs/QA_LOG.md`](docs/QA_LOG.md). Agent instructions: [`CLAUDE.md`](CLAUDE.md).
 
-For details: `docs/PROJECT_OVERVIEW.md`.
+| File | What it is for |
+|---|---|
+| [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | What the product is, who it is for, the MVP scope |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Monorepo layout, data flow, chain constants, environment variables |
+| [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) | Every interface end to end |
+| [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md) | What is sample, missing, wrong or half done, with owner |
+| [`docs/WALLET.md`](docs/WALLET.md) | The wallet's and the extension's surfaces and flows |
+| [`docs/FRONTEND.md`](docs/FRONTEND.md) | Content specification of every showcase page |
+| [`docs/BOUNTIES_AND_TRACKS.md`](docs/BOUNTIES_AND_TRACKS.md) | Track, prizes and the state of each |
+| [`docs/RESOURCES.md`](docs/RESOURCES.md) | Which sponsor tool is used where |
+| [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Contract specifications and deployments |
+| [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | The x402 design (checked, not settled) |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel, Render, CI |
+| [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Review of the five earlier Baret versions |
+| [`docs/BRAND.md`](docs/BRAND.md) | Brand specification |
 
----
+Rules every change follows: Monad only (testnet `10143`, mainnet `143`); fail-closed, so missing data blocks; sponsor integrations are part of the product, not badges; code and docs change together; secrets never enter the repository.
 
-## Critical Constraints (apply to every file, must not be forgotten)
-
-1. **Monad only.** No other network's name will appear in code, docs or the brand name (no Stellar, no Solana, no generic "any EVM chain"). Chain constants are hardcoded: testnet `10143`, mainnet `143`.
-2. **Fresh git history.** The repo to be created for this project will take commits starting today (2026-09-13); the git history of the old `Baret-Stellar` / `Baret-EVM` repos will not be carried over. Code/concept inspiration may come from the old repos, but the files are written from scratch.
-3. **Name: Baret.** The old code names (`Premon`, `stellar-thorn`, `Blackthorn`, the `DELTAG_*` env prefix) will not be used in any new file.
-4. **Sponsor integration = the core of the product, not a badge.** Removing any integration must cause a real breakage in the product (see the Cleanverse test, `docs/BOUNTIES_AND_TRACKS.md`).
-
----
-
-## How to Contribute (for AI sessions)
-
-1. First read this README + `docs/PROJECT_OVERVIEW.md` + `docs/ARCHITECTURE.md`.
-2. Position the work to be done against the weekly plan in `docs/ROADMAP.md`.
-3. If an out-of-scope idea comes up, check `docs/BOUNTIES_AND_TRACKS.md` first — it may already have been evaluated and rejected.
-4. If a new architecture/scope decision is taken, add it to `docs/DECISIONS.md`.
-5. When the work is done, update the status table in the relevant `docs/*.md` file. **Work does not count as "done" unless code and docs are updated together.**
+Licence: MIT ([`LICENSE`](LICENSE)).

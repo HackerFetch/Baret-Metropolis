@@ -10,11 +10,11 @@ Last updated: 2026-09-13
 
 | Perk | Value | Claim link (in Resources.txt) | Purpose in Baret | Claim status |
 |---|---|---|---|---|
-| Tenderly Pro | ~$7,200 | Notion: Tenderly Access for Metropolis | PaymentGuard.sol debug/simulate, revert trace inspection, multi-step scenario rehearsal on a virtual testnet (recording before the demo) | ⬜ Not claimed |
-| Quicknode Build Plan | ~$147 | Notion: Quicknode Credits for Metropolis Hackers | Backup RPC to Alchemy + webhooks (chain event monitoring) | ⬜ Not claimed |
-| Zerion API Builder | ~$149 | Notion: Free Zerion API Builder Plan | Optional — backup data source for the wallet activity/parsed tx view (not primary) | ⬜ Not claimed |
+| Tenderly Pro | ~$7,200 | Notion: Tenderly Access for Metropolis | PaymentGuard.sol debug/simulate, revert trace inspection, multi-step scenario rehearsal on a virtual testnet (recording before the demo) | ➖ Not claimed, not needed (2026-10-10): the build finished without it |
+| Quicknode Build Plan | ~$147 | Notion: Quicknode Credits for Metropolis Hackers | Backup RPC to Alchemy + webhooks (chain event monitoring) | ➖ Not claimed, not needed (2026-10-10): the build finished without it |
+| Zerion API Builder | ~$149 | Notion: Free Zerion API Builder Plan | Optional — backup data source for the wallet activity/parsed tx view (not primary) | ➖ Not claimed, not needed (2026-10-10): the build finished without it |
 
-**Action (Week 1):** Claim all three perks, add the keys to `.env`, update this table.
+**Closed 2026-10-10 (Hale, H14):** none of the three was claimed and none is needed. Simulation runs on `debug_traceCall` against Monad's public RPC, reads on Alchemy, and the wallet's activity on the Envio indexer.
 
 ---
 

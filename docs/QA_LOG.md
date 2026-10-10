@@ -36,7 +36,7 @@ Last updated: 2026-10-10 evening · by: Hale's agent (session 3) · API commit `
 | **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
 | **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
 | **Next step** | H3 handed to Ezgin (2026-10-10, Hale's decision); when Ezgin's notes are in, rewrite the **[H3]** lines of `docs/submission/SCRIPTS.md`. Now: H12 (KIMI and Qwen articles), then a vault through the live wallet for the cap shot, H14 |
-| **Open bugs filed by Hale** | 6 — Ezgin also: P2 an over-cap payment's reason is "unknown"; Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
+| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Ezgin also: P2 an over-cap payment's reason is "unknown"; Meriç: P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---|---|
@@ -233,6 +233,14 @@ End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and 
   - Result: 0.10 → safe, sent `0x482f3286b3594bcd4efe8200dd86d18887d59828e5ec423830543041e94876f9` (status 1); 0.40 → blocked, `signed: false`, `SIMULATION_FAILED`. The Envio indexer had the new vault, its agent, caps and the payment at `/v1/audit/vault/0xA19A…0E3C` within ~20 s.
   - Problem: the over-cap finding says only "Execution reverted for an unknown reason." though the contract reverts with `ExceedsPerTxCap()` → 🐛 P2 for Ezgin.
   - Files changed: `tasks/FOR_EZGIN.md`, `docs/submission/SCRIPTS.md` (1:55 row now concrete), `docs/QA_LOG.md`; `.env` locally (not committed).
+
+- **Piece: `main` (#66–#75) merged; M11 verified live** 
+  - What: merge `13b309f` (conflicts at the tops of the three task files: both sides kept, our stale copy of the G-02 bullet dropped since `main` closed it as M8). M11's fix (#66) on the live API `16f5448`: a fresh overpay run vetoed on the amount only, `refCheck: {"reference":"inv-2001","matches":true}` in the decode. "Verified by Hale" written under M11; the Qwen article's paragraph now says it is fixed.
+
+- **Piece: H14 (1)–(3), the documents a judge reads** (task: "H14 · Final documents")
+  - What: see the task's note in `tasks/FOR_HALE.md`. Every claim in the new README was checked on the day: the `curl` returned Blocked, the CRE-written address `0xa8f3…27a4` is Blocked with `SCAMSNIFFER_BLACKLIST`, the five showcase pages answer 200, `pnpm check` (99 files, 1,072 tests) and `forge test` (10 suites, 85 tests) green on `13b309f`.
+  - Problem: my first draft said every chain read goes through Alchemy; the traces go to the public RPC (`separateTraceRpc: true`, Alchemy's free tier has no `debug_traceCall`). Corrected before commit.
+  - Files changed: `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/WALLET.md`, `docs/X402_FACILITATOR.md`, `docs/RESOURCES.md`, `docs/DEPLOYMENT.md`, `tasks/FOR_HALE.md`.
 
 End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 and H12 drafted, not ticked; H3 handed to Ezgin. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 
