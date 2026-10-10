@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { Verdict } from "./check-types.js";
 
 /**
@@ -144,13 +144,43 @@ const failures = new Map<string, { at: number; final: boolean }>();
 
 const key = (requestId: string, language: ExplainLanguage) => `${requestId}\u0000${language}`;
 
+/**
+ * Every mounted block reads the two maps above, so each change is announced:
+ * a block that did not make the ask (the same request shown twice, or a
+ * block mounted while another one asked) still re-renders with the result.
+ */
+const listeners = new Set<() => void>();
+let version = 0;
+
+function changed(): void {
+  version += 1;
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+const snapshot = () => version;
+
 /** Test hook: forget every answer and every failure. */
 export function clearExplainCache(): void {
   cache.clear();
   failures.clear();
+  changed();
 }
 
-function settled(requestId: string | null, language: ExplainLanguage): ExplainState | null {
+/**
+ * What the maps hold for one key. `_version` is the store's version: passing
+ * it makes the read depend on it, so a memoizing compiler (the apps build
+ * with the React Compiler) reads the maps again after every change.
+ */
+function settled(
+  requestId: string | null,
+  language: ExplainLanguage,
+  _version: number,
+): ExplainState | null {
   if (requestId === null) return { status: "unavailable", answer: null };
   const k = key(requestId, language);
   const answer = cache.get(k);
@@ -168,7 +198,7 @@ function settled(requestId: string | null, language: ExplainLanguage): ExplainSt
  * once, with no ask. A 404 verdict_unknown is never asked again.
  */
 export function useExplanation(requestId: string | null, language: ExplainLanguage): ExplainState {
-  const [, setTick] = useState(0);
+  const version = useSyncExternalStore(subscribe, snapshot, snapshot);
 
   useEffect(() => {
     if (requestId === null) return;
@@ -205,7 +235,7 @@ export function useExplanation(requestId: string | null, language: ExplainLangua
           failures.set(k, { at: Date.now(), final });
           schedule();
         }
-        setTick((n) => n + 1);
+        changed();
       });
     }
 
@@ -222,5 +252,5 @@ export function useExplanation(requestId: string | null, language: ExplainLangua
     };
   }, [requestId, language]);
 
-  return settled(requestId, language) ?? { status: "loading", answer: null };
+  return settled(requestId, language, version) ?? { status: "loading", answer: null };
 }
