@@ -28,7 +28,7 @@ Last updated: 2026-10-10 · by: Hale's agent (session 3) · API commit `25b7581`
 | **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
 | **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
 | **Next step** | H3 handed to Ezgin (2026-10-10, Hale's decision); when Ezgin's notes are in, rewrite the **[H3]** lines of `docs/submission/SCRIPTS.md`. Now: H12 (KIMI and Qwen articles), then a vault through the live wallet for the cap shot, H14 |
-| **Open bugs filed by Hale** | 5 — Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
+| **Open bugs filed by Hale** | 6 — Ezgin also: P2 an over-cap payment's reason is "unknown"; Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---|---|
@@ -218,6 +218,13 @@ End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and 
   - What / result: see the task's note in `tasks/FOR_HALE.md`. Save → "copy number 1 is on Monad"; storage wiped, same passkey → Balanced, then "Bring them back here" → Strict; a different passkey → "no encrypted copy yet".
   - Problem: the cross-device test cannot be scripted — an exported virtual credential gives a different PRF output ("This passkey can't open the account"). Not a product bug; written into §2. The real two-device run is Hale's, with a syncing passkey provider.
   - Bugs filed: none.
+
+- **Piece: Hale's demo vault for the cap shot** (E1 (3); the demo's 1:55 shot)
+  - What: with Hale's funded wallet `0xF9f8…8682` and `cast`: `PaymentGuardFactory.createVault(USDC)` → vault `0xA19A33288E9d1E3F5A0761a5b0fb7e5199c00E3C` (tx `0x1fa209b5…024c`); `approve` + `deposit(1000000)`; `setMerchantCap(0x1365…ff49, 250000, 500000, 1000000)`; a new agent key (`cast wallet new`, written only to the gitignored `.env` as `HALE_DEMO_AGENT_KEY` / `HALE_DEMO_AGENT_ADDRESS` / `HALE_DEMO_VAULT`), funded 1 MON, `setAgentSigner` → agent `0xC082d6E5F9269335842b66D32a3B800015b19C4b`. All status 1.
+  - How to run it again: `set -a; . ./.env; set +a; BARET_AGENT_PRIVATE_KEY="$HALE_DEMO_AGENT_KEY" BARET_API_URL=https://baret-monad-api.onrender.com MONAD_TESTNET_RPC_URL=https://testnet-rpc.monad.xyz pnpm --filter @baret/agent-kit baret pay --vault $HALE_DEMO_VAULT --merchant 0x1365566191bAA9872A64AcDce963751d5343ff49 --amount <base units> --ref <text>`.
+  - Result: 0.10 → safe, sent `0x482f3286b3594bcd4efe8200dd86d18887d59828e5ec423830543041e94876f9` (status 1); 0.40 → blocked, `signed: false`, `SIMULATION_FAILED`. The Envio indexer had the new vault, its agent, caps and the payment at `/v1/audit/vault/0xA19A…0E3C` within ~20 s.
+  - Problem: the over-cap finding says only "Execution reverted for an unknown reason." though the contract reverts with `ExceedsPerTxCap()` → 🐛 P2 for Ezgin.
+  - Files changed: `tasks/FOR_EZGIN.md`, `docs/submission/SCRIPTS.md` (1:55 row now concrete), `docs/QA_LOG.md`; `.env` locally (not committed).
 
 End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 and H12 drafted, not ticked; H3 handed to Ezgin. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 
