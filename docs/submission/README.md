@@ -10,3 +10,5 @@ Files the submission forms ask for, ready to upload.
 Both are rendered from the mark's own paths in `packages/ui/src/brand/Mark.tsx` and the wordmark font `packages/web-ui/fonts/big-shoulders-stencil-display-900.woff2`, following `docs/BRAND.md` section 02 (mark height equals cap height, tracking +4%, two flat colours). The product itself never uses a raster of the mark; these exist only because the forms ask for one.
 
 The video scripts (demo, pitch, sponsor clips) are in `SCRIPTS.md`, for review before recording (H11, H13).
+
+One text per prize, ready to paste into the forms, with the gates each one waits on: `TEXTS.md` (H14).

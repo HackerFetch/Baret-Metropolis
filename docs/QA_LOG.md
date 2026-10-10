@@ -25,9 +25,9 @@ Last updated: 2026-10-10 night · by: Hale's agent (session 3) · API commit `16
 | | |
 |---|---|
 | **Done** | H1, H4–H8, H9 part 1, **H16** (KIMI and Qwen live), **the extension as a real wallet** (attack Blocked in its own window, honest swap confirmed, popup send, lock, restore), **H10 (1)** `verify:demo` 20/20 and the four x402 boxes, **H10 (2)** `pnpm check` 1,072 and forge 85 green, **Hale's demo vault** `0xA19A…0E3C`, **H14 (1)–(3)** README for judges and the status documents |
-| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; H14 (4) the per-prize texts; the sealed settings' two-device run needs a real passkey |
+| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; H14 (4) drafted (`docs/submission/TEXTS.md`), waiting on E8; the sealed settings' two-device run needs a real passkey |
 | **Blocked on** | Ezgin: the platform team (E1 (1)) → H2. H3 (MetaMask) is Ezgin's since 2026-10-10 |
-| **Next step** | H14 (4), one text per prize in `docs/submission/`. Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
+| **Next step** | E8's fact check of `README.md` and `docs/submission/TEXTS.md`; before recording, the checks in "Before recording" (`tasks/FOR_HALE.md`). Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
 | **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived" |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
@@ -225,6 +225,11 @@ End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and 
   - What: see the task's note in `tasks/FOR_HALE.md`. Every claim in the new README was checked on the day: the `curl` returned Blocked, the CRE-written address `0xa8f3…27a4` is Blocked with `SCAMSNIFFER_BLACKLIST`, the five showcase pages answer 200, `pnpm check` (99 files, 1,072 tests) and `forge test` (10 suites, 85 tests) green on `13b309f`.
   - Problem: my first draft said every chain read goes through Alchemy; the traces go to the public RPC (`separateTraceRpc: true`, Alchemy's free tier has no `debug_traceCall`). Corrected before commit.
   - Files changed: `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/WALLET.md`, `docs/X402_FACILITATOR.md`, `docs/RESOURCES.md`, `docs/DEPLOYMENT.md`, `tasks/FOR_HALE.md`.
+
+- **Piece: H14 (4), one text per prize** (task: "H14 · Final documents")
+  - What: `docs/submission/TEXTS.md`, linked from `docs/submission/README.md`; §8's tracker marks each as a draft. Twelve entries; Nansen marked not entered unless E2 lands and is seen live.
+  - Problem: my first Nansen paragraph named the HTTP method and said the segment shows on the sign request; neither was checked in the code, so both came out. The Cleanverse paragraph first said the contract checks the merchant only; it checks both parties.
+  - Files changed: `docs/submission/TEXTS.md` (new), `docs/submission/README.md`, `docs/submission/SCRIPTS.md` (Overpayment allowed again since M11), `docs/QA_AND_DELIVERY.md` §8, `tasks/FOR_HALE.md`, `tasks/FOR_EZGIN.md` (under E8), `docs/ROADMAP.md`.
 
 End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 and H12 drafted, not ticked; H3 handed to Ezgin. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 

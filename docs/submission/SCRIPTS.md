@@ -35,7 +35,7 @@ The demo video, the pitch video and the sponsor clips, shot by shot: what is on 
 
 **If the 1:55 shot is cut**: give its 20 seconds to the `/agents` playground's "Pay aUSDC to a wallet with no credential" (Blocked, the asset only moves between verified wallets), spoken: "The same check enforces identity: this asset only moves between verified wallets."
 
-**Do not use** the "Overpayment" scenario on `/review` until the 🐛 P1 in `tasks/FOR_MERIC.md` is fixed: its live reason also claims a ref mismatch that is not there.
+The "Overpayment" scenario is safe to show since M11 (verified live 2026-10-10: the veto names only the amount).
 
 ---
 
