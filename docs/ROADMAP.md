@@ -147,6 +147,15 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M5 | Qwen: the reviewer against the real model and made agentic (planning, tools, several steps), demoable | **Done 2026-10-09** on Monad testnet (D-035) | none | Qwen |
 | M6 | The wallet screens on live data: one-prompt onboarding, fix what real data breaks, remove the sample notice. **Done 2026-10-09** (#45): 4 taps and about 6 s to a first confirmed send, the stateless test passes; real-device pass is H10 | Sat 10 | E3, E4 | Mera UX |
 | M7 | The project logo for the form: JPG, PNG or WEBP, at most 3 MB | **Done 2026-10-09** (`docs/submission/`) | | main track |
+| M8 | 🐛 P1 G-02: the landing and `/install` call the sample extension a working wallet. Option (a), decided 2026-10-10: the web wallet is the first button everywhere, the header included, the demo `/novaswap` the second, and the extension appears only on `/install`, as a preview of its screens on sample data | Sat 10 to Sun 11 before 12:00 | | main track |
+| M9 | Read the sealed-settings block once (E11) and make every status line true: a failed save no longer says "Nothing was changed", and "matches" goes, since a restore can keep local names the copy lacks | Sun 11 before 12:00 | E11 | Many Keys |
+| M10 | Review the video scripts against the live sites (H11): no shot shows the extension as a wallet, the landing shot matches the new first button, Overpayment comes back only after M11 is verified live | Sun 11, before the recording | M8, M9, M11 merged | all |
+| M11 | 🐛 P1 G-08: `/review` overpay's veto names a ref mismatch that is not there. One sentence in the reviewer's prompt, and `decode_transaction` reports whether `ref` is keccak256 of the payment's reference, worked out in code; sampled live before the merge | Sat 10 to Sun 11 before 12:00 | | Qwen |
+| M12 | Line drawings for the two "For developers" cards on `/docs`. Cosmetic, first to cut | Sun 11 before 12:00, if time remains | | main track |
+| M13 | The KIMI block asks again after a failure: only real answers cached, at most one retry a minute, never for a 404 `verdict_unknown`, and a failed line that is true for any failure | Sat 10 to Sun 11 before 12:00 | | KIMI |
+| M14 | One failed rule draft no longer removes the form: the sentence stays, with one inline line | Sat 10 to Sun 11 before 12:00 | | KIMI |
+| M15 | The two sentences that call a 429 "no answer" (`hub.content.ts`, `sign.content.ts`) become true for a 429, a 5xx and a timeout; "Can't reach Baret" keeps its name | Sun 11 before 12:00 | | main track |
+| M16 | The copy for Ezgin's typed-data fail-open fix, as commits on his branch, so guard, copy and server land together (P1, allowed after the freeze) | when his pull request opens | Ezgin's fix | main track |
 
 ### Hale
 
@@ -171,7 +180,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 
 ### What is cut first
 
-If a day slips, drop in this order and write it down here and in `docs/BOUNTIES_AND_TRACKS.md`: H8, E6 (Cleanverse contract), M5 with its article (Qwen), H7, E5, M4 with its article (KIMI), M3. **Never cut:** M1 and M2 (the story), E3 and E4 (three prizes depend on them), H3, H9, H11, H13, H15.
+If a day slips, drop in this order and write it down here and in `docs/BOUNTIES_AND_TRACKS.md`: M12, H8, E6 (Cleanverse contract), M5 with its article (Qwen), H7, E5, M4 with its article (KIMI), M3. **Never cut:** M1 and M2 (the story), E3 and E4 (three prizes depend on them), H3, H9, H11, H13, H15.
 
 If M3 is not working by Saturday evening, the Baret side of the story stays the panel on the page, the MetaMask drain is still real, and the video is told with those two.
 
