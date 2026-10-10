@@ -46,8 +46,8 @@ export const policies = {
    * Rules from a sentence (live wallet only): KIMI turns a sentence into
    * suggested changes. Nothing applies here: ticked changes go into the
    * draft, and the page's own Save gate decides. A change that loosens a
-   * rule starts unticked. When the server can't draft, one quiet line and
-   * the block hides itself.
+   * rule starts unticked. When the server can't draft, the form and the
+   * sentence stay and one line says why; submitting again is the retry.
    */
   draft: {
     label: "Write a rule in your own words",
@@ -64,7 +64,12 @@ export const policies = {
     none: "KIMI found no rule to change in that sentence. Try saying it another way.",
     apply: "Add to my draft",
     applied: "Added to your draft. Check the form and the preview, then save.",
-    unavailable: "Drafting from a sentence is not available right now.",
+    failed: {
+      /** 422: the model's answer did not fit the rules. */
+      invalid: "Try saying it another way.",
+      /** Any other failure: not configured, no answer, a limit, a timeout, no network. */
+      other: "Not available right now. Try again in a minute.",
+    },
   },
 
   preview: {
