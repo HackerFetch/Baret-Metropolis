@@ -15,6 +15,12 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
     bodyLimit: 256 * 1024,
+    // The server sits behind its host's proxy, and the sites reach it through
+    // their own: without this every visitor has the proxy's address and shares
+    // one rate-limit bucket. With it a client is the first address in
+    // X-Forwarded-For. A direct caller can forge that header to get a fresh
+    // per-minute bucket; the daily caps on the paid routes do not key on it.
+    trustProxy: true,
   });
 
   await app.register(cors, {

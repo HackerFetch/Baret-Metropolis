@@ -46,6 +46,8 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 
 **What it costs:** the limits are for the whole world, not per visitor: 120 requests a minute in total, and 6 a minute on `/v1/review` and on `/v1/sealed`. Three judges pressing "Run the review" in the same minute can get 429; the page then shows the recorded run of 9 October (which is labelled as recorded). One busy page also slows every other visitor.
 
+**State (2026-10-10):** fixed on branch `rate-limit-per-visitor`, live after its merge and the measurement repeated.
+
 **Fix:** `trustProxy: true` in the Fastify options, so the limit keys on the `X-Forwarded-For` address Render and Vercel pass. A caller can then forge that header to dodge the per-minute limit; the daily caps (KIMI 500, review 200, sealed 200) still bound what that can spend. One line, plus a test; redeploy and repeat the measurement above from two networks.
 
 ### G-02 · The landing and `/install` describe the extension as a working wallet
