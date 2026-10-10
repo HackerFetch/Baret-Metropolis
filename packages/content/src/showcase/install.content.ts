@@ -166,8 +166,6 @@ export const install = {
         "Read the sign request a site sends, before you sign it",
         "Send the unsigned transaction, your address and the site's origin to the Baret server",
         "Refuse to sign when one of your rules blocks it",
-        "Pay x402 requests on its own, but only inside caps you approved",
-        "Watch your address and alert you when something moves without you",
       ],
     },
     cannot: {
