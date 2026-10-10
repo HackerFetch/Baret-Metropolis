@@ -193,7 +193,7 @@ export const delegation = {
     /** Live: an outside agent address, registered without its key ever being here. */
     external: {
       label: "Agent address",
-      hint: "The address of an agent wallet, such as one made with Dynamic. Its key stays with the agent.",
+      hint: "The agent's own wallet comes from Dynamic, and the vault owner authorises it with their Mera passkey. Its key stays with the agent.",
       action: { label: "Authorise this address" },
     },
     creating: "Confirm with your passkey. Mera derives the agent key from it.",

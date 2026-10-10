@@ -324,6 +324,27 @@ describe("what the model is shown", () => {
     expect(compliance({ side: "self" })).toContain("Your account has no Cleanverse");
     expect(compliance({ side: "recipient" })).toContain("your rules require one");
   });
+
+  it("names ScamSniffer when the registry says the listing came from it, and stays generic otherwise", () => {
+    const listed = (reasonCode: string) =>
+      explainPayload(
+        {
+          ...verdict,
+          findings: [
+            {
+              code: "KNOWN_MALICIOUS_ADDRESS",
+              severity: "critical",
+              values: { address: PEER },
+              details: { registry: { severity: 3, reasonCode }, nansen: false },
+              blocking: true,
+            },
+          ],
+        },
+        "en",
+      ).findings[0]?.what;
+    expect(listed("SCAMSNIFFER_BLACKLIST")).toContain("ScamSniffer's public blacklist");
+    expect(listed("SOME_FUTURE_CODE")).toContain("blocklist in the Baret reputation registry");
+  });
 });
 
 describe("kimiExplainer", () => {

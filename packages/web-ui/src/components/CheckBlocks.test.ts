@@ -60,6 +60,44 @@ describe("bodyOf", () => {
     expect(template).toBe(BASE.body);
     expect(values).toEqual({});
   });
+
+  const WITH_REASON = {
+    body: "{address} is on the blocklist.",
+    bodyReason: "{address} is on ScamSniffer's public blacklist.",
+  };
+
+  it("picks bodyReason when the registry's reasonCode is a known source", () => {
+    const { template, values } = bodyOf(WITH_REASON, {
+      values: { address: "0xabc" },
+      details: { registry: { reasonCode: "SCAMSNIFFER_BLACKLIST" } },
+    });
+    expect(template).toBe(WITH_REASON.bodyReason);
+    expect(values).toEqual({ address: "0xabc" });
+  });
+
+  it("falls back to body when the reasonCode is not a known source", () => {
+    const { template } = bodyOf(WITH_REASON, {
+      values: { address: "0xabc" },
+      details: { registry: { reasonCode: "SOME_FUTURE_CODE" } },
+    });
+    expect(template).toBe(WITH_REASON.body);
+  });
+
+  it("falls back to body when details.registry is null (a Nansen-only flag)", () => {
+    const { template } = bodyOf(WITH_REASON, {
+      values: { address: "0xabc" },
+      details: { registry: null, nansen: true },
+    });
+    expect(template).toBe(WITH_REASON.body);
+  });
+
+  it("falls back to body when there is no bodyReason variant at all", () => {
+    const { template } = bodyOf(BASE, {
+      values: { recipient: "0xabc" },
+      details: { registry: { reasonCode: "SCAMSNIFFER_BLACKLIST" } },
+    });
+    expect(template).toBe(BASE.body);
+  });
 });
 
 describe("hasValues", () => {
