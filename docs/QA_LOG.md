@@ -28,7 +28,7 @@ Last updated: 2026-10-10 · by: Hale's agent (session 3) · API commit `25b7581`
 | **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
 | **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
 | **Next step** | H3 handed to Ezgin (2026-10-10, Hale's decision); when Ezgin's notes are in, rewrite the **[H3]** lines of `docs/submission/SCRIPTS.md`. Now: H12 (KIMI and Qwen articles), then a vault through the live wallet for the cap shot, H14 |
-| **Open bugs filed by Hale** | 1 — 🐛 P1 `/review` overpay names a false ref mismatch (`tasks/FOR_MERIC.md`) |
+| **Open bugs filed by Hale** | 5 — Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---|---|
@@ -198,6 +198,21 @@ End of session: tasks ticked in `tasks/FOR_HALE.md`: **H4, H6, H7**. H1, H5 and 
   - How it works: every claim traced to the live runs (H16) or Meriç's facts pack, the three code-level ones read in the source first (`explain.ts` lines 33–54, `policy-draft.ts` `loosens()`, `review-agent.ts` the approve→veto rule).
   - Result: drafted, not published. Publishing needs Hale's own account; the links then go into the KIMI and Qwen forms and `tasks/FOR_HALE.md`.
   - Files changed: `docs/articles/kimi.md`, `docs/articles/qwen.md` (new), `tasks/FOR_HALE.md`, `tasks/FOR_MERIC.md`, `docs/ROADMAP.md`.
+
+- **Piece: `main` (#59 to #65) merged into `qa`** (housekeeping)
+  - What: #59 (our `qa`) merged; then E11 sealed settings, the API reference and `docs/SYSTEM_GAPS.md`, G-01 rate limits per visitor, E12 the extension as a real wallet. Conflicts only at the top of `tasks/FOR_MERIC.md` and `tasks/FOR_EZGIN.md` (both sides added tasks); kept both. Merge `ad381be`.
+
+- **Piece: H10 (1), `verify:demo` on the live API** (task: "H10 · Test")
+  - What / how: `pnpm --filter @baret/server verify:demo -- --api https://baret-monad-api.onrender.com --from 0x5AE98770795957F9a376083afcb775672FbD2C93` (the funded playground agent; G-14 says the deploy wallet prints a false 19 of 20).
+  - Result: **20 of 20** on API `a34e520`. The four x402 boxes of `docs/X402_FACILITATOR.md` §5 ticked from the Scrybe and Agents rows, with a note that they check the verdict and that the payment is not settled (G-05).
+
+- **Piece: the extension as a real wallet (E12, D-040)** (task: "Test: the extension as a real wallet")
+  - What: built with `WXT_BARET_API_URL=https://baret-monad-api.onrender.com pnpm --filter @baret/extension build`, loaded unpacked into Playwright's Chromium (`chromium.launchPersistentContext(dir, { channel: "chromium", headless: true, args: ["--disable-extensions-except=<out>", "--load-extension=<out>"] })`; the extension id comes from the service worker's URL). Funded from Hale's test wallet with `cast send … --value 5ether`.
+  - Result: passed — details under the task in `tasks/FOR_HALE.md`. The attack through "Sign with your wallet" is Blocked in the extension's own window with no sign button; the honest swap confirms (`0xc30b…6514`, status 1); popup Send confirms (block 69901288); lock and unlock; reveal phrase and restore to the same address.
+  - Problems on the way (the script's, not the product's): uppercase labels are CSS (`text-transform`), so `getByLabel("TO")` fails and `/^to$/i` works; the backup's two-word check sits on the same page as the checkbox, so Continue stays disabled until both words are filled; a fresh profile makes a new key each run (each run cost 0.5–5 MON from Hale's wallet), so the setup is done once and the profile reused, unlocked with the passphrase; the request window is `popup.html?request=1` and is sometimes reused rather than opened, so look for it in `context.pages()` instead of waiting for a `page` event.
+  - Bugs filed: 🐛 P1 NovaSwap says "with no Baret check" with the extension connected, 🐛 P2 two wallets called "Baret" in the connect dialog (`tasks/FOR_MERIC.md`); 🐛 P2 a contract call that brings dUSDC shows as "Sent 0.00 MON" and dUSDC is missing from Tokens, 🐛 P2 the restore's funds step says "arrived" for an existing balance (`tasks/FOR_EZGIN.md`).
+  - Also: `docs/submission/SCRIPTS.md` demo 0:25–0:50 now uses the extension, with the web wallet's window as the fallback.
+  - Files changed: `tasks/FOR_HALE.md`, `tasks/FOR_MERIC.md`, `tasks/FOR_EZGIN.md`, `docs/X402_FACILITATOR.md`, `docs/submission/SCRIPTS.md`, `docs/QA_LOG.md`.
 
 End of session: tasks ticked in `tasks/FOR_HALE.md`: **H16**. H11 and H12 drafted, not ticked; H3 handed to Ezgin. Left unfinished: H2, H3 (E1), H9 (2) (Discord), H10's real-device wallet pass, H11's gated lines. Next session starts with: H3 the moment E1's funding lands; otherwise H12 (the KIMI and Qwen articles: both features are live now) and H14's README draft. §1 rewritten: yes.
 

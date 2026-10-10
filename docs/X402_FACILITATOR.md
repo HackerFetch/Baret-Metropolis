@@ -85,10 +85,12 @@ These fields are **conceptually the same model** as `setMerchantCap` in `Payment
 
 ## 5. Test / Demo Plan
 
-- [ ] Happy path: a payment within the cap to a merchant on the allowlist — passes automatically.
-- [ ] Rejection path: asset outside the allowlist — `X402_NON_CANONICAL_ASSET`, payment is not sent.
-- [ ] Rejection path: destination address mismatch (a fake 402 response is simulated) — `X402_DESTINATION_MISMATCH`.
-- [ ] Cap overflow: consecutive requests exceeding the hourly limit — blocked.
+- [x] Happy path: a payment within the cap to a merchant on the allowlist — passes automatically.
+- [x] Rejection path: asset outside the allowlist — `X402_NON_CANONICAL_ASSET`, payment is not sent.
+- [x] Rejection path: destination address mismatch (a fake 402 response is simulated) — `X402_DESTINATION_MISMATCH`.
+- [x] Cap overflow: consecutive requests exceeding the hourly limit — blocked.
+
+The four boxes above are ticked from `verify:demo` against the live API (Hale, 2026-10-10, API commit `a34e520`, `--from 0x5AE98770795957F9a376083afcb775672FbD2C93`, 20 of 20): Scrybe "first answer, cap 0.25" safe and "sixth answer in the hour" blocked; Agents "pay a merchant" safe, "pay with a look-alike token" blocked, "pay the wrong address" caution (`X402_DESTINATION_MISMATCH`). They check Baret's **verdict** on each payment; the payment itself is not settled (`docs/SYSTEM_GAPS.md` G-05), so no video or text says an x402 payment settles.
 - [ ] These four scenarios are shown in the demo video (notes-2.txt: visualizes the "adversarial layer... personal CFO agent" narrative).
 
 ## 6. Open Decisions
