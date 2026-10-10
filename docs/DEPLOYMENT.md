@@ -41,6 +41,10 @@ merge to main ────────► CI on main ──── all checks gre
 1. Push the `infra` branch and open the PR. The first CI run starts by itself; nothing to configure. Actions must be enabled for the `HackerFetch` org (Settings → Actions → Allow all actions).
 2. After the first green run: Settings → Branches → `main` rule → **Require status checks to pass**: `Lint, types, tests`, `Build apps`, `Contracts`. This makes CI the merge gate for both of us.
 
+**Only `main` deploys (since 2026-10-11).** Both `vercel.json` files set `git.deploymentEnabled` to `main` only. The team is on Vercel's Hobby plan, which allows 100 deployments a day, and a skipped build counts as one. Every push to every branch made two (the showcase and the wallet), every merge two more; on 2026-10-10, with about 75 commits on `main` and 25 branches pushed, the limit was reached and Vercel refused every deployment for 24 hours ("Deployment rate limited"), production included. A pull request therefore has no preview URL: read its CI, and run the app locally. To bring previews back, remove the `git` block, or move the team to Pro (6000 a day).
+
+Render deploys the API only after the GitHub checks of a commit pass (`autoDeployTrigger: checksPass`), and a failed Vercel status counts: while Vercel refuses deployments, the API does not follow `main` either. Use "Manual Deploy" on Render for a server change that cannot wait.
+
 ### 3.2 Render (API)
 1. render.com → sign in with GitHub → grant access to `HackerFetch/Baret-Metropolis`.
 2. **New → Blueprint** → pick the repo. The service is named `baret-monad-api` because an older, unrelated `baret-api` service already exists on our Render account; do not reuse or overwrite it.
