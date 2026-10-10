@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "verify:demo": "tsx scripts/verify-demo.ts",
-    "verify:wallet": "tsx scripts/verify-wallet.ts"
+    "verify:wallet": "tsx scripts/verify-wallet.ts",
+    "verify:sealed": "tsx scripts/verify-sealed.ts"
   },
   "dependencies": {
     "@baret/agent-kit": "workspace:*",

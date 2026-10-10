@@ -104,6 +104,17 @@ const envSchema = z.object({
   BARET_DEMO_VAULT: optionalAddress,
   BARET_DEMO_MERCHANT: optionalAddress,
   BARET_DEMO_AGENT: optionalAddress,
+  /** contracts/src/SealedStore.sol on testnet. Needed, with the relayer's key, for /v1/sealed. */
+  MONAD_TESTNET_SEALED_STORE_ADDRESS: optionalAddress,
+  /** Pays the gas of sealed writes. A testnet key holding MON and nothing else. */
+  BARET_SEALED_RELAYER_PRIVATE_KEY: z
+    .string()
+    .trim()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "must be a 0x-prefixed 32-byte hex key")
+    .optional(),
+  /** Requests per minute per client on /v1/sealed, and fresh writes per UTC day. */
+  BARET_SEALED_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(6),
+  BARET_SEALED_DAILY_LIMIT: z.coerce.number().int().positive().default(200),
   /** The demo agent's key. Unset: /v1/review reviews but never sends. */
   BARET_DEMO_AGENT_PRIVATE_KEY: z
     .string()
@@ -160,6 +171,15 @@ export interface AppConfig {
   reviewRateLimitPerMinute: number;
   /** Null (no Qwen key, or turned off): /v1/review answers 503. */
   review: ReviewConfig | null;
+  sealedRateLimitPerMinute: number;
+  /** Null (no store address or no relayer key): /v1/sealed answers 503. */
+  sealed: SealedConfig | null;
+}
+
+export interface SealedConfig {
+  store: Address;
+  relayerPrivateKey: Hex;
+  dailyLimit: number;
 }
 
 export interface ReviewConfig {
@@ -255,6 +275,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
             merchant: e.BARET_DEMO_MERCHANT ?? DEMO_MERCHANT,
             agent: demoAgent,
             agentPrivateKey: e.BARET_REVIEW_SEND === "1" ? key : null,
+          }
+        : null,
+    sealedRateLimitPerMinute: e.BARET_SEALED_RATE_LIMIT_PER_MINUTE,
+    sealed:
+      e.MONAD_TESTNET_SEALED_STORE_ADDRESS && e.BARET_SEALED_RELAYER_PRIVATE_KEY
+        ? {
+            store: e.MONAD_TESTNET_SEALED_STORE_ADDRESS,
+            relayerPrivateKey: e.BARET_SEALED_RELAYER_PRIVATE_KEY as Hex,
+            dailyLimit: e.BARET_SEALED_DAILY_LIMIT,
           }
         : null,
   };

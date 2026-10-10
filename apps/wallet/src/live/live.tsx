@@ -1,5 +1,11 @@
 import type { AnalyzeResponse } from "@baret/guard";
-import type { StoredCredential, Wallet, WalletCall, WalletSession } from "@baret/wallet-core";
+import type {
+  SealedKeys,
+  StoredCredential,
+  Wallet,
+  WalletCall,
+  WalletSession,
+} from "@baret/wallet-core";
 import { fromAnalyze, type SignContext, unreachable } from "@baret/wallet-ui/data/analyze";
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
 import { useWallet, type WalletState } from "@baret/wallet-ui/data/store";
@@ -17,6 +23,7 @@ import {
   useState,
 } from "react";
 import { activityOf, merchantNames } from "./history.js";
+import { parseSealed, sealedText } from "./sealedDoc.js";
 import {
   clearStored,
   type PasskeyProblem,
@@ -56,6 +63,10 @@ import {
  *    localStorage. None is secret, and none is needed: with storage cleared,
  *    or on another device, unlock() offers every passkey the site has and the
  *    same passkey brings back the same address (rules fall back to Balanced).
+ *  - A sealed copy of the rules, the merchants' names and the account's name,
+ *    when the reader asks for one: encrypted with a key from the passkey's
+ *    own namespace and kept on Monad, so the same passkey brings them back on
+ *    any device (`sealed`). That key is in memory until lock(), like the rest.
  *
  * Fail-closed: a balance that was not read is "error", never a number; a
  * check that did not finish is Can't reach Baret, which cannot be signed.
@@ -137,7 +148,32 @@ export interface Live {
      */
     derive(): Promise<{ readonly address: string; readonly privateKey: string } | null>;
   };
+  /**
+   * The rules, the merchants' names and the account's name, sealed with a key
+   * from the passkey's own namespace and kept on Monad. The first use in a
+   * session shows one passkey prompt; nothing is signed by the account and
+   * the account pays no gas (Baret's server relays the write).
+   */
+  readonly sealed: {
+    /**
+     * Against the copy this session last saved or restored: "unknown" before
+     * either, "changed" once the settings differ from it.
+     */
+    readonly state: "unknown" | "current" | "changed";
+    save(): Promise<SealedOutcome>;
+    /** Replaces this browser's rules and names with the sealed copy. */
+    restore(): Promise<SealedOutcome>;
+  };
 }
+
+/** How a sealed save or restore ended. */
+export type SealedOutcome =
+  | { readonly result: "saved" | "restored"; readonly version: string }
+  /** Restore only: this passkey has no sealed copy yet. */
+  | { readonly result: "empty" }
+  /** The passkey prompt gave nothing. */
+  | { readonly result: "cancelled" }
+  | { readonly result: "failed" };
 
 export type { LiveStep, StepBuilder };
 
@@ -247,11 +283,19 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     [dispatch],
   );
 
+  // The sealed namespace's keys, once the passkey gave them, and the document
+  // this session last saved or restored.
+  const sealedKeys = useRef<SealedKeys | null>(null);
+  const [sealedCopy, setSealedCopy] = useState<string | null>(null);
+
   const lock = useCallback(
     (reason: "you" | "expired" = "you") => {
       session.current?.lock();
       session.current = null;
       wallet.current = null;
+      sealedKeys.current?.forget();
+      sealedKeys.current = null;
+      setSealedCopy(null);
       const ended = deadlineRef.current;
       setExpiredAt(reason === "expired" && ended !== null ? new Date(ended).toISOString() : null);
       setDeadline(null);
@@ -432,6 +476,10 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         patch({ sessionEndsAt: new Date(ends).toISOString() });
         return;
       }
+      // Another account: the sealed keys of the one before are not this one's.
+      sealedKeys.current?.forget();
+      sealedKeys.current = null;
+      setSealedCopy(null);
       const rules = readRules();
       // Another account than the one on screen: its log is not this one's.
       const other = stateRef.current.address !== next.address;
@@ -793,6 +841,97 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     };
   }, [vaultRefresh]);
 
+  /** The settings as they would be sealed now. */
+  const sealedNow = sealedText({
+    rules: { policy: state.policy, template: state.template },
+    merchants: readMerchants(),
+    name: state.accountName,
+  });
+  const sealedNowRef = useRef(sealedNow);
+  sealedNowRef.current = sealedNow;
+
+  const sealed = useMemo(() => {
+    /** The namespace's keys: from memory, or one passkey prompt. Null when the prompt gave nothing. */
+    const keys = async (): Promise<SealedKeys | null> => {
+      const open = session.current;
+      if (!open) return null;
+      if (sealedKeys.current) return sealedKeys.current;
+      const { sealedKeysFromPasskey } = await import("@baret/wallet-core");
+      const stored = readCredential();
+      try {
+        const got = await sealedKeysFromPasskey({
+          rpId: window.location.hostname,
+          ...(stored ? { credential: stored } : {}),
+        });
+        // Locked, or another account, while the prompt was open.
+        if (session.current !== open) {
+          got.forget();
+          return null;
+        }
+        sealedKeys.current = got;
+        return got;
+      } catch {
+        return null;
+      }
+    };
+    const save = async (): Promise<SealedOutcome> => {
+      const got = await keys();
+      if (!got) return { result: "cancelled" };
+      try {
+        const { readSealed, sealedTarget } = await import("@baret/wallet-core");
+        const target = sealedTarget();
+        if (!target) return { result: "failed" };
+        const text = sealedNowRef.current;
+        const entry = await readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL });
+        const put = await got.put(target, entry.version + 1n, new TextEncoder().encode(text));
+        const res = await fetch("/api/v1/sealed", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(put),
+        });
+        if (!res.ok) return { result: "failed" };
+        if (sealedKeys.current === got) setSealedCopy(text);
+        return { result: "saved", version: put.version };
+      } catch {
+        return { result: "failed" };
+      }
+    };
+    const restore = async (): Promise<SealedOutcome> => {
+      const got = await keys();
+      if (!got) return { result: "cancelled" };
+      try {
+        const { readSealed, sealedTarget } = await import("@baret/wallet-core");
+        const target = sealedTarget();
+        if (!target) return { result: "failed" };
+        const entry = await readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL });
+        if (entry.version === 0n) return { result: "empty" };
+        // Fail-closed: an entry these keys cannot open, or that is not a
+        // settings document, changes nothing.
+        const doc = parseSealed(
+          new TextDecoder().decode(await got.open(entry.blob, entry.version)),
+        );
+        if (!doc || sealedKeys.current !== got) return { result: "failed" };
+        writeRules(doc.rules);
+        for (const [address, label] of Object.entries(doc.merchants)) {
+          writeMerchant(address, label);
+        }
+        const name = doc.name.trim() === "" ? stateRef.current.accountName : doc.name;
+        writeName(name);
+        patch({ policy: doc.rules.policy, template: doc.rules.template, accountName: name });
+        setSealedCopy(sealedText({ rules: doc.rules, merchants: readMerchants(), name }));
+        // The vault's merchants take their names from what was just restored.
+        void vaultRefresh();
+        return { result: "restored", version: entry.version.toString() };
+      } catch {
+        return { result: "failed" };
+      }
+    };
+    return { save, restore };
+  }, [patch, vaultRefresh]);
+
+  const sealedState: Live["sealed"]["state"] =
+    sealedCopy === null ? "unknown" : sealedCopy === sealedNow ? "current" : "changed";
+
   const forget = useCallback(() => {
     lock();
     clearStored();
@@ -816,6 +955,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       forget,
       loadHistory,
       vault,
+      sealed: { state: sealedState, ...sealed },
     }),
     [
       known,
@@ -832,6 +972,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       forget,
       loadHistory,
       vault,
+      sealedState,
+      sealed,
     ],
   );
 

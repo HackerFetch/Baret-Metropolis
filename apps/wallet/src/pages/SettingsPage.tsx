@@ -9,11 +9,11 @@ import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, type ReactNode, useId, useRef, useState } from "react";
+import { type JSX, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { WALLET_VERSION } from "../lib/version.js";
-import { useLive } from "../live/live.js";
+import { type SealedOutcome, useLive } from "../live/live.js";
 import { sessionTime } from "../live/session.js";
 import { routes } from "../routes.js";
 
@@ -22,7 +22,8 @@ import { routes } from "../routes.js";
  * each row its label, one plain line and its control; the danger zone, which
  * states every consequence before the button and asks again in a dialog with
  * an acknowledgement; and what Baret keeps. Changes apply at once and say
- * "Saved." On live, the lock switch gives way to the session's end time.
+ * "Saved." On live, the lock switch gives way to the session's end time, and
+ * a block offers the sealed copy of the rules (live.sealed).
  */
 
 const [account, security, network, privacy, about] = settings.groups;
@@ -91,6 +92,20 @@ export function Component() {
   const [saved, setSaved] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [name, setName] = useState(state.accountName);
+  // A restored sealed copy can bring another name: the field follows the account.
+  useEffect(() => setName(state.accountName), [state.accountName]);
+  const [sealing, setSealing] = useState(false);
+  const [sealedOutcome, setSealedOutcome] = useState<SealedOutcome | null>(null);
+
+  /** One at a time: the passkey prompt, the read from Monad, then the write or the restore. */
+  function seal(run: () => Promise<SealedOutcome>): void {
+    if (sealing) return;
+    setSealing(true);
+    setSealedOutcome(null);
+    void run()
+      .then(setSealedOutcome)
+      .finally(() => setSealing(false));
+  }
 
   const changed = changedFields(state.policy, state.template).length;
   const rulesValue =
@@ -235,6 +250,51 @@ export function Component() {
             ) : null}
           </ul>
         </Block>
+
+        {live ? (
+          <Block title={settings.sealed.title}>
+            <p className={`${T.body} max-w-[64ch]`}>{settings.sealed.body}</p>
+            <ul className="grid border-t border-[color:var(--rule)]">
+              {settings.sealed.points.map((point) => (
+                <li
+                  key={point}
+                  className="border-b border-[color:var(--rule)] py-3 text-base text-[color:var(--fg)]"
+                >
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={sealing}
+                onClick={() => seal(live.sealed.save)}
+              >
+                {settings.sealed.save}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={sealing}
+                onClick={() => seal(live.sealed.restore)}
+              >
+                {settings.sealed.restore}
+              </Button>
+            </div>
+            <p role="status" className={T.small}>
+              {sealing
+                ? settings.sealed.busy
+                : sealedOutcome && live.sealed.state !== "changed"
+                  ? fill(settings.sealed.outcome[sealedOutcome.result], {
+                      version: "version" in sealedOutcome ? sealedOutcome.version : "",
+                    })
+                  : live.sealed.state === "unknown"
+                    ? settings.sealed.prompt
+                    : settings.sealed.state[live.sealed.state]}
+            </p>
+          </Block>
+        ) : null}
 
         <Block title={network.title}>
           <ul className="grid border-t border-[color:var(--rule)]">

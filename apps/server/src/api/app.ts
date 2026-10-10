@@ -8,6 +8,7 @@ import { explainRoutes } from "./routes/explain.js";
 import { healthRoutes } from "./routes/health.js";
 import { policyDraftRoutes } from "./routes/policy-draft.js";
 import { reviewRoutes } from "./routes/review.js";
+import { sealedRoutes } from "./routes/sealed.js";
 
 export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   const { config } = deps;
@@ -38,5 +39,6 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   await app.register(explainRoutes, deps);
   await app.register(reviewRoutes, deps);
   await app.register(policyDraftRoutes, deps);
+  await app.register(sealedRoutes, deps);
   return app;
 }

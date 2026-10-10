@@ -64,6 +64,8 @@ export const config: AppConfig = {
   kimiDailyLimit: 500,
   reviewRateLimitPerMinute: 1000,
   review: null,
+  sealedRateLimitPerMinute: 1000,
+  sealed: null,
 };
 
 /** An in-memory chain. Everything defaults to an empty, healthy state. */

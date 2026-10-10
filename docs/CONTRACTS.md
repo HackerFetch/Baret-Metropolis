@@ -195,12 +195,31 @@ The asset says no without saying why (`execution reverted`). `apps/server` reads
 
 ---
 
+## 4.4 `SealedStore.sol`: untrusted storage for what a passkey sealed (D-039)
+
+The Baret wallet encrypts a person's rules and merchant names with a key from its own passkey namespace (`packages/wallet-core/src/sealed.ts`) and keeps the ciphertext here, so the same passkey opens it on any device. The contract has no owner, holds no funds and never sees a key or a plaintext.
+
+| Function | Who | What |
+|---|---|---|
+| `put(address id, uint64 version, bytes blob, bytes signature)` | Anyone (Baret's relayer pays the gas) | Stores `blob` under `id`. Reverts `EmptyBlob`, `BlobTooLarge` (over `MAX_SIZE`, 2048 bytes), `StaleVersion` (not higher than the stored version) or `BadSignature` (the EIP-712 signature over `Put(address id,uint64 version,bytes32 blobHash)` does not recover to `id`, has a high `s`, or is not 65 bytes). Emits `Sealed(id, version, size)` |
+| `get(address id)` | Anyone | The stored version and blob; version 0 and an empty blob when there is none |
+| `digest(address id, uint64 version, bytes32 blobHash)` | Anyone | The digest `id`'s key signs. Domain: name `Baret SealedStore`, version `1`, the chain id, this contract |
+
+`id` is the address of a signing key from the sealed namespace, not a wallet account: nothing on the chain links an entry to the account whose settings it holds. A relayer cannot forge a write, replay one, or put an older blob back.
+
+| Network | Address | Deploy date |
+|---|---|---|
+| Monad testnet (10143) | [`0xC094af68bE1039f70E1362C2f326542BB2DC21BB`](https://testnet.monadexplorer.com/address/0xC094af68bE1039f70E1362C2f326542BB2DC21BB) | 2026-10-10, source verified on Sourcify |
+
+Deploy: `forge script script/DeploySealedStore.s.sol --rpc-url monad_testnet --broadcast --private-key $DEPLOYER_PRIVATE_KEY`. End to end against the chain: `pnpm --filter @baret/server verify:sealed` (with `BARET_SEALED_RELAYER_PRIVATE_KEY`, or `-- --api <url>` to go through a server's `POST /v1/sealed`).
+
 ## 5. Test Plan
 
 - [x] `forge test -vv` — all unit + fuzz tests green (26 tests, 2026-10-01).
 - [x] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
 - [x] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
 - [x] `ReputationOracleReceiver` (13 tests, one fuzz): only the forwarder reports, another workflow owner is refused, a protected target stops the whole report, `pending` skips flagged, protected and zero, ERC-165 answers for `IReceiver`.
+- [x] `SealedStore` (11 tests, one fuzz, 2026-10-10): anyone relays what the key signed, another key or another contract's signature is refused, the same or an older version is refused, a malleable or malformed signature is refused, the size limits, and a shorter blob leaves nothing of a longer one.
 - [ ] With Tenderly: the trace of a real "unlimited approve" and "payment to a flagged address" scenario is recorded (for the demo video).
 - [x] After deploying to testnet: live verification with `cast call`, the address tables (§2.6, §3.4) are filled in. Source verified on Monad's Sourcify (`forge verify-contract --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org`).
 

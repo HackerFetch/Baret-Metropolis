@@ -69,3 +69,9 @@ services:
         sync: false
       - key: BARET_REVIEW_SEND
         value: "1"
+      # Sealed settings: the store's public address, and the key that pays the
+      # gas of POST /v1/sealed (a testnet key holding MON and nothing else).
+      - key: MONAD_TESTNET_SEALED_STORE_ADDRESS
+        value: "0xC094af68bE1039f70E1362C2f326542BB2DC21BB"
+      - key: BARET_SEALED_RELAYER_PRIVATE_KEY
+        sync: false
