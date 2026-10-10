@@ -257,7 +257,7 @@ export const sign = {
     title: "Can't reach Baret",
     body: "No check ran, so this request is treated as Blocked.",
     reasons: {
-      server: "The Baret server did not answer.",
+      server: "The Baret server was busy or did not answer.",
       simulation: "The simulation could not run on Monad.",
       data: "Data one of your rules needs was missing.",
     },
