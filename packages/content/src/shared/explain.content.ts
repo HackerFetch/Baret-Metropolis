@@ -13,7 +13,7 @@ export const explain = {
   languageLabel: "Language",
   languages: { en: "English", tr: "Turkish", zh: "Chinese" },
   loading: "KIMI is writing it in plain words...",
-  unavailable: "KIMI could not write it in this language. Pick another one.",
+  unavailable: "KIMI is not available right now. Try again in a minute.",
 } as const;
 
 export type ExplainContent = typeof explain;

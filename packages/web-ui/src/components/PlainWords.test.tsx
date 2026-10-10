@@ -1,8 +1,8 @@
 import { explain } from "@baret/content";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { clearExplainCache } from "../lib/explain.js";
+import { clearExplainCache, EXPLAIN_RETRY_MS } from "../lib/explain.js";
 import { LOADING_DELAY_MS, PlainWords } from "./PlainWords.js";
 
 /** English placeholder text for every language; the test checks the request and the lang attribute. */
@@ -153,5 +153,101 @@ describe("PlainWords", () => {
     await new Promise((resolve) => setTimeout(resolve, LOADING_DELAY_MS + 200));
     expect(wrap).not.toHaveBeenCalled();
     expect(container.innerHTML).toBe("");
+  });
+});
+
+describe("PlainWords after a failure", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Lets the fetch mock settle and runs timers up to `ms` from now. */
+  const pass = (ms = 0) =>
+    act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+
+  it("asks nothing within the minute, once after it, and again on a later mount", async () => {
+    const fetchMock = vi.fn(async () => respond(503, { error: "explain_unavailable" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<PlainWords requestId="req-8" />);
+    await pass();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    first.unmount();
+
+    const second = render(<PlainWords requestId="req-8" />);
+    await pass(EXPLAIN_RETRY_MS / 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(second.container.innerHTML).toBe("");
+    await pass(EXPLAIN_RETRY_MS / 2);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await pass(EXPLAIN_RETRY_MS * 3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(second.container.innerHTML).toBe("");
+    second.unmount();
+
+    render(<PlainWords requestId="req-8" />);
+    await pass();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("shows the answer when the retry after the minute succeeds", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(respond(503, { error: "explain_unavailable" }))
+      .mockResolvedValueOnce(respond(200, answer("en")));
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<PlainWords requestId="req-9" />);
+    await pass(LOADING_DELAY_MS + 100);
+    expect(container.innerHTML).toBe("");
+    await pass(EXPLAIN_RETRY_MS);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("Headline in en")).toBeTruthy();
+  });
+
+  it("never asks again after a 404 verdict_unknown", async () => {
+    const fetchMock = vi.fn(async () => respond(404, { error: "verdict_unknown" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<PlainWords requestId="req-10" />);
+    await pass(EXPLAIN_RETRY_MS * 2);
+    expect(first.container.innerHTML).toBe("");
+    first.unmount();
+    render(<PlainWords requestId="req-10" />);
+    await pass(EXPLAIN_RETRY_MS * 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the failed line after an earlier answer and retries that language once a minute", async () => {
+    let trWorks = false;
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const { language } = JSON.parse(init.body as string) as { language: string };
+      return language === "en" || trWorks
+        ? respond(200, answer(language))
+        : respond(503, { error: "explain_unavailable" });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<PlainWords requestId="req-11" />);
+    await pass();
+    expect(screen.getByText("Headline in en")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("radio", { name: explain.languages.tr }));
+    await pass();
+    expect(screen.getByRole("status").textContent).toBe(explain.unavailable);
+
+    fireEvent.click(screen.getByRole("radio", { name: explain.languages.en }));
+    await pass();
+    fireEvent.click(screen.getByRole("radio", { name: explain.languages.tr }));
+    await pass(EXPLAIN_RETRY_MS / 2);
+    expect(screen.getByRole("status").textContent).toBe(explain.unavailable);
+    expect(asked(fetchMock)).toEqual(["en", "tr"]);
+
+    trWorks = true;
+    await pass(EXPLAIN_RETRY_MS / 2);
+    expect(asked(fetchMock)).toEqual(["en", "tr", "tr"]);
+    expect(screen.getByText("Headline in tr")).toBeTruthy();
   });
 });
