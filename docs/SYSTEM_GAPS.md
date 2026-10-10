@@ -13,7 +13,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | # | Gap | Kind | Priority | Owner |
 |---|---|---|---|---|
 | G-01 | Every visitor shares one rate-limit bucket. **Fixed 2026-10-10** | Wrong | closed | Ezgin |
-| G-02 | The landing and `/install` describe the extension as a working wallet; it is a sample | Wrong claim | P1 | Meriç (copy), Ezgin (decision) |
+| G-02 | The landing and `/install` describe the extension as a working wallet; it was a sample. **Built 2026-10-10 (D-040), live after the merge**; what is still empty in it is listed under G-02 | Wrong claim | P2 after the merge | Ezgin |
 | G-03 | The API sleeps: the first request after idle takes 15 to 40 s | Half done | P1 | Ezgin |
 | G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
 | G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
@@ -51,6 +51,8 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 **Fix:** `trustProxy: true` in the Fastify options, so the limit keys on the `X-Forwarded-For` address Render and Vercel pass. A caller can then forge that header to dodge the per-minute limit; the daily caps (KIMI 500, review 200, sealed 200) still bound what that can spend. One line, plus a test; redeploy and repeat the measurement above from two networks.
 
 ### G-02 · The landing and `/install` describe the extension as a working wallet
+
+**State (2026-10-10, D-040):** Ezgin decided the extension becomes a real wallet, and it is built on branch `extension-live`: its own keystore, an EIP-1193 and EIP-6963 provider, and Baret's check before every signature, checked in a browser against the live API (a blocked attack, a signed transfer). The published zips become that build when the branch merges. Still not live inside it: more than one account, the allowances list, alerts, the x402 payments page, Swap, a custom node, notifications; and Firefox, the Send form, structured data, restore and the two Settings dialogs were written and not run in a browser. The finding as first written follows.
 
 **What the pages say:** the landing's first button is "Install the extension". Its FAQ says: "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use." `/install` says "It is a Monad wallet that simulates every sign request and checks it before you sign", and offers the zips, which are published (`releases/latest/download/baret-chrome.zip`, built 2026-10-10).
 
@@ -166,7 +168,7 @@ Every end-to-end check of the wallet was a hand-written Playwright script in a s
 
 ### G-21 · Named in documents, never built
 
-`/mcp/tools` and `/mcp/call`; batch, stream and replay variants of analyze; the x402 facilitator and `/demo/paywall`; the extension's provider, keystore and x402 interceptor; a Cleanverse REST client (the integration reads Cleanverse's contracts instead); anything on mainnet.
+`/mcp/tools` and `/mcp/call`; batch, stream and replay variants of analyze; the x402 facilitator and `/demo/paywall`; the extension's x402 interceptor (its provider and keystore are built, D-040); a Cleanverse REST client (the integration reads Cleanverse's contracts instead); anything on mainnet.
 
 ---
 
@@ -179,7 +181,7 @@ Every end-to-end check of the wallet was a hand-written Playwright script in a s
 ## Suggested order before the freeze
 
 1. G-01: done.
-2. G-02 (decide the wording; a copy change).
+2. G-02: decided and built (D-040); merge it, then Hale installs the published zip and runs it.
 3. G-03 (the Starter plan, before recording).
 4. G-13 (with H14).
 5. G-06 and G-07 only if the key and the aUSDC arrive tonight; otherwise both prizes are entered as they stand or dropped, and the texts say what is true.

@@ -15,6 +15,7 @@ import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useEffect, useRef, useState } from "react";
 import { SETUP_ART } from "../../../../assets.js";
+import { useGate } from "../../../../data/gate.js";
 import { useExtension } from "../../../../data/store.js";
 import { Dialog } from "../../parts/kit.js";
 import { StepFrame } from "./Frame.js";
@@ -29,13 +30,27 @@ const NUMBER = `w-5 shrink-0 text-right font-mono text-label text-[color:var(--f
 
 export function Backup({ onNext }: { onNext: () => void }): JSX.Element {
   const { dispatch } = useExtension();
+  const gate = useGate();
+  // Live: the wallet's own words, read from the open keystore when the step
+  // opens and held only while it is on screen. The sample shows sample words.
+  const [phrase, setPhrase] = useState<readonly string[]>(gate ? [] : SAMPLE_PHRASE);
+  useEffect(() => {
+    if (!gate) return;
+    let alive = true;
+    void gate.phrase().then((words) => {
+      if (alive && words) setPhrase(words);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [gate]);
   const [revealed, setRevealed] = useState(false);
   const [wrote, setWrote] = useState(false);
   const [answers, setAnswers] = useState<readonly string[]>(["", ""]);
   const [left, setLeft] = useState<readonly boolean[]>([false, false]);
   const [skipping, setSkipping] = useState(false);
   const list = useRef<HTMLOListElement>(null);
-  const checked = wrote && allMatch(answers);
+  const checked = wrote && phrase.length > 0 && allMatch(answers, phrase);
 
   // The reveal button goes away when pressed: the focus moves to the words.
   useEffect(() => {
@@ -71,8 +86,10 @@ export function Backup({ onNext }: { onNext: () => void }): JSX.Element {
               aria-label={extOnboarding.restore.field.label}
               className={`${GRID} focus:outline-none`}
             >
-              {SAMPLE_PHRASE.map((word, i) => (
-                <li key={word} className={CELL}>
+              {phrase.map((word, i) => (
+                // A real phrase can hold the same word twice: the position is the key.
+                // biome-ignore lint/suspicious/noArrayIndexKey: the list is fixed and ordered
+                <li key={i} className={CELL}>
                   <span className={NUMBER}>{i + 1}</span>
                   <span className="min-w-0 truncate font-mono text-base text-[color:var(--fg)]">
                     {word}
@@ -80,15 +97,17 @@ export function Backup({ onNext }: { onNext: () => void }): JSX.Element {
                 </li>
               ))}
             </ol>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <Tag tone="neutral" size="sm">
-                {extFrame.sample.tag}
-              </Tag>
-              <span className={`${T.small} min-w-[20ch] flex-1`}>{extFrame.sampleWords}</span>
-            </p>
+            {gate ? null : (
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <Tag tone="neutral" size="sm">
+                  {extFrame.sample.tag}
+                </Tag>
+                <span className={`${T.small} min-w-[20ch] flex-1`}>{extFrame.sampleWords}</span>
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[color:var(--rule)] pt-3">
               <CopyButton
-                text={SAMPLE_PHRASE.join(" ")}
+                text={phrase.join(" ")}
                 label={backup.copy.label}
                 done={common.actions.copied}
               />
@@ -98,8 +117,9 @@ export function Backup({ onNext }: { onNext: () => void }): JSX.Element {
         ) : (
           <>
             <ol aria-hidden="true" className={GRID}>
-              {SAMPLE_PHRASE.map((word, i) => (
-                <li key={word} className={CELL}>
+              {Array.from({ length: 12 }, (_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: twelve fixed placeholders
+                <li key={i} className={CELL}>
                   <span className={NUMBER}>{i + 1}</span>
                   <span className="h-3 w-16 max-w-full bg-[color:var(--rule-strong)] blur-[3px]" />
                 </li>
@@ -144,6 +164,7 @@ export function Backup({ onNext }: { onNext: () => void }): JSX.Element {
             setAnswers((all) => all.map((answer, i) => (i === index ? value : answer)))
           }
           onLeave={(index) => setLeft((all) => all.map((was, i) => was || i === index))}
+          phrase={phrase}
         />
       ) : null}
 

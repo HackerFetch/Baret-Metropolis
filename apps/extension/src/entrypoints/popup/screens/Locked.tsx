@@ -60,6 +60,7 @@ export function Locked({
   onReset: () => void;
 }): JSX.Element {
   const { state, unlock } = useExtension();
+  const live = state.scenario === "live";
   const fieldId = useId();
   const hintId = useId();
   const errorId = useId();
@@ -147,7 +148,10 @@ export function Locked({
                 onChange={(event) => setValue(event.target.value)}
                 placeholder={locked.field.placeholder}
                 autoComplete="current-password"
-                aria-describedby={showError ? `${hintId} ${errorId}` : hintId}
+                aria-describedby={
+                  [live ? null : hintId, showError ? errorId : null].filter(Boolean).join(" ") ||
+                  undefined
+                }
                 aria-invalid={wrong && value === "" ? true : undefined}
                 // Read-only, not disabled, so focus stays on the field during a pause.
                 readOnly={locking}
@@ -165,9 +169,12 @@ export function Locked({
                 {shown ? locked.field.hide : locked.field.show}
               </button>
             </div>
-            <p id={hintId} className="text-xs text-[color:var(--fg-muted)]">
-              {extFrame.lockedHint}
-            </p>
+            {/* The sample says what opens it; a real wallet says nothing about its passphrase. */}
+            {live ? null : (
+              <p id={hintId} className="text-xs text-[color:var(--fg-muted)]">
+                {extFrame.lockedHint}
+              </p>
+            )}
           </div>
 
           <div id={errorId}>

@@ -2,6 +2,7 @@ import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ExtensionProvider } from "../../data/store.js";
+import { isLivePage } from "../../lib/live.js";
 import { readStart, type Start } from "../../lib/start.js";
 import { PopupApp } from "./PopupApp.js";
 import "../../styles.css";
@@ -56,8 +57,14 @@ function Root() {
   );
 }
 
-createRoot(container).render(
-  <StrictMode>
-    <Root />
-  </StrictMode>,
-);
+// Installed, with no sample named in the address: the real wallet. Its code
+// loads only then, so the sample never touches the extension's APIs.
+if (isLivePage()) {
+  void import("../../live/boot.js").then(({ mountLivePopup }) => mountLivePopup(container));
+} else {
+  createRoot(container).render(
+    <StrictMode>
+      <Root />
+    </StrictMode>,
+  );
+}
