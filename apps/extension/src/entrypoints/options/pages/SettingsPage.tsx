@@ -10,6 +10,7 @@ import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { OPTIONS_ART } from "../../../assets.js";
 import { rulesTemplate } from "../../../data/derive.js";
+import { useGate } from "../../../data/gate.js";
 import { activeAccount, useExtension } from "../../../data/store.js";
 import type { Account, Settings } from "../../../data/types.js";
 import { EXT_VERSION } from "../../../lib/version.js";
@@ -118,6 +119,7 @@ function Consequences({ label, items }: { label: string; items: readonly string[
 export function Component() {
   const { state, dispatch } = useExtension();
   const lock = useLock();
+  const gate = useGate();
   const navigate = useNavigate();
   const account = activeAccount(state);
   const [status, setStatus] = useState("");
@@ -448,6 +450,8 @@ export function Component() {
         disabled={!acknowledged}
         onConfirm={() => {
           if (!acknowledged) return;
+          // Live: the vault and everything stored go, and setup opens.
+          if (gate) return gate.wipe(false);
           dispatch({ type: "reset" });
           setResetting(false);
           navigate("/onboarding");

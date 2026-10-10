@@ -3,6 +3,7 @@ import { Button, VerdictTag } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { T } from "@baret/web-ui/lib/type";
 import { createContext, type JSX, type ReactNode, use, useEffect, useId, useRef } from "react";
+import { useExtension } from "../../../data/store.js";
 import type { Activity } from "../../../data/types.js";
 import { activityText, partyOf, statusOf, timeOf } from "../../../data/words.js";
 
@@ -15,7 +16,10 @@ import { activityText, partyOf, statusOf, timeOf } from "../../../data/words.js"
  */
 
 /** Above every page: nothing here is connected yet, and nothing is sent. */
-export function SampleNotice(): JSX.Element {
+export function SampleNotice(): JSX.Element | null {
+  const { state } = useExtension();
+  // A live wallet is not a sample: nothing to warn about.
+  if (state.scenario === "live") return null;
   return (
     <aside
       aria-label={extFrame.sample.tag}

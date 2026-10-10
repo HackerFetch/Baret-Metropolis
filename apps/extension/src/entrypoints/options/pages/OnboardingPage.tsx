@@ -19,8 +19,9 @@ import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Brand } from "@baret/wallet-ui/components/Brand";
 import { ArrowLeft } from "lucide-react";
-import type { JSX } from "react";
+import { type JSX, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { useGate } from "../../../data/gate.js";
 import { SampleNotice } from "../parts/kit.js";
 import { routes } from "../routes.js";
 import { Account } from "./onboarding/Account.js";
@@ -83,6 +84,10 @@ function readState(value: unknown): SetupState | null {
 export function Component(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
+  // Live: the keystore makes the wallet at the passphrase step. A phrase the
+  // reader typed to restore waits here until then, in memory only.
+  const gate = useGate();
+  const typedPhrase = useRef<string | null>(null);
   const saved = readState(location.state);
   const screen = saved?.step ?? firstScreen();
   const restored = saved?.restored ?? false;
@@ -133,12 +138,29 @@ export function Component(): JSX.Element {
           ) : null}
           {screen === "restore" ? (
             <Restore
-              onRestored={() => go("passphrase", true)}
+              onRestored={(phrase) => {
+                typedPhrase.current = phrase;
+                go("passphrase", true);
+              }}
               onBack={moved ? back : () => go("welcome")}
             />
           ) : null}
           {screen === "passphrase" ? (
-            <Passphrase onSet={() => go(restored ? "fund" : "key")} />
+            <Passphrase
+              onSet={(passphrase) => {
+                const next = () => go(restored ? "fund" : "key");
+                if (!gate) return void next();
+                const phrase = restored ? typedPhrase.current : null;
+                // A restore whose words were lost to a reload: the reader types them again.
+                if (restored && !phrase) return void go("restore");
+                return gate.create(passphrase, phrase ?? undefined).then((made) => {
+                  if ("error" in made) return made.error;
+                  typedPhrase.current = null;
+                  next();
+                  return null;
+                });
+              }}
+            />
           ) : null}
           {screen === "key" ? <Key onNext={() => go("backup")} /> : null}
           {screen === "backup" ? <Backup onNext={() => go("fund")} /> : null}
