@@ -62,7 +62,16 @@ export const FRESH_WALLET_DAYS = 7;
 export function profileFromFirstFunder(
   records: readonly FirstFunder[],
   nowMs: number,
+  /**
+   * False where Nansen does not index the chain being checked (Monad testnet:
+   * its answers describe the same address on mainnet). A wallet Nansen has no
+   * record of is then unknown, not fresh: its absence says nothing.
+   */
+  absenceIsFresh = true,
 ): NansenProfile {
+  if (records.length === 0 && !absenceIsFresh) {
+    return { trustLevel: "new", flagged: false, freshWallet: false, whale: false };
+  }
   const first = records[0];
   const fundedAt = first?.block_timestamp ? Date.parse(first.block_timestamp) : Number.NaN;
   const freshWallet =
@@ -89,6 +98,14 @@ export interface NansenHttpOptions {
    * Nansen fail closed.
    */
   maxAddresses?: number;
+  /**
+   * Whether a wallet with no funding record counts as a fresh wallet. True on
+   * a chain Nansen indexes. False on Monad testnet, where the lookup reads the
+   * address on mainnet and almost no testnet wallet exists there: Nansen then
+   * speaks only when it knows something (a recent funding, a funder named for
+   * theft, a label).
+   */
+  absenceIsFresh?: boolean;
   fetch?: typeof globalThis.fetch;
   now?: () => number;
 }
@@ -170,7 +187,11 @@ export class NansenHttpSource implements NansenSource {
       address,
       chain: "all",
     });
-    return profileFromFirstFunder(data as FirstFunder[], this.now());
+    return profileFromFirstFunder(
+      data as FirstFunder[],
+      this.now(),
+      this.options.absenceIsFresh ?? true,
+    );
   }
 
   /** POSTs and returns `data`. 404 means Nansen has nothing on the address: an empty answer. */

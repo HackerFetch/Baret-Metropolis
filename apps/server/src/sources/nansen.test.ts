@@ -111,6 +111,36 @@ describe("NansenHttpSource", () => {
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = Date.parse("2026-10-02T12:00:00Z");
 
+describe("a wallet Nansen has no record of, on a chain Nansen does not index", () => {
+  it("is unknown, not fresh: its absence says nothing", () => {
+    expect(profileFromFirstFunder([], NOW, false)).toEqual({
+      trustLevel: "new",
+      flagged: false,
+      freshWallet: false,
+      whale: false,
+    });
+  });
+
+  it("is still fresh or flagged when Nansen does know something", () => {
+    const recent = new Date(NOW - 2 * 24 * 60 * 60 * 1000).toISOString();
+    expect(profileFromFirstFunder([{ block_timestamp: recent }], NOW, false).freshWallet).toBe(
+      true,
+    );
+    const old = new Date(NOW - 400 * 24 * 60 * 60 * 1000).toISOString();
+    const drained = profileFromFirstFunder(
+      [{ block_timestamp: old, first_funder_name: "Fake_Phishing drainer" }],
+      NOW,
+      false,
+    );
+    expect(drained).toMatchObject({ flagged: true, freshWallet: false, trustLevel: "established" });
+  });
+
+  it("keeps counting as fresh on a chain Nansen indexes", () => {
+    expect(profileFromFirstFunder([], NOW).freshWallet).toBe(true);
+    expect(profileFromFirstFunder([], NOW, true).freshWallet).toBe(true);
+  });
+});
+
 describe("profileFromFirstFunder", () => {
   it("calls a wallet never funded, or funded this week, fresh", () => {
     expect(profileFromFirstFunder([], NOW)).toMatchObject({ trustLevel: "new", freshWallet: true });
