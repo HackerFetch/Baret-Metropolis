@@ -20,32 +20,16 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-10 evening · by: Hale's agent (session 3) · API commit `a34e520`
+Last updated: 2026-10-10 night · by: Hale's agent (session 3) · API commit `16f5448`
 
 | | |
 |---|---|
-| **Done** | H1, H4–H8, H9 part 1, **H16** (KIMI and Qwen live), **the extension as a real wallet** (attack Blocked in its own window, honest swap confirmed, popup send, lock, restore), **H10 (1)** `verify:demo` 20/20 and the four x402 boxes, **Hale's demo vault** `0xA19A…0E3C` (inside the cap paid, over it Blocked) |
-| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; sealed settings checked with a virtual passkey, the two-device run left for a real passkey |
-| **Blocked on** | Ezgin: the platform team (E1 (1)) → H2; H3 (MetaMask) is Ezgin's since 2026-10-10 |
-| **Next step** | H14 (README and access instructions for judges, using `docs/SYSTEM_GAPS.md` G-13); Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
-| **Open bugs filed by Hale** | 6 — Meriç: P1 `/review` overpay's false ref mismatch, P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived", P2 over-cap reason "unknown" |
+| **Done** | H1, H4–H8, H9 part 1, **H16** (KIMI and Qwen live), **the extension as a real wallet** (attack Blocked in its own window, honest swap confirmed, popup send, lock, restore), **H10 (1)** `verify:demo` 20/20 and the four x402 boxes, **H10 (2)** `pnpm check` 1,072 and forge 85 green, **Hale's demo vault** `0xA19A…0E3C`, **H14 (1)–(3)** README for judges and the status documents |
+| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; H14 (4) the per-prize texts; the sealed settings' two-device run needs a real passkey |
+| **Blocked on** | Ezgin: the platform team (E1 (1)) → H2. H3 (MetaMask) is Ezgin's since 2026-10-10 |
+| **Next step** | H14 (4), one text per prize in `docs/submission/`. Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
+| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived" |
 | **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
-
----|---|
-| **Done** | H1 (setup; funding still open), H4, H5 (indexer side), H6, H7, H8 (#57), H9 part 1, **H16** (2026-10-10: `/review` three scenarios live, honest sent `0x3d33…efe9` status 1; KIMI en/tr/zh on NovaSwap and in the wallet window; rules from a sentence; fail-closed with the API or explain down) |
-| **In progress** | **H11** drafted in `docs/submission/SCRIPTS.md`, waiting on H3, E1, H9 (2), E8 review. H9 (2) and H10's real-device wallet pass need Hale at the keyboard |
-| **Blocked on** | Ezgin (E1 (1)): the platform team → H2. Funding landed 2026-10-10 (5 MON, 2 test USDC to `0xF9f8…8682`, see `tasks/FOR_EZGIN.md` E1), so H3 is open; a vault for the demo's cap shot is Hale's to open through the live wallet |
-| **Next step** | H3 handed to Ezgin (2026-10-10, Hale's decision); when Ezgin's notes are in, rewrite the **[H3]** lines of `docs/submission/SCRIPTS.md`. Now: H12 (KIMI and Qwen articles), then a vault through the live wallet for the cap shot, H14 |
-| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Ezgin also: P2 an over-cap payment's reason is "unknown"; Meriç: P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 extension activity/tokens for a received token, P2 restore's "arrived" |
-| **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
-
----|---|
-| **Done** | H1 (machine, identity, `qa`, test wallet — funding still open), **H4** (ticked: 17/18 of the live `/agents` matrix exact), **H9 part 1** (both package READMEs, merged in #50), **H5** (wallet History page live from the indexer, merged in #52), **H6** (quickstart samples corrected, MCP removed, a live agent-payments section reading the agent's own vault, a link to `/review`; merged in #55), **H7** (two Cleanverse playground actions, asset-aware finding wording via `details`/`bodyOf()`; merged in #56, with a review fix for how the asset is named), **H8** (the ScamSniffer reason named on a `KNOWN_MALICIOUS_ADDRESS` finding, the landing and the delegation page say the same sentence about the agent's key, the extension's `host_permissions` scoped to a build-time `WXT_BARET_API_URL` instead of `<all_urls>`; `pnpm check` green, branch `small-copy-and-extension` pushed, PR not opened yet) |
-| **In progress** | H1's last piece (dUSDC from the faucet) — blocked on funding of Hale's own wallet. H9 (2), H5's real-passkey confirmation (H10) and opening H8's PR all need a human at the keyboard or an authenticated `gh`, not the agent |
-| **Blocked on** | Ezgin (E1): platform team membership, testnet MON and test USDC to `0xF9f85340A31C3B2Ea477F3AEA684781Bb2618682` |
-| **Next step** | Open `small-copy-and-extension`'s pull request. Once E1 lands: H2, H3. H9 (2) and H5's real-passkey check whenever Hale is at the keyboard. No more H-tasks on the board without an open dependency, besides those two |
-| **Open bugs filed by Hale** | 0 |
-| **Days to the deadline** | Freeze Sun 11 Oct 12:00, submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---
 
