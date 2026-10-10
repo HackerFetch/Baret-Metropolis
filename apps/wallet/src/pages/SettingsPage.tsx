@@ -16,6 +16,7 @@ import { WALLET_VERSION } from "../lib/version.js";
 import { type SealedOutcome, useLive } from "../live/live.js";
 import { sessionTime } from "../live/session.js";
 import { routes } from "../routes.js";
+import { type SealedAction, sealedStatus } from "./sealedStatus.js";
 
 /**
  * Settings: five groups of rows (account, security, network, privacy, about),
@@ -96,11 +97,13 @@ export function Component() {
   useEffect(() => setName(state.accountName), [state.accountName]);
   const [sealing, setSealing] = useState(false);
   const [sealedOutcome, setSealedOutcome] = useState<SealedOutcome | null>(null);
+  const [sealedAction, setSealedAction] = useState<SealedAction | null>(null);
 
   /** One at a time: the passkey prompt, the read from Monad, then the write or the restore. */
-  function seal(run: () => Promise<SealedOutcome>): void {
+  function seal(action: SealedAction, run: () => Promise<SealedOutcome>): void {
     if (sealing) return;
     setSealing(true);
+    setSealedAction(action);
     setSealedOutcome(null);
     void run()
       .then(setSealedOutcome)
@@ -269,7 +272,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 disabled={sealing}
-                onClick={() => seal(live.sealed.save)}
+                onClick={() => seal("save", live.sealed.save)}
               >
                 {settings.sealed.save}
               </Button>
@@ -277,21 +280,18 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 disabled={sealing}
-                onClick={() => seal(live.sealed.restore)}
+                onClick={() => seal("restore", live.sealed.restore)}
               >
                 {settings.sealed.restore}
               </Button>
             </div>
             <p role="status" className={T.small}>
-              {sealing
-                ? settings.sealed.busy
-                : sealedOutcome && live.sealed.state !== "changed"
-                  ? fill(settings.sealed.outcome[sealedOutcome.result], {
-                      version: "version" in sealedOutcome ? sealedOutcome.version : "",
-                    })
-                  : live.sealed.state === "unknown"
-                    ? settings.sealed.prompt
-                    : settings.sealed.state[live.sealed.state]}
+              {sealedStatus({
+                busy: sealing,
+                outcome: sealedOutcome,
+                action: sealedAction,
+                state: live.sealed.state,
+              })}
             </p>
           </Block>
         ) : null}
