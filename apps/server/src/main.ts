@@ -4,6 +4,7 @@ import { type AnalyzeDeps, analyze } from "./application/analyze.js";
 import { kimiExplainer } from "./application/explain.js";
 import { KimiBudget, kimiPolicyDrafter } from "./application/policy-draft.js";
 import { monadSender, qwenReviewerFactory, ReviewService } from "./application/review.js";
+import { SealedRelay, storedVersionReader } from "./application/sealed.js";
 import { ExplanationCache, VerdictCache } from "./application/verdicts.js";
 import { loadConfig } from "./config/env.js";
 import { type MonadRpc, ViemMonadRpc } from "./infra/rpc.js";
@@ -51,6 +52,17 @@ if (config.review && testnet) {
     reviewer: qwen.reviewer,
     model: qwen.model,
     send: review.agentPrivateKey ? monadSender(testnet, review.agentPrivateKey) : null,
+  });
+}
+
+// Sealed settings: this server only pays the gas of writes the wallet signed.
+if (config.sealed && testnet) {
+  deps.sealed = new SealedRelay({
+    store: config.sealed.store,
+    chainId: testnet.chainId,
+    dailyLimit: config.sealed.dailyLimit,
+    current: storedVersionReader(testnet, config.sealed.store),
+    send: monadSender(testnet, config.sealed.relayerPrivateKey),
   });
 }
 

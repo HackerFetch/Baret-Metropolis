@@ -109,6 +109,35 @@ export const settings = {
   passkeyHintLive:
     "On, every signature asks for your passkey. Off, only opening the wallet does. Showing the agent key always asks.",
 
+  /**
+   * Live only: the sealed copy of the rules, the merchants' names and the
+   * account's name, encrypted with a key from the passkey and kept on Monad.
+   */
+  sealed: {
+    title: "Your rules on every device",
+    body: "Your rules and the names you gave your merchants are stored in this browser. Save an encrypted copy and the same passkey brings them back on any device.",
+    points: [
+      "The copy is encrypted here, with a key only your passkey can make. The key is never stored.",
+      "The encrypted copy is kept on Monad, filed under an id that is not your address.",
+      "Baret's server pays for the save. It cannot read the copy or change it.",
+    ],
+    save: "Save an encrypted copy",
+    restore: "Bring them back here",
+    prompt: "The first of these in a session asks for your passkey.",
+    busy: "Waiting for your passkey and Monad.",
+    state: {
+      current: "The encrypted copy matches what you see here.",
+      changed: "You changed something since the last copy. Save again to keep it.",
+    },
+    outcome: {
+      saved: "Saved. Encrypted copy number {version} is on Monad.",
+      restored: "Your rules and merchant names are back, from copy number {version}.",
+      empty: "This passkey has no encrypted copy yet. Nothing was changed.",
+      cancelled: "The passkey prompt was closed. Nothing was changed.",
+      failed: "That did not work. Nothing was changed. Try again.",
+    },
+  },
+
   saved: "Saved.",
 
   errors: {

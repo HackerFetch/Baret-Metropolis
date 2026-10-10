@@ -17,6 +17,7 @@ function configured(n: NetworkConfig, deps: AnalyzeDeps) {
     policyDraft: deps.policyDrafter != null,
     review: deps.review != null,
     reviewSends: deps.review?.sends ?? false,
+    sealed: deps.sealed != null,
     separateTraceRpc: n.traceRpcUrl !== n.rpcUrl,
     usdc: n.usdcAddress !== null,
     reputationRegistry: n.reputationRegistryAddress !== null,
