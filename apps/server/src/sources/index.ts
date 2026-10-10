@@ -15,6 +15,8 @@ export function createSources(config: AppConfig, network: NetworkConfig): Source
           apiKey: config.nansenApiKey,
           mode: config.nansenMode,
           timeoutMs: config.requestTimeoutMs,
+          // Nansen indexes Monad mainnet only (sources/nansen.ts).
+          absenceIsFresh: network.network === "mainnet",
         })
       : null,
     registry: network.reputationRegistryAddress
