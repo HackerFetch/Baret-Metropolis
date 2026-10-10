@@ -11,6 +11,7 @@ import { fill } from "@baret/web-ui/lib/util";
 import { Menu, X } from "lucide-react";
 import { type JSX, lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { NavLink, Outlet, ScrollRestoration, useLocation } from "react-router";
+import { useGate } from "../../data/gate.js";
 import { activeAccount, useExtension } from "../../data/store.js";
 import { scenarioQuery } from "../../lib/start.js";
 import { LockContext, SampleNotice } from "./parts/kit.js";
@@ -115,7 +116,15 @@ export function Component() {
   const { pathname } = useLocation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
-  const [locked, setLocked] = useState(false);
+  // Live: the keystore says whether the wallet is locked, and locks it.
+  const gate = useGate();
+  const [sampleLocked, setSampleLocked] = useState(false);
+  const locked = gate ? gate.locked : sampleLocked;
+  const setLocked = (next: boolean) => {
+    if (!gate) setSampleLocked(next);
+    else if (next) gate.lock();
+    else gate.opened();
+  };
   const [moved, setMoved] = useState("");
   const toggle = useRef<HTMLButtonElement>(null);
   const main = useRef<HTMLElement>(null);
@@ -157,6 +166,7 @@ export function Component() {
   // lives only in memory and the reload rebuilds it from the URL, so the URL
   // carries the empty wallet the reset leaves, plus the reachability preview.
   const reset = () => {
+    if (gate) return gate.wipe(true);
     location.assign(resetHref(location.pathname, state.reachable));
   };
 
@@ -167,7 +177,7 @@ export function Component() {
         <div className="h-[600px] w-full max-w-[400px] overflow-hidden border border-[color:var(--rule-strong)] bg-[color:var(--ground)]">
           <Suspense fallback={null}>
             <Locked
-              reason="manual"
+              reason={gate ? gate.lockReason : "manual"}
               values={{ count: String(state.settings.lockMinutes), origin: "" }}
               onOpen={() => setLocked(false)}
               onReset={reset}

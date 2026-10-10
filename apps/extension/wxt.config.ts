@@ -16,6 +16,16 @@ function baretApiOrigin(): string {
   return new URL(url).origin;
 }
 
+/** The Monad RPC the wallet reads from and sends through; the public node by default. */
+function monadRpcOrigin(): string {
+  const env = import.meta.env as Record<string, string | undefined> | undefined;
+  const url =
+    env?.WXT_MONAD_TESTNET_RPC_URL ||
+    process.env.WXT_MONAD_TESTNET_RPC_URL ||
+    "https://testnet-rpc.monad.xyz";
+  return new URL(url).origin;
+}
+
 /**
  * WXT was chosen over CRXJS for three concrete reasons, not for taste.
  *
@@ -62,7 +72,7 @@ export default defineConfig({
       "notifications", // drift alerts
     ],
 
-    host_permissions: [`${baretApiOrigin()}/*`],
+    host_permissions: [`${baretApiOrigin()}/*`, `${monadRpcOrigin()}/*`],
 
     action: {
       default_title: "Baret",

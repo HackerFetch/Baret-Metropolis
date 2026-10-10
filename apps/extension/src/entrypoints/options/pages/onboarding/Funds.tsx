@@ -12,6 +12,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useState } from "react";
 import { SETUP_ART } from "../../../../assets.js";
+import { activeAccount, useExtension } from "../../../../data/store.js";
 import { AddressLine, OutLink, StepFrame } from "./Frame.js";
 import { EMPTY_BALANCE, FAUCET_AMOUNT, MINIMUM, SYMBOL, WAIT } from "./words.js";
 
@@ -20,17 +21,26 @@ const { fund } = extOnboarding;
 type Funds = "idle" | "watching" | "arrived";
 
 export function Funds({ onNext }: { onNext: () => void }): JSX.Element {
-  const [funds, setFunds] = useState<Funds>("idle");
+  const { state } = useExtension();
+  const live = state.scenario === "live";
+  // Live: the balance Monad reports for the new account, read again every
+  // few seconds by the page (live/LiveOptions.tsx). The address is watched
+  // from the start: MON may come from the faucet or from another account.
+  const balance = live ? (activeAccount(state)?.balance ?? "0") : null;
+  const [sampleFunds, setFunds] = useState<Funds>("idle");
+  const funded = balance !== null && Number(balance) >= MINIMUM;
+  const funds: Funds = balance === null ? sampleFunds : funded ? "arrived" : "watching";
+  const amount = balance ?? FAUCET_AMOUNT;
   const noteId = useId();
   const minimumId = useId();
-  const arrived = funds === "arrived" && Number(FAUCET_AMOUNT) >= MINIMUM;
+  const arrived = funds === "arrived" && Number(amount) >= MINIMUM;
 
-  // The faucet's transfer, once the reader has opened the faucet.
+  // The sample's faucet transfer, once the reader has opened the faucet.
   useEffect(() => {
-    if (funds !== "watching") return;
+    if (live || sampleFunds !== "watching") return;
     const id = window.setTimeout(() => setFunds("arrived"), WAIT.faucet);
     return () => window.clearTimeout(id);
-  }, [funds]);
+  }, [live, sampleFunds]);
 
   return (
     <StepFrame title={fund.title} body={fund.body} picture={SETUP_ART.fund}>
@@ -38,7 +48,7 @@ export function Funds({ onNext }: { onNext: () => void }): JSX.Element {
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[color:var(--rule)] py-3">
           <dt className="text-sm text-[color:var(--fg-muted)]">{fund.balanceLabel}</dt>
           <dd className={`font-display text-2xl font-extrabold text-[color:var(--fg)] ${T.num}`}>
-            {`${funds === "arrived" ? FAUCET_AMOUNT : EMPTY_BALANCE} ${SYMBOL}`}
+            {`${balance ?? (funds === "arrived" ? FAUCET_AMOUNT : EMPTY_BALANCE)} ${SYMBOL}`}
           </dd>
         </div>
         <div className="grid gap-1 border-b border-[color:var(--rule)] py-3">
@@ -68,7 +78,7 @@ export function Funds({ onNext }: { onNext: () => void }): JSX.Element {
         {funds === "watching"
           ? fund.waiting
           : funds === "arrived"
-            ? fill(fund.arrived, { amount: `${FAUCET_AMOUNT} ${SYMBOL}` })
+            ? fill(fund.arrived, { amount: `${amount} ${SYMBOL}` })
             : ""}
       </p>
 

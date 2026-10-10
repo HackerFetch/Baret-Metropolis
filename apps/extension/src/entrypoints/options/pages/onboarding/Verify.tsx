@@ -15,13 +15,20 @@ import { SAMPLE_PHRASE, VERIFY_POSITIONS } from "./words.js";
 const { verify } = extOnboarding.backup;
 
 /** True when the typed word is the phrase's word at that position (counted from 1). */
-export function isWordAt(position: number, typed: string): boolean {
-  const word = SAMPLE_PHRASE[position - 1];
+export function isWordAt(
+  position: number,
+  typed: string,
+  phrase: readonly string[] = SAMPLE_PHRASE,
+): boolean {
+  const word = phrase[position - 1];
   return word !== undefined && typed.trim().toLowerCase() === word;
 }
 
-export function allMatch(answers: readonly string[]): boolean {
-  return VERIFY_POSITIONS.every((position, i) => isWordAt(position, answers[i] ?? ""));
+export function allMatch(
+  answers: readonly string[],
+  phrase: readonly string[] = SAMPLE_PHRASE,
+): boolean {
+  return VERIFY_POSITIONS.every((position, i) => isWordAt(position, answers[i] ?? "", phrase));
 }
 
 export function Verify({
@@ -29,7 +36,10 @@ export function Verify({
   left,
   onAnswer,
   onLeave,
+  phrase = SAMPLE_PHRASE,
 }: {
+  /** The phrase being backed up: the wallet's own when live, the sample's otherwise. */
+  phrase?: readonly string[];
   answers: readonly string[];
   /** Which fields the reader has left at least once. */
   left: readonly boolean[];
@@ -45,7 +55,8 @@ export function Verify({
       <div className="grid gap-4 sm:grid-cols-2">
         {VERIFY_POSITIONS.map((position, i) => {
           const typed = answers[i] ?? "";
-          const wrong = (left[i] ?? false) && typed.trim() !== "" && !isWordAt(position, typed);
+          const wrong =
+            (left[i] ?? false) && typed.trim() !== "" && !isWordAt(position, typed, phrase);
           return (
             <TextField
               key={position}
@@ -61,7 +72,7 @@ export function Verify({
         })}
       </div>
       <p role="status" className="text-sm font-medium text-[color:var(--safe-ink)]">
-        {allMatch(answers) ? verify.success : ""}
+        {allMatch(answers, phrase) ? verify.success : ""}
       </p>
     </fieldset>
   );

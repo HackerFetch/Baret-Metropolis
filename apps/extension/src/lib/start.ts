@@ -63,6 +63,8 @@ export function readStart(search: string, fallbackPhase: StartPhase = "uninitial
  * in a tab), and the reachability preview when one is given.
  */
 export function scenarioQuery(scenario: Scenario, reachable: boolean | null = true): string {
+  // A live page links to live pages: no sample rides along.
+  if (scenario === "live") return "";
   const params = new URLSearchParams();
   if (scenario === "empty") params.set("sample", "empty");
   else if (reachable === null) params.set("sample", "loading");
