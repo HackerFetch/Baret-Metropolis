@@ -20,6 +20,7 @@
     "@baret/guard": "workspace:*",
     "@baret/routes": "workspace:*",
     "@baret/ui": "workspace:*",
+    "@baret/wallet-core": "workspace:*",
     "@baret/wallet-ui": "workspace:*",
     "@baret/web-ui": "workspace:*",
     "@webext-core/messaging": "4.0.0",

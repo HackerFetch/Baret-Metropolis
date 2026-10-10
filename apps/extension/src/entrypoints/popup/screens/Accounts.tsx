@@ -219,7 +219,9 @@ export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
         ))}
       </ul>
       <div className="grid gap-3 px-4 pt-4 pb-5">
-        {adding ? (
+        {/* Live: one account for now. A second one needs its own key path, which
+            the keystore does not track yet, so the wallet does not offer it. */}
+        {state.scenario === "live" ? null : adding ? (
           <div className="grid gap-2 border border-[color:var(--rule-strong)] p-3">
             <p className="font-display text-base font-bold uppercase text-[color:var(--fg)]">
               {accounts.add.title}

@@ -73,7 +73,11 @@ const STATUS: Record<ActivityItem["kind"], ActivityStatus> = {
 };
 
 /** The wallet's log row for a transaction, as the extension's log keeps it. */
-function fromTransaction(item: ActivityItem, tx: TransactionRequest, account: string): Activity {
+export function fromTransaction(
+  item: ActivityItem,
+  tx: TransactionRequest,
+  account: string,
+): Activity {
   const { request } = tx;
   const values = request.values;
   return {
