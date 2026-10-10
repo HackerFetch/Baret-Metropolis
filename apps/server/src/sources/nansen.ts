@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import type { NansenProfile, NansenSource } from "./types.js";
+import type { NansenProfile, NansenSource, NansenState } from "./types.js";
 
 /** One label as Nansen's `/profiler/address/labels` returns it. */
 export interface NansenLabel {
@@ -82,6 +82,9 @@ export function profileFromFirstFunder(
 
 export type NansenMode = "funder" | "labels";
 
+/** Label lookups a day unless set: 2,500 credits at most. */
+export const DEFAULT_LABELS_DAILY_LIMIT = 25;
+
 export interface NansenHttpOptions {
   apiKey: string;
   timeoutMs: number;
@@ -98,6 +101,13 @@ export interface NansenHttpOptions {
    * Nansen fail closed.
    */
   maxAddresses?: number;
+  /**
+   * Labels mode only: the most label lookups (100 credits each) in one UTC
+   * day. Past it the source answers from first-funder (1 credit) until the
+   * next day, so a busy day or a caller who sends many new addresses cannot
+   * spend the whole balance, and every address still gets an answer.
+   */
+  labelsDailyLimit?: number;
   /**
    * Whether a wallet with no funding record counts as a fresh wallet. True on
    * a chain Nansen indexes. False on Monad testnet, where the lookup reads the
@@ -127,6 +137,12 @@ export class NansenError extends Error {
  * Nansen indexes Monad mainnet only, so on testnet the answers describe the
  * same address on mainnet. Every requested address gets an answer or the
  * whole lookup throws: a partial answer would let an unchecked address pass.
+ *
+ * The mode is one setting (NANSEN_MODE) and nothing else has to change with
+ * it: both modes fill the same profile, so the rules read either. Labels can
+ * say more (who owns a wallet, a whale, an exploiter by name); first-funder
+ * never says `identified`. In labels mode a daily budget caps the 100-credit
+ * lookups, and past it the source answers from first-funder.
  */
 export class NansenHttpSource implements NansenSource {
   private readonly baseUrl: string;
@@ -134,6 +150,8 @@ export class NansenHttpSource implements NansenSource {
   private readonly fetchImpl: typeof globalThis.fetch;
   private readonly now: () => number;
   private readonly cache = new Map<Address, { at: number; profile: NansenProfile }>();
+  private labelsDay = "";
+  private labelsUsed = 0;
 
   constructor(private readonly options: NansenHttpOptions) {
     this.baseUrl = (options.baseUrl ?? "https://api.nansen.ai").replace(/\/+$/, "");
@@ -169,8 +187,32 @@ export class NansenHttpSource implements NansenSource {
     return out;
   }
 
+  private get labelsLimit(): number {
+    return Math.max(0, this.options.labelsDailyLimit ?? DEFAULT_LABELS_DAILY_LIMIT);
+  }
+
+  /** Label lookups left today; the count starts again at 00:00 UTC. */
+  private labelsLeft(): number {
+    const today = new Date(this.now()).toISOString().slice(0, 10);
+    if (today !== this.labelsDay) {
+      this.labelsDay = today;
+      this.labelsUsed = 0;
+    }
+    return Math.max(0, this.labelsLimit - this.labelsUsed);
+  }
+
+  describe(): NansenState {
+    if (this.mode !== "labels") {
+      return { mode: "funder", answering: "funder", labelsLeftToday: null };
+    }
+    const left = this.labelsLeft();
+    return { mode: "labels", answering: left > 0 ? "labels" : "funder", labelsLeftToday: left };
+  }
+
   private async profile(address: Address): Promise<NansenProfile> {
-    if (this.mode === "labels") {
+    if (this.mode === "labels" && this.labelsLeft() > 0) {
+      // Counted before the call: a lookup that fails has still been charged.
+      this.labelsUsed += 1;
       const data = await this.post("/api/v1/profiler/address/labels", {
         address,
         chain: "monad",

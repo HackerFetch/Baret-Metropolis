@@ -11,6 +11,9 @@ function configured(n: NetworkConfig, deps: AnalyzeDeps) {
   const { config } = deps;
   return {
     nansen: config.nansenApiKey !== null,
+    // The mode set, the mode the next new address is answered in, and the
+    // label lookups left today: a switch of NANSEN_MODE is visible here.
+    ...nansenState(n, deps),
     cleanverse: n.cleanverse !== null,
     indexer: config.envioEndpoint !== null,
     explain: config.explain !== null,
@@ -23,6 +26,20 @@ function configured(n: NetworkConfig, deps: AnalyzeDeps) {
     reputationRegistry: n.reputationRegistryAddress !== null,
     knownContracts: n.knownContracts.length,
     paymentGuardFactory: n.paymentGuardFactoryAddress !== null,
+  };
+}
+
+function nansenState(n: NetworkConfig, deps: AnalyzeDeps) {
+  let state = null;
+  try {
+    state = deps.sourcesFor(n).nansen?.describe?.() ?? null;
+  } catch {
+    // A source that cannot be built reads as off.
+  }
+  return {
+    nansenMode: state?.mode ?? null,
+    nansenAnswering: state?.answering ?? null,
+    nansenLabelsLeftToday: state?.labelsLeftToday ?? null,
   };
 }
 
