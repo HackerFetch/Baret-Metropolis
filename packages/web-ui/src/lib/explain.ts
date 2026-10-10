@@ -66,25 +66,50 @@ export function parseExplainAnswer(body: unknown): ExplainAnswer | null {
   };
 }
 
-/** Asks the server once. Non-2xx, a bad body or a network error is null; never throws. */
+/**
+ * One ask to the server: the answer, or a failure with the HTTP status (0 for
+ * a network error, an abort or a timeout) and the body's `error` code when
+ * the body parses. A 2xx with a bad body is a failure with that status.
+ */
+export type ExplainResult =
+  | { ok: true; answer: ExplainAnswer }
+  | { ok: false; status: number; code: string | null };
+
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const body: unknown = await res.json();
+    return isObject(body) && typeof body.error === "string" ? body.error : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Asks the server once. Never throws. */
 export async function fetchExplanation(
   requestId: string,
   language: ExplainLanguage,
   signal?: AbortSignal,
   fetchImpl: typeof fetch = fetch,
-): Promise<ExplainAnswer | null> {
+): Promise<ExplainResult> {
+  let res: Response;
   try {
-    const res = await fetchImpl(EXPLAIN_URL, {
+    res = await fetchImpl(EXPLAIN_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ requestId, language }),
       signal: signal ?? null,
     });
-    if (!res.ok) return null;
-    return parseExplainAnswer(await res.json());
   } catch {
-    return null;
+    return { ok: false, status: 0, code: null };
   }
+  if (!res.ok) return { ok: false, status: res.status, code: await errorCode(res) };
+  try {
+    const answer = parseExplainAnswer(await res.json());
+    if (answer) return { ok: true, answer };
+  } catch {
+    // A body that is not JSON is a bad body.
+  }
+  return { ok: false, status: res.status, code: null };
 }
 
 /** The reader's language when it is one KIMI writes, else English. SSR-safe. */
@@ -102,58 +127,100 @@ export type ExplainState =
   | { status: "unavailable"; answer: null }
   | { status: "ready"; answer: ExplainAnswer };
 
-/** Settled answers per requestId and language, so switching back never asks twice. */
-const cache = new Map<string, ExplainAnswer | null>();
+/**
+ * At most one new ask per requestId and language in this window. Every ask
+ * spends the shared KIMI budget of 500 a day.
+ */
+export const EXPLAIN_RETRY_MS = 60_000;
+
+/** Real answers per requestId and language; one is never asked for again. */
+const cache = new Map<string, ExplainAnswer>();
+
+/**
+ * The last failed ask per requestId and language. `final` marks a verdict
+ * the server no longer has (404 verdict_unknown), which is never asked again.
+ */
+const failures = new Map<string, { at: number; final: boolean }>();
 
 const key = (requestId: string, language: ExplainLanguage) => `${requestId}\u0000${language}`;
 
-/** Test hook: forget every settled answer. */
+/** Test hook: forget every answer and every failure. */
 export function clearExplainCache(): void {
   cache.clear();
+  failures.clear();
 }
 
 function settled(requestId: string | null, language: ExplainLanguage): ExplainState | null {
   if (requestId === null) return { status: "unavailable", answer: null };
   const k = key(requestId, language);
-  if (!cache.has(k)) return null;
-  const answer = cache.get(k) ?? null;
-  return answer ? { status: "ready", answer } : { status: "unavailable", answer: null };
+  const answer = cache.get(k);
+  if (answer) return { status: "ready", answer };
+  return failures.has(k) ? { status: "unavailable", answer: null } : null;
 }
 
 /**
  * KIMI's reading of one verdict in one language. Aborts on a change of
  * request or language and on unmount; a null requestId is unavailable.
+ *
+ * A failure is not kept for good. While the hook stays on a key that failed,
+ * it asks once more when the minute since the last ask is up, and then
+ * stops. A key that failed less than a minute ago settles as unavailable at
+ * once, with no ask. A 404 verdict_unknown is never asked again.
  */
 export function useExplanation(requestId: string | null, language: ExplainLanguage): ExplainState {
-  const [state, setState] = useState<{ k: string; value: ExplainState } | null>(null);
-  const k = requestId === null ? "" : key(requestId, language);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
-    if (requestId === null || cache.has(key(requestId, language))) return;
-    const controller = new AbortController();
-    // The timeout aborts too, and that settles as unavailable. An abort from a
-    // change or unmount sets `cancelled` first, so it settles nothing.
+    if (requestId === null) return;
+    const k = key(requestId, language);
+    if (cache.has(k)) return;
+    // An abort from a change or unmount sets `cancelled` first, so it records
+    // nothing. The timeout aborts too, and that records a failure (status 0).
     let cancelled = false;
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    void fetchExplanation(requestId, language, controller.signal).then((answer) => {
-      clearTimeout(timer);
-      if (cancelled) return;
-      const k = key(requestId, language);
-      cache.set(k, answer);
-      setState({
-        k,
-        value: answer ? { status: "ready", answer } : { status: "unavailable", answer: null },
+    let retried = false;
+    let controller: AbortController | null = null;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+
+    const schedule = () => {
+      const last = failures.get(k);
+      if (!last || last.final || retried) return;
+      retried = true;
+      const wait = last.at + EXPLAIN_RETRY_MS - Date.now();
+      retry = setTimeout(ask, Math.max(0, wait));
+    };
+
+    function ask() {
+      const c = new AbortController();
+      controller = c;
+      timeout = setTimeout(() => c.abort(), TIMEOUT_MS);
+      void fetchExplanation(requestId as string, language, c.signal).then((result) => {
+        clearTimeout(timeout);
+        if (cancelled) return;
+        if (result.ok) {
+          cache.set(k, result.answer);
+          failures.delete(k);
+        } else {
+          const final = result.status === 404 && result.code === "verdict_unknown";
+          failures.set(k, { at: Date.now(), final });
+          schedule();
+        }
+        setTick((n) => n + 1);
       });
-    });
+    }
+
+    const last = failures.get(k);
+    if (!last) ask();
+    else if (!last.final && Date.now() - last.at >= EXPLAIN_RETRY_MS) ask();
+    else schedule();
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
-      controller.abort();
+      clearTimeout(timeout);
+      clearTimeout(retry);
+      controller?.abort();
     };
   }, [requestId, language]);
 
-  return (
-    settled(requestId, language) ??
-    (state && state.k === k ? state.value : { status: "loading", answer: null })
-  );
+  return settled(requestId, language) ?? { status: "loading", answer: null };
 }
