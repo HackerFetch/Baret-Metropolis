@@ -158,16 +158,16 @@ One row per prize the team enters (twelve are selected on the project). What eac
 
 | Bounty | Form fields / criteria (from the platform) | Evidence in the product (URL, tx, file) | Text written | Submitted |
 |---|---|---|---|---|
-| Main track: Trust, Identity & AI Infrastructure (logo, demo video max 3 min, pitch video max 2 min, live link with access instructions) | | | ⬜ | ⬜ |
-| Nansen | | | ⬜ | ⬜ |
-| Dynamic | | | ⬜ | ⬜ |
-| Mera-Powered UX | | | ⬜ | ⬜ |
-| Mera: One Passkey, Many Keys | | | ⬜ | ⬜ |
-| Cleanverse (demo video required, max 5 min) | | | ⬜ | ⬜ |
-| Envio | | | ⬜ | ⬜ |
-| Alchemy | | | ⬜ | ⬜ |
-| Best Community Team Project (campus group in all three profiles) | | | ⬜ | ⬜ |
-| Chainlink: Best workflow with CRE (demo video required, max 2 min) | | | ⬜ | ⬜ |
+| Main track: Trust, Identity & AI Infrastructure (logo, demo video max 3 min, pitch video max 2 min, live link with access instructions) |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Nansen |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Dynamic |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Mera-Powered UX |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Mera: One Passkey, Many Keys |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Cleanverse (demo video required, max 5 min) |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Envio |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Alchemy |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Best Community Team Project (campus group in all three profiles) |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Chainlink: Best workflow with CRE (demo video required, max 2 min) |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 | KIMI (only if M4 is live at the freeze; published article required) | The published article's link | Built and run with the real key on 2026-10-09, not yet live in production. Deployed 2026-10-09 (#51), live once the keys are on Render (E7); until then `/v1/explain` answers 503. Screens: "In plain words" under the findings on the demo sites' panel (on production the panel checks live with no wallet, since `VITE_BARET_DEMO_FROM` is set on Vercel; "Check it live" appears only on builds without it) and in the wallet's sign window, en / tr / zh; the wallet's rules page drafts policy changes from a sentence. Routes: `POST /v1/explain` (by `requestId`, D-036), `POST /v1/policy/draft`. Evidence: `docs/evidence/kimi/*.png`, `docs/evidence/README.md`. Article facts: H12 in `tasks/FOR_HALE.md` | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 | Qwen 3.8 Max (only if M5 is live at the freeze; published article required; the main submission must be in Track 4) | The published article's link | Run for real on Monad testnet on 2026-10-09, not yet live in production. Deployed 2026-10-09 (#51), live once the keys are on Render (E7); until then `/review` shows its recorded run, labelled "Recorded run, 9 October 2026". The agent reviewer plans and calls four read-only tools, veto only (D-035): a 9x overpayment vetoed, an injected intent vetoed, the matching payment approved and sent, tx `0x206bbd5cc3ee0ee092b52076d9da054b53e50b134c173427f87a7dc08821095d` from vault `0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`. A judge runs it at `https://baret-metropolis.vercel.app/review` (`POST /v1/review`). Evidence: `docs/evidence/qwen/*.json`, `docs/evidence/README.md`. Article facts: H12 in `tasks/FOR_HALE.md` | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 
