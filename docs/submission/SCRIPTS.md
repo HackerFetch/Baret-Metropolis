@@ -106,5 +106,5 @@ Needs the CRE CLI (`cre login`), Bun ≥ 1.2.21, `cast`, and `workflows/.env` (E
 | Reviewer | What to check | State |
 |---|---|---|
 | Ezgin (E8) | The adopters and the post-event plan in the pitch; the CRE and Cleanverse clips; nothing claimed that is not live | open |
-| Meriç | The on-screen words match the sites; the KIMI and Qwen shots | open |
+| Meriç | The on-screen words match the sites; the KIMI and Qwen shots | done 2026-10-10: every on-screen string is in the live copy; five notes under H11 in `tasks/FOR_HALE.md` |
 | Hale (H3) | The **[H3]** lines, after the MetaMask rehearsal | open |
