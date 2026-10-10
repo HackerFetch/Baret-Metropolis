@@ -1,6 +1,6 @@
 # Baret — API reference, end to end
 
-Last updated: 2026-10-10 · Checked against commit `a48900b` and the live API on that day.
+Last updated: 2026-10-11 · Checked against commit `a48900b` and the live API on 2026-10-10; eight corrections checked against the code at `8a1a04f` on 2026-10-11 (the list in `tasks/FOR_EZGIN.md`).
 
 Every interface between two parts of Baret, in the order a transaction passes through them: a site asks, the wallet checks, the server simulates and decides, the chain executes, the indexer records. What is not built is listed in the last section and, with everything else that is unfinished, in `docs/SYSTEM_GAPS.md`.
 
@@ -36,7 +36,7 @@ A site opens the wallet with `window.open` (window name `baret-wallet`) and the 
 | wallet → site | `connected` | `id`, `address` | The person agreed |
 | site → wallet | `sign` | `id`, `chainId` (10143), `call: { to, value, data }` | Asks the wallet to check and sign one call. `value` is wei as a decimal string; `data` at most 100,000 characters |
 | wallet → site | `signed` | `id`, `address`, `hash` | Checked, signed and sent |
-| wallet → site | `refused` | `id`, `reason`, `address`, `findings` | Not signed. `reason`: `declined` (the person), `blocked` (Baret), `unreachable` (no verdict), `invalid` (not a request). `findings`: `{ code, values }` for each finding behind a block |
+| wallet → site | `refused` | `id`, `reason`, `address`, `findings` | Not signed. `reason`: `declined` (the person), `blocked` (Baret), `unreachable` (no verdict); the parser also knows `invalid`, which no sender uses. `findings`: `{ code, values }` for every finding on screen, one per code, at most 50, with `address: null`; a decline on Caution carries them too |
 
 Only contract calls and transfers: there is no message-signing request (no `personal_sign`, no typed data) in this protocol.
 
@@ -69,7 +69,7 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 | | `WalletSession` | The unlocked account in memory: `address`, `account` (viem), `lock()` |
 | Check and sign | `new Wallet({ session, chain, baretUrl, policy })` | Binds an account to Baret's server and the person's rules |
 | | `wallet.check(call)` | Calls `/v1/analyze` and returns the verdict |
-| | `wallet.sign(call, verdict, { acknowledged })` | Signs and sends. Refuses Blocked, an expired verdict, and Caution without the acknowledgement (`NotClearedError`) |
+| | `wallet.sign(call, verdict, { acknowledged })` | Signs and sends. Refuses Blocked, and Caution without the acknowledgement, with `NotClearedError`; refuses an expired verdict with a plain `Error` ("the check has expired") |
 | | `wallet.checkAndSign(call)` | Both, for scripts |
 | Chain | `createWalletChain({ rpcUrl })` | `balances`, `findVault`, `vault`, `prepare`, `send`, `wait` |
 | Call builders | `transfers.mon`, `transfers.token` | A MON or ERC-20 transfer as a `WalletCall` |
@@ -125,7 +125,7 @@ Neither SDK is on npm: both work from a clone of the repository.
 
 ## 4. The analysis server: HTTP API
 
-Base URL `https://baret-monad-api.onrender.com`. JSON in, JSON out. No API key is required today (`BARET_API_KEYS` is empty); when keys are set, every `/v1` route needs `x-api-key`. Every route but `/health*` answers 503 when what it needs is not configured or did not answer: it never invents an empty or safe answer.
+Base URL `https://baret-monad-api.onrender.com`. JSON in, JSON out. No API key is required today (`BARET_API_KEYS` is empty); when keys are set, every `/v1` route needs `x-api-key`, and a missing or unknown key gets 401 `{ error: "unauthorized" }` (`/health*` stays open). Every route but `/health*` answers 503 when what it needs is not configured or did not answer: it never invents an empty or safe answer.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -161,19 +161,19 @@ Errors: 400 `invalid_request`; 503 `rpc_unavailable`. A source that does not ans
 
 ### `POST /v1/explain`
 
-`{ requestId, language? }` with the `meta.requestId` of an analyze answer from the last ten minutes; `language` is `en`, `tr` or `zh`. Returns `{ decision, explanation: { headline, summary, points, advice }, language, model }`. The decision is copied from the server's own verdict, never from the model. 404 `verdict_unknown`; 503 `explain_unavailable`. 20 requests a minute.
+`{ requestId, language? }` with the `meta.requestId` of an analyze answer from the last ten minutes; `language` is `en`, `tr` or `zh`. The older `{ verdict, language }` is still accepted, and only its `meta.requestId` is read. Returns `{ requestId, decision, explanation: { headline, summary, points, advice }, language, model: { provider, name } }`. The decision is copied from the server's own verdict, never from the model. 404 `verdict_unknown` (the verdict is gone, for example after a restart); 503 `explain_unavailable` when no model is configured, the model did not answer, or today's KIMI budget is used up (500 fresh calls a day, shared with `/v1/policy/draft`). 20 requests a minute.
 
 ### `POST /v1/policy/draft`
 
-`{ sentence, current?, language? }`. Returns `{ policy, changes, refused, note, model }`: the proposed rules, each change, and what the model was asked for but may not loosen. Validated against the policy schema; nothing is saved. 422 `policy_draft_invalid`; 429 over the daily cap; 503. 10 requests a minute.
+`{ sentence, current?, language? }`. Returns `{ policy, changes, refused, note, model }`: the proposed rules, each change, and what the model was asked for but may not loosen. Validated against the policy schema; nothing is saved. 422 `policy_draft_invalid`; 429 `policy_draft_daily_limit` over the KIMI budget it shares with `/v1/explain`; 503 `policy_draft_unavailable`, both when no model is configured and when the model did not answer. 10 requests a minute.
 
 ### `POST /v1/review`
 
-`{ scenario }`: `honest`, `overpay` or `injected`. Each is a fixed `PaymentGuard.pay` on Baret's demo vault `0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`. Returns the intent, the call, Baret's verdict, the reviewer's decision with its plan and steps, and `sent` (`{ hash, status }`) when an approved honest run paid 0.10 dUSDC on testnet. With `accept: text/event-stream` the steps stream. One answer per scenario is kept for 30 minutes. 429 `review_daily_limit`; 503. 6 requests a minute.
+`{ scenario }`: `honest`, `overpay` or `injected`. Each is a fixed `PaymentGuard.pay` on Baret's demo vault `0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`. Returns the intent, the call, Baret's verdict, the reviewer's decision with its plan and steps, and `sent` (`{ hash, status }`) when an approved honest run paid 0.10 dUSDC on testnet. With `accept: text/event-stream` the steps stream. One answer per scenario is kept for 30 minutes. 429 `review_daily_limit`; 503 `review_unavailable` (not configured) or `review_failed`. A streamed run can also end with `event: error` on a 200. 6 requests a minute.
 
 ### `POST /v1/sealed`
 
-`{ id, version, blob, signature }`: an entry sealed and signed by `SealedKeys.put`. The server checks the signature and the version and pays the gas. Returns `{ id, version, hash }`. 400 `sealed_bad_signature` / `sealed_too_large`; 409 `sealed_stale_version`; 429 `sealed_daily_limit`; 502 `sealed_failed`; 503. 6 requests a minute.
+`{ id, version, blob, signature }`: an entry sealed and signed by `SealedKeys.put`. The server checks the signature and the version and pays the gas. Returns `{ id, version, hash }`. 400 `sealed_bad_signature` / `sealed_too_large`; 409 `sealed_stale_version`; 429 `sealed_daily_limit`; 502 `sealed_failed` (the write may still land); 503 `sealed_unavailable`. 6 requests a minute.
 
 ### `GET /v1/audit/*`
 
@@ -181,11 +181,11 @@ Read from the indexer. Amounts are base units as strings; addresses lowercase. `
 
 ### `GET /health`, `GET /health/ready`
 
-`/health`: `{ status, analysisVersion, commit }`. `/health/ready`: per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`.
+`/health`: `{ status, analysisVersion, commit }`. `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`.
 
 ### Limits
 
-120 requests a minute over all routes, then the tighter per-route limits above. Daily caps: KIMI 500 fresh calls, review 200 fresh runs, sealed 200 writes. See `docs/SYSTEM_GAPS.md` G-01: today these buckets are shared by every visitor.
+120 requests a minute over all routes, then the tighter per-route limits above, counted per visitor since #63 (G-01, closed: the server trusts the proxy's `X-Forwarded-For`). Over a per-minute limit the answer is 429 from the rate limiter, `{ statusCode, error: "Too Many Requests", message }`. Daily caps: KIMI 500 fresh calls (explain and draft together), review 200 fresh runs, sealed 200 writes; they are counted for the whole server, not per visitor, and reset at 00:00 UTC and on every restart.
 
 ## 5. What the server calls
 

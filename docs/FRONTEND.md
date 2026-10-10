@@ -104,7 +104,7 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 
 #### 01 — SCRYBE (x402, flagship)
 - **Tagline:** Pay-per-question oracle
-- **Description:** An AI Q&A service that charges $0.001 USDC per answer over x402. A real 402 challenge, a real on-chain settlement, and a wallet that puts a ceiling on what the agent can spend.
+- **Description:** An AI Q&A service that charges $0.001 USDC per answer over x402. Baret checks each payment against the visitor's hourly cap before it is signed. The price, the 402 and the history are fixed values, and nothing settles (G-05).
 - **Watch for:** Per-merchant rolling spend cap · Facilitator allowlist enforcement · Asset allowlist for the payment leg
 - **Threat class:** Silent agent · Drift risk
 - **Why it matters:** Agent payments repeat by design, so a small leak compounds with every request.
@@ -186,29 +186,7 @@ Headline: **"Your agent signs. Baret checks first."** Description: "The same pre
 
 ### 3.3 Quickstart (code samples — as content; the real package names stay in sync with `ARCHITECTURE.md`)
 
-**Install:** `pnpm add @baret/agent-kit`
-
-**SDK (TypeScript/Node) sample content:**
-```
-import { AgentWallet } from "@baret/agent-kit";
-
-// The secret is read from BARET_AGENT_SECRET; never hard-coded.
-const agent = AgentWallet.fromSecret(process.env.BARET_AGENT_SECRET!, {
-  serverUrl: "http://localhost:8080",
-  network: "testnet",
-  policy: "balanced",
-});
-
-const { hash, explorerUrl } = await agent.guardedSubmit(txRequest);
-//  ↳ throws GuardBlockedError if the policy blocks. The key never signs.
-```
-
-**CLI (from any language) sample content:**
-```
-baret init --server http://localhost:8080 --network testnet --policy balanced
-export BARET_AGENT_SECRET=0x...agent-private-key
-echo "$TX_JSON" | baret submit -      # exit 0 submitted · 1 blocked · 2 error
-```
+**As built (H6, 2026-10-09):** the samples on `/agents` follow `packages/agent-kit/README.md`, run against the live API: `new AgentWallet({ signer, baretUrl, rpcUrl, policyTemplate })` with `dynamicSigner(...)` or `localSigner(privateKey)`, then `guardedSubmit`, which throws `GuardBlockedError` when Baret does not clear the call. The install is a clone of the repository: nothing is on npm (G-16). The CLI is `pnpm baret` from `packages/agent-kit` (`address`, `analyze`, `submit`, `pay`, `review`), exit 0 cleared, 1 not cleared and nothing signed, 2 error. There is no `AgentWallet.fromSecret` and no MCP endpoint; the samples planned here before were replaced.
 
 A note alongside: **"Fail-closed by design."** If the Baret server is unreachable, `evaluate` throws and signing never happens. Your agent stops instead of signing blind.
 

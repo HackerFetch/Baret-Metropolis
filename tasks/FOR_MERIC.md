@@ -65,6 +65,8 @@
   - Result (Meriç, 2026-10-09): done, merged in #45. The real-device pass with the stateless and cross-device tests is Hale's H10 (the note is under H10).
 - [x] **M7 · The project logo for the form** — The track asks for a "Project Logo/Graphic: uploaded in JPG, JPEG, PNG, or WEBP format (maximum size 3MB)". Export it from the brand mark (`packages/ui/src/brand/`) and give the file to Hale for the form (H15). Sun 11 Oct. Left by: Ezgin · Date: 2026-10-09
   - Result (Meriç, 2026-10-09): two 1024 x 1024 PNG files in `docs/submission/`, rendered from the mark's own paths (`packages/ui/src/brand/Mark.tsx`): `baret-logo-1024.png` (the lockup, orange and ink on concrete, the default variant) and `baret-mark-1024.png` (the mark alone, ink on orange, the icon variant), 15 KB and 10 KB. The line for Hale is under H15.
+- [x] **Gap audit and the night's fixes (2026-10-11)** — A read-only audit of what is still missing, eight lenses with every serious finding re-checked (`docs/GAP_AUDIT.md`); Ezgin's and Hale's items are in their files. Left by: Meriç · Date: 2026-10-11
+  - Result (Meriç, 2026-10-11): mine are done. The KIMI and Qwen articles are fact-checked, with the fixes in Hale's task "Fix the two articles" (this answers her request on `qa`). The extension's copy says Baret checks every transaction, not every sign request: a `personal_sign` message is signed with no check (D-040). `docs/WALLET.md` and `docs/FRONTEND.md` match D-040 and G-05. `/docs` has an API reference card, and `docs/API_REFERENCE.md` got its eight checked corrections. Not done: a `.env.example` for `apps/wallet`.
 
 **If time runs short, cut in this order:** M12, M5, M4, M3. Never M1, M2 or M6.
 
