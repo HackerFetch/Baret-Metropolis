@@ -14,7 +14,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 |---|---|---|---|---|
 | G-01 | Every visitor shares one rate-limit bucket. **Fixed 2026-10-10** | Wrong | closed | Ezgin |
 | G-02 | The landing and `/install` describe the extension as a working wallet; it was a sample. **Built 2026-10-10 (D-040), live after the merge**; what is still empty in it is listed under G-02 | Wrong claim | P2 after the merge | Ezgin |
-| G-03 | The API sleeps: the first request after idle takes 15 to 40 s | Half done | P1 | Ezgin |
+| G-03 | The API slept on the free plan. **Starter since 2026-10-10**: the first request after 18 idle minutes took 0.10 s | Half done | closed | Ezgin |
 | G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
 | G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
 | G-06 | Nansen is off | Missing | P2 | Ezgin |
