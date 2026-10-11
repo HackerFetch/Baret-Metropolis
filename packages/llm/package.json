@@ -1,7 +1,6 @@
 {
   "name": "@baret/llm",
   "version": "0.1.0",
-  "private": true,
   "description": "One OpenAI-compatible chat client for Baret's two model uses: the Qwen reviewer in agent-kit and the KIMI explanation in the server.",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,7 +10,9 @@
   },
   "scripts": {
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "zod": "4.6.5"
@@ -19,5 +20,27 @@
   "devDependencies": {
     "@types/node": "24.10.1",
     "typescript": "6.0.3"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HackerFetch/Baret-Metropolis.git",
+    "directory": "packages/llm"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   }
 }
