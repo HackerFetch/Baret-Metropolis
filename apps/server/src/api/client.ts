@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { isIP } from "node:net";
 import type { FastifyRequest } from "fastify";
 
 /**
@@ -17,6 +18,12 @@ import type { FastifyRequest } from "fastify";
  * who writes a made-up address in front gets no new identity, and one who
  * claims to be a site without the secret is counted as direct.
  *
+ * A site's edge also names the visitor itself, in `x-baret-client`, and on a
+ * marked request that address wins over the count: measured on the live
+ * sites, the first entry the edge's rewrite forwards is not always its own
+ * (a visitor's made-up X-Forwarded-For sometimes arrives in its place). The
+ * header counts for nothing without the secret.
+ *
  * With `directHops` unset nothing is known about the proxies and the client
  * is Fastify's `req.ip` (the first entry), as before.
  */
@@ -27,6 +34,7 @@ export interface ProxyTrust {
 }
 
 export const EDGE_HEADER = "x-baret-edge";
+export const EDGE_CLIENT_HEADER = "x-baret-client";
 
 function same(a: string, b: string): boolean {
   const left = Buffer.from(a);
@@ -47,8 +55,10 @@ export function clientOf(req: FastifyRequest, trust: ProxyTrust): string {
     .split(",")
     .map((part) => part.trim())
     .filter((part) => part !== "");
-  const marked = trust.edgeHops !== null && viaEdge(req, trust);
-  const hops = marked ? (trust.edgeHops as number) : trust.directHops;
+  const marked = viaEdge(req, trust);
+  const named = req.headers[EDGE_CLIENT_HEADER];
+  if (marked && typeof named === "string" && isIP(named) !== 0) return named;
+  const hops = marked && trust.edgeHops !== null ? trust.edgeHops : trust.directHops;
   // Fewer entries than our proxies add: not through them at all (a local call).
   const peer = req.socket.remoteAddress ?? req.ip;
   return hops === 0 ? peer : (entries[entries.length - hops] ?? peer);
