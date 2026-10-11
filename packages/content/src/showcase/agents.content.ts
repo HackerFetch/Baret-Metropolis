@@ -145,6 +145,38 @@ export const agents = {
     reviewLink: { label: "Watch Qwen review an agent's payment", href: "/review" },
   },
 
+  /** A lookup of Baret's reputation registry (2026-10-11): what the
+   *  Chainlink CRE workflow wrote from ScamSniffer's blacklist into the
+   *  ReputationRegistry on Monad, read through the Envio indexer at
+   *  GET /v1/audit/reputation/:address. Fail-closed: an unanswered lookup
+   *  is "unavailable", never "not on the registry". */
+  registry: {
+    title: "Ask Baret's registry about an address.",
+    body: "Baret keeps a reputation registry on Monad, and every check reads it. A Chainlink CRE workflow, run so far in Chainlink's simulator, has written part of ScamSniffer's public blacklist to it.",
+    label: "Address",
+    hint: "An address is 0x followed by 40 hex characters.",
+    lookUp: "Look it up",
+    tryListed: "Try a listed address",
+    /** On the registry since the workflow's first run (live answer, 2026-10-11). */
+    sample: "0xa8f3762b03ae73cbbdb9173d3537c632628727a4",
+    explorer: "https://testnet.monadexplorer.com",
+    loading: "Asking the registry...",
+    listed: "This address is on Baret's registry: {reason}. Severity {level} of 4, {severity}.",
+    /** The contract's scale (ReputationRegistry.sol, MAX_SEVERITY = 4). */
+    severities: { 1: "low", 2: "medium", 3: "high", 4: "critical" },
+    /** One line per reason code the workflow writes; any other code is shown as itself. */
+    reasons: {
+      SCAMSNIFFER_BLACKLIST:
+        "it is on ScamSniffer's public blacklist, written to Monad by Baret's Chainlink CRE workflow",
+    },
+    otherReason: "it was flagged with code {code}",
+    view: "View the transaction that wrote it",
+    clear:
+      "This address is not on Baret's registry. The registry holds only part of ScamSniffer's blacklist, so this does not mean the address is clean. Baret still checks every transaction against your rules.",
+    unavailable: "The registry did not answer. Nothing is cleared, try again in a minute.",
+    invalid: "That is not an address. An address is 0x followed by 40 hex characters.",
+  },
+
   /** Who decides what. A control table earns more trust than a page of
    *  security prose. */
   /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
