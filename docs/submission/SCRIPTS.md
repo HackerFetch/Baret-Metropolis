@@ -69,12 +69,14 @@ Only the Cleanverse and CRE clips are required. The optional ones are made only 
 | Shot | On screen | Spoken |
 |---|---|---|
 | 1 | `docs/CONTRACTS.md` 4.3 → `CompliantPaymentGuard` `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c` on the explorer, its source | "An agent pays merchants from a vault. Under the Travel Rule, both sides of a payment must be identified. Here the credential check sits inside the contract, before the transfer: no credential, no movement." |
-| 2 | Explorer "Read contract": `verified(0xc448042EdAC1899B023CaA0E9Da5e4a8833de873)` → verified, tier 5; `verified(0x1365566191bAA9872A64AcDce963751d5343ff49)` → not verified | "This merchant holds a Cleanverse A-Pass. This one does not." |
+| 2 | Explorer "Read contract": `verified(0xC448042edaC1899B023cAa0E9dA5E4a8833de873)` → verified, tier 5; `verified(0x1365566191bAA9872A64AcDce963751d5343ff49)` → not verified | "This merchant holds a Cleanverse A-Pass. This one does not." |
 | 3 | `/agents` playground, "Pay aUSDC to a verified wallet" → Safe; "Pay aUSDC to a wallet with no credential" → Blocked, "this asset only moves between verified wallets" | "Before the agent signs, Baret reads the same credentials on chain and names the party without one." |
 | 4 **[gate: E6, a live settlement]** | The agent's payment to the verified merchant settling, the `Settled` event naming both credentials | "With a credential on both sides, the payment settles and the event records both." |
 | 5 **[gate: E6]** | The same payment to the unverified merchant, refused by the contract | "Without one, the contract refuses it, whatever the agent signs." |
 
-**If E6 is not done at recording:** shots 1–3 only, and the submission text says the settlement waits on test aUSDC from Cleanverse; never show a settlement that did not happen.
+**E6 is done (2026-10-11, D-048):** a payment settled, in `BVUSD` (Baret's own test Cleanverse Verified Asset, `0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`) through the guard at `0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b`. Shot 1 shows that guard, shots 4 and 5 that transaction and the blocked `baret pay`; say "a compliant asset we issued through Cleanverse", never aUSDC. The commands are in `docs/CONTRACTS.md` 4.3.
+
+**If E6 is not done at recording (kept for the record):** shots 1–3 only, and the submission text says the settlement waits on test aUSDC from Cleanverse; never show a settlement that did not happen.
 
 ### 3.2 Chainlink CRE — required, at most 2:00
 

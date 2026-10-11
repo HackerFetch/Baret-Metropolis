@@ -43,7 +43,7 @@ Addresses to try in any check:
 |---|---|
 | `0xeB9EBB97BcD146FF1a4424490cbE8e19b7983888` | NovaSwap's look-alike drainer, on the reputation registry: Blocked |
 | `0xa8f3762b03ae73cbbdb9173d3537c632628727a4` | Written to the registry from ScamSniffer's blacklist by the Chainlink CRE workflow: Blocked |
-| `0xc448042EdAC1899B023CaA0E9Da5e4a8833de873` | Holds a Cleanverse A-Pass (verified, tier 5): an aUSDC payment to it is Safe |
+| `0xC448042edaC1899B023cAa0E9dA5E4a8833de873` | Holds a Cleanverse A-Pass (verified, tier 5): an aUSDC payment to it is Safe |
 | `0x1365566191bAA9872A64AcDce963751d5343ff49` | No Cleanverse credential: an aUSDC payment to it is Blocked |
 
 ## Call it from your app
@@ -100,7 +100,7 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | **Dynamic** | The demo agent is a Dynamic server wallet, authorised on a PaymentGuard vault and paying from it | Live; its payments are listed on `/agents` |
 | **Envio** | HyperIndex indexes every vault, payment and registry change; the wallet's Activity, `/agents` and the Qwen reviewer read it through `/v1/audit/*` | Live |
 | **Chainlink CRE** | A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain reputation registry that every check reads; `/agents` looks any address up in it | Simulated with the CRE CLI with a real write on testnet (`workflows/README.md`); not deployed to a DON |
-| **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live; a settlement through the contract waits on test aUSDC |
+| **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live. A payment settled through the contract on 2026-10-11 in `BVUSD`, a Cleanverse Verified Asset Baret issued in the sandbox (`docs/CONTRACTS.md` 4.3); none in aUSDC |
 | **KIMI** (`kimi-k3`) | The plain-words explanation under every live verdict, and rules from a sentence on the wallet's Rules page | Live |
 | **Qwen** (`qwen3.8-max`) | The agent reviewer on `/review`: plan, four tools, veto only | Live |
 | **Alchemy** | The analysis's chain reads (balances, code, the registry, the vaults) go through Alchemy's Monad RPC, batched; the trace goes to the public Monad RPC, which serves `debug_traceCall` | Live |
@@ -112,7 +112,7 @@ Said plainly, so that nothing above is read as more than it is:
 
 - **A `personal_sign` message is not checked.** There is nothing to simulate in a plain-text message, so the wallet and extension show it as the text it signs and sign on the reader's press, with no call to Baret first.
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
-- **No Cleanverse settlement has been made** through `CompliantPaymentGuard` yet.
+- **No aUSDC has moved through `CompliantPaymentGuard`.** The settlement of 2026-10-11 is in `BVUSD`, a test Cleanverse Verified Asset Baret issued itself; Cleanverse's sandbox does not hand out aUSDC.
 - **Mainnet:** nothing is deployed there.
 
 The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
@@ -126,6 +126,8 @@ The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
 | `ReputationRegistry` | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) |
 | `ReputationOracleReceiver` (CRE) | [`0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d`](https://testnet.monadexplorer.com/address/0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d) |
 | `CompliantPaymentGuard` (Cleanverse) | [`0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`](https://testnet.monadexplorer.com/address/0x6E867b840f11cC1d9c6e16d1f76D737199bc907c) |
+| `CompliantPaymentGuard` for `BVUSD` (Cleanverse, D-048) | [`0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`](https://testnet.monadexplorer.com/address/0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af) |
+| `BVUSD`, Baret's test Cleanverse Verified Asset | [`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`](https://testnet.monadexplorer.com/address/0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2) |
 | `SealedStore` (encrypted settings) | [`0xC094af68bE1039f70E1362C2f326542BB2DC21BB`](https://testnet.monadexplorer.com/address/0xC094af68bE1039f70E1362C2f326542BB2DC21BB) |
 
 The demo sites' contracts and every deployment's details: [`docs/CONTRACTS.md`](docs/CONTRACTS.md).

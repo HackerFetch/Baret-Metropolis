@@ -63,6 +63,8 @@ Machine facts that cost time on the first one and may apply here: no `jq` or Doc
 
 ## 5. Task B: Cleanverse, one real settlement
 
+> **Done on the first machine, 2026-10-11 (D-048). Do not repeat it.** aUSDC could not be had (the sandbox's faucet and deposit routes fail), so a CVA of our own was issued through `POST /atoken/launch` (`BVUSD`, `0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`), a second guard deployed for it (`0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`), and both payments run: settled `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b`, and blocked before signing. What is left is Ezgin's step on Render (two addresses on `MONAD_TESTNET_KNOWN_CONTRACTS`) and one run against the live API. The rest of this section is the history.
+
 **The prize asks** for identity verification "structurally coupled to asset movement": the credential (CVI, the A-Pass) checked before any transfer of the compliant asset (CVA, here aUSDC), a real compliance use case and a video of up to five minutes. Full text: `docs/QA_AND_DELIVERY.md` §8.1.
 
 **What exists** (D-034, `docs/CONTRACTS.md` §4.3, gap G-07):
@@ -81,7 +83,7 @@ Machine facts that cost time on the first one and may apply here: no `jq` or Doc
 **Once the wallet holds aUSDC:**
 1. `cast call 0xaC0893567D43C3E7e6e35a72803df05416C1f20D "balanceOf(address)(uint256)" 0x5aE13F1028144842f0384d09091067D6184F8197 --rpc-url https://testnet-rpc.monad.xyz`
 2. Fund the guard as `docs/CONTRACTS.md` §4.3 describes (the allowance is already there).
-3. With the Dynamic agent (`set -a; . ~/.baret/dynamic.env; set +a`): `pnpm --filter @baret/agent-kit baret pay --vault 0x6E867b840f11cC1d9c6e16d1f76D737199bc907c --merchant 0xc448042EdAC1899B023CaA0E9Da5e4a8833de873 --amount 250000 --ref demo-1`. That merchant is verified: the payment must settle.
+3. With the Dynamic agent (`set -a; . ~/.baret/dynamic.env; set +a`): `pnpm --filter @baret/agent-kit baret pay --vault 0x6E867b840f11cC1d9c6e16d1f76D737199bc907c --merchant 0xC448042edaC1899B023cAa0E9dA5E4a8833de873 --amount 250000 --ref demo-1`. That merchant is verified: the payment must settle.
 4. The same to `0x1365566191bAA9872A64AcDce963751d5343ff49` (no credential): Baret must block it before signing and name the party; on the chain it would revert with `NotVerified`.
 5. Record both hashes in `docs/CONTRACTS.md` §4.3, close G-07 in `docs/SYSTEM_GAPS.md`, tick E6 in `tasks/FOR_EZGIN.md`, and tell Hale in `tasks/FOR_HALE.md`: this pair is the Cleanverse part of the video.
 

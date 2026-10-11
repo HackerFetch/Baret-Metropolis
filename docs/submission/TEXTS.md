@@ -94,7 +94,9 @@ Common links, used below:
 
 > Use case: Travel Rule-compliant agent payments. An AI agent pays merchants in aUSDC, a Cleanverse Verified Asset, and both parties of every payment must hold a valid Cleanverse Verified Identity. Identity is coupled to movement in two places. **Before signing:** Baret's compliance detector reads both parties' A-Pass credentials on Monad for every aUSDC transfer and blocks one where a party has none, naming that party ("this asset only moves between verified wallets"). **In the contract:** `CompliantPaymentGuard` (`0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`) checks that both parties hold an active credential of at least the owner's minimum tier before it moves anything, so an unverified merchant cannot be paid whatever the agent signs.
 >
-> Judges can run it on <https://baret-metropolis.vercel.app/agents>: "Pay aUSDC to a verified wallet" (`0xc448042EdAC1899B023CaA0E9Da5e4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
+> Judges can run it on <https://baret-metropolis.vercel.app/agents>: "Pay aUSDC to a verified wallet" (`0xC448042edaC1899B023cAa0E9dA5E4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
+
+**E6 settled on 2026-10-11 (D-048):** the text above may add: "A payment settled through the contract between two verified identities: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b`, in `BVUSD` (`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`), a Cleanverse Verified Asset Baret issued through Cleanverse's API, from the guard at `0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`; the same payment to a wallet with no credential is stopped before the agent signs." It is not aUSDC and the text must not say so.
 
 **[gate]** the demo video (`docs/submission/SCRIPTS.md` 3.1). Shots 4 and 5 (a live settlement) only if E6 has settled one; otherwise the text and the video stop at the check and the contract's `canPay`, and never show a settlement.
 

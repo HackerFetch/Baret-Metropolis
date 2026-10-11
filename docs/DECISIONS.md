@@ -351,3 +351,18 @@
 **Note (AK-5, resolved):** Showcase site names are not being renamed with a Monad theme; the original names are kept — see D-010.
 
 **Rule:** When an open decision is settled, it is removed from this table, added above as a numbered D-XXX entry, and the other files it affects (`ARCHITECTURE.md`, `CONTRACTS.md`, etc.) are updated at the same time.
+
+### D-048 — Cleanverse: a CVA of our own, and the first real settlement between verified identities
+
+**Date:** 2026-10-11 · **Owner:** Ezgin
+
+**Context:** `CompliantPaymentGuard` (D-034) was deployed and tested on a fork, and no payment had settled through it: it pays in aUSDC, the deploy wallet held none, and only Cleanverse's operator mints it. With the invitation to `docs.cleanverse.com` the documented routes could be tried with the hackathon api-id. On the sandbox the routes that would bring aUSDC do not answer: `POST /faucet`, `/query_deposit_address`, `/query_deposit_atoken_list` and `/get_white_list` all return `0002 Internal server error` (for other chains too), and Access Core's `deposit` on the chain is open to deposit members only, which the deploy wallet is not. The CVA and Validator routes do answer.
+
+**Decision:** Issue a Cleanverse Verified Asset of our own through the documented route and pay in that. `POST /atoken/launch` (AES-encrypted body, rule: minimum tier 1, no country or group limit) issued **Baret Verified Dollar, `BVUSD`**, 6 decimals, at `0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2` on Monad testnet, admin the deploy wallet; Cleanverse's policy contract reports it registered, so every transfer of it asks the same policy as aUSDC. The admin granted itself `MINTER_ROLE` and minted 100. A second `CompliantPaymentGuard`, the same source with `BVUSD` as its asset, is at `0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af` (Sourcify, exact match), with the same agent, merchants and caps as the first. The aUSDC guard stays as it is.
+
+**What happened on the chain:** the Dynamic agent ran `baret pay` to the verified merchant `0xC448042edaC1899B023cAa0E9dA5E4a8833de873` (tier 5): Baret answered Safe, the agent signed, and 0.25 BVUSD moved from the owner to the merchant in `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b` with a `Settled` event naming both credentials. The same command to `0x1365566191bAA9872A64AcDce963751d5343ff49` (no credential) was stopped before signing: Blocked, `COMPLIANCE_NO_CREDENTIAL`, reason `NoCredential`, refused by the guard. A direct `transfer` of BVUSD to that wallet reverts in the token itself.
+
+**Found on the way:** the honest payment read Caution for "many actions in one signature" (17). The count took every frame that is not a `STATICCALL`, so a proxy's `DELEGATECALL` into its own implementation counted, also inside a read. An operation is now a call that can change something: not a read, nothing inside a read, and not a `DELEGATECALL` (`analysis/effects.ts`, `TraceFrame.readOnly`), the same rule the nesting measure already followed. The payment is under the threshold of 10 and reads Safe. `verify:demo` against a local server with this change agrees on the 18 scenarios it agreed on before it.
+
+**Not claimed:** no aUSDC has moved through a Baret contract. BVUSD is a test asset Baret issued in Cleanverse's sandbox; it is compliant because Cleanverse's policy gates it, not because anything backs it. The two runs went through a local Baret server that knows the two new addresses; the live API answers Caution for the honest one until both are on `MONAD_TESTNET_KNOWN_CONTRACTS` on Render and this branch is deployed.
+

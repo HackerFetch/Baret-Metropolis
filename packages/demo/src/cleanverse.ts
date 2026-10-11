@@ -21,7 +21,7 @@ export const CLEANVERSE = {
    * scenario built on them stops agreeing if their owner moves the funds.
    */
   verifiedHolder: "0x888895E314BF33CEeBCF5320279061aed3a5E2bd",
-  verifiedRecipient: "0xc448042EdAC1899B023CaA0E9Da5e4a8833de873",
+  verifiedRecipient: "0xC448042edaC1899B023cAa0E9dA5E4a8833de873",
 } as const satisfies Record<string, Address | number>;
 
 const ERC20 = parseAbi(["function transfer(address to, uint256 amount) returns (bool)"]);

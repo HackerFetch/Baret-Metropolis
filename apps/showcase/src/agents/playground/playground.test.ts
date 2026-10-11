@@ -242,7 +242,7 @@ describe("the playground source, live (VITE_BARET_PLAYGROUND=live)", () => {
   it("sends the Cleanverse actions from the real verified holder, not the playground agent", async () => {
     const HOLDER = "0x888895E314BF33CEeBCF5320279061aed3a5E2bd";
     const AUSDC = "0xaC0893567D43C3E7e6e35a72803df05416C1f20D";
-    const RECIPIENT = "0xc448042EdAC1899B023CaA0E9Da5e4a8833de873";
+    const RECIPIENT = "0xC448042edaC1899B023cAa0E9dA5E4a8833de873";
     const fetch = vi.fn(async () => okResponse("safe"));
     vi.stubGlobal("fetch", fetch);
     await sourceFor(true, FUNDED)(
