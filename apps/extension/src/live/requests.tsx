@@ -1,6 +1,6 @@
 import { transfers, type WalletCall } from "@baret/wallet-core";
 import { fromAnalyze, type SignContext, unreachable } from "@baret/wallet-ui/data/analyze";
-import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
+import { toUnits } from "@baret/wallet-ui/data/format";
 import type { SignRequest as SignRequestData } from "@baret/wallet-ui/data/types";
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { type JSX, useEffect, useRef, useState } from "react";
@@ -18,6 +18,7 @@ import { type Decision, MessageView, TypedDataView } from "../entrypoints/popup/
 import { ConnectPhase } from "../entrypoints/popup/screens/Connect.js";
 import { fromTransaction } from "../entrypoints/popup/screens/Sign.js";
 import { grantsFrom, isPayment, paymentFrom, problemFrom, withGrants } from "./records.js";
+import { loggedRow } from "./row.js";
 import {
   type AnalyzeResponse,
   chain,
@@ -178,30 +179,7 @@ export function LiveTransaction({
     };
   }, []);
 
-  /**
-   * The log row with the words its sentence needs. A site's call names no
-   * amount or asset by itself: an allowance is logged as one, anything else
-   * as what the simulation says left the account, or the MON the call carries.
-   */
-  const row = (item: Activity): Activity => {
-    if (item.values.asset) return item;
-    const approval = shown.approvals[0];
-    if (approval) {
-      return {
-        ...item,
-        kind: "allowance",
-        counterparty: approval.spender,
-        values: { asset: approval.unit },
-      };
-    }
-    const out = shown.changes.find((change) => change.direction === "out");
-    return {
-      ...item,
-      values: out
-        ? { amount: out.value, asset: out.unit }
-        : { amount: fromUnits(call.value, 18), asset: "MON" },
-    };
-  };
+  const row = (item: Activity): Activity => loggedRow(item, shown, call.value);
 
   const tx: TransactionRequest = {
     kind: "transaction",

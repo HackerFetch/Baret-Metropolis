@@ -20,20 +20,35 @@ const { fund } = extOnboarding;
 
 type Funds = "idle" | "watching" | "arrived";
 
-export function Funds({ onNext }: { onNext: () => void }): JSX.Element {
+/** A balance from Monad with two decimals, as every other screen shows it. */
+const two = (balance: string): string => {
+  const n = Number(balance);
+  return Number.isFinite(n) ? n.toFixed(2) : balance;
+};
+
+export function Funds({
+  onNext,
+  restored = false,
+}: {
+  onNext: () => void;
+  /** The account came from a recovery phrase: MON it holds was there before, it did not arrive. */
+  restored?: boolean;
+}): JSX.Element {
   const { state } = useExtension();
   const live = state.scenario === "live";
   // Live: the balance Monad reports for the new account, read again every
   // few seconds by the page (live/LiveOptions.tsx). The address is watched
   // from the start: MON may come from the faucet or from another account.
-  const balance = live ? (activeAccount(state)?.balance ?? "0") : null;
+  const held = live ? (activeAccount(state)?.balance ?? "0") : null;
+  // Shown with two decimals; the minimum is checked against what Monad said.
+  const balance = held === null ? null : two(held);
   const [sampleFunds, setFunds] = useState<Funds>("idle");
-  const funded = balance !== null && Number(balance) >= MINIMUM;
+  const funded = held !== null && Number(held) >= MINIMUM;
   const funds: Funds = balance === null ? sampleFunds : funded ? "arrived" : "watching";
   const amount = balance ?? FAUCET_AMOUNT;
   const noteId = useId();
   const minimumId = useId();
-  const arrived = funds === "arrived" && Number(amount) >= MINIMUM;
+  const arrived = funds === "arrived" && Number(held ?? amount) >= MINIMUM;
 
   // The sample's faucet transfer, once the reader has opened the faucet.
   useEffect(() => {
@@ -78,7 +93,7 @@ export function Funds({ onNext }: { onNext: () => void }): JSX.Element {
         {funds === "watching"
           ? fund.waiting
           : funds === "arrived"
-            ? fill(fund.arrived, { amount: `${amount} ${SYMBOL}` })
+            ? fill(live && restored ? fund.holds : fund.arrived, { amount: `${amount} ${SYMBOL}` })
             : ""}
       </p>
 

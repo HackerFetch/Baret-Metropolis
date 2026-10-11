@@ -164,7 +164,7 @@ export function Component(): JSX.Element {
           ) : null}
           {screen === "key" ? <Key onNext={() => go("backup")} /> : null}
           {screen === "backup" ? <Backup onNext={() => go("fund")} /> : null}
-          {screen === "fund" ? <Funds onNext={() => go("account")} /> : null}
+          {screen === "fund" ? <Funds restored={restored} onNext={() => go("account")} /> : null}
           {screen === "account" ? <Account onNext={() => go("rules")} /> : null}
           {screen === "rules" ? <Rules onNext={() => go("done")} /> : null}
           {screen === "done" ? <Done /> : null}

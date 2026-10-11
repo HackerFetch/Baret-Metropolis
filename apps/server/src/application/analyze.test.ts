@@ -4,7 +4,7 @@ import {
   analyzeRequestSchema,
   FINDING_CODES,
 } from "@baret/guard";
-import { type Address, getAddress, serializeTransaction } from "viem";
+import { type Address, getAddress, serializeTransaction, toFunctionSelector } from "viem";
 import { afterAll, describe, expect, it } from "vitest";
 import type { CallParams } from "../infra/rpc.js";
 import {
@@ -89,6 +89,31 @@ describe("simulation", () => {
     rpc.estimate = null; // a revert has no gas estimate, so the fee is unknown
     const r = await run(tx({ to: PEER, value: "1" }), rpc);
     expect(codes(r)).toEqual(["SIMULATION_FAILED"]);
+  });
+
+  it("names the vault's own error when a payment reverts on a cap", async () => {
+    const rpc = new FakeRpc();
+    rpc.outcome = {
+      ok: false,
+      revertReason: "Execution reverted for an unknown reason.",
+      revertData: toFunctionSelector("ExceedsPerTxCap()"),
+    };
+    rpc.estimate = null;
+    const r = await run(tx({ to: PEER, value: "1" }), rpc);
+    expect(r.findings.find((f) => f.code === "SIMULATION_FAILED")?.details).toEqual({
+      revertReason: "The amount is over this merchant's cap per payment.",
+      revertError: "ExceedsPerTxCap",
+    });
+  });
+
+  it("keeps the node's sentence for an error it cannot read", async () => {
+    const rpc = new FakeRpc();
+    rpc.outcome = { ok: false, revertReason: "Execution reverted.", revertData: "0xdeadbeef" };
+    rpc.estimate = null;
+    const r = await run(tx({ to: PEER, value: "1" }), rpc);
+    expect(r.findings.find((f) => f.code === "SIMULATION_FAILED")?.details).toEqual({
+      revertReason: "Execution reverted.",
+    });
   });
 
   it("says when there is no trace", async () => {

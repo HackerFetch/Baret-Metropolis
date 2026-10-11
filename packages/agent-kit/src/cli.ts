@@ -229,6 +229,17 @@ function paymentFrom(values: PayFlags) {
 
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
 
+/** A finding as the CLI prints it: its details too, when it has any (a revert's reason). */
+const shown = (f: {
+  code: string;
+  values: unknown;
+  details?: Record<string, unknown> | undefined;
+}) => ({
+  code: f.code,
+  values: f.values,
+  ...(f.details ? { details: f.details } : {}),
+});
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
   const { values, positionals } = parseArgs({
@@ -369,7 +380,7 @@ async function main(argv: string[]): Promise<number> {
           decision: verdict.decision,
           reviewed: false,
           signed: false,
-          findings: verdict.findings.map((f) => ({ code: f.code, values: f.values })),
+          findings: verdict.findings.map(shown),
         });
         return EXIT.blocked;
       }
@@ -400,7 +411,7 @@ main(process.argv.slice(2))
       print({
         decision: err.verdict.decision,
         signed: false,
-        findings: err.verdict.findings.map((f) => ({ code: f.code, values: f.values })),
+        findings: err.verdict.findings.map(shown),
         firedRules: err.verdict.firedRules,
       });
       process.exit(EXIT.blocked);
