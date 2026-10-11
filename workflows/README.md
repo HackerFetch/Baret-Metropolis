@@ -80,4 +80,4 @@ The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xa1b9799281003
 
 The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09), block 70195240) went through the mock forwarder to the receiver and wrote ten entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0x57862f4c20fd3450bf63381235b1d36095daf364`, and `safe` for the same transfer to a wallet that is not on the feed; `GET /v1/audit/reputation/0x57862f4c20fd3450bf63381235b1d36095daf364` names this transaction. The receiver was back on the production forwarder with the workflow-owner check on when the script ended (read from the chain).
 
-Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11.
+Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11. Access was requested that day with `cre account access` and waits on Chainlink.
