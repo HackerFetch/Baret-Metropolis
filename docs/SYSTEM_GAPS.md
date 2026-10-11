@@ -170,6 +170,8 @@ The per-minute limits are per visitor since #63, and that visitor is the first a
 
 **Switched on 2026-10-11 (API `18fb4f3`), one hole found and closed (branch `edge-client-address`).** With the secret on all three and `BARET_PROXY_HOPS=3`, `BARET_EDGE_PROXY_HOPS=4` on Render: 8 of 8 direct requests with a made-up `X-Forwarded-For` stayed in the caller's own bucket, also with a guessed `x-baret-edge`. Through a site, 12 of 12 plain requests landed in the visitor's bucket, but about half of the requests that carried a made-up `X-Forwarded-For` got a fresh one, with `forwardedHops` still 4: the first entry the rewrite forwards is not always Vercel's own. The middleware now names the visitor itself in `x-baret-client` (the address Vercel saw the connection from), and the server uses that on a request that carries the secret; the hop count stays as the fallback when the edge names none.
 
+**Closed 2026-10-11 (API and both sites on `3d9c6ca`).** 54 of 54 requests stayed in the caller's own bucket: through each site with a made-up `X-Forwarded-For` (12 and 12), with a made-up `x-baret-client`, `x-real-ip` and `x-vercel-forwarded-for` (6 and 6), directly with all of them plus a guessed `x-baret-edge` (6), and plain. Not checked from outside, because it needs two networks: two real visitors of one site getting a bucket each; the unit test in `apps/server/src/api/app.test.ts` covers that rule.
+
 ### G-18 · Contracts are unaudited testnet deployments
 
 Tested with `forge test` (85 tests) and verified on Sourcify; no audit. In `docs/CONTRACTS.md` two lines are unticked: the fuzz of the cap arithmetic as its own item, and the Tenderly traces for the video. Nothing is on mainnet and nothing is planned there.
