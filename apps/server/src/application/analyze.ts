@@ -36,6 +36,7 @@ import type { ReviewService } from "./review.js";
 import type { SealedRelay } from "./sealed.js";
 import type { UnreadKinds } from "./unread.js";
 import type { ExplanationCache, VerdictCache } from "./verdicts.js";
+import type { X402Paywall } from "./x402.js";
 
 export const ANALYSIS_VERSION = "1";
 /** Bounds the reads one request can cause. */
@@ -63,6 +64,8 @@ export interface AnalyzeDeps {
   review?: ReviewService | null;
   /** Counts the kinds of signed message the server could not read. */
   unreadKinds?: UnreadKinds | null;
+  /** Serves and settles /demo/paywall. Absent or null: that route answers 503. */
+  paywall?: X402Paywall | null;
   /** Relays /v1/sealed's writes. Absent or null: that route answers 503. */
   sealed?: SealedRelay | null;
   /** Writes /v1/policy/draft's proposals. Absent or null: that route answers 503. */

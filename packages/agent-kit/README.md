@@ -62,6 +62,21 @@ pnpm --filter @baret/agent-kit baret analyze --to 0xac9517a70c88480c9fA7E9a280DA
 
 This one prints the whole verdict and exits `1`: the address is on Baret's blocklist. The commands are `address`, `analyze`, `submit`, `pay`, `review`, `wallet create` and `policy list`; `baret pay --vault <vault> --merchant <merchant> --amount <base units> --ref <text>` pays through a deployed `PaymentGuard` vault instead of a raw transaction. Exit codes: `0` when Baret clears the call (for `submit` and `pay`, once it is sent; for `review`, once the reviewer approves), `1` when Baret does not clear it (Blocked, or Caution without `BARET_ALLOW_CAUTION=1`) or the reviewer vetoes it, and nothing was signed, `2` for anything else. The full list of settings is the comment at the top of `src/cli.ts`: `BARET_API_URL` (default: the live API above), `BARET_API_KEY`, `BARET_NETWORK` (`testnet` unless set; `mainnet` also needs `MONAD_MAINNET_RPC_URL`), `MONAD_TESTNET_RPC_URL`, `BARET_POLICY_TEMPLATE`, `BARET_ALLOW_CAUTION`, the `QWEN_*` settings below, and one signer: `BARET_AGENT_PRIVATE_KEY`, or a Dynamic server wallet (`DYNAMIC_ENVIRONMENT_ID`, `DYNAMIC_AUTH_TOKEN` and `BARET_AGENT_WALLET_PASSWORD`).
 
+## Paying an HTTP 402 (x402)
+
+```ts
+import { localSigner, payX402 } from "@baret/agent-kit";
+
+const paid = await payX402("https://baret-monad-api.onrender.com/demo/paywall?q=what%20is%20x402", {
+  signer: localSigner(process.env.BARET_AGENT_PRIVATE_KEY as `0x${string}`),
+  baretUrl: "https://baret-monad-api.onrender.com",
+  maxAmount: 100_000n, // never sign a 402 that asks more than 0.10 USDC
+});
+console.log(paid.response.status, paid.receipt?.transaction, await paid.response.json());
+```
+
+The first request comes back 402 with a price, a token and an address. `payX402` builds the EIP-3009 `TransferWithAuthorization` for exactly those terms, sends it to Baret with the terms beside it, and signs only when Baret clears it; a message that pays another address or token, or more than the agent's caps, throws `GuardBlockedError` with nothing signed. The payer needs test USDC and no MON: the server that takes the payment submits it. From a terminal: `pnpm --filter @baret/agent-kit baret x402 <url> --max 100000`. Pass `history` (the agent's payments of the last 24 hours, each call returns its own as `spend`) when the policy has an hourly or daily cap.
+
 ## What comes back, and what fail-closed means here
 
 Same contract as `@baret/guard`'s `/v1/analyze` (`../guard/README.md`): `decision`, `findings`, `confidence`. `AgentWallet` adds nothing optimistic on top — a verdict it cannot parse, a server it cannot reach, or a timeout all surface as `GuardUnreachableError` from `evaluate()`, and `guardedSign`/`guardedSubmit` never reach the signer unless the verdict itself says `safe` (or `caution` with `allowCaution: true`). There is no path from "Baret did not answer" to a signature.
