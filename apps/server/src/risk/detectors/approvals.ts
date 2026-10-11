@@ -2,12 +2,31 @@ import type { Detector, FindingDraft } from "../../analysis/context.js";
 import { formatAmount, tokenMeta } from "../../analysis/format.js";
 
 /**
- * Allowances, operator access and permits the user grants. For an unlimited
+ * Allowances, operator access and permits the user grants, and a signed
+ * message whose grant Baret cannot read. For an unlimited
  * allowance, {amount} is what this same request actually spends of the token,
  * the amount a bounded approval would need; empty when nothing is spent.
  */
 export const approvals: Detector = (ctx) => {
   const out: FindingDraft[] = [];
+  // A signed message. The values stay empty on purpose: the message's own
+  // names are text the site chose.
+  const signature = ctx.effects.signature;
+  if (signature) {
+    const unread = signature.kind === "unread";
+    if (signature.wrongChain || (unread && signature.valueBearing)) {
+      // Cannot be read and may move value, or is meant for another chain,
+      // where the same account exists: stopped under every policy.
+      out.push({
+        code: "SIGNATURE_NOT_UNDERSTOOD",
+        values: {},
+        details: { reason: signature.wrongChain ? "chain" : signature.reason },
+      });
+    } else if (unread) {
+      // Cannot be read, and nothing in it points at funds: said, not stopped.
+      out.push({ code: "SIGNATURE_UNRECOGNISED", values: {} });
+    }
+  }
   for (const a of ctx.effects.approvals) {
     const meta = tokenMeta(ctx, a.contract);
     if (a.kind === "operator") {
