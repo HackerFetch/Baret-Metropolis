@@ -174,6 +174,23 @@ export const findings = {
     fix: "Sign only if you know what this site uses the signature for.",
   },
 
+  SIGNED_ORDER_DETECTED: {
+    emitter: "approvals",
+    values: ["count"],
+    title: "A marketplace order",
+    body: "Signing this places an order for {count} of your items. Nothing moves now. Anyone can fill it later, at any time before it ends.",
+    why: "An order is a standing offer, not a transfer. It stays valid after you close the page, until it ends or you cancel it on-chain.",
+    fix: "Check what you give and what you are paid, below, before you sign.",
+  },
+  ORDER_PAYS_NOTHING: {
+    emitter: "approvals",
+    values: ["count"],
+    title: "This order pays you nothing",
+    body: "The order gives away {count} of your items and nothing in it is paid to you. Whoever fills it takes them for free.",
+    why: "Drainers ask for an order priced at nothing because it looks like a listing and costs no fee to sign.",
+    fix: "Decline. A real listing names what you are paid.",
+  },
+
   // programs detector ------------------------------------------------------
 
   RISKY_CONTRACT_INTERACTION: {

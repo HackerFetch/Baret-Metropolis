@@ -14,10 +14,12 @@ import {
 import { type Address, getAddress } from "viem";
 import type { AnalysisContext, DelegateCall, Lookup, TokenMeta } from "../analysis/context.js";
 import {
+  carriedCall,
   type Effects,
   effectsFromCalldata,
   effectsFromTrace,
   effectsFromTypedData,
+  namesAnotherChain,
 } from "../analysis/effects.js";
 import { tokenMeta } from "../analysis/format.js";
 import type { AppConfig, NetworkConfig } from "../config/env.js";
@@ -32,6 +34,7 @@ import type { Explainer } from "./explain.js";
 import type { KimiBudget, PolicyDrafter } from "./policy-draft.js";
 import type { ReviewService } from "./review.js";
 import type { SealedRelay } from "./sealed.js";
+import type { UnreadKinds } from "./unread.js";
 import type { ExplanationCache, VerdictCache } from "./verdicts.js";
 
 export const ANALYSIS_VERSION = "1";
@@ -58,6 +61,8 @@ export interface AnalyzeDeps {
   explanations?: ExplanationCache | null;
   /** Runs /v1/review's demo. Absent or null: that route answers 503. */
   review?: ReviewService | null;
+  /** Counts the kinds of signed message the server could not read. */
+  unreadKinds?: UnreadKinds | null;
   /** Relays /v1/sealed's writes. Absent or null: that route answers 503. */
   sealed?: SealedRelay | null;
   /** Writes /v1/policy/draft's proposals. Absent or null: that route answers 503. */
@@ -114,6 +119,40 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   };
   let feeWei: bigint | null = null;
 
+  /** Runs a call on the node and reads what it does to `who`. */
+  const simulate = async (call: NormalizedTx, who: Address, paysFee: boolean) => {
+    const params: CallParams = {
+      from: call.from,
+      to: call.to,
+      data: call.data,
+      value: call.value,
+      gas: call.gas,
+    };
+    const [outcome, estimate, frame, gasPrice] = await Promise.all([
+      rpc.call(params, block),
+      rpc.estimateGas(params, block),
+      rpc.traceCall(params, block),
+      call.gasPrice ?? rpc.getGasPrice(),
+    ]);
+    const traced = parseCallTrace(frame);
+    const gasLimit = call.gas ?? estimate;
+    return {
+      trace: traced,
+      simulation: {
+        ran: true,
+        ok: outcome.ok,
+        revertReason: outcome.ok ? null : outcome.revertReason,
+        revertData: outcome.ok ? null : outcome.revertData,
+        traced: traced !== null,
+        gasLimit,
+      },
+      // Whoever relays a signed call pays for it, not the account that signed.
+      feeWei: !paysFee ? 0n : gasLimit !== null ? gasLimit * gasPrice : null,
+      effects:
+        traced && outcome.ok ? effectsFromTrace(traced, who) : effectsFromCalldata(call, who),
+    };
+  };
+
   if (req.transaction) {
     try {
       tx = await decodeTransaction(
@@ -125,34 +164,26 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
       throw new AnalyzeInputError(err instanceof Error ? err.message : String(err));
     }
     user = req.userWallet ? getAddress(req.userWallet) : tx.from;
-    const params: CallParams = {
-      from: tx.from,
-      to: tx.to,
-      data: tx.data,
-      value: tx.value,
-      gas: tx.gas,
-    };
-    const [outcome, estimate, frame, gasPrice] = await Promise.all([
-      rpc.call(params, block),
-      rpc.estimateGas(params, block),
-      rpc.traceCall(params, block),
-      tx.gasPrice ?? rpc.getGasPrice(),
-    ]);
-    trace = parseCallTrace(frame);
-    const gasLimit = tx.gas ?? estimate;
-    simulation = {
-      ran: true,
-      ok: outcome.ok,
-      revertReason: outcome.ok ? null : outcome.revertReason,
-      revertData: outcome.ok ? null : outcome.revertData,
-      traced: trace !== null,
-      gasLimit,
-    };
-    effects = trace && outcome.ok ? effectsFromTrace(trace, user) : effectsFromCalldata(tx, user);
-    feeWei = gasLimit !== null ? gasLimit * gasPrice : null;
+    ({ trace, simulation, feeWei, effects } = await simulate(tx, user, true));
   } else if (req.typedData) {
-    user = getAddress(req.typedData.signer);
-    effects = effectsFromTypedData(req.typedData, network.chainId);
+    // A message that carries a call is not guessed at: its call is simulated,
+    // exactly as a transaction's would be.
+    const carried = carriedCall(req.typedData);
+    if (carried) {
+      tx = carried.tx;
+      user = carried.user;
+      ({ trace, simulation, feeWei, effects } = await simulate(carried.tx, carried.user, false));
+      effects.signature = {
+        kind: "read",
+        reason: null,
+        valueBearing: false,
+        wrongChain: namesAnotherChain(req.typedData, network.chainId),
+        verifier: carried.verifier,
+      };
+    } else {
+      user = getAddress(req.typedData.signer);
+      effects = effectsFromTypedData(req.typedData, network.chainId);
+    }
   } else {
     throw new AnalyzeInputError("send exactly one of `transaction` or `typedData`");
   }

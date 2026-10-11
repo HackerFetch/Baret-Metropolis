@@ -197,7 +197,7 @@ export const policy = {
       group: "approvals",
       label: "Block signed allowances",
       hint: "Blocks a permit: a signature that grants an allowance without a transaction, and is easy to miss.",
-      codes: ["PERMIT_SIGNATURE_DETECTED", "SIGNATURE_NOT_UNDERSTOOD"],
+      codes: ["PERMIT_SIGNATURE_DETECTED", "SIGNATURE_NOT_UNDERSTOOD", "ORDER_PAYS_NOTHING"],
     },
 
     // Dangerous calls
@@ -377,6 +377,7 @@ export const policy = {
         "LOW_CONFIDENCE_INCOMPLETE_DATA",
         "ERC20_APPROVAL_GRANTED",
         "SIGNATURE_UNRECOGNISED",
+        "SIGNED_ORDER_DETECTED",
         "NANSEN_FLAGGED_FRESH_WALLET",
         "NANSEN_FLAGGED_WHALE_COUNTERPARTY",
         "DEEP_CALL_NESTING",
