@@ -11,6 +11,7 @@ import { LiveAgentPayments } from "../agents/LiveAgentPayments.js";
 import { Playground } from "../agents/playground/Playground.js";
 import type { PolicyName } from "../agents/playground/sample.js";
 import { Quickstart } from "../agents/Quickstart.js";
+import { RegistryLookup } from "../agents/RegistryLookup.js";
 import { AGENTS_ART } from "../shared/assets.js";
 import { ClosingBand } from "../shared/ClosingBand.js";
 
@@ -18,7 +19,8 @@ import { ClosingBand } from "../shared/ClosingBand.js";
  * /agents, for a developer about to give an agent access to money. Seven
  * blocks (owner's order, 2026-10-03; the live agent added H6, 2026-10-09):
  * the claim at night, the three layers, a real Dynamic agent's own payments
- * read live from the indexer, the quickstart, the playground, fair
+ * read live from the indexer and a lookup of Baret's reputation registry
+ * (2026-10-11), the quickstart, the playground, fair
  * questions, and the way in. The problem, the control model, the chooser,
  * fail-closed and revoke are folded into those or cut. One policy choice
  * drives the quickstart's code and the playground's answers. The questions
@@ -37,6 +39,7 @@ export function Component() {
       <AgentsHero />
       <Layers />
       <LiveAgentPayments />
+      <RegistryLookup />
       <Quickstart policy={policy} />
       <Playground policy={policy} onPolicy={setPolicy} />
       <Section id="faq" ground="deep">

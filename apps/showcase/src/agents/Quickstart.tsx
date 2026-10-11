@@ -16,25 +16,27 @@ import type { PolicyName } from "./playground/sample.js";
  * From install to the first blocked transaction. Left: the three steps on
  * hairlines and a hand picking one of three tags (pick a policy). Right: the
  * code, one sample at a time behind a radio group (HTTP API, TypeScript,
- * any language): the line before it, the code with a copy button, the line
+ * any language, MCP): the line before it, the code with a copy button, the line
  * after it. The SDK and CLI samples carry the policy picked in the
  * playground. The code scrolls sideways inside its own box only, and the box
- * takes keyboard focus so it can be scrolled without a pointer. All three
- * samples work today, from a clone of the repository (none is on npm yet);
+ * takes keyboard focus so it can be scrolled without a pointer. All four
+ * samples work today: the HTTP and MCP ones against the live API, the SDK
+ * and CLI ones from a clone of the repository (none is on npm yet);
  * a sample not in `WORKS_TODAY` would carry a status line and no copy
  * button instead, for whenever the next one is only planned.
  */
 
 const ID = "quickstart";
 const { quickstart, steps } = agents;
-const SAMPLES = {
+export const SAMPLES = {
   http: quickstart.http,
   sdk: quickstart.sdk,
   cli: quickstart.cli,
+  mcp: quickstart.mcp,
 } as const;
 type SampleId = keyof typeof SAMPLES;
 /** Every sample that runs today, from a clone of the repository. */
-const WORKS_TODAY: readonly SampleId[] = ["http", "sdk", "cli"];
+export const WORKS_TODAY: readonly SampleId[] = ["http", "sdk", "cli", "mcp"];
 
 export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
   const name = useId();
@@ -66,7 +68,7 @@ export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
         <Reveal className="col-span-4 min-w-0 md:col-span-8 lg:col-span-7" delay={0.06}>
           <fieldset>
             <legend className="sr-only">{quickstart.tabs}</legend>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {(Object.keys(SAMPLES) as SampleId[]).map((id) => (
                 <Segment
                   key={id}

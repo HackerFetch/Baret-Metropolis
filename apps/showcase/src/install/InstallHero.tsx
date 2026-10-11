@@ -5,16 +5,17 @@ import { T } from "@baret/web-ui/lib/type";
 import type { JSX } from "react";
 import { INSTALL_ART, LCP_SIZES } from "../shared/assets.js";
 import { PageHero } from "../shared/PageHero.js";
-import { type Browser, BUILDS, leadBuild, otherBuild } from "./builds.js";
+import { type Browser, BUILDS, leadBuild, otherBuild, sourceOf } from "./builds.js";
 
 /**
- * The opening with the download in it, so the main action is in the first
- * viewport. The detected browser picks the lead build; its line keeps its
- * height while detection resolves, so nothing shifts.
+ * The opening with the way in, so the main action is in the first viewport.
+ * The detected browser picks the lead build; its line keeps its height while
+ * detection resolves, so nothing shifts.
  *
- * With a published build: the download button, what is inside the zip, a
- * mono meta line and the other build as a quiet link. Today none is
- * published, so the hero says that plainly and points at the source.
+ * What the button does follows where the build comes from: the store listing
+ * once it is public (in a new tab, so the steps below stay in reach), else
+ * the zip (what is inside it, a mono meta line, the other build as a quiet
+ * link), else the source with the hero saying so.
  */
 
 const { hero, download } = install;
@@ -31,60 +32,75 @@ function Meta({ id }: { id: "chromium" | "firefox" }): JSX.Element {
 export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
   const lead = BUILDS[leadBuild(browser)];
   const other = BUILDS[otherBuild(lead.id)];
-  const published = lead.href !== null;
+  const source = sourceOf(lead);
+  const copy = download.builds[lead.id];
+  const otherHref = other.store ?? other.href;
 
-  const actions = published ? (
-    <LinkButton
-      href={lead.href ?? ""}
-      label={lead.action}
-      variant="primary"
-      size="lg"
-      icon="arrow-down"
-      fullOnPhone
-    />
-  ) : (
-    <LinkButton
-      href={download.pending.action.href}
-      label={download.pending.action.label}
-      variant="primary"
-      size="lg"
-      icon="arrow-up-right"
-      fullOnPhone
-    />
-  );
+  const action =
+    source === "store" ? (
+      <LinkButton
+        href={lead.store ?? ""}
+        label={copy.store.action}
+        variant="primary"
+        size="lg"
+        icon="arrow-up-right"
+        fullOnPhone
+        newTab
+      />
+    ) : source === "zip" ? (
+      <LinkButton
+        href={lead.href ?? ""}
+        label={lead.action}
+        variant="primary"
+        size="lg"
+        icon="arrow-down"
+        fullOnPhone
+      />
+    ) : (
+      <LinkButton
+        href={download.pending.action.href}
+        label={download.pending.action.label}
+        variant="primary"
+        size="lg"
+        icon="arrow-up-right"
+        fullOnPhone
+      />
+    );
+
+  const body =
+    source === "store" ? copy.store.body : source === "zip" ? download.body : download.pending.body;
 
   return (
     <PageHero
       title={hero.title}
-      body={hero.body}
+      body={`${hero.body} ${source === "store" ? copy.store.how : copy.developerBuild}`}
       actions={
         <>
           <p className={`${T.small} w-full min-h-[2lh] text-[color:var(--fg)] md:min-h-[1lh]`}>
-            {(published ? hero.detected : hero.detectedPending)[browser]}
+            {(source === "source" ? hero.detectedPending : hero.detected)[browser]}
           </p>
-          {actions}
+          {action}
         </>
       }
       after={
         <div className="grid gap-3 border-t border-[color:var(--rule)] pt-4">
-          <p className={`${T.small} max-w-[56ch]`}>
-            {published ? download.body : download.pending.body}
-          </p>
+          <p className={`${T.small} max-w-[56ch]`}>{body}</p>
           <Meta id={lead.id} />
-          {published && other.href ? (
+          {source !== "source" && otherHref ? (
             <p className={T.small}>
               {download.other}{" "}
               <a
-                href={other.href}
+                href={otherHref}
                 rel="noreferrer"
                 className="font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
               >
                 {other.title}
               </a>
+              {source === "store" && other.store === null ? `, ${download.otherZip}` : null}
             </p>
-          ) : (
+          ) : source === "store" ? null : (
             <p className={`${T.small} max-w-[56ch]`}>
-              {published ? download.status : download.statusPending}
+              {source === "zip" ? copy.status : copy.statusPending}
             </p>
           )}
         </div>

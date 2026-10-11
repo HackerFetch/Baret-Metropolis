@@ -145,6 +145,38 @@ export const agents = {
     reviewLink: { label: "Watch Qwen review an agent's payment", href: "/review" },
   },
 
+  /** A lookup of Baret's reputation registry (2026-10-11): what the
+   *  Chainlink CRE workflow wrote from ScamSniffer's blacklist into the
+   *  ReputationRegistry on Monad, read through the Envio indexer at
+   *  GET /v1/audit/reputation/:address. Fail-closed: an unanswered lookup
+   *  is "unavailable", never "not on the registry". */
+  registry: {
+    title: "Ask Baret's registry about an address.",
+    body: "Baret keeps a reputation registry on Monad, and every check reads it. A Chainlink CRE workflow, run so far in Chainlink's simulator, has written part of ScamSniffer's public blacklist to it.",
+    label: "Address",
+    hint: "An address is 0x followed by 40 hex characters.",
+    lookUp: "Look it up",
+    tryListed: "Try a listed address",
+    /** On the registry since the workflow's first run (live answer, 2026-10-11). */
+    sample: "0xa8f3762b03ae73cbbdb9173d3537c632628727a4",
+    explorer: "https://testnet.monadexplorer.com",
+    loading: "Asking the registry...",
+    listed: "This address is on Baret's registry: {reason}. Severity {level} of 4, {severity}.",
+    /** The contract's scale (ReputationRegistry.sol, MAX_SEVERITY = 4). */
+    severities: { 1: "low", 2: "medium", 3: "high", 4: "critical" },
+    /** One line per reason code the workflow writes; any other code is shown as itself. */
+    reasons: {
+      SCAMSNIFFER_BLACKLIST:
+        "it is on ScamSniffer's public blacklist, written to Monad by Baret's Chainlink CRE workflow",
+    },
+    otherReason: "it was flagged with code {code}",
+    view: "View the transaction that wrote it",
+    clear:
+      "This address is not on Baret's registry. The registry holds only part of ScamSniffer's blacklist, so this does not mean the address is clean. Baret still checks every transaction against your rules.",
+    unavailable: "The registry did not answer. Nothing is cleared, try again in a minute.",
+    invalid: "That is not an address. An address is 0x followed by 40 hex characters.",
+  },
+
   /** Who decides what. A control table earns more trust than a page of
    *  security prose. */
   /** Not rendered on /agents since 2026-10-03 (folded into other blocks or cut for simplicity). */
@@ -227,41 +259,43 @@ export const agents = {
     /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Quickstart",
     title: "From install to your first blocked transaction.",
-    /** Accessible name of the HTTP API / TypeScript / any language picker. */
+    /** Accessible name of the HTTP API / TypeScript / any language / MCP picker. */
     tabs: "Show the code for",
     /** Under a sample whose package or endpoint does not exist yet. Such a sample has no copy button. */
     planned: "Planned. Not published yet, so this code does not run today.",
     /** The one path that works today: the analysis server's own endpoint. */
     http: {
       title: "HTTP API",
-      before: "Works today. Start the server locally and post an unsigned transaction to it.",
+      before:
+        "Works today, with no install. Post an unsigned transaction to the live Baret API on Monad testnet.",
       code: [
-        "curl -X POST http://localhost:8080/v1/analyze \\",
+        "curl -X POST https://baret-monad-api.onrender.com/v1/analyze \\",
         '  -H "content-type: application/json" \\',
         "  -d '{",
         '    "network": "testnet",',
         '    "transaction": {',
-        '      "from": "<agent address>",',
-        '      "to": "<contract address>",',
-        '      "value": "0",',
+        '      "from": "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",',
+        '      "to": "0xac9517a70c88480c9fA7E9a280DA485F7f552C29",',
+        '      "value": "100000000000000000",',
         '      "data": "0x"',
-        "    }",
+        "    },",
+        '    "policyTemplate": "balanced"',
         "  }'",
       ],
       after:
-        "The answer carries a decision: safe, caution or blocked. An agent signs only on safe, since a caution is for a person to read. No answer means no signature.",
+        "The answer carries a decision: safe, caution or blocked. This one is blocked, since the address it pays is flagged. An agent signs only on safe. No answer means no signature.",
     },
     sdk: {
       title: "TypeScript",
       before:
-        "Wrap the signer, then send the way you already do. Works today, from a clone of the repository.",
+        "Wrap the signer, then send the way you already do. Works today, from a clone of the repository, and asks the live Baret API.",
       code: [
         'import { AgentWallet, localSigner } from "@baret/agent-kit";',
         'import { type Hex, parseEther } from "viem";',
         "",
         "const agent = new AgentWallet({",
         "  signer: localSigner(process.env.BARET_AGENT_PRIVATE_KEY as Hex),",
-        '  baretUrl: "http://localhost:8080",',
+        '  baretUrl: "https://baret-monad-api.onrender.com",',
         '  rpcUrl: "https://testnet-rpc.monad.xyz",',
         '  policyTemplate: "balanced",',
         "});",
@@ -291,6 +325,28 @@ export const agents = {
       ],
       after:
         "Exit 0 means Baret cleared it (for submit, it was also sent). Exit 1 means Baret did not clear it, or Qwen vetoed it when QWEN_API_KEY is set, and nothing was signed. Exit 2 means anything else went wrong, such as Baret not answering.",
+    },
+    /** Model Context Protocol (D-045): the live POST /mcp endpoint. */
+    mcp: {
+      title: "MCP",
+      before:
+        "Works today, with no SDK. An agent that speaks the Model Context Protocol adds one URL, https://baret-monad-api.onrender.com/mcp, and can ask Baret before it signs.",
+      code: [
+        "curl -X POST https://baret-monad-api.onrender.com/mcp \\",
+        "  -H 'content-type: application/json' \\",
+        "  -H 'accept: application/json, text/event-stream' \\",
+        "  -d '{",
+        '    "jsonrpc": "2.0",',
+        '    "id": 1,',
+        '    "method": "tools/call",',
+        '    "params": {',
+        '      "name": "address_reputation",',
+        '      "arguments": { "address": "0xa8f3762b03ae73cbbdb9173d3537c632628727a4" }',
+        "    }",
+        "  }'",
+      ],
+      after:
+        "Four tools: check_transaction and check_signature return the verdict before a send or a signature, address_reputation reads the registry, policy_templates lists the three rule sets. This address comes back flagged. No answer means no signature.",
     },
     /** Three levels of involvement, smallest first. */
     /** Not rendered on /agents since 2026-10-03. */

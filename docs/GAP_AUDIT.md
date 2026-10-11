@@ -2,7 +2,7 @@
 
 A read-only audit of what is still missing before the deadline, run by Meriç's agent at 00:45 GMT+3 on 2026-10-11 (`main` at `8a1a04f`): eight lenses (the prizes, the submission package, the live product, the documents, security, the plan, the public repository, the track's scoring), with every blocker and high finding re-checked by a second agent that tried to refute it. Each owner acts on their own items; the task files point here.
 
-**Done since the audit (2026-10-11, Meriç):** item 20 (the KIMI and Qwen articles fact-checked: the fixes are under Hale's task "Fix the two articles" in `tasks/FOR_HALE.md`), item 21 (`docs/WALLET.md` after D-040), item 22 (the extension says it checks every transaction, not every sign request), and item 23 except the wallet's `.env.example` (`docs/FRONTEND.md` on Scrybe and the agent quickstart, an API reference card on `/docs`). `docs/API_REFERENCE.md` also got its eight checked corrections.
+**Done since the audit (2026-10-11, Meriç):** item 20 (the KIMI and Qwen articles fact-checked: the fixes are under Hale's task "Fix the two articles" in `tasks/FOR_HALE.md`), item 21 (`docs/WALLET.md` after D-040), item 22 (the extension says it checks every transaction, not every sign request), and item 23 (`docs/FRONTEND.md` on Scrybe and the agent quickstart, an API reference card on `/docs`, and `apps/wallet/.env.example`). `docs/API_REFERENCE.md` also got its eight checked corrections.
 
 ---
 

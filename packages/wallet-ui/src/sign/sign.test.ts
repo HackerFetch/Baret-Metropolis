@@ -63,6 +63,39 @@ describe("the request's words", () => {
     expect(overrideBody(sample("blocked"))).toMatch(/^Block unlimited allowances stays on\./);
   });
 
+  it("never names a toggle when only a fail-closed finding fired its rule", () => {
+    // SIGNATURE_NOT_UNDERSTOOD and ACCOUNT_CODE_DELEGATION block under every
+    // rule set, so their field may be switched off: no line may name it.
+    for (const [code, rule] of [
+      ["SIGNATURE_NOT_UNDERSTOOD", "blockPermit"],
+      ["ACCOUNT_CODE_DELEGATION", "blockDelegatecall"],
+    ] as const) {
+      const request: SignRequest = {
+        ...sample("blocked"),
+        findings: [{ code, values: {} }],
+        rules: [{ rule }],
+      };
+      expect(blockedSummary(request)).toBe("A check stopped this request. Nothing was signed.");
+      expect(overrideBody(request)).toMatch(/^Your rules stay on\./);
+      expect(ruleRows(request)).toEqual([]);
+    }
+  });
+
+  it("still names a toggle that a toggle finding fired next to a fail-closed one", () => {
+    const request: SignRequest = {
+      ...sample("blocked"),
+      findings: [
+        { code: "SIGNATURE_NOT_UNDERSTOOD", values: {} },
+        { code: "PERMIT_SIGNATURE_DETECTED", values: {} },
+      ],
+      rules: [{ rule: "blockPermit" }],
+    };
+    expect(blockedSummary(request)).toBe(
+      "Block signed allowances stopped this request. Nothing was signed.",
+    );
+    expect(overrideBody(request)).toMatch(/^Block signed allowances stays on\./);
+  });
+
   it("suggests the fallback fix when the allowance carries no amount", () => {
     expect(fixFor(sample("blocked"))).toBe(
       "Decline, then ask the site for a request that fits your rules.",

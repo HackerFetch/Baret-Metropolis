@@ -1,4 +1,4 @@
-import { common, extFrame, optionsAllowances, policies, policy, x402 } from "@baret/content";
+import { common, extFrame, optionsAllowances, policies, x402 } from "@baret/content";
 import { Button, Meter, truncateAddress } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Block, Empty } from "@baret/wallet-ui/components/Block";
@@ -17,6 +17,7 @@ import type { Payment, PaymentPermission, Problem } from "../../../data/types.js
 import { timeOf } from "../../../data/words.js";
 import { Dialog, Figure, INPUT, LINK } from "../parts/kit.js";
 import { DECIMALS, type Draft, readDraft, spentWithin, VAULT_ASSET } from "./x402-money.js";
+import { problemBody } from "./x402-problem.js";
 
 /**
  * Payments, the x402 page. x402 keeps no running total, so this page is where
@@ -60,29 +61,6 @@ function dayOf(iso: string): number {
 /** "0.50 USDC"; a cap that is not set reads None. */
 function capText(value: string | null, asset: string): string {
   return value === null ? common.ui.none : `${amount(value, DECIMALS)} ${asset}`;
-}
-
-type RuleField = keyof typeof policy.fields;
-
-function midSentence(label: string): string {
-  return label.charAt(0).toLowerCase() + label.slice(1);
-}
-
-function isRuleField(key: string): key is RuleField {
-  return Object.hasOwn(policy.fields, key);
-}
-
-/** A problem's sentence: the rule by its name, addresses shortened. */
-function problemBody(problem: Problem): string {
-  const { rule, expected, actual } = problem.values;
-  return fill(problems.types[problem.kind].body, {
-    ...problem.values,
-    merchant: problem.merchant,
-    // The rule sits mid-sentence ("goes over cap per payment"), so its label starts in lower case.
-    ...(rule ? { rule: midSentence(isRuleField(rule) ? policy.fields[rule].label : rule) } : {}),
-    ...(expected ? { expected: truncateAddress(expected) } : {}),
-    ...(actual ? { actual: truncateAddress(actual) } : {}),
-  });
 }
 
 /** An empty block in one line, in the dashed frame of the wallet's empty states. */
