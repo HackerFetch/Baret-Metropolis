@@ -261,5 +261,5 @@ Named in older documents and absent from the code:
 
 - A separate x402 facilitator service: `GET /demo/paywall` settles its own payments (D-046); `docs/X402_FACILITATOR.md` is the older, larger design.
 - Batch, stream and replay variants of analyze.
-- In the extension: more than one account, the allowances list, alerts, the x402 payments page and its interceptor, Swap (`docs/DECISIONS.md` D-040).
+- In the extension: alerts (the post-sign monitor), the facilitators list, PaymentGuard caps as permissions, the x402 interceptor and Swap. Built since D-047: more accounts, the allowances list, a real revoke and the payments page's records.
 - Anything on Monad mainnet.

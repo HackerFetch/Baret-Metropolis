@@ -164,6 +164,8 @@ The per-minute limits are per visitor since #63, and that visitor is the first a
 
 **Server half built 2026-10-11 (branch `proxy-hops`), off until configured.** `GET /health` reports `forwardedHops`, the number of `X-Forwarded-For` entries the request carried. With `BARET_PROXY_HOPS` set to the count a direct request shows, the limits key on the entry the host's proxy wrote, so a made-up address in front buys no new bucket (`apps/server/src/api/client.ts`, tested). A request through a site's rewrite has one more proxy: it is recognised by `x-baret-edge` carrying `BARET_EDGE_SECRET`, and then `BARET_EDGE_PROXY_HOPS` applies. Still to do, in this order: (1) deploy and read `forwardedHops` directly and through both sites' `/api/health`; (2) set `BARET_PROXY_HOPS`; this alone closes the forging for direct callers, and visitors of the sites then share their edge's addresses until (3) an edge middleware on both Vercel projects adds the secret header and `BARET_EDGE_PROXY_HOPS` is set. Step 3 changes how both sites reach the API, so it goes in after the recording, not before.
 
+**Measured on the live API, 2026-10-11 (commit `700dad7`):** a direct request shows `forwardedHops` 3, a direct request with one made-up address 4 (the proxies append, they do not overwrite), and a request through either site's `/api` 4. So `BARET_PROXY_HOPS=3` and, once the sites' edge sends the secret, `BARET_EDGE_PROXY_HOPS=4`.
+
 ### G-18 · Contracts are unaudited testnet deployments
 
 Tested with `forge test` (85 tests) and verified on Sourcify; no audit. In `docs/CONTRACTS.md` two lines are unticked: the fuzz of the cap arithmetic as its own item, and the Tenderly traces for the video. Nothing is on mainnet and nothing is planned there.

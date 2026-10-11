@@ -179,14 +179,35 @@ function Row({
 }
 
 export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
-  const { state, dispatch } = useExtension();
+  const { state, dispatch, derive } = useExtension();
   const [adding, setAdding] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const next = state.accounts.length + 1;
 
-  // Deriving the next account, stood in for by a short wait.
+  // Live: the next account of the recovery phrase, so the same phrase brings
+  // it back anywhere. A locked wallet adds nothing.
   useEffect(() => {
-    if (working === null) return;
+    if (working === null || !derive) return;
+    let alive = true;
+    void derive(next - 1).then((address) => {
+      if (!alive) return;
+      if (address && !state.accounts.some((a) => a.address === address)) {
+        dispatch({
+          type: "addAccount",
+          account: { id: `acc-${next}`, name: working, address, balance: "0" },
+        });
+      }
+      setWorking(null);
+      setAdding(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [working, next, dispatch, derive, state.accounts]);
+
+  // The sample: deriving the next account, stood in for by a short wait.
+  useEffect(() => {
+    if (working === null || derive) return;
     const id = window.setTimeout(() => {
       dispatch({
         type: "addAccount",
@@ -196,7 +217,7 @@ export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
       setAdding(false);
     }, 500);
     return () => window.clearTimeout(id);
-  }, [working, next, dispatch]);
+  }, [working, next, dispatch, derive]);
 
   return (
     <Sheet title={accounts.title} onClose={onClose}>
@@ -219,9 +240,8 @@ export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
         ))}
       </ul>
       <div className="grid gap-3 px-4 pt-4 pb-5">
-        {/* Live: one account for now. A second one needs its own key path, which
-            the keystore does not track yet, so the wallet does not offer it. */}
-        {state.scenario === "live" ? null : adding ? (
+        {/* Live, a new account is the recovery phrase's next one (store `derive`). */}
+        {adding ? (
           <div className="grid gap-2 border border-[color:var(--rule-strong)] p-3">
             <p className="font-display text-base font-bold uppercase text-[color:var(--fg)]">
               {accounts.add.title}
