@@ -53,7 +53,7 @@ The extension injects an EIP-1193 provider and announces it over EIP-6963 (`name
 | `eth_requestAccounts`, `wallet_requestPermissions` | Opens the connect window, unless the site is connected and the wallet open |
 | `wallet_switchEthereumChain`, `wallet_addEthereumChain` | `null` for chain 10143, error 4902 for any other |
 | `eth_sendTransaction` | Opens the request window: `/v1/analyze` with the reader's rules, then Safe can be signed, Caution only on the reader's press, Blocked never. Returns the hash once the transaction is sent; error 4001 when declined or blocked |
-| `eth_signTypedData_v4` | The same check on the structured data, then the signature |
+| `eth_signTypedData_v4` | The same check on the structured data, then the signature. A message the server cannot read is never Safe (D-043): blocked when it names another account or an amount, a warning when it points at no funds |
 | `personal_sign` | Shows the message as text and signs on the reader's press; there is nothing to simulate |
 | `eth_call`, `eth_getBalance`, `eth_estimateGas`, `eth_getTransactionReceipt` and the other read methods | Passed to the Monad RPC as they are |
 | `eth_sign`, `eth_signTransaction`, anything else | Error 4200: refused |
@@ -181,7 +181,7 @@ Read from the indexer. Amounts are base units as strings; addresses lowercase. `
 
 ### `GET /health`, `GET /health/ready`
 
-`/health`: `{ status, analysisVersion, commit }`. `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`.
+`/health`: `{ status, analysisVersion, commit }`. `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
 
 ### Limits
 

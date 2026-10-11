@@ -17,7 +17,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-03 | The API slept on the free plan. **Starter since 2026-10-10**: the first request after 18 idle minutes took 0.10 s | Half done | closed | Ezgin |
 | G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
 | G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
-| G-06 | Nansen is off | Missing | P2 | Ezgin |
+| G-06 | Nansen was off. **On since 2026-10-11**, labels mode inside a daily budget (D-041, D-042) | Missing | closed | Ezgin |
 | G-07 | No Cleanverse settlement has happened | Half done | P2 | Ezgin |
 | G-08 | Qwen's overpay veto sometimes names a mismatch that is not there. **Fixed 2026-10-10** (#66), checked live | Wrong | P1 | Meriç |
 | G-09 | The CRE workflow runs only as a simulation from one machine | Half done | P2 | Ezgin |
@@ -28,11 +28,14 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-14 | `verify:demo` reports a false failure from the deploy wallet | Wrong (test) | P3 | Ezgin |
 | G-15 | Sealed settings: saved by hand, and two things to watch | Limit | P3 | Ezgin |
 | G-16 | The SDKs are not on npm | Missing | P3 | Ezgin |
-| G-17 | The API is open: no keys, any origin | Limit | P3 | Ezgin |
+| G-17 | The API is open: no keys, any origin; the daily caps can be used up by one caller | Limit | P2 | Ezgin |
 | G-18 | Contracts are unaudited testnet deployments | Limit | P3 | Ezgin |
 | G-19 | The indexer does not cover two contracts | Limit | P3 | Ezgin |
 | G-20 | No browser test in the repository | Missing | P3 | Hale |
 | G-21 | Named in documents, never built | Missing | P3 | — |
+| G-22 | An unread signed message came back Safe. **Fixed 2026-10-11** (D-043) | Wrong | closed | Ezgin |
+| G-23 | The API answered 503 after a burst of checks. **Fixed 2026-10-11**: the RPC client waits and retries | Wrong | closed | Ezgin |
+| G-24 | Sealed settings: a save or restore with no answer waited for ever. **Fixed 2026-10-11** | Wrong | closed | Ezgin |
 
 ---
 
@@ -88,7 +91,7 @@ Say "Baret checks an x402 payment before it is signed", never "Baret pays over x
 
 ### G-06 · Nansen is off
 
-No key on Render: `/health/ready` shows `nansen: false` and every verdict lists `nansen: skipped`. The code is there (`apps/server/src/sources/nansen.ts`). Under Balanced the trust-level rule passes without it; under Strict the rules that need Nansen fail closed. The Nansen prize cannot be entered without it (E2). When the key arrives: `labels` mode costs 100 credits a call and the API is open (G-17) behind one shared rate-limit bucket (G-01), so fix G-01 first or keep `funder` mode (1 credit).
+**State (2026-10-11):** on. Ezgin bought 10,000 credits; the key is on Render in `labels` mode with at most 25 label lookups a day and first-funder after that (D-042), and `/health/ready` shows `nansenMode`, `nansenAnswering` and `nansenLabelsLeftToday`. Turning it on first broke the demo (12 of 20): Nansen indexes Monad mainnet only, and a testnet wallet with no record there read as a fresh wallet. Since D-041 a wallet Nansen has no record of is unknown on testnet, and `verify:demo` is 20 of 20 with Nansen on. A label shows only for an address Nansen knows on mainnet.
 
 ### G-07 · No Cleanverse settlement has happened
 
@@ -115,7 +118,6 @@ One process, no database. Lost on every deploy, restart or sleep (G-03): the ver
 - **The session's own log lives in memory.** A send, a decline or a Blocked verdict is gone after a reload. Only the vault's payments come back, from the indexer.
 - **Nine vault events have no row** in Activity (E10): only `paid` shows.
 - **The rules' change history** clears on reload (the page says so).
-- **No field for a pasted agent address.** `live.vault.agent(address)` exists; the Agents page only offers the key derived from the passkey, so a Dynamic server wallet cannot be authorised from the wallet's screens. The Dynamic prize rewards exactly that pairing.
 - **Balances** are MON and test USDC only, with no price.
 - **Rules after a storage clear** fall back to Balanced unless the person saved a sealed copy and presses "Bring them back here" (G-15).
 
@@ -154,7 +156,11 @@ The scenario "Cleanverse aUSDC to a wallet with no credential" pays the `--from`
 
 ### G-17 · The API is open
 
-`BARET_API_KEYS` is empty and CORS allows any origin, on purpose: a static site cannot keep a key. Anyone who finds the URL can call every route, the paid ones included. What bounds the cost: the rate limits (see G-01) and the daily caps. `/v1/review` can also make the demo agent pay 0.10 dUSDC, at most once per 30 minutes, inside the demo vault's caps.
+`BARET_API_KEYS` is empty and CORS allows any origin, on purpose: a static site cannot keep a key. Anyone who finds the URL can call every route, the paid ones included.
+
+The per-minute limits are per visitor since #63, and that visitor is the first address in `X-Forwarded-For`, which a direct caller can forge (measured on the live API on 2026-10-10: a forged address started a fresh bucket). The daily caps are counted for the whole process, so one caller with forged addresses can use up a day's KIMI calls or sealed writes in minutes, and those features then fail for everyone until 00:00 UTC. The caps bound what is spent; they do not keep the feature available.
+
+**State (2026-10-11):** the caps are raised in `render.yaml` (`BARET_KIMI_DAILY_LIMIT` 3000, `BARET_SEALED_DAILY_LIMIT` 1000), which makes a drain slower and dearer, not impossible. The fix that closes it is for the sites' own proxy to mark its requests with a secret and for the server to trust `X-Forwarded-For` only on marked requests; it changes how both sites reach the API and cannot be tried without deploying it, so it is not done before the recording. `/v1/review` can also make the demo agent pay 0.10 dUSDC, at most once per 30 minutes, inside the demo vault's caps. Nansen's label lookups have their own daily budget (D-042).
 
 ### G-18 · Contracts are unaudited testnet deployments
 
@@ -187,3 +193,19 @@ Every end-to-end check of the wallet was a hand-written Playwright script in a s
 3. G-03 (the Starter plan, before recording).
 4. G-13 (with H14).
 5. G-06 and G-07 only if the key and the aUSDC arrive tonight; otherwise both prizes are entered as they stand or dropped, and the texts say what is true.
+
+---
+
+## Found and fixed after this list was written
+
+### G-22 · An unread signed message came back Safe
+
+Found by Meriç on 2026-10-10 and measured live on 2026-10-11 under Balanced: a Permit2 `PermitTransferFrom` for the whole balance, a Seaport order for another chain and a message of an unknown kind all answered `safe` with no findings. `effectsFromTypedData` returned no effect for what it could not read. Fixed by D-043: every message carries a reading; an unread one that names another account or an amount is `SIGNATURE_NOT_UNDERSTOOD` (blocked under every policy), one that points at no funds is `SIGNATURE_UNRECOGNISED` (a warning); a message for another chain is blocked; the DAI permit and Permit2 signature transfers are read. A signed transaction with an EIP-7702 authorization list is `ACCOUNT_CODE_DELEGATION`. Still not read as what they are: Seaport orders and messages that carry a call (they are blocked as unread).
+
+### G-23 · The API answered 503 after a burst of checks
+
+About 18 calls in a row made the node refuse some reads, `/v1/analyze` answered 503 and a demo panel showed an honest request as "Can't reach Baret". The RPC client now asks a busy node again after 0.25, 0.5, 1 and 2 seconds (`apps/server/src/infra/rpc.ts`). A node that is down still gives no verdict.
+
+### G-24 · Sealed settings: a save or restore with no answer waited for ever
+
+Neither the read of the store nor the relayed save had a time limit (`apps/wallet/src/live/live.tsx`), so a request that never answered kept "Waiting for your passkey and Monad." up until a reload. Both end as failed now, the read after 20 seconds and the save after 45.

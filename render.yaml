@@ -74,6 +74,13 @@ services:
         sync: false
       - key: BARET_REVIEW_SEND
         value: "1"
+      # Fresh model calls and sealed writes a day. The API is open and a caller
+      # can dodge the per-minute limit, so these are set well above a day's
+      # real use: a drain has to be large to switch a feature off for everyone.
+      - key: BARET_KIMI_DAILY_LIMIT
+        value: "3000"
+      - key: BARET_SEALED_DAILY_LIMIT
+        value: "1000"
       # Sealed settings: the store's public address, and the key that pays the
       # gas of POST /v1/sealed (a testnet key holding MON and nothing else).
       - key: MONAD_TESTNET_SEALED_STORE_ADDRESS
