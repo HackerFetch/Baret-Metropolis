@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "TransactionGuard SDK: the GuardPolicy schema, the policy templates and the /v1/analyze contract. No chain library inside.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HackerFetch/Baret-Metropolis.git",
+    "directory": "packages/guard"
+  },
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
