@@ -119,6 +119,8 @@ const envSchema = z.object({
     .optional(),
   /** Requests per minute per client on /v1/sealed, and fresh writes per UTC day. */
   BARET_SEALED_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(6),
+  /** Requests per minute per client on /mcp: each tool call is an analysis. */
+  BARET_MCP_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(60),
   BARET_SEALED_DAILY_LIMIT: z.coerce.number().int().positive().default(200),
   /** The demo agent's key. Unset: /v1/review reviews but never sends. */
   BARET_DEMO_AGENT_PRIVATE_KEY: z
@@ -178,6 +180,7 @@ export interface AppConfig {
   /** Null (no Qwen key, or turned off): /v1/review answers 503. */
   review: ReviewConfig | null;
   sealedRateLimitPerMinute: number;
+  mcpRateLimitPerMinute: number;
   /** Null (no store address or no relayer key): /v1/sealed answers 503. */
   sealed: SealedConfig | null;
 }
@@ -285,6 +288,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
           }
         : null,
     sealedRateLimitPerMinute: e.BARET_SEALED_RATE_LIMIT_PER_MINUTE,
+    mcpRateLimitPerMinute: e.BARET_MCP_RATE_LIMIT_PER_MINUTE,
     sealed:
       e.MONAD_TESTNET_SEALED_STORE_ADDRESS && e.BARET_SEALED_RELAYER_PRIVATE_KEY
         ? {

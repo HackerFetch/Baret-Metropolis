@@ -66,6 +66,7 @@ export const config: AppConfig = {
   review: null,
   nansenLabelsDailyLimit: 25,
   sealedRateLimitPerMinute: 1000,
+  mcpRateLimitPerMinute: 1000,
   sealed: null,
 };
 
