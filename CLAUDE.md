@@ -22,6 +22,10 @@ An identity that matches none of the three rows: ask who it is before doing anyt
    notes, deliberately not committed: what is built against what is only
    stubbed, the decisions already settled with their reasons, and the traps
    that have already cost time. Absent on a fresh clone, and that is expected.
+   Working with Ezgin on a machine that has no earlier session of its own:
+   read `docs/HANDOFF_EZGIN_SECOND_MACHINE.md` too (committed, no secrets).
+   It carries Ezgin's standing rules and where npm, Cleanverse and Chainlink
+   stopped.
 1. Identify who you are working with via `git config user.name` / `user.email`. If unsure, ask.
 2. In your first message remind the person of their role and give a one-paragraph "where the project is right now" (`README.md` status table + the current week in `docs/ROADMAP.md`).
 3. Read the person's task file and summarise the open items:
