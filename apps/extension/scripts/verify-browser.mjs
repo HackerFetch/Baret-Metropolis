@@ -659,6 +659,84 @@ if (usdcKey) {
     JSON.stringify(payment ?? null).slice(0, 200),
   );
   if (!w7.isClosed()) await w7.close().catch(() => {});
+
+  // The site's own caps, kept in the wallet: 0.05 was just paid, and an hourly
+  // cap of 0.07 has no room for another 0.05. Then the site is paused.
+  const host = new URL(site.url()).host;
+  const setCard = (status) =>
+    sw.evaluate(
+      async ([origin, cardStatus]) => {
+        const s = (await chrome.storage.local.get("baret.state"))["baret.state"];
+        const at = new Date().toISOString();
+        const card = {
+          id: "caps-verify",
+          kind: "payment",
+          origin,
+          account: s.active,
+          status: cardStatus,
+          granted: at,
+          lastUsed: null,
+          holder: origin,
+          uses: [],
+          merchant: origin,
+          asset: "USDC",
+          caps: { perPayment: "0.10", hour: "0.07", day: "1.00" },
+          spent: { hour: "0.00", day: "0.00" },
+          paymentsToday: 0,
+          facilitator: "",
+          week: [0, 0, 0, 0, 0, 0, 0],
+        };
+        const permissions = [...s.permissions.filter((x) => x.id !== card.id), card];
+        await chrome.storage.local.set({ "baret.state": { ...s, permissions } });
+      },
+      [host, status],
+    );
+  await setCard("active");
+  await site.waitForTimeout(1000);
+  wp = waitWindow();
+  const overCap = askPayment(`0x${"5c".repeat(32)}`);
+  const w8 = await wp;
+  await w8.waitForTimeout(5000);
+  const t8 = await view(w8);
+  say(`payment over the site's cap: ${t8.slice(0, 260)} | ${JSON.stringify(await buttons(w8))}`);
+  expect(
+    "a payment over the site's hourly cap reads Blocked and names the cap",
+    /blocked/i.test(t8) && /hourly cap/i.test(t8),
+  );
+  expect(
+    "a payment over the site's cap has no sign button",
+    !(await buttons(w8)).some((b) => /^sign/i.test(b)),
+  );
+  await w8
+    .getByRole("button", { name: /decline/i })
+    .first()
+    .click();
+  const capAnswer = await overCap;
+  expect("the site is told its payment is over a cap", /over a cap/i.test(capAnswer), capAnswer);
+  if (!w8.isClosed()) await w8.close().catch(() => {});
+
+  // The closing window saves its log row first: the card is written after it.
+  await site.waitForTimeout(2500);
+  await setCard("paused");
+  await site.waitForTimeout(1000);
+  wp = waitWindow();
+  const paused = askPayment(`0x${"5d".repeat(32)}`);
+  const w9 = await wp;
+  await w9.waitForTimeout(5000);
+  const t9 = await view(w9);
+  say(`payment to a paused site: ${t9.slice(0, 200)}`);
+  expect("a payment to a paused site reads Blocked", /blocked/i.test(t9));
+  await w9
+    .getByRole("button", { name: /decline/i })
+    .first()
+    .click();
+  const pausedAnswer = await paused;
+  expect("the site is told it is paused", /is paused/i.test(pausedAnswer), pausedAnswer);
+  expect(
+    "neither refused payment was signed",
+    (await state()).payments.every((x) => !/5c5c|5d5d/.test(x.id)),
+  );
+  if (!w9.isClosed()) await w9.close().catch(() => {});
 }
 
 // A second account: the recovery phrase's next one, not a made-up address.
