@@ -408,7 +408,7 @@ function LiveTypedData({
     guard
       .evaluate({
         network: "testnet",
-        typedData: typed as never,
+        typedData: { signer: owner.address, ...typed } as never,
         userWallet: owner.address as Hex,
         policy: policy.current as never,
       })

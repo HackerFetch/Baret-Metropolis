@@ -15,7 +15,7 @@ export const extOnboarding = {
 
   welcome: {
     title: "A wallet that reads before you sign.",
-    body: "Baret simulates each sign request on Monad and checks it against your rules. You get a verdict in plain words before your key moves.",
+    body: "Baret simulates each transaction on Monad and checks it against your rules. You get a verdict in plain words before your key moves.",
     points: [
       "Simulated before you sign",
       "A cap and a revoke button on every permission",
@@ -170,7 +170,7 @@ export const extOnboarding = {
 
   policy: {
     title: "Pick your starting rules",
-    body: "Baret checks every sign request against these rules. Start from a set and change any single rule later.",
+    body: "Baret checks every transaction against these rules. Start from a set and change any single rule later.",
     selected: "Selected",
     action: { label: "Use these rules" },
     customise: { label: "See all 25 rules" },
@@ -178,7 +178,7 @@ export const extOnboarding = {
   },
 
   done: {
-    title: "Baret now checks every sign request.",
+    title: "Baret now checks every transaction.",
     body: "Here is what happens from now on, before anything is signed.",
     checks: [
       "Each request is simulated on Monad, so you see what it changes.",

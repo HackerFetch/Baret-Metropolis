@@ -18,7 +18,7 @@ export const optionsHome = {
     title: "Baret status",
     reachable: {
       ok: "Baret is answering",
-      bad: "Can't reach Baret. Every sign request is treated as Blocked until it answers.",
+      bad: "Can't reach Baret. Every transaction is treated as Blocked until it answers.",
     },
     rules: { template: "{template} rules active", custom: "Custom rules active" },
     lastCheck: { label: "Last check", value: "{time}", never: "No checks yet" },

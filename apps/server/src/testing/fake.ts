@@ -64,7 +64,9 @@ export const config: AppConfig = {
   kimiDailyLimit: 500,
   reviewRateLimitPerMinute: 1000,
   review: null,
+  nansenLabelsDailyLimit: 25,
   sealedRateLimitPerMinute: 1000,
+  mcpRateLimitPerMinute: 1000,
   sealed: null,
 };
 

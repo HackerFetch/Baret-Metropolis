@@ -3,12 +3,31 @@ import {
   type Address,
   getAddress,
   type Hex,
+  isAddress,
   parseTransaction,
   recoverTransactionAddress,
   type TransactionSerialized,
+  zeroAddress,
 } from "viem";
 
 /** A transaction in one shape, whatever the client sent. */
+/** The contracts named in an EIP-7702 authorization list, whatever the field is called. */
+function delegationsOf(parsed: object): Address[] {
+  const list = (parsed as { authorizationList?: unknown }).authorizationList;
+  if (!Array.isArray(list)) return [];
+  const out: Address[] = [];
+  for (const item of list as { address?: unknown; contractAddress?: unknown }[]) {
+    const target = item?.address ?? item?.contractAddress;
+    // An entry that cannot be read still counts: the zero address stands for it.
+    out.push(
+      typeof target === "string" && isAddress(target, { strict: false })
+        ? getAddress(target)
+        : zeroAddress,
+    );
+  }
+  return out;
+}
+
 export interface NormalizedTx {
   from: Address;
   to: Address | null;
@@ -18,6 +37,12 @@ export interface NormalizedTx {
   gas: bigint | null;
   /** Price per gas the sender will pay at most, if set. */
   gasPrice: bigint | null;
+  /**
+   * EIP-7702: the contracts a signed transaction's authorization list hands an
+   * account's code to. The simulation does not apply them, so they are carried
+   * here and reported, never ignored.
+   */
+  delegations?: readonly Address[];
 }
 
 export class TxDecodeError extends Error {
@@ -64,6 +89,7 @@ export async function decodeTransaction(
     } else {
       throw new TxDecodeError("an unsigned transaction needs `userWallet` as its sender");
     }
+    const delegations = delegationsOf(parsed);
     if (parsed.chainId !== undefined && parsed.chainId !== chainId) {
       throw new TxDecodeError(`signed for chain ${parsed.chainId}, expected ${chainId}`);
     }
@@ -74,6 +100,7 @@ export async function decodeTransaction(
       data: parsed.data ?? "0x",
       gas: parsed.gas ?? null,
       gasPrice: parsed.maxFeePerGas ?? parsed.gasPrice ?? null,
+      ...(delegations.length > 0 ? { delegations } : {}),
     };
   }
 

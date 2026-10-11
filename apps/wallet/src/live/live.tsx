@@ -201,6 +201,31 @@ export function useHistoryRead(): void {
   }, [key, load]);
 }
 
+/** How long a read of the sealed store may take, and how long the relayed save may. */
+const SEALED_READ_MS = 20_000;
+const SEALED_SAVE_MS = 45_000;
+
+/**
+ * `work`, or a rejection once it has taken too long: a node or a server that
+ * never answers must end as "that did not work", not as a line that waits
+ * until the page is reloaded.
+ */
+function inTime<T>(work: Promise<T>, ms = SEALED_READ_MS): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("timed out")), ms);
+    work.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /** How long the history read may take before it reads as unavailable. */
 const HISTORY_TIMEOUT_MS = 15_000;
 
@@ -882,12 +907,16 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         const target = sealedTarget();
         if (!target) return { result: "failed" };
         const text = sealedNowRef.current;
-        const entry = await readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL });
+        const entry = await inTime(
+          readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL }),
+        );
         const put = await got.put(target, entry.version + 1n, new TextEncoder().encode(text));
         const res = await fetch("/api/v1/sealed", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(put),
+          // The relay waits for the block: longer than a read, never for ever.
+          signal: AbortSignal.timeout(SEALED_SAVE_MS),
         });
         if (!res.ok) return { result: "failed" };
         if (sealedKeys.current === got) setSealedCopy(text);
@@ -903,7 +932,9 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
         const { readSealed, sealedTarget } = await import("@baret/wallet-core");
         const target = sealedTarget();
         if (!target) return { result: "failed" };
-        const entry = await readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL });
+        const entry = await inTime(
+          readSealed({ store: target.store, id: got.id, rpcUrl: RPC_URL }),
+        );
         if (entry.version === 0n) return { result: "empty" };
         // Fail-closed: an entry these keys cannot open, or that is not a
         // settings document, changes nothing.

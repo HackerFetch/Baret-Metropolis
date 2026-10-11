@@ -14,6 +14,7 @@ import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { useCheck } from "../kit/useCheck.js";
 import { BaretCheck, useBaretCheck } from "../kit/wallet/BaretCheck.js";
+import { isBaretExtension, walletLabel } from "../kit/wallet/baret.js";
 import { SignBlock } from "../kit/wallet/SignBlock.js";
 import { addressOf, requestPicker, switchToMonad } from "../kit/wallet/store.js";
 import {
@@ -73,7 +74,12 @@ export function NovaSwapSite(): JSX.Element {
   const baret = useBaretCheck();
   const address = addressOf(wallet);
   const usdc = useTokenBalance(NOVASWAP.usdc, address);
-  const walletName = wallet.connection.status === "connected" ? wallet.connection.wallet.name : "";
+  const walletName =
+    wallet.connection.status === "connected" ? walletLabel(wallet.connection.wallet) : "";
+  // The Baret extension checks a request with Baret itself (D-040): the sign
+  // block then never says the request skips the check.
+  const walletChecks =
+    wallet.connection.status === "connected" && isBaretExtension(wallet.connection.wallet.id);
   const chainId = wallet.connection.status === "connected" ? wallet.connection.chainId : null;
   const [need, setNeed] = useState<Need | null>(null);
   // The version and amount the last run started with: its labels and
@@ -326,6 +332,7 @@ export function NovaSwapSite(): JSX.Element {
                       }
                       stoppedNote={signMode === "danger" ? outcome.open : null}
                       busy={faucet.state.phase === "running"}
+                      checks={walletChecks}
                       onSign={onSign}
                     />
                   }

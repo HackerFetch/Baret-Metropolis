@@ -157,6 +157,11 @@ export const docs = {
           body: "Give an agent a signer that cannot sign past Baret's verdict, plus the baret CLI.",
           file: "packages/agent-kit/README.md",
         },
+        {
+          title: "API reference",
+          body: "Every route of the live API: what to send, what comes back, the errors and the limits.",
+          file: "docs/API_REFERENCE.md",
+        },
       ],
     },
   ],

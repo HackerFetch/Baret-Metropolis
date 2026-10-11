@@ -12,6 +12,19 @@ export interface NansenProfile {
 export interface NansenSource {
   /** Throws when Nansen does not answer. Every requested address gets an entry. */
   lookup(addresses: readonly Address[]): Promise<Map<Address, NansenProfile>>;
+  /**
+   * How the source answers right now, for /health/ready: the mode it was set
+   * to, the mode its next uncached lookup will use, and how many label lookups
+   * are left today (null in funder mode). No key, no address.
+   */
+  describe?(): NansenState;
+}
+
+export interface NansenState {
+  mode: "funder" | "labels";
+  /** "funder" in labels mode once today's label lookups are used up. */
+  answering: "funder" | "labels";
+  labelsLeftToday: number | null;
 }
 
 /** An entry in the on-chain ReputationRegistry (written by the CRE workflow). */

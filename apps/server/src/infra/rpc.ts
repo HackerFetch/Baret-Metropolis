@@ -100,6 +100,16 @@ function isRevert(err: unknown): boolean {
   );
 }
 
+/**
+ * A node that answers "too many requests" or a 5xx is asked again, each time
+ * after twice the wait: 0.25 s, 0.5 s, 1 s, 2 s (under 4 s in all). A burst of
+ * checks, such as a page of demo panels loading together, then waits instead
+ * of failing: without this the plan's per-second limit turned an honest
+ * request into "Can't reach Baret". A node that is really down still fails,
+ * and the request still gets no verdict.
+ */
+const RETRY = { retryCount: 4, retryDelay: 250 } as const;
+
 export class ViemMonadRpc implements MonadRpc {
   private readonly client: PublicClient;
   private traceSupported: boolean | null = null;
@@ -120,11 +130,11 @@ export class ViemMonadRpc implements MonadRpc {
       config.traceRpcUrl === config.rpcUrl
         ? null
         : createPublicClient({
-            transport: http(config.traceRpcUrl, { timeout: timeoutMs, retryCount: 1 }),
+            transport: http(config.traceRpcUrl, { timeout: timeoutMs, ...RETRY }),
           });
     this.client = createPublicClient({
       batch: { multicall: false },
-      transport: http(config.rpcUrl, { timeout: timeoutMs, retryCount: 2, batch: { wait: 10 } }),
+      transport: http(config.rpcUrl, { timeout: timeoutMs, ...RETRY, batch: { wait: 10 } }),
     });
   }
 

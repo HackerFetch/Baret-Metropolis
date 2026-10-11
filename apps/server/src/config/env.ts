@@ -75,6 +75,11 @@ const envSchema = z.object({
    * labels: Profiler labels, 100 credits each (needs a paid plan or granted credits).
    */
   NANSEN_MODE: z.enum(["funder", "labels"]).default("funder"),
+  /**
+   * Labels mode: label lookups per UTC day (100 credits each). Past it the
+   * server answers from first-funder until the next day.
+   */
+  NANSEN_LABELS_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(25),
 
   /** The GraphQL endpoint of the deployed Envio indexer (indexer/). */
   ENVIO_ENDPOINT: z.string().url().optional(),
@@ -114,6 +119,8 @@ const envSchema = z.object({
     .optional(),
   /** Requests per minute per client on /v1/sealed, and fresh writes per UTC day. */
   BARET_SEALED_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(6),
+  /** Requests per minute per client on /mcp: each tool call is an analysis. */
+  BARET_MCP_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(60),
   BARET_SEALED_DAILY_LIMIT: z.coerce.number().int().positive().default(200),
   /** The demo agent's key. Unset: /v1/review reviews but never sends. */
   BARET_DEMO_AGENT_PRIVATE_KEY: z
@@ -161,6 +168,7 @@ export interface AppConfig {
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
   nansenMode: "funder" | "labels";
+  nansenLabelsDailyLimit: number;
   /** Null: the audit routes answer 503. */
   envioEndpoint: string | null;
   /** Null: /v1/explain answers 503. */
@@ -172,6 +180,7 @@ export interface AppConfig {
   /** Null (no Qwen key, or turned off): /v1/review answers 503. */
   review: ReviewConfig | null;
   sealedRateLimitPerMinute: number;
+  mcpRateLimitPerMinute: number;
   /** Null (no store address or no relayer key): /v1/sealed answers 503. */
   sealed: SealedConfig | null;
 }
@@ -256,6 +265,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,
     nansenMode: e.NANSEN_MODE,
+    nansenLabelsDailyLimit: e.NANSEN_LABELS_DAILY_LIMIT,
     envioEndpoint: e.ENVIO_ENDPOINT ?? null,
     explain: e.KIMI_API_KEY
       ? { apiKey: e.KIMI_API_KEY, baseUrl: e.KIMI_BASE_URL ?? null, model: e.KIMI_MODEL ?? null }
@@ -278,6 +288,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
           }
         : null,
     sealedRateLimitPerMinute: e.BARET_SEALED_RATE_LIMIT_PER_MINUTE,
+    mcpRateLimitPerMinute: e.BARET_MCP_RATE_LIMIT_PER_MINUTE,
     sealed:
       e.MONAD_TESTNET_SEALED_STORE_ADDRESS && e.BARET_SEALED_RELAYER_PRIVATE_KEY
         ? {

@@ -187,6 +187,11 @@ export const hub = {
         busy: "The Baret wallet window has a request open. Finish it there first.",
       },
       others: "Wallets in this browser",
+      /** The Baret extension (D-040) among the wallets in this browser, named apart from the Baret wallet's window above. */
+      extension: {
+        name: "Baret extension",
+        body: "A wallet in this browser that checks each transaction with Baret before it signs.",
+      },
       none: "No other wallet found in this browser.",
       sample: {
         label: "Use the sample wallet",
@@ -331,12 +336,16 @@ export const hub = {
      * A site's second button beside its main one: the same request, sent
      * straight to the connected wallet with no Baret check first. Shared by
      * every site that has it, NovaSwap first. {wallet} is the wallet's own name.
+     * When that wallet is the Baret extension, it checks the request itself
+     * (D-040), so `noteChecked` replaces `note`.
      */
     sign: {
       /** Above the second button: what the site's main button does instead. */
       checked: "The site's button above goes through Baret's check first.",
       action: "Sign with your wallet",
       note: "Sends this request straight to your wallet, with no Baret check. These are real transactions on Monad testnet, with test tokens that have no value.",
+      noteChecked:
+        "Sends this request to the Baret extension, which checks it with Baret before it signs. These are real transactions on Monad testnet, with test tokens that have no value.",
       title: "In your wallet",
       status: {
         waiting: "Next",

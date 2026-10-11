@@ -5,6 +5,7 @@ import { kimiExplainer } from "./application/explain.js";
 import { KimiBudget, kimiPolicyDrafter } from "./application/policy-draft.js";
 import { monadSender, qwenReviewerFactory, ReviewService } from "./application/review.js";
 import { SealedRelay, storedVersionReader } from "./application/sealed.js";
+import { UnreadKinds } from "./application/unread.js";
 import { ExplanationCache, VerdictCache } from "./application/verdicts.js";
 import { loadConfig } from "./config/env.js";
 import { type MonadRpc, ViemMonadRpc } from "./infra/rpc.js";
@@ -22,6 +23,7 @@ const deps: AnalyzeDeps = {
   kimiBudget: new KimiBudget(config.kimiDailyLimit),
   verdicts: new VerdictCache(),
   explanations: new ExplanationCache(),
+  unreadKinds: new UnreadKinds(),
   rpcFor: (n) => {
     let rpc = rpcs.get(n.network);
     if (!rpc) {

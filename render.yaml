@@ -49,8 +49,13 @@ services:
         sync: false
       - key: NANSEN_API_KEY
         sync: false
+      # labels: who Nansen says owns a wallet (100 credits an address), at most
+      # NANSEN_LABELS_DAILY_LIMIT a day, then first-funder (1 credit) until
+      # 00:00 UTC. funder: first-funder only. /health/ready shows which.
       - key: NANSEN_MODE
-        value: funder
+        value: labels
+      - key: NANSEN_LABELS_DAILY_LIMIT
+        value: "25"
       # Cleanverse on Monad testnet: A-Pass (identity) and the aToken policy.
       # Public contract addresses, from Cleanverse's query_chain_config.
       - key: MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS
@@ -69,6 +74,13 @@ services:
         sync: false
       - key: BARET_REVIEW_SEND
         value: "1"
+      # Fresh model calls and sealed writes a day. The API is open and a caller
+      # can dodge the per-minute limit, so these are set well above a day's
+      # real use: a drain has to be large to switch a feature off for everyone.
+      - key: BARET_KIMI_DAILY_LIMIT
+        value: "3000"
+      - key: BARET_SEALED_DAILY_LIMIT
+        value: "1000"
       # Sealed settings: the store's public address, and the key that pays the
       # gas of POST /v1/sealed (a testnet key holding MON and nothing else).
       - key: MONAD_TESTNET_SEALED_STORE_ADDRESS

@@ -1,3 +1,5 @@
+import { hub } from "@baret/content";
+
 /**
  * Pure helpers for the demo sites' wallet picker: which announced wallet is
  * Baret, which icons are safe to draw, and what a failed connect means.
@@ -13,6 +15,24 @@ export const BARET_RDNS = "app.vercel.baret-metropolis";
 
 export function isBaret(id: string): boolean {
   return id === BARET_RDNS;
+}
+
+/**
+ * The reverse-DNS name the Baret extension announces over EIP-6963 since
+ * D-040 (apps/extension/src/entrypoints/provider.content.ts). It is a wallet
+ * of its own that checks a transaction with Baret before it signs, so the
+ * picker names it apart from the Baret wallet's window, and a site never
+ * says a request sent to it skips Baret's check.
+ */
+export const BARET_EXTENSION_RDNS = "dev.baret.wallet";
+
+export function isBaretExtension(id: string): boolean {
+  return id === BARET_EXTENSION_RDNS;
+}
+
+/** A wallet's name on the sites: its own, except the Baret extension's, which reads apart from the Baret wallet's window. */
+export function walletLabel(option: { readonly id: string; readonly name: string }): string {
+  return isBaretExtension(option.id) ? hub.frame.wallet.extension.name : option.name;
 }
 
 /**

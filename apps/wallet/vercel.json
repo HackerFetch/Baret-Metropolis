@@ -4,6 +4,13 @@
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @baret/extension run postinstall",
   "buildCommand": "cd ../.. && pnpm --filter @baret/wallet build",
   "outputDirectory": "dist",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "*": false,
+      "**": false
+    }
+  },
   "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ../../packages ../../pnpm-lock.yaml",
   "rewrites": [
     {

@@ -6,6 +6,7 @@ import { analyzeRoutes } from "./routes/analyze.js";
 import { auditRoutes } from "./routes/audit.js";
 import { explainRoutes } from "./routes/explain.js";
 import { healthRoutes } from "./routes/health.js";
+import { mcpRoutes } from "./routes/mcp.js";
 import { policyDraftRoutes } from "./routes/policy-draft.js";
 import { reviewRoutes } from "./routes/review.js";
 import { sealedRoutes } from "./routes/sealed.js";
@@ -46,5 +47,6 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   await app.register(reviewRoutes, deps);
   await app.register(policyDraftRoutes, deps);
   await app.register(sealedRoutes, deps);
+  await app.register(mcpRoutes, deps);
   return app;
 }

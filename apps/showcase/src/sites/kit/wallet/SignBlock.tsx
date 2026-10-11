@@ -54,6 +54,7 @@ export function SignBlock({
   outcome,
   stoppedNote = null,
   busy = false,
+  checks = false,
   onSign,
 }: {
   flow: FlowState;
@@ -76,6 +77,8 @@ export function SignBlock({
   stoppedNote?: string | null;
   /** True while another wallet request of the page is open (the faucet). */
   busy?: boolean;
+  /** True when the connected wallet is the Baret extension, which checks the request with Baret itself (D-040). */
+  checks?: boolean;
   onSign: () => void;
 }): JSX.Element {
   const titleId = useId();
@@ -128,7 +131,7 @@ export function SignBlock({
       >
         {copy.action}
       </Button>
-      <p className={T.small}>{copy.note}</p>
+      <p className={T.small}>{checks ? copy.noteChecked : copy.note}</p>
 
       {need === "wallet" ? (
         <div className="grid gap-2">
