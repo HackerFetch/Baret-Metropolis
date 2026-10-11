@@ -2,7 +2,7 @@
 
 > **This file is the single authority on the question "what are we building and why".** For architecture details see `ARCHITECTURE.md`; for scope/bounty priority see `BOUNTIES_AND_TRACKS.md`.
 
-Last updated: 2026-09-13 · Status: **Planning complete, implementation has not started**
+Last updated: 2026-09-13 (the problem, the product and the journeys below are unchanged since planning) · **For what is actually built and live today, read `README.md` first** — this file is the plan, not a status report, and §4.2 in particular describes an agent-side flow that was built differently (see the note there)
 
 ---
 
@@ -57,6 +57,9 @@ For agents, additionally: instead of a raw private key, an on-chain spend-limite
 5. The user can still say "sign anyway" if they want (depending on the default policy), but they do so knowingly.
 
 ### 4.2 Agent developer — automatic x402 payment
+
+**Built differently from the journey below (D-046, 2026-10-11):** there is no automatic extension-side interceptor. A site's own "Pay with your wallet" button sends the request through the connected wallet, same as any other transaction; `GET /demo/paywall` is the server's own paywall, which verifies the signed EIP-3009 authorisation and settles it, acting as its own facilitator. `@baret/agent-kit`'s `payX402` and the `baret x402` CLI command do this for an agent. The policy check (step 3 below) is real: Baret's check runs before any payment is signed.
+
 1. The agent sends a request to an API and receives 402 + `PaymentRequirements`.
 2. The extension's x402 interceptor catches this response and decodes the actual payment parameters (to whom, how much, which asset).
 3. Policy check: is the merchant on the allowlist, is the asset on the allowlist, is the hourly/daily spending cap exceeded?
