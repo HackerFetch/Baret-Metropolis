@@ -10,6 +10,8 @@ export interface TraceFrame {
   depth: number;
   /** This frame or one of its parents reverted, so its effects never land. */
   reverted: boolean;
+  /** This frame is a STATICCALL or runs inside one: it can only read. */
+  readOnly: boolean;
 }
 
 export interface TraceLog {
@@ -53,12 +55,19 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
   // `contractDepth` is how many contracts deep a frame is. A DELEGATECALL runs
   // borrowed code inside the calling contract (a proxy and its implementation
   // are one contract to the user), so it does not add a level.
-  const walk = (f: RawCallFrame, depth: number, contractDepth: number, parentReverted: boolean) => {
+  const walk = (
+    f: RawCallFrame,
+    depth: number,
+    contractDepth: number,
+    parentReverted: boolean,
+    parentReadOnly: boolean,
+  ) => {
     const reverted = parentReverted || Boolean(f.error) || Boolean(f.revertReason);
     const to = addr(f.to);
     if (to) touched.add(to);
     const type = (f.type ?? "CALL").toUpperCase();
     const level = type === "DELEGATECALL" ? Math.max(contractDepth - 1, 0) : contractDepth;
+    const readOnly = parentReadOnly || type === "STATICCALL";
     maxDepth = Math.max(maxDepth, level);
     frames.push({
       type,
@@ -68,6 +77,7 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
       input: (f.input ?? "0x") as Hex,
       depth,
       reverted,
+      readOnly,
     });
     if (!reverted) {
       for (const log of f.logs ?? []) {
@@ -75,9 +85,9 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
         if (a) logs.push({ address: a, topics: log.topics as Hex[], data: log.data as Hex });
       }
     }
-    for (const child of f.calls ?? []) walk(child, depth + 1, level + 1, reverted);
+    for (const child of f.calls ?? []) walk(child, depth + 1, level + 1, reverted, readOnly);
   };
 
-  walk(root, 0, 0, false);
+  walk(root, 0, 0, false, false);
   return { frames, logs, maxDepth, touched: [...touched] };
 }

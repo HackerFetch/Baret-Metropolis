@@ -34,6 +34,7 @@ const ERRORS = parseAbi([
   "error MerchantIsPaused(address merchant)",
   "error PerTxCapExceeded(uint256 amount, uint256 cap)",
   "error DailyCapExceeded(uint256 wouldSpend, uint256 cap)",
+  "error NotVerified(address party, uint8 reason)",
   "error RefusedByPolicy(address from, address to)",
   "error TransferFailed()",
 ]);
@@ -58,6 +59,7 @@ const MEANING: Record<string, string> = {
   MerchantIsPaused: "The vault's owner has paused this merchant.",
   PerTxCapExceeded: "The amount is over this merchant's cap per payment.",
   DailyCapExceeded: "The payment would go over this merchant's cap per day.",
+  NotVerified: "A party to the payment is not a verified identity.",
   RefusedByPolicy: "The asset's own policy refused the transfer.",
   TransferFailed: "The token refused the transfer.",
 };

@@ -137,7 +137,13 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
     }
   }
 
-  const calls = trace.frames.filter((f) => !f.reverted && f.type !== "STATICCALL").length;
+  // An operation is a call that can change something. A read does not count,
+  // nor does anything inside one, and a DELEGATECALL is the calling contract's
+  // own code (a proxy and its implementation are one contract to the user):
+  // counted, every call to a proxy would be two.
+  const calls = trace.frames.filter(
+    (f) => !f.reverted && !f.readOnly && f.type !== "DELEGATECALL",
+  ).length;
   return { approvals, transfers, ownership, operationCount: calls, source: "trace" };
 }
 

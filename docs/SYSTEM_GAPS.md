@@ -18,7 +18,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-04 | Five of the six demo sites sign nothing. **Closed 2026-10-11** | Sample | P2 | Meriç |
 | G-05 | Scrybe's x402 payment is checked and never made. **Closed 2026-10-11 (D-046)** | Sample | P2 | Ezgin, Meriç |
 | G-06 | Nansen was off. **On since 2026-10-11**, labels mode inside a daily budget (D-041, D-042) | Missing | closed | Ezgin |
-| G-07 | No Cleanverse settlement has happened | Half done | P2 | Ezgin |
+| G-07 | No Cleanverse settlement has happened | Closed 2026-10-11 (in a CVA of our own, not aUSDC) | P2 | Ezgin |
 | G-08 | Qwen's overpay veto sometimes names a mismatch that is not there. **Fixed 2026-10-10** (#66), checked live | Wrong | P1 | Meriç |
 | G-09 | The CRE workflow runs only as a simulation from one machine | Half done | P2 | Ezgin |
 | G-10 | The server keeps its state in memory | Limit | P2 | Ezgin |
@@ -96,6 +96,8 @@ What stays a sample: Scrybe's main button ("Pay and ask") still only shows Baret
 ### G-07 · No Cleanverse settlement has happened
 
 The check works: the server reads the credential on chain and blocks a transfer to a wallet without one (2 of 2 on the live API). `CompliantPaymentGuard` is deployed and tested on a fork. What has never happened is a real payment through it: the deploy wallet holds 0 aUSDC and only Cleanverse's operator mints it (E6). Without it the prize is entered with the check and the playground screens, and the video must not show a settlement.
+
+**Closed 2026-10-11 (D-048).** A payment settled between two verified identities through `CompliantPaymentGuard`, and one to a wallet with no credential was stopped before signing: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b`, `docs/CONTRACTS.md` 4.3. It is in `BVUSD`, a CVA Baret issued through Cleanverse's `POST /atoken/launch`, not in aUSDC: the sandbox's faucet and deposit routes still answer "Internal server error". Left: the two new addresses on Render's `MONAD_TESTNET_KNOWN_CONTRACTS`, so the live API reads the honest payment Safe (it reads Caution, two unknown contracts, until then). The video may show the settlement and must say the asset is Baret's own test CVA.
 
 ### G-08 · Qwen's overpay veto sometimes names a mismatch that is not there
 
