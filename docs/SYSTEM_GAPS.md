@@ -176,7 +176,7 @@ Every end-to-end check of the wallet was a hand-written Playwright script in a s
 
 ### G-21 · Named in documents, never built
 
-`/mcp/tools` and `/mcp/call`; batch, stream and replay variants of analyze; the x402 facilitator and `/demo/paywall`; the extension's x402 interceptor (its provider and keystore are built, D-040); a Cleanverse REST client (the integration reads Cleanverse's contracts instead); anything on mainnet.
+Agent tools over MCP were never built until 2026-10-11 (`POST /mcp`, D-045). Still not built: batch, stream and replay variants of analyze; the x402 facilitator and `/demo/paywall`; the extension's x402 interceptor (its provider and keystore are built, D-040); a Cleanverse REST client (the integration reads Cleanverse's contracts instead); anything on mainnet.
 
 ---
 

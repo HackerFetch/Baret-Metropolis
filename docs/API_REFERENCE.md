@@ -179,6 +179,21 @@ Errors: 400 `invalid_request`; 503 `rpc_unavailable`. A source that does not ans
 
 Read from the indexer. Amounts are base units as strings; addresses lowercase. `?limit=` on `recent` and `vault`. 400 for a bad address; 404 when the indexer has not seen the vault; 503 `indexer_unavailable`.
 
+### `POST /mcp` (D-045)
+
+Baret as tools for an AI agent, over the Model Context Protocol (Streamable HTTP, one JSON-RPC message per POST, one JSON answer, no session and no stream; `GET` and `DELETE` answer 405). Protocol versions `2025-06-18`, `2025-03-26` and `2024-11-05`.
+
+| Tool | Arguments | What it returns |
+|---|---|---|
+| `check_transaction` | `from`, `to?`, `value?`, `data?`, `policyTemplate?`, `network?` | The verdict of `/v1/analyze` for an unsigned transaction |
+| `check_signature` | `signer`, `typedData { domain, types, primaryType, message }`, `policyTemplate?`, `network?` | The verdict for an EIP-712 message |
+| `address_reputation` | `address`, `network?` | The registry entry: flagged, severity, reason code |
+| `policy_templates` | none | The three rule sets |
+
+Every result starts with a sentence a model can act on ("Decision: blocked. Do not sign. Findings: ...") and carries the whole verdict as `structuredContent`. No verdict (bad arguments, a node that does not answer, a registry that is not configured) is a result with `isError: true` that says to treat it as blocked: never an empty or safe answer. The tools only read: nothing is signed, sent or stored. 60 requests a minute (`BARET_MCP_RATE_LIMIT_PER_MINUTE`).
+
+To add it to a client that speaks MCP over HTTP: the URL is `https://baret-monad-api.onrender.com/mcp`, with no key today. For Claude Code: `claude mcp add --transport http baret https://baret-monad-api.onrender.com/mcp`.
+
 ### `GET /health`, `GET /health/ready`
 
 `/health`: `{ status, analysisVersion, commit }`. `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
@@ -229,7 +244,6 @@ A cron-triggered workflow: fetches ScamSniffer's address blacklist, asks the rec
 
 Named in older documents and absent from the code:
 
-- `/mcp/tools`, `/mcp/call` (agent tools over MCP).
 - `/demo/paywall` and an x402 facilitator: `docs/X402_FACILITATOR.md` is a design. Baret checks an x402 payment (as typed data plus `payment`), and nothing settles one.
 - Batch, stream and replay variants of analyze.
 - In the extension: more than one account, the allowances list, alerts, the x402 payments page and its interceptor, Swap (`docs/DECISIONS.md` D-040).
