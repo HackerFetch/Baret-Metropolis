@@ -27,6 +27,14 @@ export const approvals: Detector = (ctx) => {
       out.push({ code: "SIGNATURE_UNRECOGNISED", values: {} });
     }
   }
+  // A marketplace order: it can be filled any time until it ends, so it is
+  // always said; one that pays the signer nothing is a gift to whoever fills it.
+  const order = ctx.effects.order;
+  if (order) {
+    const count = String(order.gives);
+    out.push({ code: "SIGNED_ORDER_DETECTED", values: { count } });
+    if (!order.paid) out.push({ code: "ORDER_PAYS_NOTHING", values: { count } });
+  }
   for (const a of ctx.effects.approvals) {
     const meta = tokenMeta(ctx, a.contract);
     if (a.kind === "operator") {

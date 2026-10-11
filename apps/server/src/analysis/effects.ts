@@ -1,5 +1,5 @@
 import type { TypedDataRequest } from "@baret/guard";
-import { type Address, getAddress, isAddress, zeroAddress } from "viem";
+import { type Address, getAddress, type Hex, isAddress, zeroAddress } from "viem";
 import {
   decodeKnownCall,
   decodeKnownLog,
@@ -46,6 +46,8 @@ export interface Effects {
   source: "trace" | "calldata" | "typedData";
   /** Typed data only: what Baret made of the message (`effectsFromTypedData`). */
   signature?: SignatureReading;
+  /** Typed data only: a marketplace order the message places. */
+  order?: OrderEffect;
 }
 
 const NATIVE_VALUE_CALLS = new Set(["CALL", "CREATE", "CREATE2", "SELFDESTRUCT"]);
@@ -240,6 +242,20 @@ const asBig = (v: unknown): bigint | null => {
   return null;
 };
 
+/**
+ * A marketplace order (Seaport). Signing one moves nothing by itself: anyone
+ * can fill it later, at any time before it ends, and then the offer leaves
+ * the signer and the consideration is paid out.
+ */
+export interface OrderEffect {
+  /** Items the signer gives. */
+  gives: number;
+  /** Something of the consideration comes back to the signer. */
+  paid: boolean;
+  /** The offer covers any item of a collection, not one named item. */
+  wholeCollection: boolean;
+}
+
 /** What Baret made of a signed EIP-712 message. */
 export interface SignatureReading {
   /**
@@ -264,6 +280,9 @@ export interface SignatureReading {
 }
 
 const MAX_UINT256 = (1n << 256n) - 1n;
+
+/** More orders than this in one signature is not read: nobody can review them. */
+const MAX_BULK_ORDERS = 64;
 
 /** Field names that carry an amount of something, whatever the message is. */
 const AMOUNT_NAME =
@@ -314,6 +333,11 @@ function bearsValue(t: TypedDataRequest, user: Address): boolean {
  *   ReceiveWithAuthorization
  *   CancelAuthorization           EIP-3009: takes an authorisation back
  *   Delegation                    ERC-5805 voting power: moves no funds
+ *   OrderComponents, BulkOrder    Seaport orders: what the signer gives, and
+ *                                 whether anything is paid back to them
+ *
+ * Messages that carry a call (`carriedCall`) do not come here when their call
+ * can be run: they are simulated like a transaction.
  *
  * Fail-closed: any other kind, and a recognised kind whose fields do not
  * yield the effect its name promises (a permit for another owner, a missing
@@ -348,6 +372,70 @@ export function effectsFromTypedData(t: TypedDataRequest, chainId?: number): Eff
   };
   const record = (v: unknown) =>
     typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+
+  /**
+   * Records a Seaport order placed through `market`; false when any item of
+   * it cannot be read. The offer leaves the signer for whoever fills the
+   * order, which nobody knows at signing: the market stands for them.
+   */
+  const order = (o: Record<string, unknown>, market: Address): boolean => {
+    if (asAddress(o.offerer) !== user) return false;
+    const offer = Array.isArray(o.offer) ? o.offer : null;
+    const consideration = Array.isArray(o.consideration) ? o.consideration : null;
+    if (!offer || !consideration || offer.length === 0) return false;
+    const effect = out.order ?? { gives: 0, paid: false, wholeCollection: false };
+    for (const raw of offer) {
+      const item = record(raw);
+      const kind = asBig(item.itemType);
+      const contract = asAddress(item.token);
+      // The most the order can take: an amount may fall or rise over its life.
+      const start = asBig(item.startAmount);
+      const end = asBig(item.endAmount);
+      if (kind === null || start === null || end === null) return false;
+      const amount = start > end ? start : end;
+      if (kind === 1n && contract) {
+        out.transfers.push({ token: contract, from: user, to: market, amount, nft: false });
+      } else if ((kind === 2n || kind === 3n) && contract) {
+        out.transfers.push({ token: contract, from: user, to: market, amount, nft: true });
+      } else if ((kind === 4n || kind === 5n) && contract) {
+        // By criteria: any item of the collection the signer holds.
+        pushApproval(out.approvals, {
+          kind: "operator",
+          contract,
+          spender: market,
+          amount: null,
+          unlimited: true,
+        });
+        effect.wholeCollection = true;
+      } else {
+        // Native coin cannot be offered by signature, and nothing else is known.
+        return false;
+      }
+      effect.gives += 1;
+    }
+    for (const raw of consideration) {
+      const item = record(raw);
+      const kind = asBig(item.itemType);
+      const start = asBig(item.startAmount);
+      const end = asBig(item.endAmount);
+      if (kind === null || start === null || end === null) return false;
+      if (asAddress(item.recipient) !== user) continue;
+      // The least the signer can be paid.
+      const amount = start < end ? start : end;
+      if (amount === 0n) continue;
+      const contract = asAddress(item.token);
+      if (kind === 0n) {
+        out.transfers.push({ token: null, from: market, to: user, amount, nft: false });
+      } else if (contract) {
+        out.transfers.push({ token: contract, from: market, to: user, amount, nft: kind !== 1n });
+      } else {
+        return false;
+      }
+      effect.paid = true;
+    }
+    out.order = effect;
+    return true;
+  };
 
   let read = false;
   let known = true;
@@ -413,20 +501,105 @@ export function effectsFromTypedData(t: TypedDataRequest, chainId?: number): Eff
       // Voting power to a delegate. The tokens stay where they are.
       read = token !== null && asAddress(m.delegatee) !== null;
       break;
+    case "OrderComponents":
+      read = token !== null && order(m, token);
+      break;
+    case "BulkOrder": {
+      // A tree of orders signed at once: every leaf has to be read.
+      const leaves = (Array.isArray(m.tree) ? m.tree : []).flat(Number.POSITIVE_INFINITY);
+      read = token !== null && leaves.length > 0 && leaves.length <= MAX_BULK_ORDERS;
+      for (const leaf of read ? leaves : []) {
+        if (!order(record(leaf), token as Address)) read = false;
+      }
+      out.operationCount = Math.max(1, leaves.length);
+      break;
+    }
     default:
       // An order, a vote, a login, a kind nobody has seen: Baret has no model
       // of what it authorises.
       known = false;
   }
 
-  const declared = asBig(t.domain.chainId);
   out.signature = {
     kind: read ? "read" : "unread",
     reason: read ? null : known ? "fields" : "unknownType",
     // A known kind that did not read is a grant Baret could not pin down.
     valueBearing: read ? false : known || bearsValue(t, user),
-    wrongChain: chainId !== undefined && declared !== null && declared !== BigInt(chainId),
+    wrongChain: namesAnotherChain(t, chainId),
     verifier: token,
   };
   return out;
+}
+
+/** Whether the message's domain names a chain other than the one being checked. */
+export function namesAnotherChain(t: TypedDataRequest, chainId: number | undefined): boolean {
+  const declared = asBig(t.domain.chainId);
+  return chainId !== undefined && declared !== null && declared !== BigInt(chainId);
+}
+
+/**
+ * A signed message that carries a call for somebody else to send: the call,
+ * as the chain will run it, and the account whose funds it can move.
+ */
+export interface CarriedCall {
+  tx: NormalizedTx;
+  /** Whose balances the call touches: the signer, or the Safe they sign for. */
+  user: Address;
+  /** The contract that will run it: a forwarder, or the Safe itself. */
+  verifier: Address;
+}
+
+/**
+ * The call inside a signed message, when the message is one of the kinds that
+ * carry one. Unlike a permit, such a message can be simulated: what it does
+ * is what its call does.
+ *
+ *   ForwardRequest   ERC-2771 meta-transaction. The forwarder sends `data` to
+ *                    `to` with the signer's address appended, and a contract
+ *                    that trusts the forwarder acts as if the signer called.
+ *   SafeTx           A Safe transaction. The Safe sends `data` to `to` once
+ *                    enough owners have signed; the funds at stake are the Safe's.
+ *
+ * Null for any other kind, and for one of these whose fields do not give a
+ * call that can be run as an ordinary call (another sender, a Safe
+ * delegatecall): the caller then treats the message as unread.
+ */
+export function carriedCall(t: TypedDataRequest): CarriedCall | null {
+  const signer = getAddress(t.signer);
+  const verifier = asAddress(t.domain.verifyingContract);
+  const m = t.message;
+  if (!verifier) return null;
+  const to = asAddress(m.to);
+  const data = typeof m.data === "string" && /^0x([0-9a-fA-F]{2})*$/.test(m.data) ? m.data : null;
+  const value = m.value === undefined ? 0n : asBig(m.value);
+  if (!to || data === null || value === null) return null;
+
+  if (t.primaryType === "ForwardRequest") {
+    if (asAddress(m.from) !== signer) return null;
+    const gas = asBig(m.gas);
+    return {
+      tx: {
+        from: verifier,
+        to,
+        value,
+        // ERC-2771: the forwarder appends who the call is from.
+        data: `${data}${signer.slice(2).toLowerCase()}` as Hex,
+        gas: gas !== null && gas > 0n ? gas : null,
+        gasPrice: null,
+      },
+      user: signer,
+      verifier,
+    };
+  }
+  if (t.primaryType === "SafeTx") {
+    // operation 1 is a delegatecall: the Safe runs foreign code as itself,
+    // which an ordinary call cannot stand in for.
+    if (asBig(m.operation ?? 0) !== 0n) return null;
+    return {
+      tx: { from: verifier, to, value, data: data as Hex, gas: null, gasPrice: null },
+      user: verifier,
+      verifier,
+    };
+  }
+  return null;
 }

@@ -21,6 +21,10 @@ function configured(n: NetworkConfig, deps: AnalyzeDeps) {
     review: deps.review != null,
     reviewSends: deps.review?.sends ?? false,
     sealed: deps.sealed != null,
+    // Signed messages the server could not read since it started, and how
+    // many different kinds: numbers only, the names stay in the log.
+    unreadSignatures: deps.unreadKinds?.messages ?? 0,
+    unreadSignatureKinds: deps.unreadKinds?.kinds ?? 0,
     separateTraceRpc: n.traceRpcUrl !== n.rpcUrl,
     usdc: n.usdcAddress !== null,
     reputationRegistry: n.reputationRegistryAddress !== null,
