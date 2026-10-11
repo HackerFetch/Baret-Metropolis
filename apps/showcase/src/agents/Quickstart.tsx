@@ -21,7 +21,7 @@ import type { PolicyName } from "./playground/sample.js";
  * playground. The code scrolls sideways inside its own box only, and the box
  * takes keyboard focus so it can be scrolled without a pointer. All four
  * samples work today: the HTTP and MCP ones against the live API, the SDK
- * and CLI ones from a clone of the repository (none is on npm yet);
+ * one from the npm package, the CLI one from a clone of the repository;
  * a sample not in `WORKS_TODAY` would carry a status line and no copy
  * button instead, for whenever the next one is only planned.
  */

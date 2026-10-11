@@ -38,10 +38,9 @@ export const agents = {
       primary: { label: "Read the quickstart", href: "#quickstart" },
       secondary: { label: "Try the playground", href: "#playground" },
     },
-    install: "git clone https://github.com/HackerFetch/Baret-Metropolis",
-    /** Shown under the install line until the kit is on npm. */
-    installStatus:
-      "Not on npm yet. After the clone, pnpm install, then use @baret/agent-kit and the baret CLI from the workspace.",
+    install: "npm install @baret/agent-kit",
+    /** Shown under the install line. The kit is on npm since 2026-10-11. */
+    installStatus: "On npm. The package brings @baret/guard and the baret CLI with it.",
   },
 
   /** The argument. Concrete over scary. */
@@ -288,7 +287,7 @@ export const agents = {
     sdk: {
       title: "TypeScript",
       before:
-        "Wrap the signer, then send the way you already do. Works today, from a clone of the repository, and asks the live Baret API.",
+        "Wrap the signer, then send the way you already do. Works today, from the npm package, and asks the live Baret API.",
       code: [
         'import { AgentWallet, localSigner } from "@baret/agent-kit";',
         'import { type Hex, parseEther } from "viem";',

@@ -75,8 +75,8 @@ export function AgentsHero(): JSX.Element {
                 fullOnPhone
               />
             </div>
-            {/* The kit is not on npm yet: the line is the clone that gets it,
-                and the status under it says what to run next. */}
+            {/* The kit is on npm: the line installs it, and the status under it
+                says what comes with it. */}
             <div className="mt-8 max-w-[420px] border border-chalk/25 bg-ink/40 px-4 py-3">
               <code className="block break-all font-mono text-sm text-chalk">{hero.install}</code>
               <p className="mt-1 text-sm text-chalk/70">{hero.installStatus}</p>
