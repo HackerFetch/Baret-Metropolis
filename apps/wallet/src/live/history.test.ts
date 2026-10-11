@@ -37,13 +37,13 @@ describe("activityOf", () => {
     ]);
   });
 
-  it("skips every kind but paid: the other nine have no row yet", () => {
+  it("reads the other nine kinds as what the owner changed in the vault", () => {
     const body = {
       activity: [
         { kind: "created", timestamp: 1 },
-        { kind: "deposited", amount: "100", timestamp: 2 },
-        { kind: "withdrawn", amount: "100", timestamp: 3 },
-        { kind: "merchantCapSet", merchant: MERCHANT, amount: "100", timestamp: 4 },
+        { kind: "deposited", amount: "40000000", timestamp: 2 },
+        { kind: "withdrawn", amount: "1500000", timestamp: 3 },
+        { kind: "merchantCapSet", merchant: MERCHANT, amount: "5000000", timestamp: 4 },
         { kind: "merchantPaused", merchant: MERCHANT, timestamp: 5 },
         { kind: "merchantResumed", merchant: MERCHANT, timestamp: 6 },
         { kind: "merchantRevoked", merchant: MERCHANT, timestamp: 7 },
@@ -51,7 +51,33 @@ describe("activityOf", () => {
         { kind: "agentRevoked", agent: AGENT, timestamp: 9 },
       ],
     };
-    expect(activityOf(body)).toEqual([]);
+    const items = activityOf(body, { [MERCHANT.toLowerCase()]: "Scrybe" }) ?? [];
+    expect(items.map((i) => [i.kind, i.values])).toEqual([
+      ["vaultCreated", {}],
+      ["vaultDeposit", { amount: "40.00", asset: "USDC" }],
+      ["vaultWithdraw", { amount: "1.50", asset: "USDC" }],
+      ["merchantCaps", { amount: "5.00", asset: "USDC", merchant: "Scrybe" }],
+      ["merchantPaused", { merchant: "Scrybe" }],
+      ["merchantResumed", { merchant: "Scrybe" }],
+      ["merchantRemoved", { merchant: "Scrybe" }],
+      ["agentKey", { agent: AGENT }],
+      ["agentRevoked", { agent: AGENT }],
+    ]);
+    // Money into the vault leaves the account; a withdrawal comes back.
+    expect(items[1]?.changes).toEqual([{ direction: "out", value: "40.00", unit: "USDC" }]);
+    expect(items[2]?.changes).toEqual([{ direction: "in", value: "1.50", unit: "USDC" }]);
+    expect(items.every((i) => i.source === "indexer" && i.verdict === null)).toBe(true);
+  });
+
+  it("leaves out a row whose kind is unknown or misses the field its sentence needs", () => {
+    const rows = [
+      { kind: "somethingNew", timestamp: 1 },
+      { kind: "deposited", timestamp: 2 },
+      { kind: "merchantPaused", merchant: "nobody", timestamp: 3 },
+      { kind: "agentSet", timestamp: 4 },
+      { kind: "created" },
+    ];
+    expect(activityOf({ activity: rows })).toEqual([]);
   });
 
   it("leaves out a paid row with no readable merchant, amount or time", () => {
@@ -142,8 +168,14 @@ describe("activityOf", () => {
       ],
     };
     const items = activityOf(body) ?? [];
-    expect(items).toHaveLength(2);
-    expect(items.map((i) => i.kind)).toEqual(["payment", "payment"]);
+    expect(items.map((i) => i.kind)).toEqual([
+      "payment",
+      "vaultDeposit",
+      "payment",
+      "agentKey",
+      "merchantCaps",
+      "vaultDeposit",
+    ]);
     expect(items[0]).toMatchObject({
       id: "69543063-37",
       values: {

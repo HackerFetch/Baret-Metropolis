@@ -37,6 +37,16 @@ export const history = {
     drift: "Left your account without this wallet signing",
     connect: "Connected to {origin}",
     disconnect: "Disconnected {origin}",
+    /** The vault's own history: what the owner changed, and when. */
+    vaultCreated: "Opened your vault",
+    vaultDeposit: "Deposited {amount} {asset} into your vault",
+    vaultWithdraw: "Withdrew {amount} {asset} from your vault",
+    merchantCaps: "Set the caps for {merchant}: {amount} {asset} a day",
+    merchantPaused: "Paused payments to {merchant}",
+    merchantResumed: "Resumed payments to {merchant}",
+    merchantRemoved: "Removed {merchant} from your vault",
+    agentKey: "Let {agent} pay from your vault",
+    agentRevoked: "Revoked the agent key {agent}",
   },
 
   detail: {
