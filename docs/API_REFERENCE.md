@@ -211,7 +211,7 @@ The authorisation is an EIP-3009 `TransferWithAuthorization` on the token in `as
 
 ### `GET /health`, `GET /health/ready`
 
-`/health`: `{ status, analysisVersion, commit, forwardedHops }` (`forwardedHops`: how many `X-Forwarded-For` entries the request carried, a count only). `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `x402`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
+`/health`: `{ status, analysisVersion, commit, forwardedHops, viaEdge }` (`forwardedHops`: how many `X-Forwarded-For` entries the request carried, a count only; `viaEdge`: whether the request carried the sites' edge secret). `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `x402`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
 
 ### Limits
 

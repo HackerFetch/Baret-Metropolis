@@ -125,6 +125,15 @@ describe("http", () => {
         url: "/health",
         headers: { "x-forwarded-for": forwarded, ...(edge ? { "x-baret-edge": edge } : {}) },
       });
+    const edge = async (mark?: string) =>
+      (
+        await app.inject({
+          method: "GET",
+          url: "/health",
+          headers: { "x-forwarded-for": "192.0.2.1", ...(mark ? { "x-baret-edge": mark } : {}) },
+        })
+      ).json().viaEdge;
+    expect([await edge(secret), await edge("wrong"), await edge()]).toEqual([true, false, false]);
     // Direct: the host's proxy appended the caller. A made-up address in front buys nothing.
     expect((await from("198.51.100.9")).statusCode).toBe(200);
     expect((await from("1.1.1.1, 198.51.100.9")).statusCode).toBe(200);

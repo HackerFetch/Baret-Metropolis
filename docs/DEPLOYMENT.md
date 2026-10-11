@@ -124,6 +124,10 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | Envio indexer (hosted) | ✅ Live since 2026-10-07 at `https://indexer.dev.hyperindex.xyz/b3bc40c/v1/graphql`; its data matches the chain and all four `/v1/audit` routes were checked against it. The free plan deletes a deployment after 30 days, or after 7 days without a request (the keep-warm job asks it every 10 minutes) |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |
 
+## The sites' edge secret (G-17)
+
+Both Vercel projects run `middleware.ts` in front of their `/api` rewrite. With `BARET_EDGE_SECRET` set on a project (Production) it sends that value on as `x-baret-edge`; the server, with the same value in `BARET_EDGE_SECRET`, answers `viaEdge: true` on `/health` for such a request and, once `BARET_PROXY_HOPS` and `BARET_EDGE_PROXY_HOPS` are set, keys its rate limits on the address a proxy wrote, not on one the caller can invent. The secret lives in the three dashboards only. To rotate it, pick a moment when nobody records: between the first and the last of the three changes the sites' requests count as direct ones. Change Render, then both Vercel projects, redeploy each, and check `viaEdge` through both sites.
+
 ## Publishing the SDK to npm
 
 `@baret/guard`, `@baret/llm` and `@baret/agent-kit` can be published since 2026-10-11; none is published yet. In the workspace they still resolve to their TypeScript sources (`main` and `exports` point at `src/`), so nothing changes for the apps. A published copy is built JavaScript with type declarations: `pnpm build` in a package runs `tsc -p tsconfig.build.json` into `dist/`, and `publishConfig` swaps `main`, `types`, `exports` and (for agent-kit) `bin` to `dist/` when the package is packed. `prepack` runs the build, so a tarball cannot ship without it. pnpm rewrites `workspace:*` to the real version.

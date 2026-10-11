@@ -34,6 +34,12 @@ function same(a: string, b: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
+/** Whether the request carries the sites' edge secret. False when no secret is configured. */
+export function viaEdge(req: FastifyRequest, trust: ProxyTrust): boolean {
+  const mark = req.headers[EDGE_HEADER];
+  return trust.edgeSecret !== null && typeof mark === "string" && same(mark, trust.edgeSecret);
+}
+
 export function clientOf(req: FastifyRequest, trust: ProxyTrust): string {
   if (trust.directHops === null) return req.ip;
   const header = req.headers["x-forwarded-for"];
@@ -41,12 +47,7 @@ export function clientOf(req: FastifyRequest, trust: ProxyTrust): string {
     .split(",")
     .map((part) => part.trim())
     .filter((part) => part !== "");
-  const mark = req.headers[EDGE_HEADER];
-  const marked =
-    trust.edgeSecret !== null &&
-    trust.edgeHops !== null &&
-    typeof mark === "string" &&
-    same(mark, trust.edgeSecret);
+  const marked = trust.edgeHops !== null && viaEdge(req, trust);
   const hops = marked ? (trust.edgeHops as number) : trust.directHops;
   // Fewer entries than our proxies add: not through them at all (a local call).
   const peer = req.socket.remoteAddress ?? req.ip;
