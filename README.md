@@ -34,7 +34,7 @@ No accounts and no login credentials are needed. The demo sites and `/review` wo
 
 - **Testnet MON.** Every signed transaction pays a small fee in testnet MON, which is free from the Monad faucet: <https://faucet.monad.xyz>. The demo sites' own **"Get 100 test dUSDC"** button gives the demo token.
 - **The Baret wallet** needs a passkey provider that supports the WebAuthn **PRF** extension, such as iCloud Keychain or Google Password Manager. "Create my wallet" is one passkey prompt. If the provider lacks PRF, the wallet says so on that screen. To run the stateless test, clear the site's storage and press "Open with my passkey": the same account comes back.
-- **The extension** is not in the Chrome Web Store. Download the zip from `/install`, unzip it, open `chrome://extensions`, turn on Developer mode and choose "Load unpacked". Set a passphrase, write down the twelve words, then send the new address a little testnet MON. On NovaSwap, choose "Connect wallet" → "Baret" under "Wallets in this browser", turn on the attack and press "Sign with your wallet": the extension shows Blocked and has no sign button.
+- **The extension** is not in the Chrome Web Store. Download the zip from `/install`, unzip it, open `chrome://extensions`, turn on Developer mode and choose "Load unpacked". Set a passphrase, write down the twelve words, then send the new address a little testnet MON. On NovaSwap, choose "Connect wallet" → "Baret extension" under "Wallets in this browser", turn on the attack and press "Sign with your wallet": the extension shows Blocked and has no sign button.
 - **The API sleeps when idle.** The first request after a quiet spell can take up to a minute; open <https://baret-monad-api.onrender.com/health> first.
 
 Addresses to try in any check:
@@ -110,6 +110,7 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 Said plainly, so that nothing above is read as more than it is:
 
+- **A `personal_sign` message is not checked.** There is nothing to simulate in a plain-text message, so the wallet and extension show it as the text it signs and sign on the reader's press, with no call to Baret first.
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
 - **No Cleanverse settlement has been made** through `CompliantPaymentGuard` yet.
 - **Mainnet:** nothing is deployed there.
@@ -179,7 +180,7 @@ This repository is also the three of us's working space. Status and plan: [`docs
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Contract specifications and deployments |
 | [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | The x402 design: checked, and settled on Monad testnet since 2026-10-11 (D-046) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel, Render, CI |
-| [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Review of the five earlier Baret versions |
+| [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Review of the five earlier Baret versions (read for ideas only; this repository is written from scratch, no files or history copied) |
 | [`docs/BRAND.md`](docs/BRAND.md) | Brand specification |
 
 Rules every change follows: Monad only (testnet `10143`, mainnet `143`); fail-closed, so missing data blocks; sponsor integrations are part of the product, not badges; code and docs change together; secrets never enter the repository.

@@ -2,7 +2,7 @@
 
 > This document is the **target architecture** for the Baret implementation to be written from scratch for Monad Metropolis (no code yet). As code starts being written, this file must be kept in sync with the code — if a contradiction is found, the source code is treated as the authority and this file is updated.
 
-Last updated: 2026-10-07 · Status: **`packages/guard`, the `apps/server` analysis core, the contracts, agent-kit, wallet-core and the Envio indexer are implemented and live on testnet; the CRE reputation-oracle workflow is built and simulated with a real write (not deployed to a DON); Nansen and Cleanverse wait on the sponsors**
+Last updated: 2026-10-11 · Status: **Live on Monad testnet: the server, the contracts, `apps/wallet` and `apps/extension` (both real wallets, not sample data), x402 settlement, the CRE reputation-oracle workflow (simulated, with a real write; not deployed to a DON), Nansen (`labels` mode), Cleanverse (the check; no settlement yet). Details and current gaps: `README.md`, `docs/SYSTEM_GAPS.md`**
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: 2026-10-07 · Status: **`packages/guard`, the `apps/server` analys
 ```mermaid
 flowchart TB
     subgraph Clients
-        EXT[apps/extension<br/>Chrome MV3 wallet + x402 interceptor]
+        EXT[apps/extension<br/>Chrome MV3 wallet]
         WAL[apps/wallet<br/>Mera-powered standalone smart wallet]
         SHOW[apps/showcase<br/>threat scenarios + /agents control panel]
         MM[MetaMask Agent Wallet<br/>via packages/metamask-plugin]
@@ -254,7 +254,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 **`POST /v1/policy/draft`** (D-038). Body `{ sentence, current?, language? }` (`policyDraftRequestSchema` in `@baret/guard`): a sentence of 1 to 400 characters, the rules to start from (default: Balanced) and `en`, `tr` or `zh`. KIMI proposes changes; the server (`application/policy-draft.ts`) checks each field and value against the policy schema, lists unknown or invalid ones in `refused` with the reason, checks the merged rules again (`422 policy_draft_invalid` if they fail) and marks each change that allows more than `current` as `loosens`. Answer `{ policy, changes: [{ field, from, to, why, loosens }], refused, note, model }` (`policyDraftResponseSchema`). Nothing is applied: the wallet's Rules page leaves loosening changes unticked, and only the person's Save changes the rules. Limits: `BARET_POLICY_DRAFT_RATE_LIMIT_PER_MINUTE` (default 10) and `BARET_KIMI_DAILY_LIMIT` (default 500 fresh KIMI calls per UTC day, shared with `/v1/explain`; over it `429 policy_draft_daily_limit`). No key or no answer: `503 policy_draft_unavailable`. `/health/ready` reports `configured.policyDraft`. Checked with the real key on 2026-10-09 (D-038).
 
 ### 8.2 `apps/wallet` and `packages/wallet-core`
-`apps/wallet` is the screens (wallet-ui store, today on sample data). `packages/wallet-core` is everything behind them, with no UI (D-023):
+`apps/wallet` is the screens (wallet-ui store; live on a real passkey account since 2026-10-09, `?sample=` keeps the sample for tests and design states). `packages/wallet-core` is everything behind them, with no UI (D-023):
 
 - `createWallet` / `unlockWallet` → `WalletSession`: the Mera passkey account (`address`, `account` for viem signing, `lock()`), plus `agentKey(n)` / `agentAddress(n)` for keys an agent can be handed.
 - `createWalletChain({ rpcUrl })`: balances, `findVault(owner)`, `vault(address, merchants)`, `prepare`, `send`, `wait`.
@@ -265,7 +265,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 ### 8.3 `apps/extension` — Chrome MV3
 - EIP-1193 / EIP-6963 provider.
 - `background`: account state machine, IndexedDB (keystore, history, allowances, site permissions), chain monitor (WebSocket — not polling, per the Alchemy recommendation in notes.txt).
-- `inpage`: `window.ethereum` provider + x402 fetch interceptor.
+- `inpage`: `window.ethereum` provider (EIP-1193/EIP-6963). There is no automatic x402 fetch interceptor; x402 settlement goes through a site's own "Pay with your wallet" button (D-046), same as any other transaction.
 - Every signature request goes through the guard; a risky transaction is blocked in the wallet, not in the dApp.
 
 ### 8.4 `apps/showcase`
