@@ -22,7 +22,7 @@ The five other demo sites, OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe
 | What | Where | What to do there |
 |---|---|---|
 | Demo sites | <https://baret-metropolis.vercel.app/showcase> | Six sites, honest and attack versions, each checked live |
-| Agents | <https://baret-metropolis.vercel.app/agents> | The playground: an agent asks Baret before eight kinds of payment. Below it, a real Dynamic agent's payments from its vault, read live from the Envio indexer |
+| Agents | <https://baret-metropolis.vercel.app/agents> | The playground: an agent asks Baret before eight kinds of payment. Below it, a real Dynamic agent's payments from its vault, read live from the Envio indexer; a lookup of Baret's on-chain reputation registry; and a quickstart with HTTP, TypeScript, the CLI and MCP samples on the live API |
 | Agent reviewer (Qwen) | <https://baret-metropolis.vercel.app/review> | Three payments an agent was asked to make. Qwen 3.8 Max plans, calls four read-only tools and can veto; the honest one is sent on testnet |
 | Baret wallet | <https://baret-wallet.vercel.app> | A passkey wallet (Mera): no seed phrase, every request checked before the sign button exists |
 | Browser extension | <https://baret-metropolis.vercel.app/install> | A wallet extension for Chrome that refuses a Blocked request in its own window |
@@ -99,7 +99,7 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | **Mera** | The Baret wallet's whole account layer: one passkey, no seed phrase; agent keys and the encrypted settings each come from their own PRF namespace (D-032, D-039) | Live |
 | **Dynamic** | The demo agent is a Dynamic server wallet, authorised on a PaymentGuard vault and paying from it | Live; its payments are listed on `/agents` |
 | **Envio** | HyperIndex indexes every vault, payment and registry change; the wallet's Activity, `/agents` and the Qwen reviewer read it through `/v1/audit/*` | Live |
-| **Chainlink CRE** | A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain reputation registry that every check reads | Simulated with the CRE CLI with a real write on testnet (`workflows/README.md`); not deployed to a DON |
+| **Chainlink CRE** | A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain reputation registry that every check reads; `/agents` looks any address up in it | Simulated with the CRE CLI with a real write on testnet (`workflows/README.md`); not deployed to a DON |
 | **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live; a settlement through the contract waits on test aUSDC |
 | **KIMI** (`kimi-k3`) | The plain-words explanation under every live verdict, and rules from a sentence on the wallet's Rules page | Live |
 | **Qwen** (`qwen3.8-max`) | The agent reviewer on `/review`: plan, four tools, veto only | Live |
