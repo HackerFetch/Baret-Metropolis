@@ -126,7 +126,7 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 
 ## The sites' edge secret (G-17)
 
-Both Vercel projects run `middleware.ts` in front of their `/api` rewrite. With `BARET_EDGE_SECRET` set on a project (Production) it sends that value on as `x-baret-edge`; the server, with the same value in `BARET_EDGE_SECRET`, answers `viaEdge: true` on `/health` for such a request and, once `BARET_PROXY_HOPS` and `BARET_EDGE_PROXY_HOPS` are set, keys its rate limits on the address a proxy wrote, not on one the caller can invent. The secret lives in the three dashboards only. To rotate it, pick a moment when nobody records: between the first and the last of the three changes the sites' requests count as direct ones. Change Render, then both Vercel projects, redeploy each, and check `viaEdge` through both sites.
+Both Vercel projects run `middleware.ts` in front of their `/api` rewrite. With `BARET_EDGE_SECRET` set on a project (Production) it sends that value on as `x-baret-edge` and the visitor's address as `x-baret-client`; the server, with the same value in `BARET_EDGE_SECRET`, answers `viaEdge: true` on `/health` for such a request and, once `BARET_PROXY_HOPS` and `BARET_EDGE_PROXY_HOPS` are set, keys its rate limits on the address a proxy wrote, not on one the caller can invent: the address the edge named on a request that carries the secret, the entry `BARET_PROXY_HOPS` from the right otherwise. The secret lives in the three dashboards only. To rotate it, pick a moment when nobody records: between the first and the last of the three changes the sites' requests count as direct ones. Change Render, then both Vercel projects, redeploy each, and check `viaEdge` through both sites.
 
 ## Publishing the SDK to npm
 

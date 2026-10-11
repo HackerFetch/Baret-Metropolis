@@ -143,6 +143,20 @@ describe("http", () => {
     expect((await from("203.0.113.8, 10.0.0.1", secret)).statusCode).toBe(200);
     expect((await from("203.0.113.7, 10.0.0.1", secret)).statusCode).toBe(200);
     expect((await from("203.0.113.7, 10.0.0.1", secret)).statusCode).toBe(429);
+    // The edge names the visitor itself: that wins over whatever the list starts with.
+    const named = (client: string, forwarded: string, mark = secret) =>
+      app.inject({
+        method: "GET",
+        url: "/health",
+        headers: { "x-forwarded-for": forwarded, "x-baret-edge": mark, "x-baret-client": client },
+      });
+    expect((await named("203.0.113.20", "5.5.5.5, 10.0.0.1")).statusCode).toBe(200);
+    expect((await named("203.0.113.20", "6.6.6.6, 10.0.0.1")).statusCode).toBe(200);
+    expect((await named("203.0.113.20", "7.7.7.7, 10.0.0.1")).statusCode).toBe(429);
+    // Without the secret the name counts for nothing: the direct caller's own bucket.
+    expect((await named("203.0.113.21", "5.5.5.5, 10.0.0.3", "wrong")).statusCode).toBe(200);
+    expect((await named("203.0.113.22", "5.5.5.5, 10.0.0.3", "wrong")).statusCode).toBe(200);
+    expect((await named("203.0.113.23", "5.5.5.5, 10.0.0.3", "wrong")).statusCode).toBe(429);
     // Claiming to be a site without the secret counts as direct: the edge's bucket, not a fresh one.
     expect((await from("9.9.9.9, 10.0.0.2", "wrong")).statusCode).toBe(200);
     expect((await from("8.8.8.8, 10.0.0.2", "wrong")).statusCode).toBe(200);
