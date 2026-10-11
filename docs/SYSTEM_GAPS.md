@@ -135,6 +135,8 @@ The protocol between a site and the wallet has `connect` and `sign` for one call
 
 Judges read the README. These are Hale's H14; the facts to correct them with are in this file and in `docs/API_REFERENCE.md`.
 
+**Closed 2026-10-11 (Hale):** README's status table and test counts were already rewritten in H14 (1)–(3); `docs/WALLET.md`'s "Not live yet" already lists M3 as shipped; `docs/X402_FACILITATOR.md`'s status line already says "design; only the check is built". The one line still stale was `docs/ARCHITECTURE.md`'s endpoint table (it listed `/mcp/tools`, `/mcp/call` as not built, when `POST /mcp` shipped today, D-045) — fixed in the `qa`/`main` merge. `docs/ROADMAP.md` "Where things stand" keeps its dated paragraphs as a history (the convention used throughout that section); the current facts are the newest dated paragraph on top, not an edit of the old ones.
+
 ---
 
 ## P3

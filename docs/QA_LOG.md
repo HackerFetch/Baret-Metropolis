@@ -20,16 +20,16 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-10 night · by: Hale's agent (session 3) · API commit `16f5448`
+Last updated: 2026-10-11 · by: Hale's agent (session 4) · API commit `d763e03`, `qa` merged up to `main` `6a1810e`
 
 | | |
 |---|---|
-| **Done** | H1, H4–H8, H9 part 1, **H16** (KIMI and Qwen live), **the extension as a real wallet** (attack Blocked in its own window, honest swap confirmed, popup send, lock, restore), **H10 (1)** `verify:demo` 20/20 and the four x402 boxes, **H10 (2)** `pnpm check` 1,072 and forge 85 green, **Hale's demo vault** `0xA19A…0E3C`, **H14 (1)–(3)** README for judges and the status documents |
-| **In progress** | H11 scripts and H12 articles drafted (`docs/submission/SCRIPTS.md`, `docs/articles/`), waiting on reviews and gates; H14 (4) drafted (`docs/submission/TEXTS.md`), waiting on E8; the sealed settings' two-device run needs a real passkey |
-| **Blocked on** | Ezgin: the platform team (E1 (1)) → H2. H3 (MetaMask) is Ezgin's since 2026-10-10 |
-| **Next step** | E8's fact check of `README.md` and `docs/submission/TEXTS.md`; before recording, the checks in "Before recording" (`tasks/FOR_HALE.md`). Hale at the keyboard: H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles |
-| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension, P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived" |
-| **Days to the deadline** | Freeze Sun 11 Oct 12:00 (tomorrow), submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
+| **Done** | Everything from session 3, plus: **`qa` caught up with 25+ commits from `main`** (Nansen live, the typed-data fail-open fix, MCP tools, Seaport orders, SDK publishable, two browser-verify scripts, raised daily caps, sealed save/restore timeout); **Nansen documented as live** (README, ROADMAP, API_REFERENCE, RESOURCES, QA_AND_DELIVERY §8, the `docs/submission/TEXTS.md` gate lifted); the **before-recording gate** (typed-data fix + Nansen): `verify:demo` 20/20, "Check with Baret" still Blocked with no sign button, `/agents` "pay" still Safe; **M13/M14 re-tested live** (the KIMI block and the rule draft both fail closed correctly on a forced 503); the **overpay veto re-confirmed**; **the wallet's `verify:browser` run 8/8**; G-13's doc staleness closed (the last line, `docs/ARCHITECTURE.md`'s endpoint table, fixed in the merge) |
+| **In progress** | H11 scripts and H12 articles drafted, waiting on reviews and gates; H14 (4) drafted, waiting on E8; the sealed settings' two-device run needs a real passkey |
+| **Blocked on** | Ezgin: **the live showcase is stuck at `16f5448`**, so Hale's own 🐛 P1/P2 fix (#77) is not visible to judges right now — only `baret-metropolis` needs a redeploy, `baret-wallet` already got a fresh one. Also: the platform team (E1 (1)) → H2. H3 (MetaMask) is Ezgin's since 2026-10-10. The extension's `verify:browser` needs a permission this sandbox refused (writing a private key to a file) |
+| **Next step** | Whether Ezgin has redeployed `baret-metropolis` (re-test the extension-copy fix the moment it has); E8's fact check; before-recording checks are now done. Hale at the keyboard: H2 (platform profiles), H9 (2) Discord, the real-passkey two-device run (Mera clips), publishing the two articles — none of these are agent-doable |
+| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension (fix merged as #77 but not yet deployed to production), P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived" |
+| **Days to the deadline** | **Today is the feature freeze (Sun 11 Oct, 12:00); recording starts this afternoon.** Submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---
 
@@ -58,6 +58,58 @@ One entry per thing Hale has actually run. Each: what it is, the command, what i
 ---
 
 ## 3. Sessions (newest on top)
+### 2026-10-11 — session 4 (merge commit `6a1810e` on `qa`, off `main` `61e9fab`; API commit `d763e03`)
+
+Goal of the session: catch up `qa` with 25+ commits that landed on `main` since session 3, then re-run the gates the freeze requires. Today is the feature freeze day (Sun 11 Oct, 12:00); recording starts this afternoon.
+
+- **Piece: `qa` merged with `main`** (housekeeping)
+  - What: `git fetch && git merge origin/main`. Five conflicts: `README.md`, `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `tasks/FOR_EZGIN.md`, `tasks/FOR_MERIC.md` (one more inside that file). Each had both sides adding real, non-overlapping content (Hale's H14 README rewrite vs. Ezgin's later edits to the same old table; both task files' "newest on top" lists grown independently).
+  - How it works: resolved every one by keeping both sides' substance — Hale's rewritten README section over `main`'s stale status table; `docs/ARCHITECTURE.md`'s endpoint table kept the audit-routes row and added the real `POST /mcp` row, dropped the stale `/mcp/tools`/`/mcp/call` placeholder, and fixed a self-contradicting sentence that called MCP "not built" one clause after calling it "Implemented"; `docs/DEPLOYMENT.md` kept Hale's checked extension-release row and appended `main`'s new "Publishing the SDK to npm" and "Browser checks" sections; both task files interleaved newest-on-top, keeping every bug report, result and new task from both sides.
+  - Result: `pnpm check` 103/103 files, 1118/1118 tests; `pnpm contracts:test` 10/10 suites, 85/85 tests. Merge commit `6a1810e`.
+  - Problem: none unresolved. Recognise this pattern: when both `qa` and `main` edit the "same" stale line, check which side's edit is actually newer/true rather than mechanically picking one — here `main`'s side of the README conflict was the *older* status table that Hale's H14 rewrite had already superseded on `qa`.
+
+- **Piece: Nansen went live since the last session — docs were still saying it is off** (task: "Nansen is on: check it and write which endpoint is used", found via the merge)
+  - What: `curl https://baret-monad-api.onrender.com/health/ready` showed `nansenMode: "labels"`, `nansenLabelsLeftToday: 25`. A fresh `POST /v1/analyze` (Strict, a transfer to an address Nansen has no record of) answered `blocked`, `NANSEN_TRUST_BELOW_MINIMUM`, `sources: [{"name":"nansen","status":"ok"}, ...]`.
+  - How it works: `docs/SYSTEM_GAPS.md` G-06 and `docs/BOUNTIES_AND_TRACKS.md` were already current (from Ezgin's own 2026-10-11 gap-audit commit); `README.md`, `docs/ROADMAP.md`, `docs/API_REFERENCE.md`, `docs/RESOURCES.md`, `docs/QA_AND_DELIVERY.md` §8 and `docs/submission/TEXTS.md` were not — they still said "off, no credits" from before this session's merge. This moves the $5,000 Nansen prize from "not entered" to enterable.
+  - Result: `pnpm --filter @baret/server verify:demo --from 0x5AE98770795957F9a376083afcb775672FbD2C93` 20 of 20 with Nansen on. All six docs above corrected; the gate in `docs/submission/TEXTS.md`'s Nansen entry lifted, its text rewritten with the live evidence.
+  - Files changed: `README.md`, `docs/ROADMAP.md`, `docs/API_REFERENCE.md`, `docs/RESOURCES.md`, `docs/QA_AND_DELIVERY.md`, `docs/submission/TEXTS.md`, `tasks/FOR_HALE.md`.
+
+- **Piece: the live showcase is stuck on a stale deploy — Hale's own P1 bug is live right now** (found while re-testing after the merge)
+  - What: `curl -I https://baret-metropolis.vercel.app/novaswap` — `last-modified: Sun, 11 Oct 2026 01:34:54 GMT`, unchanged on a second check minutes later. `git merge-base --is-ancestor 55e40cc 16f5448` answers false: PR #77 (the fix for Hale's own 🐛 P1/P2 from 2026-10-10, the extension-connected NovaSwap copy) is merged to `main` but not deployed. `tasks/FOR_EZGIN.md` already had this as a known issue (Vercel's team daily deploy limit); re-checking it live confirmed it is still blocking and narrowed it: `baret-wallet.vercel.app` *did* get a fresh deploy (`last-modified` 12:44 GMT, same day) and passed its own browser check, so only `baret-metropolis` (the showcase) is stuck.
+  - Result: added a 🔴-flagged, re-confirmed entry to the top of `tasks/FOR_EZGIN.md` naming exactly what is and is not blocked, so Ezgin's next session does not have to re-derive it.
+  - Problem: `OPEN`, not something this session can fix — it needs the account owner (a Pro upgrade or the 24-hour window) and is time-critical because recording starts today. Recognise it by: the showcase's `last-modified` header not moving across repeated checks while new commits keep landing on `main`.
+  - Files changed: `tasks/FOR_EZGIN.md`.
+
+- **Piece: before-recording gate, now unblocked (typed-data fail-open fix + Nansen live)** (task: "Before recording, once Ezgin's typed-data fail-open fix is deployed")
+  - What: `git merge-base --is-ancestor ae9475d d763e03` confirmed the live API already has D-043 (the typed-data fix). Ran the three checks the task asks for.
+  - How it works: (1) `verify:demo` against the live API; (2) Playwright with a virtual PRF authenticator (`hasPrf: true`) — NovaSwap attack on, "Check with Baret" opens the wallet popup, "Create my wallet", read the result; (3) `/agents` playground, Balanced, "pay a merchant".
+  - Result: (1) 20 of 20. (2) the wallet window answered Blocked, "Blocked by your rules", 4 findings (the 2 real ones plus the 2 fresh-account artifacts also seen in session 3's H16), the only button "Decline", no sign button. (3) "Safe. Allowed. Your agent signs and sends."
+  - Problem: the account used for (2) is a fresh one made for this test, not literally a wallet whose rules were saved before today's deploy (no such account survives across sessions — a virtual passkey's state is in-memory only). Recorded as a caveat rather than treated as fully satisfying "its stored rules must still be accepted". `OPEN` in the sense that nobody has re-checked a genuinely pre-deploy *sealed* policy object against the new server.
+  - Files changed: `tasks/FOR_HALE.md`.
+
+- **Piece: two browser-verify scripts** (task: "Two browser checks you can run yourself")
+  - What: `pnpm --filter @baret/wallet verify:browser` (needs only a virtual passkey, no key file) against `https://baret-wallet.vercel.app`.
+  - How it works: see `docs/DEPLOYMENT.md` "Browser checks"; `PLAYWRIGHT_CORE` pointed at this session's scratch install of `playwright-core` since the repo does not depend on it.
+  - Result: 8 of 8 passed (one passkey exists; save → copy 1; a fresh profile starts without the settings; the restore brings the rules, the account name, the merchant's name and names which copy; the second save is copy 2).
+  - Problem: `pnpm --filter @baret/extension verify:browser` needs `BARET_FUNDER_KEY_FILE`, a private key written to a file on disk (default `~/.baret/deployer.key`). This sandbox's auto-mode classifier refused writing Hale's own test key to a file, twice, under two different reasons ("Unauthorized Persistence" for the home-directory path, "Credential Materialization" for a scratchpad path), and the script has no inline-key alternative. Not worked around (per the denial's own instructions); left for a session with that permission, or for Hale outside this sandbox. Ezgin already ran both scripts successfully on 2026-10-11 (`docs/DEPLOYMENT.md`: "Both passed").
+  - Files changed: `tasks/FOR_HALE.md`.
+
+- **Piece: M13/M14 re-tested live** (task: "Re-test after #68 deploys: the KIMI block and the rule draft after a failure")
+  - What: Playwright `page.route` forced `/api/v1/explain` and `/api/v1/policy/draft` to 503 on the live showcase and the live wallet.
+  - How it works: NovaSwap's "Live verdict" panel only runs the check after "Enable dUSDC trading" is pressed (not on page load with no button, as an earlier note assumed — confirmed by watching network requests fire only after that click). The rule-draft sentence box on the wallet's Rules page is `<input id="_r_a_">` under the label "Write a rule in your own words", a different element from the page's three rule-list `<textarea>`s (countries, assets, sites) that share the page and have no distinguishing placeholder.
+  - Result: M13 — with explain forced to 503, the verdict and findings rendered correctly and no "In plain words" block or error text appeared at all (matches the documented "a first 503 leaves the block hidden" behaviour already verified locally by Meriç; did not wait out the full minute to see the retry-then-success half). M14 — with the draft forced to 503, the sentence input stayed visible and "KIMI is not available right now. Try again in a minute." appeared inline.
+  - Problem: the first two attempts at each check used the wrong selector (a hidden overlay switch input intercepting the toggle click; the wrong `<textarea>` for the sentence box) and only looked right once the actual DOM was inspected directly rather than guessed from memory of similar pages. Recognise it by: a click that "succeeds" with no visible effect, or a disabled submit button after filling a field that looked right.
+  - Files changed: `tasks/FOR_HALE.md`.
+
+- **Piece: overpay veto re-confirmed, G-13's doc staleness re-checked** (tasks: "Re-test the overpay veto…", "Use for H14: `docs/SYSTEM_GAPS.md` and `docs/API_REFERENCE.md`")
+  - What: a fresh `POST /v1/review {"scenario":"overpay"}`; read G-13's five listed stale lines against the current docs.
+  - Result: overpay vetoed naming only the amount, `refCheck.matches: true`; the `SCRIPTS.md:37` ban was already lifted in an earlier session, nothing left to change. Of G-13's five lines, four were already fixed by the earlier H14 session; the fifth (`docs/ARCHITECTURE.md`'s endpoint table) was fixed by this session's merge resolution above.
+  - Files changed: `tasks/FOR_HALE.md`, `docs/SYSTEM_GAPS.md`.
+
+End of session: tasks ticked in `tasks/FOR_HALE.md`: the Nansen check, the before-recording gate, the wallet browser-verify script, M13/M14's re-test, the overpay re-test, the G-13/API_REFERENCE doc pass. Left open: the extension browser-verify script (blocked on key-file permission), re-testing the NovaSwap extension copy (blocked on Ezgin's showcase redeploy), the sealed-settings real-device cross-device test, H2 (platform profiles), H9 (2) (Discord), H12 (publishing) — the last four need Hale the person, not the agent. Next session starts with: whether Ezgin has redeployed `baret-metropolis`, then H10's remaining real-device passes. §1 rewritten: yes.
+
+---
+
 ### 2026-10-10 — session 3 (commit `c5c82b5` on `qa`, off `main` `25b7581`; API commit `25b7581`)
 
 Goal of the session: H16 (now unblocked: `/health/ready` showed `explain`, `review`, `reviewSends`, `policyDraft` true, so E7's keys are on Render), then H11.

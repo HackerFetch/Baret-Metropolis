@@ -159,7 +159,7 @@ One row per prize the team enters (twelve are selected on the project). What eac
 | Bounty | Form fields / criteria (from the platform) | Evidence in the product (URL, tx, file) | Text written | Submitted |
 |---|---|---|---|---|
 | Main track: Trust, Identity & AI Infrastructure (logo, demo video max 3 min, pitch video max 2 min, live link with access instructions) |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
-| Nansen |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
+| Nansen |  | Live since 2026-10-11 (E2, D-041, D-042), checked by Hale the same day: `POST /v1/analyze` under Strict to an address with no Nansen record blocks on `NANSEN_TRUST_BELOW_MINIMUM` with `sources: [{"name":"nansen","status":"ok"}]`; `verify:demo` 20 of 20 with it on | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 | Dynamic |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 | Mera-Powered UX |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |
 | Mera: One Passkey, Many Keys |  |  | ✍ draft in `docs/submission/TEXTS.md` | ⬜ |

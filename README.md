@@ -104,14 +104,13 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | **KIMI** (`kimi-k3`) | The plain-words explanation under every live verdict, and rules from a sentence on the wallet's Rules page | Live |
 | **Qwen** (`qwen3.8-max`) | The agent reviewer on `/review`: plan, four tools, veto only | Live |
 | **Alchemy** | The analysis's chain reads (balances, code, the registry, the vaults) go through Alchemy's Monad RPC, batched; the trace goes to the public Monad RPC, which serves `debug_traceCall` | Live |
-| **Nansen** | Address labels as a detector input | Built; switched off on the live API (no credits) |
+| **Nansen** | Address segmentation as a detector input: a trust level from the profiler, blocking a fresh or unestablished wallet under stricter rules | Live since 2026-10-11, `labels` mode, 25 lookups a day on Render |
 
 ## What is not live
 
 Said plainly, so that nothing above is read as more than it is:
 
 - **x402 payments are checked, not settled.** Baret checks an x402 payment's shape and destination; no facilitator in this repository settles one.
-- **Nansen is off** on the live API (`/health/ready` shows `nansen: false`).
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
 - **No Cleanverse settlement has been made** through `CompliantPaymentGuard` yet.
 - **Mainnet:** nothing is deployed there.
