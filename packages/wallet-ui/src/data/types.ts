@@ -43,7 +43,17 @@ export interface ActivityItem {
     | "unchecked"
     | "drift"
     | "connect"
-    | "disconnect";
+    | "disconnect"
+    /** The vault's own history, read from the indexer: one kind per PaymentGuard event. */
+    | "vaultCreated"
+    | "vaultDeposit"
+    | "vaultWithdraw"
+    | "merchantCaps"
+    | "merchantPaused"
+    | "merchantResumed"
+    | "merchantRemoved"
+    | "agentKey"
+    | "agentRevoked";
   /** ISO time. */
   readonly at: string;
   readonly values: Readonly<Record<string, string>>;

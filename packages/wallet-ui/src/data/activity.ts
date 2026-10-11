@@ -10,7 +10,7 @@ import type { ActivityItem } from "./types.js";
  * show them whole.
  */
 
-const ADDRESS_KEYS = new Set(["recipient", "spender", "operator", "contract", "merchant"]);
+const ADDRESS_KEYS = new Set(["recipient", "spender", "operator", "contract", "merchant", "agent"]);
 
 /** The row's values as the sentence prints them. */
 export function rowValues(item: ActivityItem): Record<string, string> {
@@ -42,6 +42,20 @@ const SITE_KINDS = new Set<ActivityItem["kind"]>([
   "disconnect",
 ]);
 
+/** The agent's payments and everything the owner changed in the vault they are paid from. */
+const AGENT_KINDS = new Set<ActivityItem["kind"]>([
+  "payment",
+  "vaultCreated",
+  "vaultDeposit",
+  "vaultWithdraw",
+  "merchantCaps",
+  "merchantPaused",
+  "merchantResumed",
+  "merchantRemoved",
+  "agentKey",
+  "agentRevoked",
+]);
+
 /** Whether a row belongs under a filter. Pure, exported for tests. */
 export function matches(item: ActivityItem, filter: FilterId): boolean {
   switch (filter) {
@@ -54,7 +68,7 @@ export function matches(item: ActivityItem, filter: FilterId): boolean {
     case "sites":
       return SITE_KINDS.has(item.kind);
     case "agent":
-      return item.kind === "payment";
+      return AGENT_KINDS.has(item.kind);
     case "blocked":
       return item.kind === "blocked";
     case "declined":
