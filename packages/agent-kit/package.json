@@ -1,7 +1,6 @@
 {
   "name": "@baret/agent-kit",
   "version": "0.1.0",
-  "private": true,
   "description": "A guarded wallet for AI agents on Monad: every transaction is checked by Baret before it is signed.",
   "license": "MIT",
   "repository": {
@@ -24,7 +23,9 @@
   "scripts": {
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "baret": "tsx --env-file-if-exists=.env src/cli.ts"
+    "baret": "tsx --env-file-if-exists=.env src/cli.ts",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && node scripts/bin.mjs",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "@baret/guard": "workspace:*",
@@ -37,5 +38,36 @@
   "devDependencies": {
     "@types/node": "24.10.1",
     "typescript": "6.0.3"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./reviewer": {
+        "types": "./dist/reviewer.d.ts",
+        "default": "./dist/reviewer.js"
+      },
+      "./review-agent": {
+        "types": "./dist/review-agent.d.ts",
+        "default": "./dist/review-agent.js"
+      },
+      "./abi": {
+        "types": "./dist/abi.d.ts",
+        "default": "./dist/abi.js"
+      }
+    },
+    "bin": {
+      "baret": "./dist/cli.js"
+    }
   }
 }

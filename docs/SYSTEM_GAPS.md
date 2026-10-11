@@ -31,7 +31,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-17 | The API is open: no keys, any origin; the daily caps can be used up by one caller | Limit | P2 | Ezgin |
 | G-18 | Contracts are unaudited testnet deployments | Limit | P3 | Ezgin |
 | G-19 | The indexer does not cover two contracts | Limit | P3 | Ezgin |
-| G-20 | No browser test in the repository | Missing | P3 | Hale |
+| G-20 | No browser test in the repository. **Two since 2026-10-11** (`verify:browser` in the extension and the wallet; not in CI) | Missing | closed | Ezgin |
 | G-21 | Named in documents, never built | Missing | P3 | — |
 | G-22 | An unread signed message came back Safe. **Fixed 2026-10-11** (D-043) | Wrong | closed | Ezgin |
 | G-23 | The API answered 503 after a burst of checks. **Fixed 2026-10-11**: the RPC client waits and retries | Wrong | closed | Ezgin |

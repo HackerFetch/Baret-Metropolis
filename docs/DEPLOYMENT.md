@@ -123,3 +123,30 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | Vercel projects | ✅ `baret-metropolis` (showcase, main domain, canonical + sitemap verified) and `baret-wallet` live, `/api` rewrite verified 2026-10-02 |
 | Envio indexer (hosted) | ✅ Live since 2026-10-07 at `https://indexer.dev.hyperindex.xyz/b3bc40c/v1/graphql`; its data matches the chain and all four `/v1/audit` routes were checked against it. The free plan deletes a deployment after 30 days, or after 7 days without a request (the keep-warm job asks it every 10 minutes) |
 | Extension release (store / signed zip) | ⬜ Artifact only for now |
+
+## Publishing the SDK to npm
+
+`@baret/guard`, `@baret/llm` and `@baret/agent-kit` can be published since 2026-10-11; none is published yet. In the workspace they still resolve to their TypeScript sources (`main` and `exports` point at `src/`), so nothing changes for the apps. A published copy is built JavaScript with type declarations: `pnpm build` in a package runs `tsc -p tsconfig.build.json` into `dist/`, and `publishConfig` swaps `main`, `types`, `exports` and (for agent-kit) `bin` to `dist/` when the package is packed. `prepack` runs the build, so a tarball cannot ship without it. pnpm rewrites `workspace:*` to the real version.
+
+Checked on 2026-10-11: the three tarballs from `pnpm pack`, installed in an empty project with nothing else from this repository, ran `TransactionGuard.evaluate` against the live API (answer `safe`) and the `baret` CLI through plain `node`.
+
+To publish (needs the npm account that owns the `@baret` organisation; create it at `https://www.npmjs.com/org/create`, the free plan allows public packages):
+
+1. `npm login`
+2. In this order, because agent-kit depends on the other two: `pnpm --filter @baret/guard publish`, `pnpm --filter @baret/llm publish`, `pnpm --filter @baret/agent-kit publish`. Each asks for a one-time password when the account has one.
+3. Check: in an empty folder, `npm install @baret/guard`, then the smallest call from `packages/guard/README.md`.
+4. Then, in one pull request: the "not published" sentences in `packages/guard/README.md`, `packages/agent-kit/README.md` and the `/agents` page (`packages/content/src/showcase/agents.content.ts`), and the version in `package.json` for the next release.
+
+If `@baret` is taken on npm, the scope has to change in every `package.json` and import of the three packages: decide the new name before publishing anything.
+
+## Browser checks
+
+Two scripts drive the real product in Chromium, against the live API and Monad testnet. Playwright is not a dependency of the repository: install its Chromium once (`npx playwright install chromium`) and point `PLAYWRIGHT_CORE` at its `playwright-core/index.mjs` when it is not resolvable.
+
+| Command | What it walks | Checks |
+|---|---|---|
+| `pnpm --filter @baret/extension verify:browser` | The built extension (`.output/chrome-mv3`, build it first with `WXT_BARET_API_URL` set): setup with a new wallet, NovaSwap connecting, an attack Blocked, a transfer signed and confirmed, the popup, lock and unlock, NovaSwap's own faucet and attack buttons | 23 |
+| `pnpm --filter @baret/wallet verify:browser` | The web wallet with a virtual passkey: a new account, sealed settings saved, storage cleared, the copy brought back | 8 |
+
+Both passed on 2026-10-11. The extension run makes a new wallet each time and funds it with 1 MON from `BARET_FUNDER_KEY_FILE` (default `~/.baret/deployer.key`), so it needs `cast` and a funded key. Each script's header lists its settings. They are not part of CI: they need a browser, a funded key and the live services.
+
