@@ -136,6 +136,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E10 | Nine more activity kinds for the wallet's history, cosmetic (found by H5); a transaction the wallet already logged must not show twice | — | H5 merged | Envio, Mera UX |
 | E11 | Sealed settings for "One Passkey, Many Keys" (D-039): the SealedStore contract, the sealed namespace in `wallet-core`, `POST /v1/sealed`, the block in Settings. **Done 2026-10-10** (#60): live, checked through the live API and on the live wallet with a virtual passkey | Sat 10 | the relayer key on Render | Many Keys, Mera UX |
 | E12 | The extension as a real wallet (D-040): keystore, EIP-1193 and EIP-6963 provider, the request window on Baret's check, setup on a real key. **Built 2026-10-10** on branch `extension-live`, checked in a browser against the live API; the published zips follow the merge | Sat 10 | Meriç reads the changes in his screens | main track |
+| E13 | x402 settled for real (D-046, closes G-05): `GET /demo/paywall` answers 402, verifies the signed EIP-3009 payment and settles it on Monad testnet; `payX402` and `baret x402` in agent-kit; "Pay with your wallet" on Scrybe. **Built 2026-10-11** on branch `x402-settlement`, proven with real transfers (`verify:x402`); live after the next Render deploy | Sun 11 | | main track, Dynamic |
 
 ### Meriç
 

@@ -21,6 +21,7 @@ function configured(n: NetworkConfig, deps: AnalyzeDeps) {
     review: deps.review != null,
     reviewSends: deps.review?.sends ?? false,
     sealed: deps.sealed != null,
+    x402: deps.paywall != null,
     // Signed messages the server could not read since it started, and how
     // many different kinds: numbers only, the names stay in the log.
     unreadSignatures: deps.unreadKinds?.messages ?? 0,

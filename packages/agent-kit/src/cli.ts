@@ -6,6 +6,10 @@
  *   baret analyze --to 0x.. [--data 0x..] [--value <wei>]
  *   baret submit  --to 0x.. [--data 0x..] [--value <wei>] [--intent <text>]
  *   baret pay     --vault 0x.. --merchant 0x.. --amount <base units> --ref <text> [--intent <text>]
+ *   baret x402 <url> [--max <base units>]
+ *                 Pays an HTTP 402 (x402, EIP-3009): reads what the server
+ *                 asks, has Baret check that exact payment, signs it and
+ *                 requests again. Needs BARET_AGENT_PRIVATE_KEY.
  *   baret review  --intent <text> [--from 0x..] and either the flags of pay
  *                 (--vault ...) or of submit (--to ...). Never signs.
  *   baret wallet create            (Dynamic: a new server wallet for the agent)
@@ -49,7 +53,8 @@ import { createDynamicWallet, dynamicSignerFromFile } from "./dynamic.js";
 import { GuardBlockedError } from "./errors.js";
 import { qwenAgentReviewer } from "./review-agent.js";
 import { type Review, type Reviewer, ReviewerVetoError, requireApproval } from "./reviewer.js";
-import { type AgentSigner, localSigner } from "./signer.js";
+import { type AgentSigner, localSigner, type PaymentSigner } from "./signer.js";
+import { payX402 } from "./x402.js";
 
 const EXIT = { allowed: 0, blocked: 1, error: 2 } as const;
 
@@ -241,6 +246,7 @@ async function main(argv: string[]): Promise<number> {
       from: { type: "string" },
       transcript: { type: "string" },
       trace: { type: "boolean" },
+      max: { type: "string" },
     },
   });
   if (values.from !== undefined && command !== "review")
@@ -299,6 +305,41 @@ async function main(argv: string[]): Promise<number> {
       return EXIT.allowed;
     }
 
+    case "x402": {
+      const url = positionals[0];
+      if (!url || !URL.canParse(url)) throw new UsageError("usage: baret x402 <url> [--max <n>]");
+      const s = await signer();
+      if (!("signTypedData" in s)) {
+        throw new UsageError("baret x402 signs a typed message: set BARET_AGENT_PRIVATE_KEY");
+      }
+      const network = env.BARET_NETWORK === "mainnet" ? "mainnet" : "testnet";
+      const template = env.BARET_POLICY_TEMPLATE as keyof typeof POLICY_TEMPLATES | undefined;
+      const paid = await payX402(url, {
+        signer: s as PaymentSigner,
+        baretUrl: baretUrl(),
+        ...(env.BARET_API_KEY ? { baretApiKey: env.BARET_API_KEY } : {}),
+        network,
+        policyTemplate: template ?? "balanced",
+        allowCaution: env.BARET_ALLOW_CAUTION === "1",
+        ...(values.max ? { maxAmount: amount(values.max, "max") } : {}),
+      });
+      const text = await paid.response.text();
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {}
+      print({
+        status: paid.response.status,
+        decision: paid.verdict?.decision ?? null,
+        paid: paid.spend?.amount ?? null,
+        payTo: paid.requirements?.payTo ?? null,
+        transaction: paid.receipt?.transaction ?? null,
+        from: s.address,
+        body,
+      });
+      return paid.response.ok ? EXIT.allowed : EXIT.error;
+    }
+
     case "review": {
       const intent = values.intent?.trim();
       if (!intent) throw new UsageError("--intent is required: what the agent says it is doing");
@@ -346,7 +387,7 @@ async function main(argv: string[]): Promise<number> {
 
     default:
       throw new UsageError(
-        "usage: baret address | analyze | submit | pay | review | wallet create | policy list (see the header of cli.ts)",
+        "usage: baret address | analyze | submit | pay | x402 | review | wallet create | policy list (see the header of cli.ts)",
       );
   }
 }
