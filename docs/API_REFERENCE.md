@@ -36,9 +36,11 @@ A site opens the wallet with `window.open` (window name `baret-wallet`) and the 
 | wallet → site | `connected` | `id`, `address` | The person agreed |
 | site → wallet | `sign` | `id`, `chainId` (10143), `call: { to, value, data }` | Asks the wallet to check and sign one call. `value` is wei as a decimal string; `data` at most 100,000 characters |
 | wallet → site | `signed` | `id`, `address`, `hash` | Checked, signed and sent |
+| site → wallet | `signTyped` | `id`, `chainId` (10143), `typed: { domain, types, primaryType, message }` | Asks the wallet to check and sign one EIP-712 message (an x402 payment, a permit). Plain JSON, at most 20,000 characters; opened on `/sign` like a call |
+| wallet → site | `signedTyped` | `id`, `address`, `signature` | Checked and signed. The wallet sends nothing to the chain for it |
 | wallet → site | `refused` | `id`, `reason`, `address`, `findings` | Not signed. `reason`: `declined` (the person), `blocked` (Baret), `unreachable` (no verdict); the parser also knows `invalid`, which no sender uses. `findings`: `{ code, values }` for every finding on screen, one per code, at most 50, with `address: null`; a decline on Caution carries them too |
 
-Only contract calls and transfers: there is no message-signing request (no `personal_sign`, no typed data) in this protocol.
+Calls, transfers and typed messages. There is no `personal_sign` request in this protocol.
 
 A site can also use an ordinary injected wallet: the demo sites list every wallet announced over EIP-6963 and send `eth_sendTransaction` through it. With another wallet, Baret acts as a panel on the page, not as the signer. The Baret extension is such a wallet, and it checks before it signs (below).
 

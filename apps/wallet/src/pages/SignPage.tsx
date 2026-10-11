@@ -1,5 +1,5 @@
 import { common, sign, walletFrame } from "@baret/content";
-import type { WalletCall } from "@baret/wallet-core";
+import type { WalletCall, WalletTyped } from "@baret/wallet-core";
 import { unreachable } from "@baret/wallet-ui/data/analyze";
 import { SIGN_REQUESTS } from "@baret/wallet-ui/data/sample";
 import { ready, useWallet } from "@baret/wallet-ui/data/store";
@@ -8,7 +8,7 @@ import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
-import { type LiveRequest, useLive } from "../live/live.js";
+import { type LiveRequest, type LiveTyped, typedContext, useLive } from "../live/live.js";
 import { sessionTime } from "../live/session.js";
 import { signWithSettings } from "../live/signWithSettings.js";
 import { RequestFrame, SamplePicker, SiteStatus } from "../request/RequestFrame.js";
@@ -22,7 +22,9 @@ import { unchecked } from "./unchecked.js";
  * Live, a site opened it (request/siteRequest.tsx): the site's one call is
  * checked with Baret and shown like a transfer from Send, and the answer goes
  * back to the site: signed with its hash, or refused with the reason and the
- * finding codes. Live with no site, the window says how it is opened.
+ * finding codes. A typed message (an x402 payment, a permit) goes the same
+ * way and comes back as a signature: the wallet sends nothing for it. Live
+ * with no site, the window says how it is opened.
  *
  * On the sample it loads one of four sample requests, one per verdict, each
  * from one of the showcase's demo sites. Picking a sample, or starting again
@@ -182,6 +184,109 @@ function SiteSign(): JSX.Element {
   );
 }
 
+/** The site's typed message: checked with Baret, then signed or refused. Nothing is sent to Monad. */
+function SiteSignTyped(): JSX.Element {
+  const { state, dispatch } = useWallet();
+  const live = useLive();
+  const site = useSiteRequest();
+  const incoming = site.request?.type === "signTyped" ? site.request : null;
+  const origin = site.origin;
+  const typed: WalletTyped | null = incoming?.typed ?? null;
+  // Until Baret answers, the message reads as unchecked (fail-closed).
+  const [review, setReview] = useState<Request | null>(null);
+  const [pending, setPending] = useState(true);
+  const [declined, setDeclined] = useState(false);
+  const signable = useRef<LiveTyped["signable"]>(null);
+  const asked = useRef(false);
+
+  /** Asks Baret about the site's message and shows what came back. */
+  async function ask(): Promise<Request | null> {
+    if (!live || !typed || !origin) return null;
+    const answer = await live.siteTyped(origin, typed);
+    signable.current = answer.signable;
+    setReview(answer.request);
+    return answer.request;
+  }
+
+  // One check per request; a lock and unlock in between asks again.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ask reads the same message and origin
+  useEffect(() => {
+    if (!typed || !origin || asked.current) return;
+    asked.current = true;
+    void ask().then(() => setPending(false));
+  }, [typed, origin]);
+
+  if (!incoming || !typed || !origin) return <SiteStatus status="waiting" />;
+
+  const shown = review ?? unchecked(unreachable(typedContext(origin, typed, state.address)));
+
+  function decline(): void {
+    setDeclined(true);
+    const byCode = new Map<string, { code: string; values: Record<string, string> }>();
+    for (const finding of shown.findings) {
+      if (!byCode.has(finding.code))
+        byCode.set(finding.code, { code: finding.code, values: { ...finding.values } });
+    }
+    site.reply({
+      type: "refused",
+      id: incoming?.id ?? "",
+      reason: reasonOf(shown.verdict),
+      address: null,
+      findings: [...byCode.values()].slice(0, MAX_FINDINGS),
+    });
+  }
+
+  /** Signs what Baret cleared, after the passkey when the setting asks for it, and hands it to the site. */
+  async function signLive(
+    _outcome: "sent" | "overridden",
+    _sending: () => void,
+    progress: (step: "signing" | "sending") => void,
+  ) {
+    const cleared = signable.current;
+    if (!live || !cleared || !incoming) throw new Error("nothing was cleared to sign");
+    if (state.settings.passkeyEverySignature && !(await live.unlock())) {
+      throw new Error("the passkey was not given");
+    }
+    progress("signing");
+    const signed = await live.signTyped(cleared);
+    if (state.address) {
+      site.reply({
+        type: "signedTyped",
+        id: incoming.id,
+        address: state.address as `0x${string}`,
+        signature: signed.signature as `0x${string}`,
+      });
+    }
+    return signed;
+  }
+
+  const sessionNote =
+    state.sessionEndsAt && !state.settings.passkeyEverySignature
+      ? fill(sign.session.note, { time: sessionTime(state.sessionEndsAt) })
+      : null;
+
+  return (
+    <>
+      {declined ? null : (
+        <SignRequest
+          request={shown}
+          pending={pending}
+          onCheckAgain={ask}
+          onSign={signLive}
+          onDecline={decline}
+          // The wallet does not sign a block: the way past is the rule.
+          canOverride={false}
+          {...(sessionNote ? { sessionNote } : {})}
+          {...(live && shown.verdict !== "unreachable" ? { explainId: shown.id } : {})}
+          onLog={(item) => dispatch({ type: "log", item })}
+          passkey={state.settings.passkeyEverySignature}
+        />
+      )}
+      {site.answered ? <SiteStatus status="answered" origin={origin} /> : null}
+    </>
+  );
+}
+
 /** The sample: four requests, one per verdict. */
 function Sample(): JSX.Element {
   const { state, dispatch } = useWallet();
@@ -209,11 +314,19 @@ function Sample(): JSX.Element {
   );
 }
 
+/** A site asks for a call or for a typed message; until its request is in, the call's screen waits. */
+function SiteRequestView(): JSX.Element {
+  const { request } = useSiteRequest();
+  return request?.type === "signTyped" ? <SiteSignTyped /> : <SiteSign />;
+}
+
 export function Component() {
   const live = useLive();
   const { site } = useSiteRequest();
   if (!live) return <Sample />;
   return (
-    <RequestFrame picker={null}>{site ? <SiteSign /> : <SiteStatus status="none" />}</RequestFrame>
+    <RequestFrame picker={null}>
+      {site ? <SiteRequestView /> : <SiteStatus status="none" />}
+    </RequestFrame>
   );
 }

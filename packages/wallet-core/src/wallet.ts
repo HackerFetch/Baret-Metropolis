@@ -3,12 +3,21 @@ import {
   type AnalyzeResponse,
   type GuardPolicy,
   type MonadNetwork,
+  type PaymentContext,
   TransactionGuard,
 } from "@baret/guard";
 import type { Hex } from "viem";
 import type { WalletSession } from "./account.js";
 import type { WalletCall } from "./calls.js";
 import type { Receipt, WalletChain } from "./chain.js";
+
+/** An EIP-712 message this account is asked to sign; `types` may carry EIP712Domain. */
+export interface WalletTyped {
+  readonly domain: Readonly<Record<string, unknown>>;
+  readonly types: Readonly<Record<string, readonly { name: string; type: string }[]>>;
+  readonly primaryType: string;
+  readonly message: Readonly<Record<string, unknown>>;
+}
 
 /** Baret did not clear the call and the owner has not overridden it. Nothing was signed. */
 export class NotClearedError extends Error {
@@ -88,6 +97,62 @@ export class Wallet {
     const tx = await this.options.chain.prepare(this.address, call);
     const raw = await this.options.session.account.signTransaction(tx);
     return this.options.chain.send(raw);
+  }
+
+  /** The analyze request for a typed message (EIP-712) this account is asked to sign. */
+  typedRequest(typed: WalletTyped, payment?: PaymentContext): AnalyzeRequest {
+    return {
+      network: this.network,
+      typedData: {
+        signer: this.address,
+        domain: { ...typed.domain },
+        types: Object.fromEntries(
+          Object.entries(typed.types).map(([name, fields]) => [
+            name,
+            fields.map((f) => ({ ...f })),
+          ]),
+        ),
+        primaryType: typed.primaryType,
+        message: { ...typed.message },
+      },
+      userWallet: this.address,
+      policy: this.options.policy(),
+      ...(payment ? { payment } : {}),
+    };
+  }
+
+  /** Baret's verdict for a typed message. `payment` is an x402 request's own terms, when the site gave them. */
+  checkTyped(typed: WalletTyped, payment?: PaymentContext): Promise<AnalyzeResponse> {
+    return this.guard.evaluate(this.typedRequest(typed, payment));
+  }
+
+  /**
+   * Signs the typed message `checkTyped` returned a verdict for, under the
+   * same rules as `sign`. Returns the signature; nothing is sent to the chain.
+   */
+  async signTyped(
+    typed: WalletTyped,
+    verdict: AnalyzeResponse,
+    choice: { acknowledged?: boolean } = {},
+  ): Promise<Hex> {
+    if (Date.parse(verdict.expiresAt) <= Date.now()) {
+      throw new Error("the check has expired: check again before signing");
+    }
+    const cleared =
+      verdict.decision === "safe" ||
+      (verdict.decision === "caution" && choice.acknowledged === true);
+    if (!cleared) throw new NotClearedError(verdict);
+    // viem derives EIP712Domain from the domain itself.
+    const { EIP712Domain: _domain, ...types } = typed.types as Record<
+      string,
+      readonly { name: string; type: string }[]
+    >;
+    return this.options.session.account.signTypedData({
+      domain: typed.domain,
+      types,
+      primaryType: typed.primaryType,
+      message: typed.message,
+    } as never);
   }
 
   /** Check, sign and wait for the block. For flows with no screen in between. */

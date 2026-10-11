@@ -1,7 +1,9 @@
 import { hub, scrybe } from "@baret/content";
+import type { WindowTyped } from "@baret/wallet-core/window";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useState } from "react";
+import type { Address } from "viem";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { DemoBar } from "../kit/DemoBar.js";
 import { SiteHero } from "../kit/site/Page.js";
@@ -11,12 +13,13 @@ import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
 import { isBaretExtension, walletLabel } from "../kit/wallet/baret.js";
+import { askBaretTyped } from "../kit/wallet/baretWindow.js";
 import { addressOf, requestPicker, switchToMonad } from "../kit/wallet/store.js";
 import { MONAD_TESTNET_ID, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
 import { AskCard } from "./AskCard.js";
 import { ScrybeGlyph, VIEWS } from "./Glyph.js";
 import { PayBlock } from "./PayBlock.js";
-import { usePay } from "./pay.js";
+import { PayStopped, usePay } from "./pay.js";
 import { AgentsBridge, Run } from "./Run.js";
 import { ART, type Cap, SAMPLE, START_CAP, usdc } from "./sample.js";
 import { LIVE_VALUES, SOURCE } from "./source.js";
@@ -85,12 +88,46 @@ export function ScrybeSite(): JSX.Element {
     return true;
   }
 
+  /**
+   * The payment signed in the Baret wallet's window. The window opens here,
+   * inside the click, and gets the message once the 402 has named its terms;
+   * a payment that stops before that closes it with nothing asked.
+   */
+  function payThroughBaret(owner: Address, asked: string): void {
+    let hand: (typed: WindowTyped | null) => void = () => undefined;
+    const answer = askBaretTyped(
+      new Promise<WindowTyped | null>((resolve) => {
+        hand = resolve;
+      }),
+    );
+    void pay
+      .run(owner, asked, async ({ domain, types, primaryType, message }) => {
+        hand({ domain, types, primaryType, message });
+        const got = await answer;
+        if (got.type === "signedTyped") {
+          if (got.address.toLowerCase() !== owner.toLowerCase()) throw new PayStopped("account");
+          return got.signature;
+        }
+        if (got.type === "refused" && got.reason !== "declined") throw new PayStopped("blocked");
+        if (got.type === "busy") throw new PayStopped("pending");
+        if (got.type === "blocked") throw new PayStopped("failed");
+        throw new PayStopped("rejected");
+      })
+      .finally(() => hand(null));
+  }
+
   function payForReal(): void {
     if (question.trim() === "") {
       setError(site.panel.errors.empty);
       return;
     }
     setError(null);
+    // The Baret wallet, connected through its window: it checks and signs there.
+    if (address === null && wallet.baret) {
+      setNeed(null);
+      payThroughBaret(wallet.baret.address, question.trim());
+      return;
+    }
     if (address === null) {
       setNeed("wallet");
       return;
@@ -160,14 +197,22 @@ export function ScrybeSite(): JSX.Element {
                   pay={
                     <PayBlock
                       state={pay.state}
-                      walletName={connection ? walletLabel(connection.wallet) : ""}
+                      walletName={
+                        connection
+                          ? walletLabel(connection.wallet)
+                          : wallet.baret
+                            ? hub.frame.wallet.baret.name
+                            : ""
+                      }
                       need={need}
                       switching={wallet.switching}
                       onConnect={requestPicker}
                       onSwitch={() => void switchToMonad()}
                       price={SAMPLE.price}
                       merchant={LIVE_VALUES.merchant}
-                      checks={connection !== null && isBaretExtension(connection.wallet.id)}
+                      checks={
+                        connection ? isBaretExtension(connection.wallet.id) : wallet.baret !== null
+                      }
                       onPay={payForReal}
                     />
                   }

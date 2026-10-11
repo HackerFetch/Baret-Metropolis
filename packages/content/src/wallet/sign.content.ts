@@ -53,6 +53,8 @@ export const sign = {
     vaultApproval: "Let your vault take {amount} {asset} from your account",
     vaultPauseMerchant: "Pause payments to {merchant}",
     vaultResumeMerchant: "Resume payments to {merchant}",
+    /** A typed message a site asks the account to sign: nothing is sent to Monad by the wallet. */
+    message: "Sign a {kind} message for {contract}",
     unknown: "Sign a transaction Baret could not name",
   },
 
@@ -154,6 +156,9 @@ export const sign = {
     vaultWithdraw: "{amount} {asset} comes back from your vault to your account.",
     /** A site's call: Baret simulated it, so what moves is in "What changes". */
     contractCall: "This runs a call on {contract}. What changes is listed below.",
+    /** A typed message: what it allows is in the findings and in What changes. */
+    message:
+      "This is a signature, not a transaction. Whoever holds it can use it for what the message says, without asking again.",
     nothing: "Nothing leaves your wallet.",
     unknown: "Baret could not tell what moves. Treat that as a reason to stop.",
   },

@@ -89,8 +89,8 @@ export function SiteRequestProvider({
   kind,
   children,
 }: {
-  /** The request window's kind, from the matched route; null outside one. */
-  kind: SiteRequest["type"] | null;
+  /** The request window's kind, from the matched route; null outside one. /sign takes a call or a typed message. */
+  kind: "connect" | "sign" | null;
   children: ReactNode;
 }): JSX.Element {
   const live = useLive() !== null;
@@ -109,7 +109,7 @@ export function SiteRequestProvider({
       // An opaque origin cannot be answered to exactly.
       if (!event.origin || event.origin === "null") return;
       const request = parseSiteRequest(event.data);
-      if (!request || request.type !== kind) return;
+      if (!request || (request.type === "signTyped" ? "sign" : request.type) !== kind) return;
       kept.current = { request, origin: event.origin };
       setGot(kept.current);
     };
