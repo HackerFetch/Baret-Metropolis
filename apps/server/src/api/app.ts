@@ -7,6 +7,7 @@ import { auditRoutes } from "./routes/audit.js";
 import { explainRoutes } from "./routes/explain.js";
 import { healthRoutes } from "./routes/health.js";
 import { mcpRoutes } from "./routes/mcp.js";
+import { paywallRoutes } from "./routes/paywall.js";
 import { policyDraftRoutes } from "./routes/policy-draft.js";
 import { reviewRoutes } from "./routes/review.js";
 import { sealedRoutes } from "./routes/sealed.js";
@@ -26,6 +27,8 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
 
   await app.register(cors, {
     origin: config.corsOrigins.length > 0 ? [...config.corsOrigins] : true,
+    // x402: a browser on another origin has to be able to read the receipt.
+    exposedHeaders: ["x-payment-response"],
   });
   await app.register(rateLimit, { max: config.rateLimitPerMinute, timeWindow: "1 minute" });
 
@@ -48,5 +51,6 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
   await app.register(policyDraftRoutes, deps);
   await app.register(sealedRoutes, deps);
   await app.register(mcpRoutes, deps);
+  await app.register(paywallRoutes, deps);
   return app;
 }

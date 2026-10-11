@@ -12,10 +12,11 @@ import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
 import { addressOf } from "../kit/wallet/store.js";
 import { useDemoWallet } from "../kit/wallet/useDemoWallet.js";
+import { useSiteSign } from "../kit/wallet/useSiteSign.js";
 import { ClaimCard } from "./ClaimCard.js";
 import { ClaimGlyph, VIEWS } from "./Glyph.js";
 import { ART, SAMPLE, walletFor } from "./sample.js";
-import { LIVE_VALUES, SOURCE } from "./source.js";
+import { HUB, LIVE_VALUES, SOURCE, signCalls } from "./source.js";
 
 /**
  * ClaimHub: an airdrop page in its own kraft palette, with Baret's strip on
@@ -25,8 +26,9 @@ import { LIVE_VALUES, SOURCE } from "./source.js";
  * wallet is eligible. Honest, the claim calls claim and HUB arrives. In the
  * attack the same button asks for an unlimited allowance on your USDC and
  * sends nothing. With a wallet connected, Baret checks the real request
- * from that address; without one, the prepared sample (source.ts). Nothing
- * is signed or sent.
+ * from that address; without one, the prepared sample (source.ts). That button
+ * signs and sends nothing; "Sign with your wallet" under it sends the same
+ * request to the connected wallet for real (kit/wallet/useSiteSign.tsx).
  */
 
 const { site, analysis } = claimhub;
@@ -45,6 +47,7 @@ export function ClaimHubSite(): JSX.Element {
   const connectedWallet = addressOf(demoWallet);
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
+  const sign = useSiteSign(claimhub.sign);
 
   /**
    * The page's eligibility check: any address, or the connected wallet (the
@@ -119,6 +122,12 @@ export function ClaimHubSite(): JSX.Element {
                   checked={wallet !== null}
                   onCheck={checkEligibility}
                   onClaim={() => runCheck(mode)}
+                  // HUB is read in both versions: in the attack it is the balance that does not move.
+                  sign={sign.block((owner) => ({
+                    mode,
+                    calls: signCalls(mode, owner),
+                    token: HUB,
+                  }))}
                   hint={connectedWallet ? site.panel.hintConnected : site.panel.hint}
                 />
               }

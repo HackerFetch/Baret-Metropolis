@@ -295,7 +295,41 @@ export const scrybe = {
   },
 
   /** An amount with its unit, for the cap choices and the agent's run. */
+  /**
+   * "Pay with your wallet": the same question paid for real. The server
+   * answers 402, the wallet signs that payment and the server settles it on
+   * Monad testnet before it answers.
+   */
+  pay: {
+    checked: "The button above shows Baret's check of this payment. The one below makes it.",
+    action: "Pay with your wallet",
+    note: "A real x402 payment on Monad testnet: your wallet signs a message for {amount} test USDC and Scrybe settles it. You need no MON. Test USDC has no value.",
+    noteChecked:
+      "A real x402 payment on Monad testnet. The Baret extension checks the payment with Baret before it signs. You need no MON. Test USDC has no value.",
+    title: "Your payment",
+    status: {
+      asking: "Asking Scrybe for the price...",
+      signing: "Confirm the payment in {wallet}...",
+      settling: "Settling on Monad testnet...",
+    },
+    done: "Paid {amount} USDC to {merchant}.",
+    answer: "Scrybe's answer",
+    errors: {
+      rejected: "You declined in {wallet}. Nothing was paid.",
+      pending: "{wallet} already has a request open. Finish it there, then try again.",
+      network: "Your wallet is on another network. Switch it to Monad testnet, then try again.",
+      account: "The connected account changed. Press the button again.",
+      funds: "Your wallet does not hold enough test USDC. Nothing was paid.",
+      balance: "Your wallet holds less than {amount} test USDC. Nothing was paid.",
+      refused: "Scrybe did not take the payment. Nothing was paid.",
+      unsettled:
+        "The payment did not settle in time, so there is no answer. If it lands later, it shows in your wallet's history.",
+      unavailable: "Scrybe is not answering right now. Nothing was paid.",
+      failed: "The wallet did not sign it. Nothing was paid.",
+    },
+    faucet: { label: "Get test USDC", href: "https://faucet.circle.com" },
+  },
   amount: "{amount} USDC",
-} as const satisfies ScenarioSite & { amount: string };
+} as const satisfies ScenarioSite & { amount: string; pay: object };
 
 export type ScrybeContent = typeof scrybe;

@@ -4,7 +4,7 @@ import { Segment } from "@baret/web-ui/components/Segment";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId, useRef } from "react";
+import { type JSX, type ReactNode, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 import { CAPS, type Cap, SAMPLE, usdc } from "./sample.js";
 
@@ -31,6 +31,8 @@ export function AskCard({
   onCap,
   error,
   onAsk,
+  merchant,
+  pay,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -41,6 +43,10 @@ export function AskCard({
   error: string | null;
   /** False when the question is missing. */
   onAsk: () => boolean;
+  /** Who gets paid: the sample's merchant, or the real one when a payment can be made. */
+  merchant: string;
+  /** The real payment (PayBlock), under the honest version's button. */
+  pay: ReactNode;
 }): JSX.Element {
   const titleId = useId();
   const errorId = useId();
@@ -48,7 +54,7 @@ export function AskCard({
   const capHintId = useId();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const danger = mode === "danger";
-  const values = { amount: usdc(SAMPLE.price), merchant: truncateAddress(SAMPLE.merchant) };
+  const values = { amount: usdc(SAMPLE.price), merchant: truncateAddress(merchant) };
 
   return (
     <form
@@ -126,6 +132,8 @@ export function AskCard({
         {danger ? attack.cta : panel.cta}
       </Button>
       <p className={T.small}>{danger ? attack.note : panel.note}</p>
+
+      {danger ? null : pay}
 
       <AttackSwitch
         label={attack.switch.label}

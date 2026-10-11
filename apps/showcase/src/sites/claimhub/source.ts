@@ -1,4 +1,4 @@
-import { claimhub, DEMO } from "@baret/demo";
+import { claimhub, DEMO, type DemoTx } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import type { Address } from "viem";
 import type { DemoCall } from "../kit/live.js";
@@ -27,6 +27,20 @@ export interface ClaimInput {
 export function buildRequest(mode: DemoMode, from: Address): DemoCall {
   return mode === "safe" ? claimhub.claim(from) : claimhub.attackApprove(from);
 }
+
+/**
+ * The calls "Sign with your wallet" sends, in order. Honest: the claim the
+ * panel checks. Attack: the allowance the panel checks, then the call that
+ * sets it back to zero, so the demo leaves no allowance open to the drainer.
+ */
+export function signCalls(mode: DemoMode, from: Address): DemoTx[] {
+  return mode === "safe"
+    ? [claimhub.claim(from)]
+    : [claimhub.attackApprove(from), claimhub.revokeApprove(from)];
+}
+
+/** HUB, what the honest claim sends: read before and after a signed claim. */
+export const HUB = { address: DEMO.claimhub.hub, decimals: 18 } as const;
 
 /** The distributor and the spender a live request names, for the panel's copy. */
 export const LIVE_VALUES = {

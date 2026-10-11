@@ -7,6 +7,7 @@ import { monadSender, qwenReviewerFactory, ReviewService } from "./application/r
 import { SealedRelay, storedVersionReader } from "./application/sealed.js";
 import { UnreadKinds } from "./application/unread.js";
 import { ExplanationCache, VerdictCache } from "./application/verdicts.js";
+import { authorizationReader, X402Paywall } from "./application/x402.js";
 import { loadConfig } from "./config/env.js";
 import { type MonadRpc, ViemMonadRpc } from "./infra/rpc.js";
 import { createSources } from "./sources/index.js";
@@ -65,6 +66,21 @@ if (config.sealed && testnet) {
     dailyLimit: config.sealed.dailyLimit,
     current: storedVersionReader(testnet, config.sealed.store),
     send: monadSender(testnet, config.sealed.relayerPrivateKey),
+  });
+}
+
+// The x402 demo: this server is the merchant and the facilitator. It pays the
+// gas of each settlement and can move only what a payer's message signs over.
+if (config.x402 && testnet) {
+  deps.paywall = new X402Paywall({
+    chainId: testnet.chainId,
+    asset: config.x402.asset,
+    domain: { name: "USDC", version: "2" },
+    payTo: config.x402.payTo,
+    price: config.x402.price,
+    dailyLimit: config.x402.dailyLimit,
+    used: authorizationReader(testnet, config.x402.asset),
+    send: monadSender(testnet, config.x402.facilitatorPrivateKey),
   });
 }
 

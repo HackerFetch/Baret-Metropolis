@@ -1,4 +1,4 @@
-import type { ScenarioSite } from "../types.js";
+import type { ScenarioSite, SiteSign } from "../types.js";
 
 /**
  * /orbityield on apps/showcase. Trust trap. Blocked under Balanced since
@@ -266,7 +266,19 @@ export const orbityield = {
       body: "When a deposit promises a receipt, check that the receipt arrives. A missing receipt is the first sign of a one-way door.",
     },
   },
-} as const satisfies ScenarioSite;
+  sign: {
+    token: "oMON",
+    steps: {
+      safe: ["Stake {amount} MON"],
+      danger: ["Stake {amount} MON"],
+    },
+    outcome: {
+      safe: "The pool paid oMON into your wallet, one for each MON.",
+      danger:
+        "The pool kept your MON and paid nothing back: the oMON balance did not move. Press Stake to see what Baret says about the same request.",
+    },
+  },
+} as const satisfies ScenarioSite & { sign: SiteSign };
 
 export type OrbityieldContent = typeof orbityield;
 
