@@ -29,6 +29,8 @@ import { API_URL, RPC_URL } from "./source.js";
 
 /** Test USDC on Monad testnet: the wallet's second asset. */
 export const USDC = "0x534b2f3A21130d7a60830c2Df862319e593943A3" as const;
+/** dUSDC, the token the demo sites hand out and trade (packages/demo, NOVASWAP.usdc). */
+export const DEMO_USDC = "0x5BB6fF1FCbE31ED8FBce6805852Ce279475522fc" as const;
 
 export const EXPLORER = "https://testnet.monadexplorer.com";
 
@@ -99,10 +101,15 @@ export async function feeOf(from: string, call: WalletCall): Promise<string> {
   }
 }
 
-/** MON and test USDC of an address, as the screens show them. */
+/**
+ * MON and test USDC of an address, as the screens show them, and the demo
+ * sites' dUSDC once the account holds some: a token the account never met is
+ * not listed at zero.
+ */
 export async function balancesOf(address: string): Promise<Asset[]> {
-  const balances = await chain().balances(address as Hex, [USDC]);
-  return balances.map((b) => ({
+  const balances = await chain().balances(address as Hex, [USDC, DEMO_USDC]);
+  const listed = balances.filter((b) => b.token !== DEMO_USDC || b.amount > 0n);
+  return listed.map((b) => ({
     symbol: b.symbol,
     balance: fromUnits(b.amount, b.decimals, { min: 2, max: 6 }),
     decimals: b.decimals,
