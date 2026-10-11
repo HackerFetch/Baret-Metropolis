@@ -203,4 +203,23 @@ describe("the vault's history from the indexer", () => {
       "sent-1",
     ]);
   });
+
+  it("keeps the wallet's own row when the indexer reports the same transaction", () => {
+    const hash = `0x${"ab".repeat(32)}`;
+    const logged = reduce(start, {
+      type: "log",
+      item: { ...own("deposit-1", "2026-10-09T10:00:00.000Z"), hash },
+    });
+    const read = reduce(logged, {
+      type: "history",
+      items: [
+        {
+          ...paid("same-tx", "2026-10-09T10:00:01.000Z"),
+          hash: hash.toUpperCase().replace("0X", "0x"),
+        },
+        paid("p1", "2026-10-09T11:00:00.000Z"),
+      ],
+    });
+    expect(read.activity.map((item) => item.id)).toEqual(["p1", "deposit-1"]);
+  });
 });

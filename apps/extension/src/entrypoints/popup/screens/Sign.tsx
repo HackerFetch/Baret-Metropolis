@@ -70,6 +70,15 @@ const STATUS: Record<ActivityItem["kind"], ActivityStatus> = {
   drift: "confirmed",
   connect: "confirmed",
   disconnect: "confirmed",
+  vaultCreated: "confirmed",
+  vaultDeposit: "confirmed",
+  vaultWithdraw: "confirmed",
+  merchantCaps: "confirmed",
+  merchantPaused: "confirmed",
+  merchantResumed: "confirmed",
+  merchantRemoved: "confirmed",
+  agentKey: "confirmed",
+  agentRevoked: "confirmed",
 };
 
 /** The wallet's log row for a transaction, as the extension's log keeps it. */

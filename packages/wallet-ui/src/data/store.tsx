@@ -301,11 +301,17 @@ export function reduce(
       return { ...state, activity: [action.item, ...state.activity] };
     case "history": {
       const own = state.activity.filter((item) => item.source !== "indexer");
+      // A change this wallet signed is already in its own log, with its verdict:
+      // the indexer's row for the same transaction would show it twice.
+      const logged = new Set(own.flatMap((item) => (item.hash ? [item.hash.toLowerCase()] : [])));
+      const read = action.items.filter(
+        (item) => !item.hash || !logged.has(item.hash.toLowerCase()),
+      );
       const time = (item: ActivityItem) => Date.parse(item.at) || 0;
       // Newest first, as the log is written; the sort is stable, so equal times keep their order.
       return {
         ...state,
-        activity: [...own, ...action.items].sort((a, b) => time(b) - time(a)),
+        activity: [...own, ...read].sort((a, b) => time(b) - time(a)),
       };
     }
     case "send": {
