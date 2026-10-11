@@ -2,7 +2,7 @@
 
 > The implementation of the HTTP 402-based micropayment flow inside Baret. Goal: prevent an AI agent from **blind-signing** a 402 response — every payment is decoded and passed through the policy before it is sent.
 
-Last updated: 2026-10-10 · Status: **design; only the check is built.** Baret checks an x402 payment (its shape, asset, destination and the caps) and returns a verdict, live and tested (§5). Nothing in this repository settles a payment: no facilitator, no paywall endpoint (`docs/SYSTEM_GAPS.md` G-05). The rest of this file is the design.
+Last updated: 2026-10-11 · Status: **checked and settled.** Baret checks an x402 payment (its shape, asset, destination and the caps) and returns a verdict, live and tested (§5). Since D-046 (2026-10-11), `GET /demo/paywall` is a real paywall endpoint: the server verifies the signed EIP-3009 authorisation and settles it on Monad testnet, acting as its own facilitator (`docs/SYSTEM_GAPS.md` G-05, closed). Proven with real transfers: `pnpm --filter @baret/server verify:x402` passes 8 of 8 against the live API (checked 2026-10-11, tx `0x207612b6021852a76b63569dc4b9504c1a9036debf2fb8e9581e46d0d7dc2d61`, block 70138038). There is still no separate facilitator service. The rest of this file is the design.
 
 ---
 
@@ -89,9 +89,11 @@ These fields are **conceptually the same model** as `setMerchantCap` in `Payment
 - [x] Rejection path: asset outside the allowlist — `X402_NON_CANONICAL_ASSET`, payment is not sent.
 - [x] Rejection path: destination address mismatch (a fake 402 response is simulated) — `X402_DESTINATION_MISMATCH`.
 - [x] Cap overflow: consecutive requests exceeding the hourly limit — blocked.
+- [x] A real settlement on Monad testnet (D-046, 2026-10-11): `pnpm --filter @baret/server verify:x402` against the live API — the 402 terms, Baret's verdict before signing, the 200 answer, the on-chain transaction, both balances moving, and the same authorisation replayed answering 402 again. 8 of 8 (Hale, 2026-10-11, API commit `5b92f54`, tx `0x207612b6021852a76b63569dc4b9504c1a9036debf2fb8e9581e46d0d7dc2d61`, block 70138038).
 
-The four boxes above are ticked from `verify:demo` against the live API (Hale, 2026-10-10, API commit `a34e520`, `--from 0x5AE98770795957F9a376083afcb775672FbD2C93`, 20 of 20): Scrybe "first answer, cap 0.25" safe and "sixth answer in the hour" blocked; Agents "pay a merchant" safe, "pay with a look-alike token" blocked, "pay the wrong address" caution (`X402_DESTINATION_MISMATCH`). They check Baret's **verdict** on each payment; the payment itself is not settled (`docs/SYSTEM_GAPS.md` G-05), so no video or text says an x402 payment settles.
+The first four boxes are ticked from `verify:demo` against the live API (Hale, 2026-10-10, API commit `a34e520`, `--from 0x5AE98770795957F9a376083afcb775672FbD2C93`, 20 of 20): Scrybe "first answer, cap 0.25" safe and "sixth answer in the hour" blocked; Agents "pay a merchant" safe, "pay with a look-alike token" blocked, "pay the wrong address" caution (`X402_DESTINATION_MISMATCH`). Those five check Baret's **verdict** only, on purpose (`verify:demo`'s scenarios are not meant to spend real funds each run); the fifth box above is where an x402 payment is shown actually settling.
 - [ ] These four scenarios are shown in the demo video (notes-2.txt: visualizes the "adversarial layer... personal CFO agent" narrative).
+- [ ] Scrybe's own "Pay with your wallet" button (E15, E13) checked live in a browser, from a connected wallet and from the Baret wallet. Left for H10.
 
 ## 6. Open Decisions
 

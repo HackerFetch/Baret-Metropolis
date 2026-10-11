@@ -110,7 +110,6 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 Said plainly, so that nothing above is read as more than it is:
 
-- **x402 payments are checked, not settled.** Baret checks an x402 payment's shape and destination; no facilitator in this repository settles one.
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
 - **No Cleanverse settlement has been made** through `CompliantPaymentGuard` yet.
 - **Mainnet:** nothing is deployed there.
@@ -178,7 +177,7 @@ This repository is also the three of us's working space. Status and plan: [`docs
 | [`docs/BOUNTIES_AND_TRACKS.md`](docs/BOUNTIES_AND_TRACKS.md) | Track, prizes and the state of each |
 | [`docs/RESOURCES.md`](docs/RESOURCES.md) | Which sponsor tool is used where |
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Contract specifications and deployments |
-| [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | The x402 design (checked, not settled) |
+| [`docs/X402_FACILITATOR.md`](docs/X402_FACILITATOR.md) | The x402 design: checked, and settled on Monad testnet since 2026-10-11 (D-046) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel, Render, CI |
 | [`docs/REFERENCE_REPOS.md`](docs/REFERENCE_REPOS.md) | Review of the five earlier Baret versions |
 | [`docs/BRAND.md`](docs/BRAND.md) | Brand specification |
