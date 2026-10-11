@@ -276,6 +276,9 @@ function SiteSignTyped(): JSX.Element {
           onDecline={decline}
           // The wallet does not sign a block: the way past is the rule.
           canOverride={false}
+          // Always a signature, never a transaction, even when it is an
+          // x402 payment (action "payment"): no fee row, no send wording.
+          message
           {...(sessionNote ? { sessionNote } : {})}
           {...(live && shown.verdict !== "unreachable" ? { explainId: shown.id } : {})}
           onLog={(item) => dispatch({ type: "log", item })}

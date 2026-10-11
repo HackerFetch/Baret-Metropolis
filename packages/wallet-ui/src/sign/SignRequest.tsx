@@ -148,10 +148,13 @@ function Section({
 }
 
 /** The verdict's title and one-line summary, for whichever verdict came back. */
-function verdictWords(request: Request): { title: string; summary: string } {
+function verdictWords(request: Request, message = false): { title: string; summary: string } {
   const { verdict } = sign;
   return request.verdict === "safe"
-    ? { title: verdict.safe.title, summary: verdict.safe.summary }
+    ? {
+        title: verdict.safe.title,
+        summary: message ? verdict.safe.summaryMessage : verdict.safe.summary,
+      }
     : request.verdict === "caution"
       ? { title: verdict.caution.title, summary: verdict.caution.summary }
       : request.verdict === "blocked"
@@ -185,7 +188,16 @@ function checkedAlchemy(request: Request): boolean {
  * Compact only: the verdict in one line under the heading, so Baret's answer
  * is read before the site's claim and above the pinned footer.
  */
-function VerdictLine({ request, checking }: { request: Request; checking: boolean }): JSX.Element {
+function VerdictLine({
+  request,
+  checking,
+  message = false,
+}: {
+  request: Request;
+  checking: boolean;
+  /** A typed message: read, not simulated. */
+  message?: boolean;
+}): JSX.Element {
   if (checking) {
     // Two lines held, the height most verdicts take, so the answer arriving
     // does not push the rest of the request down (layout shift).
@@ -194,7 +206,7 @@ function VerdictLine({ request, checking }: { request: Request; checking: boolea
   return (
     <div className="flex items-start gap-2">
       <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
-      <p className="text-sm text-[color:var(--fg)]">{verdictWords(request).summary}</p>
+      <p className="text-sm text-[color:var(--fg)]">{verdictWords(request, message).summary}</p>
     </div>
   );
 }
@@ -203,11 +215,14 @@ function Verdict({
   request,
   checking,
   short = false,
+  message = false,
 }: {
   request: Request;
   checking: boolean;
   /** The tag and summary already sit under the heading: the title only. */
   short?: boolean;
+  /** A typed message: read, not simulated. */
+  message?: boolean;
 }): JSX.Element {
   const { verdict } = sign;
   if (checking) {
@@ -216,11 +231,11 @@ function Verdict({
         <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
           {verdict.checking.title}
         </p>
-        <p className={T.body}>{verdict.checking.body}</p>
+        <p className={T.body}>{message ? verdict.checking.bodyMessage : verdict.checking.body}</p>
       </div>
     );
   }
-  const words = verdictWords(request);
+  const words = verdictWords(request, message);
   return (
     <div className="grid gap-3">
       {short ? null : (
@@ -312,6 +327,7 @@ export function SignRequest({
   network = "testnet",
   explorer,
   canOverride = true,
+  message: messageGiven,
   sessionNote,
   explainId,
 }: {
@@ -366,6 +382,12 @@ export function SignRequest({
    * the rules. The samples keep the press-and-hold override.
    */
   canOverride?: boolean;
+  /**
+   * A typed message: signed and handed back, never sent. No network fee row,
+   * and no word of sending or simulating. Left out, a request whose action is
+   * "message" counts as one; an EIP-3009 payment needs it passed.
+   */
+  message?: boolean;
   /** Live: one muted line under the decision, such as how long the session runs. */
   sessionNote?: string;
   /**
@@ -381,6 +403,8 @@ export function SignRequest({
   // until the surface passes a new one.
   const [fresh, setFresh] = useState<{ request: Request; over: Request } | null>(null);
   const request = fresh && fresh.over === given ? fresh.request : given;
+  // A typed message is signed and handed back, never sent.
+  const message = messageGiven ?? request.action === "message";
   // Live answers land after a wait: drop them once the screen is gone.
   const alive = useRef(true);
   useEffect(() => {
@@ -566,7 +590,13 @@ export function SignRequest({
           // passkey prompt that gave nothing has its own sentence.
           signRun.current = false;
           setPhase({ kind: "review" });
-          setSaid(reached === "passkey" ? sign.status.passkeyCancelled : sign.status.failed);
+          setSaid(
+            reached === "passkey"
+              ? sign.status.passkeyCancelled
+              : message
+                ? sign.status.failedMessage
+                : sign.status.failed,
+          );
         },
       );
       return;
@@ -745,7 +775,9 @@ export function SignRequest({
                 <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
               </p>
             ) : null}
-            {compact ? <VerdictLine request={request} checking={checking} /> : null}
+            {compact ? (
+              <VerdictLine request={request} checking={checking} message={message} />
+            ) : null}
           </header>
 
           {compact && phase.kind === "override" ? (
@@ -765,7 +797,7 @@ export function SignRequest({
               </blockquote>
               <p className={T.small}>
                 <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
-                {sign.claim.note}
+                {message ? sign.claim.noteMessage : sign.claim.note}
               </p>
             </Section>
           ) : null}
@@ -773,11 +805,11 @@ export function SignRequest({
           <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
             {verdictArt && !checking ? (
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-                <Verdict request={request} checking={checking} short={compact} />
+                <Verdict request={request} checking={checking} short={compact} message={message} />
                 {verdictArt}
               </div>
             ) : (
-              <Verdict request={request} checking={checking} short={compact} />
+              <Verdict request={request} checking={checking} short={compact} message={message} />
             )}
             {!checking && !unreachable ? (
               <div className="grid gap-1 border-t border-[color:var(--rule)] pt-3 text-sm">
@@ -788,7 +820,9 @@ export function SignRequest({
                   <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
                 </p>
                 {checkedAlchemy(request) ? (
-                  <p className={T.small}>{sign.verdict.checkedBy.detail}</p>
+                  <p className={T.small}>
+                    {message ? sign.verdict.checkedBy.detailMessage : sign.verdict.checkedBy.detail}
+                  </p>
                 ) : null}
                 <ul className="grid gap-0.5">
                   {checkedLines(request).map((line) => (
@@ -855,8 +889,13 @@ export function SignRequest({
                     ))}
                   </div>
                 )}
-                <ChangeRow label={sign.changes.fee} value={amount(request.fee)} unit="MON" />
-                <p className={T.small}>{sign.changes.disclaimer}</p>
+                {/* A signature costs this account no network fee: no row for one. */}
+                {message ? null : (
+                  <ChangeRow label={sign.changes.fee} value={amount(request.fee)} unit="MON" />
+                )}
+                <p className={T.small}>
+                  {message ? sign.changes.disclaimerMessage : sign.changes.disclaimer}
+                </p>
               </Section>
 
               {!unreachable ? (
@@ -1056,7 +1095,7 @@ export function SignRequest({
                         disabled={checking}
                         onClick={() => startSigning("sent")}
                       >
-                        {sign.verdict.safe.primary}
+                        {message ? sign.verdict.safe.primaryMessage : sign.verdict.safe.primary}
                       </Button>
                     </>
                   ) : blocked && !canOverride ? (
@@ -1102,7 +1141,7 @@ export function SignRequest({
                     </>
                   )}
                 </div>
-                {unreachable && phase.kind !== "retrying" && !checking ? (
+                {unreachable && canOverride && phase.kind !== "retrying" && !checking ? (
                   <div className="flex">
                     <Button
                       ref={overrideTrigger}

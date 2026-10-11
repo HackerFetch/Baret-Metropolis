@@ -41,11 +41,11 @@ export const history = {
     vaultCreated: "Opened your vault",
     vaultDeposit: "Deposited {amount} {asset} into your vault",
     vaultWithdraw: "Withdrew {amount} {asset} from your vault",
-    merchantCaps: "Set the caps for {merchant}: {amount} {asset} a day",
+    merchantCaps: "Set the caps for {merchant}, at most {amount} {asset} per 24 hours",
     merchantPaused: "Paused payments to {merchant}",
     merchantResumed: "Resumed payments to {merchant}",
     merchantRemoved: "Removed {merchant} from your vault",
-    agentKey: "Let {agent} pay from your vault",
+    agentKey: "Registered the agent key {agent} with your vault",
     agentRevoked: "Revoked the agent key {agent}",
   },
 

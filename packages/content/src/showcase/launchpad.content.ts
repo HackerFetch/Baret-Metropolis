@@ -263,7 +263,7 @@ export const launchpad = {
     outcome: {
       safe: "The sale sent LNTL to your wallet.",
       danger:
-        "This sale paid today. Its code is borrowed from a contract its owner can replace, so the next contribution may not be. Press Contribute to see what Baret says about the same request.",
+        "This sale paid LNTL today. Its code is borrowed from a contract its owner can replace, so it may not pay for the next contribution. Press Contribute to see what Baret says about the same request.",
     },
   },
 } as const satisfies ScenarioSite & { sign: SiteSign };
