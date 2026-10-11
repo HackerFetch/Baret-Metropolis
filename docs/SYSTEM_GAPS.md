@@ -16,7 +16,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-02 | The landing and `/install` describe the extension as a working wallet; it was a sample. **Built 2026-10-10 (D-040), live after the merge**; what is still empty in it is listed under G-02 | Wrong claim | P2 after the merge | Ezgin |
 | G-03 | The API slept on the free plan. **Starter since 2026-10-10**: the first request after 18 idle minutes took 0.10 s | Half done | closed | Ezgin |
 | G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
-| G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
+| G-05 | Scrybe's x402 payment is checked and never made. **Closed 2026-10-11 (D-046)** | Sample | P2 | Ezgin, Meriç |
 | G-06 | Nansen was off. **On since 2026-10-11**, labels mode inside a daily budget (D-041, D-042) | Missing | closed | Ezgin |
 | G-07 | No Cleanverse settlement has happened | Half done | P2 | Ezgin |
 | G-08 | Qwen's overpay veto sometimes names a mismatch that is not there. **Fixed 2026-10-10** (#66), checked live | Wrong | P1 | Meriç |
@@ -85,9 +85,9 @@ The demo script uses NovaSwap for the signed attack, so the demo path holds. A j
 
 ### G-05 · Scrybe's x402 payment is checked and never made
 
-Scrybe sends Baret a real EIP-3009 message as typed data with the payment's terms, and the verdict is live. Nothing answers 402, nothing settles the payment, and no question is answered: there is no facilitator and no paywall (`docs/X402_FACILITATOR.md` is a design from 2026-09-13; `/demo/paywall` does not exist). The price, the merchant and the hourly history on the page are fixed values (`apps/showcase/src/sites/scrybe/sample.ts`, `source.ts`). The agent path that does move money is `baret pay` through a PaymentGuard vault, not x402.
+**Closed 2026-10-11 (D-046).** `GET /demo/paywall` answers 402 with the terms, verifies the signed EIP-3009 authorisation and settles it on Monad testnet before it answers; `payX402` and `baret x402` in `@baret/agent-kit` pay it after Baret's check, and Scrybe's "Pay with your wallet" pays it from the connected wallet. Proven with real transfers (`pnpm --filter @baret/server verify:x402`).
 
-Say "Baret checks an x402 payment before it is signed", never "Baret pays over x402".
+What stays a sample: Scrybe's main button ("Pay and ask") still only shows Baret's check, the agent loop's hourly history is built by the page, and the four answers are fixed text. The server is its own facilitator; there is no separate facilitator service. In the extension the x402 payments page is not built, and a typed message it checks carries no `payment` context.
 
 ### G-06 · Nansen is off
 

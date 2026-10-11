@@ -1,7 +1,7 @@
 import { hub, scrybe } from "@baret/content";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { DemoBar } from "../kit/DemoBar.js";
 import { SiteHero } from "../kit/site/Page.js";
@@ -10,9 +10,13 @@ import { SiteHeader } from "../kit/site/SiteHeader.js";
 import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
-import { useDemoWallet } from "../kit/wallet/useDemoWallet.js";
+import { isBaretExtension, walletLabel } from "../kit/wallet/baret.js";
+import { addressOf, requestPicker, switchToMonad } from "../kit/wallet/store.js";
+import { MONAD_TESTNET_ID, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
 import { AskCard } from "./AskCard.js";
 import { ScrybeGlyph, VIEWS } from "./Glyph.js";
+import { PayBlock } from "./PayBlock.js";
+import { usePay } from "./pay.js";
 import { AgentsBridge, Run } from "./Run.js";
 import { ART, type Cap, SAMPLE, START_CAP, usdc } from "./sample.js";
 import { LIVE_VALUES, SOURCE } from "./source.js";
@@ -27,7 +31,9 @@ import { LIVE_VALUES, SOURCE } from "./source.js";
  * panel shows the run, the stop and the way to the same caps on /agents.
  * With a wallet connected, Baret checks the real payment from that address
  * under the visitor's cap; without one, the prepared sample (source.ts).
- * Nothing is signed or sent.
+ * That button signs and sends nothing. "Pay with your wallet" under it makes
+ * the honest payment for real: an x402 payment settled on Monad testnet
+ * (pay.ts).
  */
 
 const { site, analysis } = scrybe;
@@ -42,7 +48,21 @@ export function ScrybeSite(): JSX.Element {
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
-  const { from, live } = useDemoWallet();
+  const { wallet, from, live } = useDemoWallet();
+  const pay = usePay();
+  const address = addressOf(wallet);
+  const connection = wallet.connection.status === "connected" ? wallet.connection : null;
+  const [need, setNeed] = useState<"wallet" | "network" | null>(null);
+
+  // A need clears once what it waited for arrives.
+  useEffect(() => {
+    if (need === "wallet" && address !== null) setNeed(null);
+    if (need === "network" && connection?.chainId === MONAD_TESTNET_ID) setNeed(null);
+  }, [need, address, connection?.chainId]);
+
+  // Another account drops the payment shown: it belongs to the address before.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the account changes
+  useEffect(() => pay.reset(), [address]);
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
 
@@ -63,6 +83,24 @@ export function ScrybeSite(): JSX.Element {
     setError(null);
     runCheck(mode);
     return true;
+  }
+
+  function payForReal(): void {
+    if (question.trim() === "") {
+      setError(site.panel.errors.empty);
+      return;
+    }
+    setError(null);
+    if (address === null) {
+      setNeed("wallet");
+      return;
+    }
+    if (connection?.chainId !== MONAD_TESTNET_ID) {
+      setNeed("network");
+      return;
+    }
+    setNeed(null);
+    void pay.run(address, question.trim());
   }
 
   function tryOther(): void {
@@ -118,6 +156,21 @@ export function ScrybeSite(): JSX.Element {
                   onCap={setCap}
                   error={error}
                   onAsk={ask}
+                  merchant={values.merchant}
+                  pay={
+                    <PayBlock
+                      state={pay.state}
+                      walletName={connection ? walletLabel(connection.wallet) : ""}
+                      need={need}
+                      switching={wallet.switching}
+                      onConnect={requestPicker}
+                      onSwitch={() => void switchToMonad()}
+                      price={SAMPLE.price}
+                      merchant={LIVE_VALUES.merchant}
+                      checks={connection !== null && isBaretExtension(connection.wallet.id)}
+                      onPay={payForReal}
+                    />
+                  }
                 />
               }
             />
