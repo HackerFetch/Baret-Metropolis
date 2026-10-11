@@ -20,6 +20,7 @@
     "@baret/wallet-core": "workspace:*",
     "@baret/wallet-ui": "workspace:*",
     "@baret/web-ui": "workspace:*",
+    "@vercel/functions": "3.9.11",
     "lucide-react": "1.46.0",
     "motion": "13.3.0",
     "react": "19.3.0",

@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
 import { ANALYSIS_VERSION } from "../../application/analyze.js";
 import type { NetworkConfig } from "../../config/env.js";
+import { viaEdge } from "../client.js";
 
 /**
  * Which optional settings a network has. Booleans and counts only: never a
@@ -62,13 +63,17 @@ export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) =
    * carried, a count and nothing else. It tells an operator how many proxies
    * stand in front of the server on each path (direct, through a site's
    * rewrite), which is what decides which of those addresses can be trusted
-   * (docs/SYSTEM_GAPS.md, G-17).
+   * (docs/SYSTEM_GAPS.md, G-17). `viaEdge` says whether it carried the sites'
+   * edge secret.
    */
   app.get("/health", async (req) => ({
     status: "ok",
     analysisVersion: ANALYSIS_VERSION,
     commit,
     forwardedHops: hops(req.headers["x-forwarded-for"]),
+    // True when the request came through a site's edge and carried the shared
+    // secret: how to check from outside that the edge middleware is working.
+    viaEdge: viaEdge(req, deps.config.proxyTrust),
   }));
 
   /** Ready when every configured network answers with the chain id it should have. */

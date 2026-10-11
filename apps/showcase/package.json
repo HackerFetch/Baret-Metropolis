@@ -19,6 +19,7 @@
     "@baret/ui": "workspace:*",
     "@baret/wallet-core": "workspace:*",
     "@baret/web-ui": "workspace:*",
+    "@vercel/functions": "3.9.11",
     "@wagmi/core": "3.6.5",
     "lenis": "1.3.26",
     "lucide-react": "1.46.0",
