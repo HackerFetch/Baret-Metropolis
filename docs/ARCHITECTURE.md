@@ -2,7 +2,7 @@
 
 > This document is the **target architecture** for the Baret implementation to be written from scratch for Monad Metropolis (no code yet). As code starts being written, this file must be kept in sync with the code — if a contradiction is found, the source code is treated as the authority and this file is updated.
 
-Last updated: 2026-10-07 · Status: **`packages/guard`, the `apps/server` analysis core, the contracts, agent-kit, wallet-core and the Envio indexer are implemented and live on testnet; the CRE reputation-oracle workflow is built and simulated with a real write (not deployed to a DON); Nansen and Cleanverse wait on the sponsors**
+Last updated: 2026-10-11 · Status: **Live on Monad testnet: the server, the contracts, `apps/wallet` and `apps/extension` (both real wallets, not sample data), x402 settlement, the CRE reputation-oracle workflow (simulated, with a real write; not deployed to a DON), Nansen (`labels` mode), Cleanverse (the check; no settlement yet). Details and current gaps: `README.md`, `docs/SYSTEM_GAPS.md`**
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: 2026-10-07 · Status: **`packages/guard`, the `apps/server` analys
 ```mermaid
 flowchart TB
     subgraph Clients
-        EXT[apps/extension<br/>Chrome MV3 wallet + x402 interceptor]
+        EXT[apps/extension<br/>Chrome MV3 wallet]
         WAL[apps/wallet<br/>Mera-powered standalone smart wallet]
         SHOW[apps/showcase<br/>threat scenarios + /agents control panel]
         MM[MetaMask Agent Wallet<br/>via packages/metamask-plugin]
@@ -234,20 +234,18 @@ The entire analysis engine lives here. Endpoints:
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/health`, `/health/ready` | Liveness / is the RPC ready |
-| POST | `/v1/analyze` | Single transaction analysis |
-| POST | `/v1/analyze/batch` | ≤25 transactions |
-| POST | `/v1/analyze/stream` | SSE result stream |
-| POST | `/v1/replay` | Re-simulation |
-| GET | `/v1/audit/recent`, `/aggregate`, `/contract/:address` | Audit (Envio-backed) |
-| POST | `/v1/explain` | A verdict in plain language (KIMI) |
-| POST | `/v1/review` | The Qwen agent reviewer on one of three fixed demo scenarios |
+| GET | `/health`, `/health/ready` | Liveness and the running commit / the chain answers and which optional parts are configured |
+| POST | `/v1/analyze` | Simulates one transaction or typed-data signature and returns the verdict |
+| POST | `/v1/explain` | A verdict this server returned, in plain language (KIMI) |
 | POST | `/v1/policy/draft` | Rules from a sentence (KIMI), a proposal only |
+| POST | `/v1/review` | The Qwen agent reviewer on one of three fixed demo scenarios |
 | POST | `/v1/sealed` | Relays one signed, encrypted settings entry to the SealedStore and pays its gas (D-039) |
+| GET | `/v1/audit/recent`, `/v1/audit/vault/:address`, `/v1/audit/owner/:address`, `/v1/audit/reputation/:address` | Audit, read from the Envio indexer (§8.8) |
 | POST | `/mcp` | Baret as tools for an AI agent, over the Model Context Protocol (D-045) |
-| GET | `/demo/paywall` | x402 demo (see `X402_FACILITATOR.md`) |
 
-Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8), `/v1/explain`, `/v1/review`, `/v1/policy/draft` (below), `/mcp` (D-045), `/v1/sealed` (D-039: body `{ id, version, blob, signature }`; 400 for a bad shape, size or signature, 409 for a version the store already has, 429 over the daily cap, 502 when the write did not land, 503 when not configured). Batch, stream, replay, MCP and the demo paywall are not built.
+Not built, though earlier versions of this table listed them: `/v1/analyze/batch`, `/v1/analyze/stream`, `/v1/replay`, `/v1/audit/aggregate`, `/v1/audit/contract/:address`, `/demo/paywall` (`docs/API_REFERENCE.md` §8).
+
+Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8), `/v1/explain`, `/v1/review`, `/v1/policy/draft` (below), `/mcp` (D-045), `/v1/sealed` (D-039: body `{ id, version, blob, signature }`; 400 for a bad shape, size or signature, 409 for a version the store already has, 429 over the daily cap, 502 when the write did not land, 503 when not configured). Batch, stream, replay and the demo paywall are not built.
 
 **`POST /v1/explain`** (D-028, D-036). Body `{ requestId, language? }`, where `requestId` is the `meta.requestId` of a `/v1/analyze` answer from this server and `language` is `en` (default), `tr` or `zh`; the older body `{ verdict, language? }` is accepted, but only `verdict.meta.requestId` is read. Answer `{ decision, explanation: { headline, summary, points[], advice }, language, model, requestId }` (`explainRequestSchema` / `explainResponseSchema` in `@baret/guard`). `/v1/analyze` keeps every verdict it returns for ten minutes (`application/verdicts.ts`); the route explains that copy, so a caller cannot get words for a verdict Baret did not reach, and an unknown id is `404 verdict_unknown`. KIMI (Moonshot, `kimi-k3`, `reasoning_effort: "low"`) writes the four fields from the verdict's facts and from the sentences `@baret/content` already holds for each finding code, so the model rephrases Baret's wording instead of inventing its own. Three things keep it honest: `decision` is copied from the cached verdict, never taken from the model or the request; the model's answer must match the schema exactly (an extra field such as a decision of its own is refused); and no key, an error, a timeout (28 s) or an answer off the schema is `503 explain_unavailable`, so the client keeps the findings it shows today. One model call per verdict and language: answers are cached for ten minutes and concurrent requests share the call. The route has its own rate limit (`BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE`, default 20). `/health/ready` reports `configured.explain`. Checked with the real key on 2026-10-09 (D-036); in production once the key is on Render (E7).
 
@@ -256,7 +254,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 **`POST /v1/policy/draft`** (D-038). Body `{ sentence, current?, language? }` (`policyDraftRequestSchema` in `@baret/guard`): a sentence of 1 to 400 characters, the rules to start from (default: Balanced) and `en`, `tr` or `zh`. KIMI proposes changes; the server (`application/policy-draft.ts`) checks each field and value against the policy schema, lists unknown or invalid ones in `refused` with the reason, checks the merged rules again (`422 policy_draft_invalid` if they fail) and marks each change that allows more than `current` as `loosens`. Answer `{ policy, changes: [{ field, from, to, why, loosens }], refused, note, model }` (`policyDraftResponseSchema`). Nothing is applied: the wallet's Rules page leaves loosening changes unticked, and only the person's Save changes the rules. Limits: `BARET_POLICY_DRAFT_RATE_LIMIT_PER_MINUTE` (default 10) and `BARET_KIMI_DAILY_LIMIT` (default 500 fresh KIMI calls per UTC day, shared with `/v1/explain`; over it `429 policy_draft_daily_limit`). No key or no answer: `503 policy_draft_unavailable`. `/health/ready` reports `configured.policyDraft`. Checked with the real key on 2026-10-09 (D-038).
 
 ### 8.2 `apps/wallet` and `packages/wallet-core`
-`apps/wallet` is the screens (wallet-ui store, today on sample data). `packages/wallet-core` is everything behind them, with no UI (D-023):
+`apps/wallet` is the screens (wallet-ui store; live on a real passkey account since 2026-10-09, `?sample=` keeps the sample for tests and design states). `packages/wallet-core` is everything behind them, with no UI (D-023):
 
 - `createWallet` / `unlockWallet` → `WalletSession`: the Mera passkey account (`address`, `account` for viem signing, `lock()`), plus `agentKey(n)` / `agentAddress(n)` for keys an agent can be handed.
 - `createWalletChain({ rpcUrl })`: balances, `findVault(owner)`, `vault(address, merchants)`, `prepare`, `send`, `wait`.
@@ -267,7 +265,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 ### 8.3 `apps/extension` — Chrome MV3
 - EIP-1193 / EIP-6963 provider.
 - `background`: account state machine, IndexedDB (keystore, history, allowances, site permissions), chain monitor (WebSocket — not polling, per the Alchemy recommendation in notes.txt).
-- `inpage`: `window.ethereum` provider + x402 fetch interceptor.
+- `inpage`: `window.ethereum` provider (EIP-1193/EIP-6963). There is no automatic x402 fetch interceptor; x402 settlement goes through a site's own "Pay with your wallet" button (D-046), same as any other transaction.
 - Every signature request goes through the guard; a risky transaction is blocked in the wallet, not in the dApp.
 
 ### 8.4 `apps/showcase`
