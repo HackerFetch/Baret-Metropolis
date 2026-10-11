@@ -19,6 +19,7 @@ import { ConnectPhase } from "../entrypoints/popup/screens/Connect.js";
 import { fromTransaction } from "../entrypoints/popup/screens/Sign.js";
 import { grantsFrom, isPayment, paymentFrom, problemFrom, withGrants } from "./records.js";
 import { loggedRow } from "./row.js";
+import { capsOf, cardAfter, type SiteStop, siteStop } from "./site-caps.js";
 import {
   type AnalyzeResponse,
   chain,
@@ -372,6 +373,10 @@ function LiveTypedData({
   const typed = parseTyped(pending.params[1]);
   const [request, setRequest] = useState<TypedDataRequest | null>(null);
   const policy = useRef(state.policy);
+  // The site's own caps or its pause stopped the payment, before any check.
+  const stop = useRef<SiteStop | null>(null);
+  const ledger = useRef({ permissions: state.permissions, payments: state.payments });
+  ledger.current = { permissions: state.permissions, payments: state.payments };
 
   // One check per request: the request does not change under the screen.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the request's id
@@ -390,6 +395,27 @@ function LiveTypedData({
     if (!typed) {
       setRequest(stopped);
       return;
+    }
+    // A payment to a site the reader paused, or over the caps they set for it,
+    // ends here: the caps live in this wallet and nothing else enforces them.
+    if (isPayment(typed)) {
+      const origin = siteOf(pending.origin);
+      const asked = paymentFrom(typed, { payer: owner.address, origin, at: "", usdc: USDC });
+      stop.current = siteStop(
+        { origin, amount: asked.amount, asset: asked.asset },
+        ledger.current.permissions,
+        ledger.current.payments,
+        Date.now(),
+      );
+      if (stop.current) {
+        setRequest({
+          ...base,
+          verdict: "blocked",
+          findings: stop.current.finding ? [stop.current.finding] : [],
+          rules: [stop.current.rule],
+        });
+        return;
+      }
     }
     const context: SignContext = {
       id: pending.id,
@@ -456,7 +482,11 @@ function LiveTypedData({
         outcome = { error: ERRORS.internal };
       }
     } else if (request.verdict === "blocked") {
-      outcome = { error: ERRORS.blocked };
+      outcome = {
+        error: stop.current
+          ? { code: ERRORS.blocked.code, message: stop.current.message }
+          : ERRORS.blocked,
+      };
     }
     const signed = "result" in outcome;
     dispatch({ type: "log", item: rowOf(request, signed ? decision : "declined", owner.id) });
@@ -465,12 +495,19 @@ function LiveTypedData({
       const by = { origin: siteOf(pending.origin), at: new Date().toISOString(), usdc: USDC };
       if (signed) {
         const payment = paymentFrom(typed, { ...by, payer: owner.address });
-        dispatch({
-          type: "patch",
-          patch: { payments: [payment, ...state.payments.filter((p) => p.id !== payment.id)] },
-        });
+        const payments = [payment, ...state.payments.filter((p) => p.id !== payment.id)];
+        dispatch({ type: "patch", patch: { payments } });
+        // The site's caps card counts it: its meters and its last use.
+        const card = capsOf(state.permissions, by.origin);
+        if (card && card.asset === payment.asset) {
+          dispatch({
+            type: "caps",
+            permission: cardAfter(card, payments, by.at, payment.amount),
+          });
+        }
       } else if (request.verdict === "blocked") {
         const code = request.findings[0]?.code ?? null;
+        // A pause has no finding: the payments page lists it as declined.
         dispatch({
           type: "patch",
           patch: { problems: [problemFrom(typed, { ...by, code }), ...state.problems] },
