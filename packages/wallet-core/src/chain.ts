@@ -76,7 +76,11 @@ export function createWalletChain(options: {
   const chainId = MONAD_NETWORKS[network].chainId;
   const client =
     options.client ??
-    createPublicClient({ transport: http(options.rpcUrl, { batch: { wait: 10 } }) });
+    // Monad's public node answers 429 past about fifteen calls a second, and a
+    // wallet with a site and a popup open gets there: wait and ask again.
+    createPublicClient({
+      transport: http(options.rpcUrl, { batch: { wait: 10 }, retryCount: 5, retryDelay: 250 }),
+    });
   const contracts = WALLET_CONTRACTS[network];
 
   return {

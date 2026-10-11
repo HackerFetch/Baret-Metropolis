@@ -40,15 +40,36 @@ export function chain(): ReturnType<typeof createWalletChain> {
 
 export const guard = new TransactionGuard({ baseUrl: API_URL });
 
-/** The open account, or null while the wallet is locked. */
-export async function openAccount(): Promise<HDAccount | null> {
+/** How many accounts of the phrase are looked through for an address. */
+const ACCOUNTS_MAX = 32;
+
+/**
+ * The open account, or null while the wallet is locked. With `address`: the
+ * account of the phrase that has it (the wallet's accounts are the phrase's
+ * accounts 0, 1, 2...), or null when none does, so nothing is ever signed
+ * with another key than the one the request names.
+ */
+export async function openAccount(address?: string): Promise<HDAccount | null> {
   const phrase = await session.phrase();
-  return phrase ? accountOf(phrase) : null;
+  if (!phrase) return null;
+  if (!address) return accountOf(phrase);
+  for (let index = 0; index < ACCOUNTS_MAX; index++) {
+    const account = accountOf(phrase, index);
+    if (account.address.toLowerCase() === address.toLowerCase()) return account;
+  }
+  return null;
+}
+
+/** The address of account `index` of the open phrase; null while locked. */
+export async function addressAt(index: number): Promise<string | null> {
+  const phrase = await session.phrase();
+  if (!phrase || !Number.isInteger(index) || index < 0 || index >= ACCOUNTS_MAX) return null;
+  return accountOf(phrase, index).address;
 }
 
 /** The signer for one request, bound to the rules as they are now. */
-export async function walletFor(policy: GuardPolicy): Promise<Wallet | null> {
-  const account = await openAccount();
+export async function walletFor(policy: GuardPolicy, address?: string): Promise<Wallet | null> {
+  const account = await openAccount(address);
   if (!account) return null;
   return new Wallet({
     // Only the address and the viem account are read from a session.

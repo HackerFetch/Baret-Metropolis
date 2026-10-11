@@ -109,5 +109,9 @@ export async function liveSource(): Promise<LiveSource> {
     },
     unlock: (passphrase) => sendMessage("unlock", passphrase),
     reach,
+    // Loaded when asked: wallet.ts reads this module's constants as it loads.
+    derive: async (index) => (await import("./wallet.js")).addressAt(index),
+    revoke: async (permissions, state) =>
+      (await import("./revoke.js")).revokeGrants(permissions, state.accounts, state.policy),
   };
 }

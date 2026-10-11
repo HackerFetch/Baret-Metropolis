@@ -78,7 +78,9 @@ const press = async (page, name) => {
 const page = await context.newPage();
 page.on("pageerror", (e) => console.log("PAGEERROR", e.message));
 page.on("console", (m) => {
-  if (m.type() === "error") console.log("CONSOLE", m.text().slice(0, 200));
+  if (m.type() === "error" || m.type() === "warning") {
+    console.log("CONSOLE", m.text().slice(0, 400));
+  }
 });
 await page.goto(`chrome-extension://${id}/options.html#/onboarding`);
 await page.waitForTimeout(2500);
@@ -162,6 +164,14 @@ say(
     " " +
     JSON.stringify(await buttons(page)),
 );
+// The check reads Monad's public node, which now and then refuses a request: try again as a person would.
+say(
+  `account check says: ${(await page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 500)}`,
+);
+for (let i = 0; i < 3 && (await buttons(page)).some((b) => /try again/i.test(b)); i++) {
+  await press(page, /try again/i);
+  await page.waitForTimeout(5000);
+}
 await press(page, /^continue$/i);
 say(`rules: ${JSON.stringify(await buttons(page))}`);
 await press(page, /continue|use|start|save|next/i);
@@ -467,6 +477,213 @@ expect(
   !/\{/.test(
     finalLog.replace(/^\[|\]$/g, "").replace(/\{"[a-z]+":"[^"]*"(,"[a-z]+":"[^"]*")*\}|\{\}/g, ""),
   ),
+);
+
+// ── What the wallet keeps from what it signed: grants, payments, a second account ──
+const state = () =>
+  sw.evaluate(async () => (await chrome.storage.local.get("baret.state"))["baret.state"]);
+const USDC = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
+const MERCHANT = "0x1365566191bAA9872A64AcDce963751d5343ff49";
+const pad = (hex) => hex.replace(/^0x/, "").toLowerCase().padStart(64, "0");
+const signIn = async (w) => {
+  await w.waitForTimeout(9000);
+  const t = await view(w);
+  await w.getByRole("button", { name: /^sign/i }).first().click();
+  return t;
+};
+
+// An allowance of 1 test USDC to the demo merchant: signed, so it goes on the list.
+wp = waitWindow();
+const allowing = send({
+  from: address,
+  to: USDC,
+  data: `0x095ea7b3${pad(MERCHANT)}${pad((1_000_000).toString(16))}`,
+  value: "0x0",
+});
+const w5 = await wp;
+say(`allowance window: ${(await signIn(w5)).slice(0, 160)}`);
+const allowed = await allowing;
+await site.waitForTimeout(7000);
+const grantId = `allowance:${USDC.toLowerCase()}:${MERCHANT.toLowerCase()}:main`;
+const listed = (await state()).permissions.find((p) => p.id === grantId);
+expect(
+  "a signed allowance is on the allowances list",
+  listed?.kind === "allowance" && listed.amount === "1" && listed.asset === "USDC",
+  `${allowed.slice(0, 16)} ${JSON.stringify(listed ?? null).slice(0, 160)}`,
+);
+if (!w5.isClosed()) await w5.close().catch(() => {});
+
+// Revoking it on the options page is a transaction: the row goes once Monad confirmed it.
+await page.goto(`chrome-extension://${id}/options.html#/permissions`);
+await page.waitForTimeout(3000);
+say(`allowances page: ${JSON.stringify((await buttons(page)).slice(0, 14))}`);
+await page
+  .getByRole("button", { name: /revoke the 1 permission/i })
+  .first()
+  .click();
+await page.waitForTimeout(1200);
+say(`after revoke press: ${JSON.stringify((await buttons(page)).slice(-6))}`);
+// The dialog's own confirm button, when the page asks first.
+await page
+  .getByRole("dialog")
+  .getByRole("button", { name: /revoke/i })
+  .first()
+  .click({ timeout: 4000 })
+  .catch(() => {});
+let open = true;
+for (let i = 0; i < 20 && open; i++) {
+  await page.waitForTimeout(1500);
+  open = (await state()).permissions.some((p) => p.id === grantId);
+}
+const left = await site.evaluate(
+  ([token, owner, spender]) =>
+    window.ethereum.request({
+      method: "eth_call",
+      params: [{ to: token, data: `0xdd62ed3e${owner}${spender}` }, "latest"],
+    }),
+  [USDC, pad(address), pad(MERCHANT)],
+);
+expect("the revoke took the row off the list", !open);
+expect("the allowance is zero on Monad", BigInt(left) === 0n, left);
+
+// An x402 payment message (EIP-3009). With no USDC in the wallet Baret stops it,
+// and the payments page says why; with USDC it is signed and listed as checked.
+const paymentMessage = (nonce) => ({
+  domain: { name: "USDC", version: "2", chainId: 10143, verifyingContract: USDC },
+  types: {
+    EIP712Domain: [
+      { name: "name", type: "string" },
+      { name: "version", type: "string" },
+      { name: "chainId", type: "uint256" },
+      { name: "verifyingContract", type: "address" },
+    ],
+    TransferWithAuthorization: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "validAfter", type: "uint256" },
+      { name: "validBefore", type: "uint256" },
+      { name: "nonce", type: "bytes32" },
+    ],
+  },
+  primaryType: "TransferWithAuthorization",
+  message: {
+    from: address,
+    to: MERCHANT,
+    value: "50000",
+    validAfter: "0",
+    validBefore: String(Math.floor(Date.now() / 1000) + 600),
+    nonce,
+  },
+});
+const askPayment = (nonce) =>
+  site.evaluate(
+    ([from, data]) =>
+      window.ethereum.request({ method: "eth_signTypedData_v4", params: [from, data] }).then(
+        (sig) => `SIG ${sig}`,
+        (e) => `ERR ${e.code} ${e.message}`,
+      ),
+    [address, JSON.stringify(paymentMessage(nonce))],
+  );
+
+wp = waitWindow();
+const refusedPayment = askPayment(`0x${"5a".repeat(32)}`);
+const w6 = await wp;
+await w6.waitForTimeout(9000);
+const t6 = await view(w6);
+say(`payment with no USDC: ${t6.slice(0, 200)}`);
+expect("a payment the wallet cannot cover reads Blocked", /blocked/i.test(t6));
+await w6
+  .getByRole("button", { name: /decline/i })
+  .first()
+  .click();
+expect("the site is told the payment was refused", (await refusedPayment).startsWith("ERR"));
+await site.waitForTimeout(1500);
+const problems = (await state()).problems;
+expect(
+  "the blocked payment is on the payments page with its reason",
+  problems.length === 1 &&
+    problems[0].merchant === MERCHANT &&
+    problems[0].values.amount === "0.05",
+  JSON.stringify(problems[0] ?? null).slice(0, 200),
+);
+if (!w6.isClosed()) await w6.close().catch(() => {});
+
+// The same payment once the wallet holds test USDC (BARET_USDC_FUNDER_KEY_FILE pays 0.2).
+const usdcFunder =
+  process.env.BARET_USDC_FUNDER_KEY_FILE ??
+  join(process.env.HOME ?? "", ".baret/playground-agent.key");
+let usdcKey = null;
+try {
+  usdcKey = readFileSync(usdcFunder, "utf8").trim();
+} catch {
+  say("no USDC funder key: the signed payment is not checked");
+}
+if (usdcKey) {
+  execFileSync(
+    "cast",
+    [
+      "send",
+      USDC,
+      "transfer(address,uint256)",
+      address,
+      "200000",
+      "--rpc-url",
+      RPC,
+      "--private-key",
+      usdcKey,
+    ],
+    { stdio: "ignore" },
+  );
+  await site.waitForTimeout(4000);
+  const nonce = `0x${"5b".repeat(32)}`;
+  wp = waitWindow();
+  const paying402 = askPayment(nonce);
+  const w7 = await wp;
+  await w7.waitForTimeout(9000);
+  say(`payment window: ${(await view(w7)).slice(0, 200)} | ${JSON.stringify(await buttons(w7))}`);
+  await w7.getByRole("button", { name: /^sign/i }).first().click();
+  const signature = await paying402;
+  await site.waitForTimeout(1500);
+  const payment = (await state()).payments.find(
+    (p) => p.id === `${address.toLowerCase()}:${nonce}`,
+  );
+  expect(
+    "the site gets the payment's signature",
+    /^SIG 0x[0-9a-f]{130}$/.test(signature),
+    signature.slice(0, 24),
+  );
+  expect(
+    "a signed x402 payment is on the payments page",
+    payment?.amount === "0.05" && payment.asset === "USDC" && payment.stage === "checked",
+    JSON.stringify(payment ?? null).slice(0, 200),
+  );
+  if (!w7.isClosed()) await w7.close().catch(() => {});
+}
+
+// A second account: the recovery phrase's next one, not a made-up address.
+await pop.reload();
+await pop.waitForTimeout(3000);
+say(`popup: ${JSON.stringify((await buttons(pop)).slice(0, 12))}`);
+await pop
+  .getByRole("button", { name: /account 1|accounts|switch/i })
+  .first()
+  .click();
+await pop.waitForTimeout(800);
+await pop
+  .getByRole("button", { name: /add account/i })
+  .first()
+  .click();
+await pop.waitForTimeout(600);
+await pop.locator("input:visible").first().fill("Savings");
+await pop.locator("form button[type=submit]").first().click();
+await pop.waitForTimeout(2500);
+const accounts = (await state()).accounts;
+const second = accounts[1]?.address ?? "";
+say(`accounts: ${JSON.stringify(accounts.map((a) => [a.id, a.name, a.address]))}`);
+expect(
+  "a second account is added with an address of its own",
+  accounts.length === 2 && /^0x[0-9a-fA-F]{40}$/.test(second) && second !== address,
 );
 await context.close();
 process.exit(failed ? 1 : 0);

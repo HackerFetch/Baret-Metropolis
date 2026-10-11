@@ -18,6 +18,7 @@ import { activeAccount, ExtensionProvider, useExtension } from "../data/store.js
 import { router } from "../entrypoints/options/router.js";
 import { sendMessage } from "../lib/messaging.js";
 import { liveSource } from "./source.js";
+import { useRecords } from "./useRecords.js";
 import { balancesOf, openAccount } from "./wallet.js";
 
 /**
@@ -39,7 +40,15 @@ function Gated({ children }: { children: ReactNode }): JSX.Element | null {
   const accounts = useRef(state.accounts);
   accounts.current = state.accounts;
 
-  const refresh = useCallback(async () => setStatus(await read()), []);
+  // The same answer keeps the same object: the gate below, and whatever a page
+  // started with it (setup's account check), is not started over each time
+  // the session's deadline moves.
+  const refresh = useCallback(async () => {
+    const next = await read();
+    setStatus((before) =>
+      before && JSON.stringify(before) === JSON.stringify(next) ? before : next,
+    );
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -60,6 +69,7 @@ function Gated({ children }: { children: ReactNode }): JSX.Element | null {
   // The balances, read again every few seconds while the wallet is open.
   const address = activeAccount(state)?.address;
   const open = status?.unlocked === true;
+  useRecords(open);
   useEffect(() => {
     if (!open || !address) return;
     const load = () =>
@@ -127,7 +137,13 @@ function Gated({ children }: { children: ReactNode }): JSX.Element | null {
           const signature = await account.signMessage({ message });
           const signer = await recoverMessageAddress({ message, signature });
           return signer === account.address;
-        } catch {
+        } catch (error) {
+          // Why the check did not finish, for whoever opens the console.
+          const cause = (error as { cause?: { details?: unknown; shortMessage?: unknown } }).cause;
+          console.warn(
+            "Baret: the account check did not finish.",
+            String(cause?.details ?? cause?.shortMessage ?? error),
+          );
           return false;
         }
       },
