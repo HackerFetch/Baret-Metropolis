@@ -66,6 +66,15 @@ const envSchema = z.object({
   BARET_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
   /** /v1/explain spends paid model credit, so it has a tighter limit of its own. */
   BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(20),
+  /**
+   * How many X-Forwarded-For entries the server's own proxies add: on a
+   * direct request, and on one a site's edge marked with BARET_EDGE_SECRET.
+   * Read both from `forwardedHops` in /health. Unset: the first entry is the
+   * client, which a direct caller can forge (src/api/client.ts).
+   */
+  BARET_PROXY_HOPS: z.coerce.number().int().min(0).max(8).optional(),
+  BARET_EDGE_PROXY_HOPS: z.coerce.number().int().min(1).max(8).optional(),
+  BARET_EDGE_SECRET: z.string().min(24).optional(),
   BARET_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
   BARET_VERDICT_TTL_SECONDS: z.coerce.number().int().positive().default(30),
 
@@ -178,6 +187,8 @@ export interface AppConfig {
   corsOrigins: readonly string[];
   rateLimitPerMinute: number;
   explainRateLimitPerMinute: number;
+  /** Which X-Forwarded-For entry is the client (src/api/client.ts). */
+  proxyTrust: { directHops: number | null; edgeHops: number | null; edgeSecret: string | null };
   requestTimeoutMs: number;
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
@@ -286,6 +297,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     corsOrigins: e.BARET_CORS_ORIGINS,
     rateLimitPerMinute: e.BARET_RATE_LIMIT_PER_MINUTE,
     explainRateLimitPerMinute: e.BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE,
+    proxyTrust: {
+      directHops: e.BARET_PROXY_HOPS ?? null,
+      edgeHops: e.BARET_EDGE_PROXY_HOPS ?? null,
+      edgeSecret: e.BARET_EDGE_SECRET ?? null,
+    },
     requestTimeoutMs: e.BARET_REQUEST_TIMEOUT_MS,
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,

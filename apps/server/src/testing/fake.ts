@@ -54,6 +54,7 @@ export const config: AppConfig = {
   corsOrigins: [],
   rateLimitPerMinute: 1000,
   explainRateLimitPerMinute: 1000,
+  proxyTrust: { directHops: null, edgeHops: null, edgeSecret: null },
   requestTimeoutMs: 1000,
   verdictTtlSeconds: 30,
   nansenApiKey: null,

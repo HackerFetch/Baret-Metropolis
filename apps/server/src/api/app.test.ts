@@ -8,6 +8,18 @@ describe("http", () => {
     const rpc = new FakeRpc();
     const app = await buildApp(deps(rpc));
     expect((await app.inject({ method: "GET", url: "/health" })).statusCode).toBe(200);
+    // How many proxies a request came through, as a count only.
+    const hops = async (header?: string) =>
+      (
+        await app.inject({
+          method: "GET",
+          url: "/health",
+          ...(header ? { headers: { "x-forwarded-for": header } } : {}),
+        })
+      ).json().forwardedHops;
+    expect(await hops()).toBe(0);
+    expect(await hops("203.0.113.7")).toBe(1);
+    expect(await hops("203.0.113.7, 198.51.100.2,10.0.0.1")).toBe(3);
     const ready = await app.inject({ method: "GET", url: "/health/ready" });
     expect(ready.json()).toMatchObject({
       status: "ready",
@@ -95,5 +107,36 @@ describe("http", () => {
     expect(other.headers["x-ratelimit-remaining"]).toBe("1");
     // And one with no proxy in front still has a bucket of its own.
     expect((await from()).statusCode).toBe(200);
+  });
+
+  it("keys the limit on an address a proxy wrote, once the proxy hops are known", async () => {
+    const secret = "edge-secret-edge-secret-edge";
+    const app = await buildApp({
+      ...deps(new FakeRpc()),
+      config: {
+        ...config,
+        rateLimitPerMinute: 2,
+        proxyTrust: { directHops: 1, edgeHops: 2, edgeSecret: secret },
+      },
+    });
+    const from = (forwarded: string, edge?: string) =>
+      app.inject({
+        method: "GET",
+        url: "/health",
+        headers: { "x-forwarded-for": forwarded, ...(edge ? { "x-baret-edge": edge } : {}) },
+      });
+    // Direct: the host's proxy appended the caller. A made-up address in front buys nothing.
+    expect((await from("198.51.100.9")).statusCode).toBe(200);
+    expect((await from("1.1.1.1, 198.51.100.9")).statusCode).toBe(200);
+    expect((await from("2.2.2.2, 198.51.100.9")).statusCode).toBe(429);
+    // Through a site: its edge marks the request, and the visitor is one entry further left.
+    expect((await from("203.0.113.7, 10.0.0.1", secret)).statusCode).toBe(200);
+    expect((await from("203.0.113.8, 10.0.0.1", secret)).statusCode).toBe(200);
+    expect((await from("203.0.113.7, 10.0.0.1", secret)).statusCode).toBe(200);
+    expect((await from("203.0.113.7, 10.0.0.1", secret)).statusCode).toBe(429);
+    // Claiming to be a site without the secret counts as direct: the edge's bucket, not a fresh one.
+    expect((await from("9.9.9.9, 10.0.0.2", "wrong")).statusCode).toBe(200);
+    expect((await from("8.8.8.8, 10.0.0.2", "wrong")).statusCode).toBe(200);
+    expect((await from("7.7.7.7, 10.0.0.2")).statusCode).toBe(429);
   });
 });

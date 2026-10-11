@@ -48,11 +48,28 @@ function nansenState(n: NetworkConfig, deps: AnalyzeDeps) {
   };
 }
 
+function hops(header: string | string[] | undefined): number {
+  const value = Array.isArray(header) ? header.join(",") : (header ?? "");
+  return value.split(",").filter((part) => part.trim() !== "").length;
+}
+
 export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
   /** The commit Render built, so a deploy can be confirmed from outside. */
   const commit = process.env.RENDER_GIT_COMMIT?.slice(0, 7) ?? null;
 
-  app.get("/health", async () => ({ status: "ok", analysisVersion: ANALYSIS_VERSION, commit }));
+  /**
+   * `forwardedHops`: how many addresses this request's X-Forwarded-For
+   * carried, a count and nothing else. It tells an operator how many proxies
+   * stand in front of the server on each path (direct, through a site's
+   * rewrite), which is what decides which of those addresses can be trusted
+   * (docs/SYSTEM_GAPS.md, G-01).
+   */
+  app.get("/health", async (req) => ({
+    status: "ok",
+    analysisVersion: ANALYSIS_VERSION,
+    commit,
+    forwardedHops: hops(req.headers["x-forwarded-for"]),
+  }));
 
   /** Ready when every configured network answers with the chain id it should have. */
   app.get("/health/ready", async (_req, reply) => {
