@@ -5,6 +5,12 @@
  * (extract, open the extensions page, load unpacked), developer-mode warning,
  * trust, after install, feature trio, troubleshooting, CTA.
  *
+ * A build reaches the browser one of three ways (2026-10-11): its store
+ * listing once that is public (the Chrome Web Store, Firefox Add-ons), a
+ * published zip, or the source. Each build's copy under `download.builds`
+ * names only its own store, so a line stays true when one build is listed
+ * and the other is still a zip. The store's steps are open, add, pin.
+ *
  * Research notes:
  *  - The best extension listings lead with what the user does not have to do:
  *    no account, nothing to connect. Say the equivalent early.
@@ -27,7 +33,8 @@ export const install = {
     /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Install",
     title: "Add the check to your browser.",
-    body: "Baret is a Monad wallet that simulates each sign request and checks it against your rules before you sign. It is not in the browser stores yet, so it loads as a developer build. No account, no email.",
+    /** Followed by the lead build's `store.how` or `developerBuild` sentence. */
+    body: "Baret is a Monad wallet that simulates each sign request and checks it against your rules before you sign. No account, no email.",
     actions: {
       primary: { label: "Download for Chrome, Brave and Edge" },
       secondary: { label: "Download for Firefox" },
@@ -52,16 +59,86 @@ export const install = {
     title: "Download the build",
     body: "A zip archive with the extension inside. Nothing installs on its own, and nothing runs until you load it.",
     builds: {
-      chromium: { title: "Baret for Chrome, Brave and Edge", requires: "Chrome 111 or later" },
-      firefox: { title: "Baret for Firefox", requires: "Firefox 128 or later" },
+      chromium: {
+        title: "Baret for Chrome, Brave and Edge",
+        requires: "Chrome 111 or later",
+        /** The hero's second sentence while this build is a zip or a source build. */
+        developerBuild: "It is not in the Chrome Web Store yet, so it loads as a developer build.",
+        /** Under a published zip. */
+        status:
+          "Not in the Chrome Web Store yet. Until it is, download it here or build it from source.",
+        /** Under the source link while no zip is published. */
+        statusPending: "Not in the Chrome Web Store yet.",
+        /** Once the listing is public, the hero and the steps send visitors there. */
+        store: {
+          action: "Get it from the Chrome Web Store",
+          /** The link under step 1, so the steps for a build the hero does not lead with still reach its listing. */
+          open: "Open the Chrome Web Store",
+          how: "It installs from the Chrome Web Store, like any extension.",
+          body: "Listed in the Chrome Web Store, so there is nothing to extract and no developer mode. Chrome, Brave and Edge all install from it.",
+          steps: [
+            {
+              short: "Open",
+              title: "Open the store page",
+              body: "Open Baret's page in the Chrome Web Store with the link below. It opens in a new tab, so these steps stay in reach.",
+            },
+            {
+              short: "Add",
+              title: "Add it to your browser",
+              body: "Press Add to Chrome (Brave words it Add to Brave), then Add extension in the dialog that lists its permissions. In Edge, first press Allow on the bar that asks about extensions from other stores.",
+            },
+            {
+              short: "Pin",
+              title: "Pin it and set up",
+              body: "Pin Baret from the puzzle-piece icon in the toolbar, then click it to set up your wallet.",
+            },
+          ],
+          note: {
+            title: "About store installs",
+            body: "Google reviews each version before it is listed, and the browser updates Baret on its own. Developer mode is not needed.",
+          },
+        },
+      },
+      firefox: {
+        title: "Baret for Firefox",
+        requires: "Firefox 128 or later",
+        developerBuild: "It is not on Firefox Add-ons yet, so it loads as a temporary add-on.",
+        status:
+          "Not on Firefox Add-ons yet. Until it is, download it here or build it from source.",
+        statusPending: "Not on Firefox Add-ons yet.",
+        store: {
+          action: "Get it from Firefox Add-ons",
+          open: "Open Firefox Add-ons",
+          how: "It installs from Firefox Add-ons, like any add-on.",
+          body: "Listed on Firefox Add-ons, so there is nothing to extract, and it stays after Firefox restarts.",
+          steps: [
+            {
+              short: "Open",
+              title: "Open the add-on page",
+              body: "Open Baret's page on Firefox Add-ons with the link below. It opens in a new tab, so these steps stay in reach.",
+            },
+            {
+              short: "Add",
+              title: "Add it to Firefox",
+              body: "Press Add to Firefox, then Add in the dialog that lists its permissions.",
+            },
+            {
+              short: "Set up",
+              title: "Find it and set up",
+              body: "Baret's button appears in the toolbar. Click it to set up your wallet. If Firefox has tucked it away, pin it from the puzzle-piece icon.",
+            },
+          ],
+          note: {
+            title: "About store installs",
+            body: "Mozilla signs each version before it is listed, and Firefox updates Baret on its own. It stays after a restart.",
+          },
+        },
+      },
     },
     meta: { version: "Version", size: "Size", updated: "Updated", manifest: "Manifest V3" },
     other: "Also available for",
-    /** Under a published build. */
-    status:
-      "Not in the Chrome Web Store or Firefox Add-ons yet. Until it is, download it here or build it from source.",
-    /** Under the source link while no build is published. */
-    statusPending: "Not in the Chrome Web Store or Firefox Add-ons yet.",
+    /** After the other build's name when it is still a zip under a store-listed lead. */
+    otherZip: "as a zip",
     /** Shown in place of the download until a build is published. */
     pending: {
       body: "No downloadable build is published yet. Build it from source in a few minutes, then load the folder the same way.",
@@ -76,6 +153,8 @@ export const install = {
     /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Steps",
     title: "Load it in three steps.",
+    /** The title over a store build's steps, which load nothing. */
+    titleStore: "Add it in three steps.",
     /** Legend of the browser picker above the steps. */
     browser: "Show the steps for",
     /** A page cannot link to a browser's internal pages, so each address
@@ -172,7 +251,7 @@ export const install = {
       title: "It cannot",
       points: [
         "Send your key or recovery phrase off this device",
-        "Sign anything you did not approve, or pay past a cap you set",
+        "Sign anything you did not approve, or sign a payment over a cap in your rules",
         "Add a fee to your transactions",
         "Work on any chain other than Monad",
       ],
@@ -239,21 +318,26 @@ export const install = {
   },
 
   /** Symptom, then fix. Symptoms use the browser's own words where it has
-   *  them. */
+   *  them. An item marked `only` belongs to one developer flow and goes once
+   *  that build is in its store: "unpacked" with the Chromium build,
+   *  "temporary" with the Firefox one. */
   troubleshooting: {
     /** Not rendered on /install since 2026-10-03. */
     eyebrow: "Help",
     title: "If something goes wrong",
     items: [
       {
+        only: "unpacked",
         symptom: "Chrome says the manifest file is missing or unreadable",
         fix: "You picked the zip or a parent folder. Pick the folder that has manifest.json directly inside it.",
       },
       {
+        only: "unpacked",
         symptom: "There is no Load unpacked button",
         fix: "Developer mode is off. Turn it on in the top right corner of the extensions page, or in the left sidebar in Edge.",
       },
       {
+        only: "temporary",
         symptom: "Baret is gone after Firefox restarted",
         fix: "Firefox removes temporary add-ons when it quits. Load it again from the debugging page. If your wallet is empty, restore it from your recovery phrase.",
       },

@@ -294,25 +294,35 @@ export const scrybe = {
     action: { label: "Read the agent docs", href: "/agents" },
   },
 
-  /** An amount with its unit, for the cap choices and the agent's run. */
+  /**
+   * The strip on top: Scrybe makes a real payment in test USDC, so it is a
+   * demo site, not a simulation. The notice sits above "Pay with your wallet".
+   */
+  frame: {
+    pill: "Demo site",
+    notice:
+      "A demo merchant on Monad testnet. Pay with your wallet makes a real payment in test USDC, which has no value.",
+  },
+
   /**
    * "Pay with your wallet": the same question paid for real. The server
    * answers 402, the wallet signs that payment and the server settles it on
    * Monad testnet before it answers.
    */
   pay: {
-    checked: "The button above shows Baret's check of this payment. The one below makes it.",
+    checked:
+      "The button above shows Baret's check of this payment. The one below makes it for real. Only the Baret wallet and the Baret extension check it before they sign.",
     action: "Pay with your wallet",
     note: "A real x402 payment on Monad testnet: your wallet signs a message for {amount} test USDC and Scrybe settles it. You need no MON. Test USDC has no value.",
     noteChecked:
-      "A real x402 payment on Monad testnet. Your Baret wallet checks the payment with Baret before it signs. You need no MON. Test USDC has no value.",
+      "A real x402 payment of {amount} test USDC on Monad testnet. Baret checks the payment before your wallet signs it. You need no MON. Test USDC has no value.",
     title: "Your payment",
     status: {
       asking: "Asking Scrybe for the price...",
       signing: "Confirm the payment in {wallet}...",
       settling: "Settling on Monad testnet...",
     },
-    done: "Paid {amount} USDC to {merchant}.",
+    done: "Paid {amount} test USDC to {merchant}.",
     answer: "Scrybe's answer",
     errors: {
       rejected: "You declined in {wallet}. Nothing was paid.",
@@ -321,16 +331,26 @@ export const scrybe = {
       account: "The connected account changed. Press the button again.",
       funds: "Your wallet does not hold enough test USDC. Nothing was paid.",
       balance: "Your wallet holds less than {amount} test USDC. Nothing was paid.",
-      blocked: "Baret checked this payment in its window and did not sign it. Nothing was paid.",
+      blocked: "Baret did not sign this payment in its window. Nothing was paid.",
+      // A refusal with no check behind it: never shown as Blocked.
+      unreachable:
+        "The Baret wallet could not reach Baret, so the check did not finish. Nothing was paid.",
+      window:
+        "Your browser stopped the Baret wallet window. Allow pop-ups for this site, then press again. Nothing was paid.",
       refused: "Scrybe did not take the payment. Nothing was paid.",
       unsettled:
-        "The payment did not settle in time, so there is no answer. If it lands later, it shows in your wallet's history.",
+        "The payment did not settle in time, so there is no answer. Check your test USDC balance before you pay again.",
       unavailable: "Scrybe is not answering right now. Nothing was paid.",
       failed: "The wallet did not sign it. Nothing was paid.",
     },
     faucet: { label: "Get test USDC", href: "https://faucet.circle.com" },
   },
+  /** An amount with its unit, for the cap choices and the agent's run. */
   amount: "{amount} USDC",
-} as const satisfies ScenarioSite & { amount: string; pay: object };
+} as const satisfies ScenarioSite & {
+  amount: string;
+  pay: object;
+  frame: { pill: string; notice: string };
+};
 
 export type ScrybeContent = typeof scrybe;

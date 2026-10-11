@@ -1,6 +1,7 @@
 import { install } from "@baret/content";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Reveal } from "@baret/web-ui/components/Reveal";
 import { Section, titleIdOf } from "@baret/web-ui/components/Section";
 import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
@@ -9,20 +10,28 @@ import { staggerDelay } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId } from "react";
 import { INSTALL_ART } from "../shared/assets.js";
-import { BUILDS, type BuildId } from "./builds.js";
+import { BUILDS, type BuildId, sourceOf, stepsFor } from "./builds.js";
 
 /**
  * Three steps for the chosen browser, in one row: a drawing, the step, and
  * for the step that names a browser page, its address with a copy button (a
  * page cannot link to chrome:// or about:). The picker starts on the
- * visitor's browser. Under the row, the browser's own caveat: developer mode
- * for Chrome, temporary add-ons for Firefox. While the chosen build is not
- * published, step 1 builds the folder from source instead of extracting a zip.
+ * visitor's browser.
+ *
+ * The steps follow where the build comes from. From its store: open, add,
+ * pin, with the listing linked under step 1 (the hero's button leads with
+ * the visitor's own build, and the picker may show the other one) and the
+ * store's own note under the row. From a zip or the source: extract (or
+ * build), open, load, with the browser's own caveat under the row:
+ * developer mode for Chrome, temporary add-ons for Firefox.
  */
 
 const ID = "steps";
 const { steps, developerMode } = install;
+/** The drawings in step order: a crate, a gate, a hook rail. */
 const ART = [INSTALL_ART.extract, INSTALL_ART.open, INSTALL_ART.load] as const;
+/** The store's steps open with the gate; the crate arrives second. */
+const STORE_ART = [INSTALL_ART.open, INSTALL_ART.extract, INSTALL_ART.load] as const;
 
 export function InstallSteps({
   browser,
@@ -32,9 +41,11 @@ export function InstallSteps({
   onBrowser: (browser: BuildId) => void;
 }): JSX.Element {
   const name = useId();
-  const chosen = browser === "firefox" ? steps.firefox : steps.chrome;
-  const first = browser === "firefox" ? steps.pending.firefox : steps.pending.chrome;
-  const items = BUILDS[browser].href === null ? [first, ...chosen.items.slice(1)] : chosen.items;
+  const build = BUILDS[browser];
+  const source = sourceOf(build);
+  const items = stepsFor(browser, source);
+  const art = source === "store" ? STORE_ART : ART;
+  const store = install.download.builds[browser].store;
   const options = [
     { id: "chromium", label: steps.chrome.title },
     { id: "firefox", label: steps.firefox.title },
@@ -42,7 +53,11 @@ export function InstallSteps({
 
   return (
     <Section id={ID} ground="deep">
-      <SectionHeader titleId={titleIdOf(ID)} title={steps.title} layout="stack" />
+      <SectionHeader
+        titleId={titleIdOf(ID)}
+        title={source === "store" ? steps.titleStore : steps.title}
+        layout="stack"
+      />
 
       <fieldset className="mt-8 max-w-[560px]">
         <legend className={T.label}>{steps.browser}</legend>
@@ -64,7 +79,7 @@ export function InstallSteps({
         {items.map((item, i) => (
           <Reveal as="li" key={`${browser}-${item.short}`} delay={staggerDelay(i)}>
             <ImgWell
-              asset={ART[i] ?? INSTALL_ART.extract}
+              asset={art[i] ?? INSTALL_ART.extract}
               ratio="3/2"
               dim
               sizes="(min-width: 768px) 380px, 100vw"
@@ -72,7 +87,19 @@ export function InstallSteps({
             />
             <h3 className={`${T.h3} mt-5 text-[color:var(--fg)]`}>{item.title}</h3>
             <p className={`${T.body} mt-2`}>{item.body}</p>
-            {"address" in item && item.address ? (
+            {source === "store" && i === 0 && build.store ? (
+              <div className="mt-4">
+                <LinkButton
+                  href={build.store}
+                  label={store.open}
+                  variant="ghost"
+                  size="sm"
+                  icon="arrow-up-right"
+                  newTab
+                />
+              </div>
+            ) : null}
+            {item.address ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] pl-3">
                 <code className="min-w-0 break-all py-2 font-mono text-sm text-[color:var(--fg)]">
                   {item.address}
@@ -85,7 +112,12 @@ export function InstallSteps({
       </ol>
 
       <div className="mt-12 grid gap-2 border-t border-[color:var(--rule)] pt-6 lg:grid-cols-12 lg:gap-8">
-        {browser === "firefox" ? (
+        {source === "store" ? (
+          <>
+            <h3 className={`${T.label} lg:col-span-3 lg:pt-1`}>{store.note.title}</h3>
+            <p className={`${T.body} max-w-[64ch] lg:col-span-9`}>{store.note.body}</p>
+          </>
+        ) : browser === "firefox" ? (
           <p className={`${T.body} text-[color:var(--fg)] lg:col-span-8`}>
             {steps.firefox.warning}
           </p>

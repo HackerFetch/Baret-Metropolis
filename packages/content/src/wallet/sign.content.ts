@@ -63,6 +63,9 @@ export const sign = {
     label: "{origin} says",
     tag: "The site's claim. Not checked.",
     note: "What changes below comes from the simulation. If the two disagree, go with What changes.",
+    /** A typed message is read, not simulated. */
+    noteMessage:
+      "What changes below comes from Baret's check. If the two disagree, go with What changes.",
   },
 
   /** The verdict block. The tag word itself lives in shared/common. */
@@ -70,17 +73,23 @@ export const sign = {
     checking: {
       title: "Checking this request",
       body: "Simulating it on Monad and running it past your rules.",
+      /** A typed message is read, not sent. */
+      bodyMessage: "Reading the message and running it past your rules.",
     },
     safe: {
       title: "Nothing here breaks your rules",
       summary: "Simulated on Monad and checked against your rules. Nothing turned up.",
+      summaryMessage: "Read and checked against your rules. Nothing turned up.",
       primary: "Sign and send",
+      /** A typed message is signed and handed back, never sent. */
+      primaryMessage: "Sign",
       secondary: "Decline",
     },
     caution: {
       title: "Allowed, with something to read first",
       summary: "No rule stopped this, but a check found something. Read it before you sign.",
       primary: "Sign and send",
+      primaryMessage: "Sign",
       secondary: "Decline",
     },
     blocked: {
@@ -120,6 +129,7 @@ export const sign = {
       label: "Checked by",
       value: "Baret server",
       detail: "Simulated over Alchemy RPC on Monad. Your key signs on this device only.",
+      detailMessage: "Checked by the Baret server. Your key signs on this device only.",
       sources: {
         reputation: "Reputation from Nansen and threat reports from Chainlink CRE",
         compliance: "Identity rules from Cleanverse",
@@ -175,6 +185,8 @@ export const sign = {
     unknown: "Baret could not work out what changes. Treat that as a reason to stop.",
     disclaimer:
       "Simulated against Monad as it is right now. If the chain changes before this lands, the result can differ.",
+    disclaimerMessage:
+      "This is a signature, not a transaction. Nothing runs on Monad until someone uses it.",
   },
 
   /** Titles and explanations per finding code live in shared/findings. */
@@ -277,6 +289,7 @@ export const sign = {
     sending: "Sending",
     /** Signing or sending failed; the request goes back to the decision. */
     failed: "It was not sent. Nothing was signed.",
+    failedMessage: "Nothing was signed, so the site got no signature.",
     /** Sending failed after the transaction left: it may have gone through. */
     unknown: "It may have been sent. Check your activity before you try again.",
     /** Standalone wallet only. The extension signs with its unlocked key. */

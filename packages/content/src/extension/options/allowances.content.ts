@@ -11,7 +11,7 @@
 
 export const optionsAllowances = {
   title: "Permissions",
-  lead: "Everything that can move funds out of this wallet without a new signature, largest exposure first. Each one has a revoke button.",
+  lead: "What this wallet granted in a transaction that can still move funds without a new signature, largest exposure first. Each one has a revoke button.",
 
   summary: {
     total: "{count} permissions",
@@ -146,8 +146,8 @@ export const optionsAllowances = {
   },
 
   empty: {
-    title: "Nothing can spend from this wallet",
-    body: "When you grant an allowance or give an agent a cap, it appears here with a revoke button.",
+    title: "No open permissions found",
+    body: "An allowance or collection access this wallet grants in a transaction appears here with a revoke button. A signed permit, or one granted with another wallet, is not listed.",
   },
 
   emptyFiltered: {
@@ -175,7 +175,7 @@ export const optionsAllowances = {
 
   help: {
     title: "Why this page exists",
-    body: "Most wallets never show a permission again after you grant it. A forgotten allowance can be used months later, with no new signature from you. Here each one sits in a list with a revoke button.",
+    body: "Most wallets never show a permission again after you grant it. A forgotten allowance can be used months later, with no new signature from you. Here each one this wallet signed has a revoke button.",
     exposure:
       "Exposure is the most a permission can take right now. An allowance with no limit counts as your whole balance of that token.",
   },

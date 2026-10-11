@@ -440,6 +440,12 @@ interface Store {
    * while the wallet is locked. Null on the sample, which makes one up.
    */
   readonly derive: ((index: number) => Promise<string | null>) | null;
+  /**
+   * Live: revokes these permissions and resolves with the ids Monad
+   * confirmed closed, once it has. Grants go on-chain; anything else closes
+   * at once. Never rejects. Null on the sample, which waits on a timer.
+   */
+  readonly revoke: ((ids: readonly string[]) => Promise<readonly string[]>) | null;
 }
 
 const ExtensionContext = createContext<Store | null>(null);
@@ -511,29 +517,45 @@ export function ExtensionProvider({
   // Live, revoking a grant is a transaction: its row goes once Monad confirmed
   // it, not when the button was pressed. One function for the page's life:
   // effects that depend on `dispatch` must not start over on every change.
+  const revokeLive = useCallback(
+    async (ids: readonly string[], at: string): Promise<readonly string[]> => {
+      if (!live) return [];
+      const now = latest.current;
+      const grants = now.permissions.filter((p) => ids.includes(p.id) && LIVE_GRANT.test(p.id));
+      const rest = ids.filter((id) => !grants.some((g) => g.id === id));
+      if (rest.length > 0) dispatch({ type: "revoke", ids: rest, at });
+      if (grants.length === 0) return rest;
+      let closed: readonly string[] = [];
+      try {
+        closed = await live.revoke(grants, now);
+      } catch {
+        // Not confirmed: the grants stay on the list.
+      }
+      if (closed.length > 0) {
+        dispatch({ type: "revoke", ids: closed, at: new Date().toISOString() });
+      }
+      return [...rest, ...closed];
+    },
+    [live, latest],
+  );
+
+  // The store's `revoke`: the same function for the page's life, so a revoke
+  // screen's effect does not start over (and send again) on a state change.
+  const revoke = useCallback(
+    (ids: readonly string[]): Promise<readonly string[]> =>
+      revokeLive(ids, new Date().toISOString()),
+    [revokeLive],
+  );
+
   const send = useCallback(
     (action: ExtAction): void => {
       if (!live || action.type !== "revoke") {
         dispatch(action);
         return;
       }
-      const now = latest.current;
-      const grants = now.permissions.filter(
-        (p) => action.ids.includes(p.id) && LIVE_GRANT.test(p.id),
-      );
-      const rest = action.ids.filter((id) => !grants.some((g) => g.id === id));
-      if (rest.length > 0) dispatch({ ...action, ids: rest });
-      if (grants.length === 0) return;
-      void live.revoke(grants, now).then(
-        (closed) => {
-          if (closed.length > 0) {
-            dispatch({ type: "revoke", ids: closed, at: new Date().toISOString() });
-          }
-        },
-        () => {},
-      );
+      void revokeLive(action.ids, action.at);
     },
-    [live, latest],
+    [live, revokeLive],
   );
 
   const store = useMemo<Store>(() => {
@@ -580,6 +602,7 @@ export function ExtensionProvider({
           later(() => answered(passphrase.length >= SAMPLE_MIN));
         }),
       derive: live ? (index) => live.derive(index) : null,
+      revoke: live ? revoke : null,
       check: () => {
         dispatch({ type: "check" });
         if (live) {
@@ -593,7 +616,7 @@ export function ExtensionProvider({
         later(() => dispatch({ type: "reachable", value: answer, at: new Date().toISOString() }));
       },
     };
-  }, [state, answer, latest, live, send]);
+  }, [state, answer, latest, live, send, revoke]);
 
   return <ExtensionContext value={store}>{children}</ExtensionContext>;
 }

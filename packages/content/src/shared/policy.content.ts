@@ -196,7 +196,7 @@ export const policy = {
     blockPermit: {
       group: "approvals",
       label: "Block signed allowances",
-      hint: "Blocks a permit: a signature that grants an allowance without a transaction, and is easy to miss.",
+      hint: "Blocks a permit, a signature that grants an allowance without a transaction. Also blocks an order that pays you nothing for what it gives away.",
       codes: ["PERMIT_SIGNATURE_DETECTED", "SIGNATURE_NOT_UNDERSTOOD", "ORDER_PAYS_NOTHING"],
     },
 

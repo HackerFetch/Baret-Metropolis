@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type Address, getAddress, type Hex, isAddress, toHex } from "viem";
 import { type SendError, sendErrorOf } from "../kit/wallet/baret.js";
+import type { BaretAnswer } from "../kit/wallet/baretWindow.js";
 import { readTokenBalance, signTyped, type TypedRequest } from "../kit/wallet/store.js";
 
 /**
@@ -32,11 +33,35 @@ export interface Terms {
  * Why a payment stopped: the wallet's reason; "balance", the wallet holds
  * less test USDC than the price; "refused", the server did not take the
  * payment; "unsettled", the transfer did not land; "unavailable", no usable
- * answer from the server; "blocked", the Baret wallet checked the payment in
- * its window and refused it. Nothing was paid in any of them except, perhaps,
- * "unsettled", which may still land.
+ * answer from the server; "blocked", the Baret wallet did not sign it in its
+ * window; "unreachable", the Baret wallet could not reach Baret, so no check
+ * ran; "window", the browser stopped the Baret wallet's window. Nothing was
+ * paid in any of them except, perhaps, "unsettled", which may still land.
  */
-export type PayError = SendError | "balance" | "blocked" | "refused" | "unsettled" | "unavailable";
+export type PayError =
+  | SendError
+  | "balance"
+  | "blocked"
+  | "unreachable"
+  | "window"
+  | "refused"
+  | "unsettled"
+  | "unavailable";
+
+/**
+ * Why the Baret wallet's window gave no signature. An unreachable Baret is
+ * never shown as Blocked: no check ran, so it gets its own line.
+ */
+export function windowStop(got: Exclude<BaretAnswer, { type: "signedTyped" }>): PayError {
+  if (got.type === "refused") {
+    if (got.reason === "declined") return "rejected";
+    if (got.reason === "unreachable") return "unreachable";
+    return "blocked";
+  }
+  if (got.type === "busy") return "pending";
+  if (got.type === "blocked") return "window";
+  return "rejected";
+}
 
 /** A signer's own reason for not signing, when it is not a wallet error ("blocked": Baret refused it in its window). */
 export class PayStopped extends Error {

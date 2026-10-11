@@ -10,6 +10,7 @@ import { ExternalLink } from "lucide-react";
 import { type JSX, useEffect, useId, useState } from "react";
 import { OPTIONS_ART } from "../../../assets.js";
 import { byExposure, now, payments, unusedFor30Days } from "../../../data/derive.js";
+import { revokeOutcome } from "../../../data/revoke-outcome.js";
 import { useExtension } from "../../../data/store.js";
 import type {
   AllowancePermission,
@@ -37,7 +38,8 @@ import { Dialog, INPUT, Search, Select } from "../parts/kit.js";
  * this device; nothing else can be paused.
  */
 
-const { summary, filters, sort, kinds, columns, detail, actions, revoke, bulk } = optionsAllowances;
+const { summary, filters, sort, kinds, columns, detail, actions, revoke, bulk, errors } =
+  optionsAllowances;
 
 type FilterId = (typeof filters)[number]["id"];
 type SortId = Exclude<keyof typeof sort, "label">;
@@ -160,8 +162,10 @@ function Detail({
 }: {
   p: Permission;
   onRevoke: () => void;
-  onLimit: () => void;
-  onPause: () => void;
+  /** Absent where a limit would not reach the chain (a live grant). */
+  onLimit?: (() => void) | undefined;
+  /** Absent live: the sign path does not read a pause yet (D-047). */
+  onPause?: (() => void) | undefined;
 }): JSX.Element {
   return (
     <div className="grid gap-8 border-t border-[color:var(--rule)] bg-[color:var(--surface)] p-5 md:grid-cols-2 md:p-6">
@@ -246,12 +250,12 @@ function Detail({
           <Button type="button" variant="danger" size="sm" onClick={onRevoke}>
             {actions.revoke.label}
           </Button>
-          {p.kind === "allowance" ? (
+          {p.kind === "allowance" && onLimit ? (
             <Button type="button" variant="ghost" size="sm" onClick={onLimit}>
               {actions.limit.label}
             </Button>
           ) : null}
-          {p.kind === "payment" ? (
+          {p.kind === "payment" && onPause ? (
             <Button type="button" variant="ghost" size="sm" onClick={onPause}>
               {p.status === "paused" ? actions.resume.label : actions.pause.label}
             </Button>
@@ -259,8 +263,12 @@ function Detail({
         </div>
         <ul className="grid gap-1">
           <li className={T.small}>{actions.revoke.hint}</li>
-          {p.kind === "allowance" ? <li className={T.small}>{actions.limit.hint}</li> : null}
-          {p.kind === "payment" ? <li className={T.small}>{actions.pause.hint}</li> : null}
+          {p.kind === "allowance" && onLimit ? (
+            <li className={T.small}>{actions.limit.hint}</li>
+          ) : null}
+          {p.kind === "payment" && onPause ? (
+            <li className={T.small}>{actions.pause.hint}</li>
+          ) : null}
         </ul>
       </div>
     </div>
@@ -277,9 +285,12 @@ function revokeLine(p: Permission): string {
 }
 
 const AMOUNT = /^\d+(?:[.,]\d{1,6})?$/;
+/** A live allowance read from the chain: a limit set here would not reach it yet. */
+const LIVE_ALLOWANCE = /^allowance:0x[0-9a-f]{40}:0x[0-9a-f]{40}:/;
 
 export function Component() {
-  const { state, dispatch } = useExtension();
+  const { state, dispatch, revoke: revokeLive } = useExtension();
+  const live = revokeLive !== null;
   const filterName = useId();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
@@ -316,6 +327,8 @@ export function Component() {
   const unlimited = mine.filter(
     (p): p is AllowancePermission => p.kind === "allowance" && p.amount === null,
   );
+  // Live, "Set a limit" sends nothing yet, so a live grant is not offered one.
+  const limitable = live ? unlimited.filter((p) => !LIVE_ALLOWANCE.test(p.id)) : unlimited;
   const unused = mine.filter((p) => unusedFor30Days(p));
   const paused = mine.filter((p) => p.status === "paused");
   const spent = payments(mine)
@@ -323,9 +336,44 @@ export function Component() {
     .toFixed(2);
   const picked = rows.filter((p) => selected.has(p.id));
 
-  // The revokes, one transaction each, stood in for by a short wait per permission.
+  // Live: one transaction per permission, and the dialog stays on its working
+  // line until Monad confirmed or refused each. Only a confirmed one is
+  // called revoked; the rest stay selected for another try.
   useEffect(() => {
-    if (!progress) return;
+    if (!progress || !revokeLive) return;
+    let alive = true;
+    const ids = progress.ids;
+    void revokeLive(ids).then((closed) => {
+      if (!alive) return;
+      const outcome = revokeOutcome(ids, closed);
+      const open = ids.filter((id) => !closed.includes(id));
+      setSelected(new Set(open));
+      if (outcome.kind === "done") {
+        setSaid(
+          outcome.count === 1
+            ? revoke.done
+            : fill(bulk.progress, { count: String(outcome.count), total: String(outcome.count) }),
+        );
+      } else if (outcome.kind === "partial") {
+        const title = fill(errors.partial.title, {
+          count: String(outcome.count),
+          total: String(outcome.total),
+        });
+        setSaid(`${title}. ${errors.partial.body}`);
+      } else {
+        setSaid(`${errors.revoke.title}. ${errors.revoke.body}`);
+      }
+      setProgress(null);
+      setDialog(null);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [progress, revokeLive]);
+
+  // The sample: the revokes, stood in for by a short wait per permission.
+  useEffect(() => {
+    if (!progress || revokeLive) return;
     if (progress.done >= progress.ids.length) {
       dispatch({ type: "revoke", ids: progress.ids, at: new Date().toISOString() });
       setSelected(new Set());
@@ -343,7 +391,7 @@ export function Component() {
     }
     const id = window.setTimeout(() => setProgress({ ...progress, done: progress.done + 1 }), 450);
     return () => window.clearTimeout(id);
-  }, [progress, dispatch]);
+  }, [progress, dispatch, revokeLive]);
 
   function askRevoke(ids: readonly string[], title: string, body: string): void {
     setDialog({ kind: "revoke", ids, title, body });
@@ -525,16 +573,23 @@ export function Component() {
                           <Detail
                             p={p}
                             onRevoke={() => askRevoke([p.id], revoke.title, revokeLine(p))}
-                            onLimit={() => {
-                              setLimits({});
-                              setDialog({ kind: "limit", ids: [p.id] });
-                            }}
-                            onPause={() =>
-                              dispatch({
-                                type: "permissionStatus",
-                                id: p.id,
-                                status: p.status === "paused" ? "active" : "paused",
-                              })
+                            onLimit={
+                              live && LIVE_ALLOWANCE.test(p.id)
+                                ? undefined
+                                : () => {
+                                    setLimits({});
+                                    setDialog({ kind: "limit", ids: [p.id] });
+                                  }
+                            }
+                            onPause={
+                              live
+                                ? undefined
+                                : () =>
+                                    dispatch({
+                                      type: "permissionStatus",
+                                      id: p.id,
+                                      status: p.status === "paused" ? "active" : "paused",
+                                    })
                             }
                           />
                         ) : null}
@@ -593,12 +648,12 @@ export function Component() {
                   },
                   {
                     key: "unlimited",
-                    count: unlimited.length,
-                    label: counted(unlimited.length, bulk.unlimited.label, bulk.unlimited.labelOne),
-                    body: counted(unlimited.length, bulk.unlimited.body, bulk.unlimited.bodyOne),
+                    count: limitable.length,
+                    label: counted(limitable.length, bulk.unlimited.label, bulk.unlimited.labelOne),
+                    body: counted(limitable.length, bulk.unlimited.body, bulk.unlimited.bodyOne),
                     run: () => {
                       setLimits({});
-                      setDialog({ kind: "limit", ids: unlimited.map((p) => p.id) });
+                      setDialog({ kind: "limit", ids: limitable.map((p) => p.id) });
                     },
                   },
                   {
@@ -663,7 +718,7 @@ export function Component() {
         title={dialog?.kind === "revoke" ? dialog.title : revoke.title}
         action={
           working
-            ? progress && progress.ids.length > 1
+            ? progress && progress.ids.length > 1 && !live
               ? fill(bulk.progress, {
                   count: String(progress.done),
                   total: String(progress.ids.length),

@@ -411,3 +411,98 @@ describe("SignRequest, in plain words", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe("SignRequest, a typed message", () => {
+  /** A typed message is signed and handed back: nothing is sent, nothing pays a fee. */
+  function typed(verdict: "safe" | "unreachable"): Request {
+    return { ...sample(verdict), action: "message", impact: "message", fee: "0" };
+  }
+
+  it("offers no override and no way to sign on Can't reach Baret when canOverride is false", () => {
+    render(
+      <SignRequest
+        request={typed("unreachable")}
+        pending={false}
+        onLog={vi.fn()}
+        canOverride={false}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: sign.verdict.unreachable.override })).toBeNull();
+    expect(screen.queryByRole("button", { name: sign.override.hold })).toBeNull();
+    expect(screen.queryByRole("button", { name: sign.verdict.safe.primary })).toBeNull();
+    expect(screen.queryByRole("button", { name: sign.verdict.safe.primaryMessage })).toBeNull();
+    expect(screen.getByRole("button", { name: sign.verdict.unreachable.secondary })).toBeTruthy();
+  });
+
+  it("keeps the sample's override on Can't reach Baret", () => {
+    render(<SignRequest request={sample("unreachable")} pending={false} onLog={vi.fn()} />);
+    expect(screen.getByRole("button", { name: sign.verdict.unreachable.override })).toBeTruthy();
+  });
+
+  it("shows no network fee row", () => {
+    render(<SignRequest request={typed("safe")} pending={false} onLog={vi.fn()} />);
+    expect(screen.queryByText(sign.changes.fee)).toBeNull();
+    expect(screen.getByText(sign.changes.disclaimerMessage)).toBeTruthy();
+  });
+
+  it("still shows the fee row on a transaction", () => {
+    render(<SignRequest request={sample("safe")} pending={false} onLog={vi.fn()} />);
+    expect(screen.getByText(sign.changes.fee)).toBeTruthy();
+  });
+
+  it("is never labelled Sign and send, simulated or sent", async () => {
+    const onSign = vi.fn(() => Promise.resolve({ signature: "0xsig" }));
+    render(<SignRequest request={typed("safe")} pending={false} onSign={onSign} onLog={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: SEND })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/simulat/i);
+    expect(screen.getByText(sign.verdict.safe.summaryMessage)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: sign.verdict.safe.primaryMessage }));
+    await waitFor(() => expect(screen.getByText(sign.result.signed.title)).toBeTruthy());
+    expect(screen.queryByText(sign.result.sent.title)).toBeNull();
+    expect(document.body.textContent).not.toMatch(/\bsent\b/i);
+  });
+
+  it("says the reading, not the simulating, while it checks", () => {
+    render(<SignRequest request={typed("safe")} pending onLog={vi.fn()} />);
+    expect(screen.getByText(sign.verdict.checking.bodyMessage)).toBeTruthy();
+    expect(screen.queryByText(sign.verdict.checking.body)).toBeNull();
+  });
+
+  it("words a failed signature without a send, and takes the message prop for a payment", async () => {
+    const onSign = vi.fn(() => Promise.reject(new Error("refused")));
+    render(
+      <SignRequest
+        request={sample("safe")}
+        message
+        pending={false}
+        onSign={onSign}
+        onLog={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText(sign.changes.fee)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: sign.verdict.safe.primaryMessage }));
+    await waitFor(() => expect(spoken().textContent).toBe(sign.status.failedMessage));
+  });
+
+  it("words an x402 payment signature as a message when the surface says so", () => {
+    // The shape the wallet's typedContext gives a TransferWithAuthorization:
+    // action "payment", no fee, no calldata. The site sign screen passes message.
+    const payment: Request = {
+      ...sample("safe"),
+      action: "payment",
+      impact: "payment",
+      values: { amount: "0.05", asset: "USDC", merchant: `0x${"22".repeat(20)}` },
+      fee: "0",
+      raw: {
+        to: `0x${"33".repeat(20)}`,
+        value: "0",
+        data: "0x",
+        decoded: "TransferWithAuthorization",
+      },
+    };
+    render(<SignRequest request={payment} message pending={false} onLog={vi.fn()} />);
+    expect(screen.queryByText(sign.changes.fee)).toBeNull();
+    expect(screen.getByRole("button", { name: sign.verdict.safe.primaryMessage })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: sign.verdict.safe.primary })).toBeNull();
+  });
+});

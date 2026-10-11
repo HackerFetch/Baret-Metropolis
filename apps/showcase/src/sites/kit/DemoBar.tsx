@@ -18,11 +18,14 @@ import { Link } from "react-router";
 const { frame } = hub;
 
 export function DemoBar({
+  pill = frame.pill,
   mode,
   onMode,
   labels,
   body,
 }: {
+  /** The strip's tag; a site that makes a real payment names itself a demo, not a simulation. */
+  pill?: string;
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
   labels: { safe: string; danger: string };
@@ -39,7 +42,7 @@ export function DemoBar({
             hidden rest says where it goes. */}
         <Link to={frame.back.href} className="inline-flex min-h-11 shrink-0 items-center">
           <Tag tone="brand" size="sm">
-            {frame.pill}
+            {pill}
           </Tag>
           <span className="sr-only">{`, ${frame.back.label}`}</span>
         </Link>
