@@ -11,7 +11,8 @@
     "test": "vitest run",
     "verify:demo": "tsx scripts/verify-demo.ts",
     "verify:wallet": "tsx scripts/verify-wallet.ts",
-    "verify:sealed": "tsx scripts/verify-sealed.ts"
+    "verify:sealed": "tsx scripts/verify-sealed.ts",
+    "verify:x402": "tsx scripts/verify-x402.ts"
   },
   "dependencies": {
     "@baret/agent-kit": "workspace:*",

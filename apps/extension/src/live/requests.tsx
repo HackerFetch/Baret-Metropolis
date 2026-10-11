@@ -17,6 +17,7 @@ import type {
 import { type Decision, MessageView, TypedDataView } from "../entrypoints/popup/parts/Requests.js";
 import { ConnectPhase } from "../entrypoints/popup/screens/Connect.js";
 import { fromTransaction } from "../entrypoints/popup/screens/Sign.js";
+import { grantsFrom, isPayment, paymentFrom, problemFrom, withGrants } from "./records.js";
 import {
   type AnalyzeResponse,
   chain,
@@ -24,6 +25,7 @@ import {
   feeOf,
   guard,
   openAccount,
+  USDC,
   walletFor,
 } from "./wallet.js";
 
@@ -44,9 +46,11 @@ const SECONDS = 300;
 
 type Answer = (outcome: RpcOutcome) => void;
 
-function useOwner(): { id: string; address: string } {
+/** The account a request is for: the one its site sees, else the account in use. */
+function useOwner(origin?: string | null): { id: string; address: string } {
   const { state } = useExtension();
-  const account = activeAccount(state);
+  const seen = origin ? state.sites.find((s) => s.origin === siteOf(origin))?.account : null;
+  const account = state.accounts.find((a) => a.id === seen) ?? activeAccount(state);
   return { id: account?.id ?? state.active, address: account?.address ?? "" };
 }
 
@@ -118,7 +122,9 @@ export function LiveTransaction({
   onFinished: () => void;
 }): JSX.Element {
   const { state, dispatch, check: recheckServer } = useExtension();
-  const owner = useOwner();
+  const owner = useOwner(origin);
+  const records = useRef(state);
+  records.current = state;
   const context = useRef<SignContext>({
     id,
     origin: origin === null ? null : siteOf(origin),
@@ -145,7 +151,7 @@ export function LiveTransaction({
   /** Asks Baret about the call. Null when there is no verdict. */
   const ask = useRef(async (): Promise<SignRequestData | null> => {
     cleared.current = null;
-    const wallet = await walletFor(policy.current);
+    const wallet = await walletFor(policy.current, owner.address);
     if (!wallet) return null;
     try {
       context.current = { ...context.current, fee: await feeOf(wallet.address, call) };
@@ -219,7 +225,7 @@ export function LiveTransaction({
       }}
       onSign={async (_outcome, sending) => {
         const verdict = cleared.current;
-        const wallet = await walletFor(policy.current);
+        const wallet = await walletFor(policy.current, owner.address);
         if (!verdict || !wallet) throw new Error("nothing was cleared to sign");
         // The reader has the findings on screen and pressed sign: that is the
         // acknowledgement a Caution needs. Blocked is refused by the wallet itself.
@@ -229,6 +235,20 @@ export function LiveTransaction({
         sending();
         const receipt = await chain().wait(hash);
         if (!receipt.ok) throw new Error("the transaction reverted");
+        // What the transaction lets someone spend from now on goes on the
+        // allowances list; the list is checked against Monad again as it is read.
+        const grants = grantsFrom(verdict.approvals, {
+          owner: owner.address,
+          account: owner.id,
+          origin: origin === null ? null : siteOf(origin),
+          at: new Date().toISOString(),
+        });
+        if (grants.length > 0) {
+          dispatch({
+            type: "patch",
+            patch: { permissions: withGrants(records.current.permissions, grants) },
+          });
+        }
         return { hash: receipt.hash, block: receipt.block.toString() };
       }}
       onDecline={() => {
@@ -370,7 +390,7 @@ function LiveTypedData({
   onFinished: () => void;
 }): JSX.Element | null {
   const { state, dispatch } = useExtension();
-  const owner = useOwner();
+  const owner = useOwner(pending.origin);
   const typed = parseTyped(pending.params[1]);
   const [request, setRequest] = useState<TypedDataRequest | null>(null);
   const policy = useRef(state.policy);
@@ -442,7 +462,7 @@ function LiveTypedData({
     let outcome: RpcOutcome = { error: ERRORS.rejected };
     if (signing && allowed && typed) {
       try {
-        const account = await openAccount();
+        const account = await openAccount(owner.address);
         if (account) {
           const { EIP712Domain: _domain, ...types } = typed.types;
           outcome = {
@@ -462,6 +482,23 @@ function LiveTypedData({
     }
     const signed = "result" in outcome;
     dispatch({ type: "log", item: rowOf(request, signed ? decision : "declined", owner.id) });
+    // An x402 payment goes on the payments page: signed, or why Baret stopped it.
+    if (typed && isPayment(typed)) {
+      const by = { origin: siteOf(pending.origin), at: new Date().toISOString(), usdc: USDC };
+      if (signed) {
+        const payment = paymentFrom(typed, { ...by, payer: owner.address });
+        dispatch({
+          type: "patch",
+          patch: { payments: [payment, ...state.payments.filter((p) => p.id !== payment.id)] },
+        });
+      } else if (request.verdict === "blocked") {
+        const code = request.findings[0]?.code ?? null;
+        dispatch({
+          type: "patch",
+          patch: { problems: [problemFrom(typed, { ...by, code }), ...state.problems] },
+        });
+      }
+    }
     onAnswer(outcome);
     onFinished();
   }
@@ -479,7 +516,7 @@ function LiveMessage({
   onFinished: () => void;
 }): JSX.Element {
   const { dispatch } = useExtension();
-  const owner = useOwner();
+  const owner = useOwner(pending.origin);
   const raw = pending.params[0];
   let text = typeof raw === "string" ? raw : "";
   let readable = false;
@@ -511,7 +548,7 @@ function LiveMessage({
     let outcome: RpcOutcome = { error: ERRORS.rejected };
     if (decision === "signed" && typeof raw === "string") {
       try {
-        const account = await openAccount();
+        const account = await openAccount(owner.address);
         if (account) {
           outcome = {
             result: await account.signMessage({ message: isHex(raw) ? { raw } : raw }),

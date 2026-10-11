@@ -2,7 +2,13 @@ import type { AnalyzeResponse } from "@baret/guard";
 import type { WebAuthnClient } from "@category-labs/mera";
 import { entropyToMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { decodeFunctionData, erc20Abi, keccak256, parseTransaction } from "viem";
+import {
+  decodeFunctionData,
+  erc20Abi,
+  keccak256,
+  parseTransaction,
+  recoverTypedDataAddress,
+} from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import { describe, expect, it } from "vitest";
 import {
@@ -245,5 +251,70 @@ describe("Wallet", () => {
     const v = await wallet.check(call);
     session.lock();
     await expect(wallet.sign(call, v)).rejects.toThrow(/locked/);
+  });
+  const typed = {
+    domain: { name: "USDC", version: "2", chainId: 10143, verifyingContract: PEER },
+    types: {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ],
+      TransferWithAuthorization: [
+        { name: "from", type: "address" },
+        { name: "to", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "validAfter", type: "uint256" },
+        { name: "validBefore", type: "uint256" },
+        { name: "nonce", type: "bytes32" },
+      ],
+    },
+    primaryType: "TransferWithAuthorization",
+    message: {
+      from: PEER,
+      to: PEER,
+      value: "50000",
+      validAfter: "0",
+      validBefore: "1700000000",
+      nonce: `0x${"07".repeat(32)}`,
+    },
+  };
+
+  it("checks a typed message as typedData and signs it without sending anything", async () => {
+    const { wallet, sent, asked } = setup(verdict("safe"));
+    const v = await wallet.checkTyped(typed);
+    expect(asked[0]).toMatchObject({
+      userWallet: wallet.address,
+      typedData: { signer: wallet.address, primaryType: "TransferWithAuthorization" },
+    });
+    expect((asked[0] as { transaction?: unknown }).transaction).toBeUndefined();
+    const signature = await wallet.signTyped(typed, v);
+    const { EIP712Domain: _domain, ...types } = typed.types;
+    const signer = await recoverTypedDataAddress({
+      domain: typed.domain as never,
+      types,
+      primaryType: "TransferWithAuthorization",
+      message: typed.message as never,
+      signature,
+    });
+    expect(signer).toBe(wallet.address);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("holds a typed message to the same rules as a transaction", async () => {
+    const blocked = setup(verdict("blocked"));
+    const b = await blocked.wallet.checkTyped(typed);
+    await expect(blocked.wallet.signTyped(typed, b, { acknowledged: true })).rejects.toBeInstanceOf(
+      NotClearedError,
+    );
+    const caution = setup(verdict("caution"));
+    const c = await caution.wallet.checkTyped(typed);
+    await expect(caution.wallet.signTyped(typed, c)).rejects.toBeInstanceOf(NotClearedError);
+    expect(await caution.wallet.signTyped(typed, c, { acknowledged: true })).toMatch(/^0x/);
+    const late = setup(verdict("safe", -1));
+    await expect(late.wallet.signTyped(typed, await late.wallet.checkTyped(typed))).rejects.toThrow(
+      /expired/,
+    );
   });
 });

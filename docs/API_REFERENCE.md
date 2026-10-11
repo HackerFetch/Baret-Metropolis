@@ -36,9 +36,11 @@ A site opens the wallet with `window.open` (window name `baret-wallet`) and the 
 | wallet → site | `connected` | `id`, `address` | The person agreed |
 | site → wallet | `sign` | `id`, `chainId` (10143), `call: { to, value, data }` | Asks the wallet to check and sign one call. `value` is wei as a decimal string; `data` at most 100,000 characters |
 | wallet → site | `signed` | `id`, `address`, `hash` | Checked, signed and sent |
+| site → wallet | `signTyped` | `id`, `chainId` (10143), `typed: { domain, types, primaryType, message }` | Asks the wallet to check and sign one EIP-712 message (an x402 payment, a permit). Plain JSON, at most 20,000 characters; opened on `/sign` like a call |
+| wallet → site | `signedTyped` | `id`, `address`, `signature` | Checked and signed. The wallet sends nothing to the chain for it |
 | wallet → site | `refused` | `id`, `reason`, `address`, `findings` | Not signed. `reason`: `declined` (the person), `blocked` (Baret), `unreachable` (no verdict); the parser also knows `invalid`, which no sender uses. `findings`: `{ code, values }` for every finding on screen, one per code, at most 50, with `address: null`; a decline on Caution carries them too |
 
-Only contract calls and transfers: there is no message-signing request (no `personal_sign`, no typed data) in this protocol.
+Calls, transfers and typed messages. There is no `personal_sign` request in this protocol.
 
 A site can also use an ordinary injected wallet: the demo sites list every wallet announced over EIP-6963 and send `eth_sendTransaction` through it. With another wallet, Baret acts as a panel on the page, not as the signer. The Baret extension is such a wallet, and it checks before it signs (below).
 
@@ -100,7 +102,8 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 | `.evaluate(call)`, `.allows(verdict)` | The verdict, and whether this wallet's settings let it sign |
 | `.guardedSign(call)`, `.guardedSubmit(call)` | Check, then sign, then (submit) send. `GuardBlockedError` when Baret says no |
 | `.pay({ vault, merchant, amount, ref })` | `PaymentGuard.pay` through the same check |
-| `localSigner(privateKey)` | A key in memory, for tests and local runs |
+| `payX402(url, options)` | Pays an HTTP 402 (x402, EIP-3009): reads the terms, has Baret check that exact payment, signs it and requests again. `X402Error` when the 402 cannot be paid as asked (D-046) |
+| `localSigner(privateKey)` | A key in memory, for tests and local runs; signs transactions and x402 payments |
 | `createDynamicWallet`, `dynamicSigner`, `dynamicSignerFromFile` | A Dynamic server wallet as the agent's signer |
 | `agentReviewer`, `qwenAgentReviewer`, `requireApproval` (`./review-agent`, `./reviewer`) | The Qwen reviewer: a plan, four read-only tools, approve or veto |
 | `PAYMENT_GUARD_ABI` (`./abi`) | The vault's ABI |
@@ -113,6 +116,7 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 | `baret analyze --to 0x.. [--data] [--value]` | The verdict for a call, nothing signed |
 | `baret submit --to 0x.. [--data] [--value] [--intent]` | Check, sign and send |
 | `baret pay --vault --merchant --amount --ref [--intent]` | A vault payment through the check |
+| `baret x402 <url> [--max <base units>]` | Pays a 402 after Baret's check and prints the answer and the settlement's transaction |
 | `baret review --intent <text> ...` | The Qwen reviewer on a call (needs `QWEN_API_KEY`) |
 | `baret wallet create` | A new Dynamic server wallet for the agent |
 | `baret policy list` | The three templates |
@@ -194,9 +198,20 @@ Every result starts with a sentence a model can act on ("Decision: blocked. Do n
 
 To add it to a client that speaks MCP over HTTP: the URL is `https://baret-monad-api.onrender.com/mcp`, with no key today. For Claude Code: `claude mcp add --transport http baret https://baret-monad-api.onrender.com/mcp`.
 
+### `GET /demo/paywall` (x402, D-046)
+
+Scrybe's paid resource, and the facilitator that settles it. `?q=<question>`.
+
+| Request | Answer |
+|---|---|
+| No `X-PAYMENT` header | **402** `{ x402Version: 1, error, accepts: [{ scheme: "exact", network: "monad-testnet", maxAmountRequired, resource, description, mimeType, payTo, maxTimeoutSeconds, asset, extra: { name, version } }] }` |
+| `X-PAYMENT`: base64 of `{ x402Version: 1, scheme: "exact", network: "monad-testnet", payload: { signature, authorization: { from, to, value, validAfter, validBefore, nonce } } }` | **200** `{ answer, payment: { success, transaction, network, payer, amount } }`, and the same receipt base64 in `X-PAYMENT-RESPONSE` |
+
+The authorisation is an EIP-3009 `TransferWithAuthorization` on the token in `asset`, signed over the domain `{ name, version, chainId: 10143, verifyingContract: asset }`. The server takes it only when it pays `payTo` exactly `maxAmountRequired`, is valid now and for at least 10 more seconds, recovers to `from` and has an unused nonce; then it submits `transferWithAuthorization` itself (the payer needs no MON) and answers after the receipt. Anything else is 402 again with the reason in `error` and nothing sent. 429 `paywall_daily_limit`; 502 `settlement_failed` (no answer; the transfer may still land); 503 `paywall_unavailable` when no facilitator key or test USDC is configured. 12 requests a minute, 300 settlements a UTC day.
+
 ### `GET /health`, `GET /health/ready`
 
-`/health`: `{ status, analysisVersion, commit }`. `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
+`/health`: `{ status, analysisVersion, commit, forwardedHops }` (`forwardedHops`: how many `X-Forwarded-For` entries the request carried, a count only). `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `x402`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
 
 ### Limits
 
@@ -244,7 +259,7 @@ A cron-triggered workflow: fetches ScamSniffer's address blacklist, asks the rec
 
 Named in older documents and absent from the code:
 
-- `/demo/paywall` and an x402 facilitator: `docs/X402_FACILITATOR.md` is a design. Baret checks an x402 payment (as typed data plus `payment`), and nothing settles one.
+- A separate x402 facilitator service: `GET /demo/paywall` settles its own payments (D-046); `docs/X402_FACILITATOR.md` is the older, larger design.
 - Batch, stream and replay variants of analyze.
-- In the extension: more than one account, the allowances list, alerts, the x402 payments page and its interceptor, Swap (`docs/DECISIONS.md` D-040).
+- In the extension: alerts (the post-sign monitor), the facilitators list, PaymentGuard caps as permissions, the x402 interceptor and Swap. Built since D-047: more accounts, the allowances list, a real revoke and the payments page's records.
 - Anything on Monad mainnet.

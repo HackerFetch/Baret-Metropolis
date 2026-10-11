@@ -54,6 +54,7 @@ export const config: AppConfig = {
   corsOrigins: [],
   rateLimitPerMinute: 1000,
   explainRateLimitPerMinute: 1000,
+  proxyTrust: { directHops: null, edgeHops: null, edgeSecret: null },
   requestTimeoutMs: 1000,
   verdictTtlSeconds: 30,
   nansenApiKey: null,
@@ -67,6 +68,8 @@ export const config: AppConfig = {
   nansenLabelsDailyLimit: 25,
   sealedRateLimitPerMinute: 1000,
   mcpRateLimitPerMinute: 1000,
+  x402RateLimitPerMinute: 1000,
+  x402: null,
   sealed: null,
 };
 

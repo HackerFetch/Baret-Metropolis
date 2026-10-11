@@ -2,7 +2,7 @@ import { claimhub } from "@baret/content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import { type JSX, useId, useRef } from "react";
+import { type JSX, type ReactNode, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 
 /**
@@ -25,6 +25,7 @@ export function ClaimCard({
   onCheck,
   onClaim,
   hint = panel.hint,
+  sign = null,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -38,6 +39,8 @@ export function ClaimCard({
   onClaim: () => void;
   /** Under the field: which wallet an empty field checks. */
   hint?: string;
+  /** "Sign with your wallet", shown under the claim button once a wallet was checked. */
+  sign?: ReactNode;
 }): JSX.Element {
   const inputId = useId();
   const hintId = useId();
@@ -118,6 +121,7 @@ export function ClaimCard({
           <Button type="button" variant="primary" size="lg" className="w-full" onClick={onClaim}>
             {panel.cta}
           </Button>
+          {sign}
           <p className={T.small}>{panel.note}</p>
         </>
       ) : null}

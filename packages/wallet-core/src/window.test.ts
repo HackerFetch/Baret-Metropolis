@@ -140,3 +140,66 @@ describe("parseWalletAnswer", () => {
     ).toBeNull();
   });
 });
+
+const typed = {
+  domain: { name: "USDC", version: "2", chainId: 10143, verifyingContract: ADDRESS },
+  types: {
+    TransferWithAuthorization: [
+      { name: "from", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "path", type: "bytes32[]" },
+    ],
+  },
+  primaryType: "TransferWithAuthorization",
+  message: { from: ADDRESS, value: "50000", path: [] },
+};
+const signTyped = {
+  channel: WINDOW_CHANNEL,
+  type: "signTyped",
+  id: "req-3",
+  chainId: 10143,
+  typed,
+};
+
+describe("typed messages", () => {
+  it("accepts a signTyped request and hands back plain data", () => {
+    expect(parseSiteRequest(signTyped)).toEqual(signTyped);
+    const withDomain = {
+      ...typed,
+      types: { ...typed.types, EIP712Domain: [{ name: "name", type: "string" }] },
+    };
+    expect(parseSiteRequest({ ...signTyped, typed: withDomain })).not.toBeNull();
+  });
+
+  it("rejects a typed message that is not exactly one", () => {
+    const bad = (change: Record<string, unknown>) =>
+      parseSiteRequest({ ...signTyped, typed: { ...typed, ...change } });
+    expect(bad({ primaryType: "Missing" })).toBeNull();
+    expect(bad({ primaryType: 7 })).toBeNull();
+    expect(bad({ types: {} })).toBeNull();
+    expect(bad({ types: { TransferWithAuthorization: [{ name: "from" }] } })).toBeNull();
+    expect(
+      bad({ types: { TransferWithAuthorization: [{ name: "from", type: "address); drop" }] } }),
+    ).toBeNull();
+    expect(bad({ message: [] })).toBeNull();
+    expect(bad({ domain: "USDC" })).toBeNull();
+    expect(bad({ extra: 1 })).toBeNull();
+    expect(bad({ message: { note: "x".repeat(20_001) } })).toBeNull();
+    expect(bad({ message: { value: 10n } })).toBeNull();
+    expect(parseSiteRequest({ ...signTyped, chainId: 143 })).toBeNull();
+    expect(parseSiteRequest({ ...signTyped, call: sign.call })).toBeNull();
+  });
+
+  it("accepts a signedTyped answer with a 65-byte signature only", () => {
+    const answer = {
+      channel: WINDOW_CHANNEL,
+      type: "signedTyped",
+      id: "req-3",
+      address: ADDRESS,
+      signature: `0x${"1b".repeat(65)}`,
+    };
+    expect(parseWalletAnswer(answer)).toEqual(answer);
+    expect(parseWalletAnswer({ ...answer, signature: HASH })).toBeNull();
+    expect(parseWalletAnswer({ ...answer, hash: HASH })).toBeNull();
+  });
+});

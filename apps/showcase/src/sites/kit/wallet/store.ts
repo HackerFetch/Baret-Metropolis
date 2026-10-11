@@ -72,6 +72,15 @@ export interface SendCall {
   readonly data: Hex;
 }
 
+/** An EIP-712 message for the wallet to sign, with uint values as decimal strings. */
+export interface TypedRequest {
+  readonly from: Address;
+  readonly domain: Record<string, unknown>;
+  readonly types: Record<string, readonly { name: string; type: string }[]>;
+  readonly primaryType: string;
+  readonly message: Record<string, unknown>;
+}
+
 /** What the engine can do once it has loaded. */
 export interface Engine {
   connect(id: string): Promise<void>;
@@ -85,6 +94,11 @@ export interface Engine {
    * chain ("network").
    */
   send(call: SendCall): Promise<Hex>;
+  /**
+   * Asks the connected wallet to sign an EIP-712 message (eth_signTypedData_v4).
+   * Nothing is sent to the chain. Refuses like `send` does.
+   */
+  signTyped(request: TypedRequest): Promise<Hex>;
   /** Waits for the call's block: "success" or "reverted". Rejects when Monad testnet does not confirm in time. */
   confirm(hash: Hex): Promise<"success" | "reverted">;
   /** An ERC-20 balance in base units, read from Monad testnet's public RPC. */
@@ -148,6 +162,10 @@ export function refreshBalance(): Promise<void> {
 
 export function sendCall(call: SendCall): Promise<Hex> {
   return prepare().then((e) => e.send(call));
+}
+
+export function signTyped(request: TypedRequest): Promise<Hex> {
+  return prepare().then((e) => e.signTyped(request));
 }
 
 export function confirmCall(hash: Hex): Promise<"success" | "reverted"> {

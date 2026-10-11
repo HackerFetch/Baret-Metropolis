@@ -2,6 +2,7 @@ import { hub, pixeldrop } from "@baret/content";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
+import type { Address } from "viem";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { DemoBar } from "../kit/DemoBar.js";
 import { SiteHero } from "../kit/site/Page.js";
@@ -11,10 +12,11 @@ import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
 import { exceeds, formatMon, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
+import { type SignRun, useSiteSign } from "../kit/wallet/useSiteSign.js";
 import { PixelGlyph, VIEWS } from "./Glyph.js";
 import { MintCard } from "./MintCard.js";
 import { ART, parseQuantity, priceOf, SAMPLE } from "./sample.js";
-import { costOf, LIVE_VALUES, SOURCE } from "./source.js";
+import { costOf, LIVE_VALUES, SOURCE, signCalls } from "./source.js";
 
 /**
  * PixelDrop: a mint page for the Night Shift collection in its own
@@ -25,7 +27,9 @@ import { costOf, LIVE_VALUES, SOURCE } from "./source.js";
  * arrives for 0.01 MON. In the attack version the same button grants another
  * address every piece you hold, now and later, and mints nothing. With a
  * wallet connected, Baret checks the real request from that address; without
- * one, the prepared sample (source.ts). Nothing is signed or sent.
+ * one, the prepared sample (source.ts). That button
+ * signs and sends nothing; "Sign with your wallet" under it sends the same
+ * request to the connected wallet for real (kit/wallet/useSiteSign.tsx).
  */
 
 const { site, analysis } = pixeldrop;
@@ -42,6 +46,24 @@ export function PixelDropSite(): JSX.Element {
   const { from, live, balance } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
+  const sign = useSiteSign(pixeldrop.sign);
+
+  /** The run "Sign with your wallet" starts; null when the quantity is refused. */
+  function signRun(owner: Address): SignRun | null {
+    const value = parseQuantity(quantity);
+    if (value === null || value > SAMPLE.perWallet) {
+      setError(value === null ? site.panel.errors.empty : site.panel.errors.tooHigh);
+      return null;
+    }
+    setError(null);
+    return {
+      mode,
+      calls: signCalls(mode, value, owner),
+      values: { count: String(value), price: priceOf(value) },
+      // The honest mint shows as one more piece; the approval moves no balance.
+      ...(mode === "safe" ? { token: { address: LIVE_VALUES.contract, decimals: 0 } } : {}),
+    };
+  }
 
   function runCheck(version: DemoMode, pieces: number): void {
     setChecked(version);
@@ -128,6 +150,7 @@ export function PixelDropSite(): JSX.Element {
                   }}
                   error={error}
                   onMint={mint}
+                  sign={sign.block(signRun)}
                 />
               }
             />

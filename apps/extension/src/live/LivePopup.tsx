@@ -12,6 +12,7 @@ import { sendMessage } from "../lib/messaging.js";
 import type { Start } from "../lib/start.js";
 import { LiveRequest, OwnTransfer } from "./requests.js";
 import { liveSource } from "./source.js";
+import { useRecords } from "./useRecords.js";
 import { balancesOf } from "./wallet.js";
 
 /**
@@ -108,6 +109,7 @@ function Live(): JSX.Element | null {
 
   const open = status?.initialized === true && status.unlocked;
   const refresh = useBalances(open);
+  useRecords(open);
 
   useEffect(() => {
     if (!open) return;

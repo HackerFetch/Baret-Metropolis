@@ -66,6 +66,15 @@ const envSchema = z.object({
   BARET_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
   /** /v1/explain spends paid model credit, so it has a tighter limit of its own. */
   BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(20),
+  /**
+   * How many X-Forwarded-For entries the server's own proxies add: on a
+   * direct request, and on one a site's edge marked with BARET_EDGE_SECRET.
+   * Read both from `forwardedHops` in /health. Unset: the first entry is the
+   * client, which a direct caller can forge (src/api/client.ts).
+   */
+  BARET_PROXY_HOPS: z.coerce.number().int().min(0).max(8).optional(),
+  BARET_EDGE_PROXY_HOPS: z.coerce.number().int().min(1).max(8).optional(),
+  BARET_EDGE_SECRET: z.string().min(24).optional(),
   BARET_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
   BARET_VERDICT_TTL_SECONDS: z.coerce.number().int().positive().default(30),
 
@@ -119,6 +128,20 @@ const envSchema = z.object({
     .optional(),
   /** Requests per minute per client on /v1/sealed, and fresh writes per UTC day. */
   BARET_SEALED_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(6),
+  /**
+   * The x402 demo (GET /demo/paywall). The facilitator's key pays the gas of
+   * each settlement; unset, the sealed relayer's key is used, and with neither
+   * the route answers 503.
+   */
+  BARET_X402_FACILITATOR_PRIVATE_KEY: z
+    .string()
+    .trim()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "must be a 0x-prefixed 32-byte hex key")
+    .optional(),
+  /** Base units of USDC for one answer (default 0.05 USDC), and settlements per UTC day. */
+  BARET_X402_PRICE: z.coerce.bigint().positive().default(50_000n),
+  BARET_X402_DAILY_LIMIT: z.coerce.number().int().positive().default(300),
+  BARET_X402_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(12),
   /** Requests per minute per client on /mcp: each tool call is an analysis. */
   BARET_MCP_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(60),
   BARET_SEALED_DAILY_LIMIT: z.coerce.number().int().positive().default(200),
@@ -164,6 +187,8 @@ export interface AppConfig {
   corsOrigins: readonly string[];
   rateLimitPerMinute: number;
   explainRateLimitPerMinute: number;
+  /** Which X-Forwarded-For entry is the client (src/api/client.ts). */
+  proxyTrust: { directHops: number | null; edgeHops: number | null; edgeSecret: string | null };
   requestTimeoutMs: number;
   verdictTtlSeconds: number;
   nansenApiKey: string | null;
@@ -181,8 +206,19 @@ export interface AppConfig {
   review: ReviewConfig | null;
   sealedRateLimitPerMinute: number;
   mcpRateLimitPerMinute: number;
+  x402RateLimitPerMinute: number;
+  /** Null (no testnet USDC, or no key to pay gas with): /demo/paywall answers 503. */
+  x402: X402Config | null;
   /** Null (no store address or no relayer key): /v1/sealed answers 503. */
   sealed: SealedConfig | null;
+}
+
+export interface X402Config {
+  asset: Address;
+  payTo: Address;
+  price: bigint;
+  dailyLimit: number;
+  facilitatorPrivateKey: Hex;
 }
 
 export interface SealedConfig {
@@ -261,6 +297,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     corsOrigins: e.BARET_CORS_ORIGINS,
     rateLimitPerMinute: e.BARET_RATE_LIMIT_PER_MINUTE,
     explainRateLimitPerMinute: e.BARET_EXPLAIN_RATE_LIMIT_PER_MINUTE,
+    proxyTrust: {
+      directHops: e.BARET_PROXY_HOPS ?? null,
+      edgeHops: e.BARET_EDGE_PROXY_HOPS ?? null,
+      edgeSecret: e.BARET_EDGE_SECRET ?? null,
+    },
     requestTimeoutMs: e.BARET_REQUEST_TIMEOUT_MS,
     verdictTtlSeconds: e.BARET_VERDICT_TTL_SECONDS,
     nansenApiKey: e.NANSEN_API_KEY || null,
@@ -289,6 +330,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
         : null,
     sealedRateLimitPerMinute: e.BARET_SEALED_RATE_LIMIT_PER_MINUTE,
     mcpRateLimitPerMinute: e.BARET_MCP_RATE_LIMIT_PER_MINUTE,
+    x402RateLimitPerMinute: e.BARET_X402_RATE_LIMIT_PER_MINUTE,
+    x402: (() => {
+      const key = e.BARET_X402_FACILITATOR_PRIVATE_KEY ?? e.BARET_SEALED_RELAYER_PRIVATE_KEY;
+      const asset = e.MONAD_TESTNET_USDC_ADDRESS;
+      if (!key || !asset) return null;
+      return {
+        asset,
+        payTo: e.BARET_DEMO_MERCHANT ?? DEMO_MERCHANT,
+        price: e.BARET_X402_PRICE,
+        dailyLimit: e.BARET_X402_DAILY_LIMIT,
+        facilitatorPrivateKey: key as Hex,
+      };
+    })(),
     sealed:
       e.MONAD_TESTNET_SEALED_STORE_ADDRESS && e.BARET_SEALED_RELAYER_PRIVATE_KEY
         ? {

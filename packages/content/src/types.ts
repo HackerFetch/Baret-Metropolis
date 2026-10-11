@@ -212,6 +212,17 @@ export interface SiteInputErrors {
   tooLow?: string;
 }
 
+/**
+ * A demo site's "Sign with your wallet": the label of each step the wallet
+ * is asked for, the token whose balance is read before and after ("" when no
+ * balance says anything), and the sentence under a run that went through.
+ */
+export interface SiteSign {
+  token: string;
+  steps: Record<"safe" | "danger", readonly string[]>;
+  outcome: Record<"safe" | "danger", string>;
+}
+
 export interface ScenarioSite {
   meta: Meta;
   scenario: Scenario & { threatClass: "drainer" | "trap" | "agent" };

@@ -131,4 +131,25 @@ describe("a site's request in a request window", () => {
     expect(seen.site).toBe(false);
     expect(opener.postMessage).not.toHaveBeenCalled();
   });
+
+  it("takes a typed message on /sign, and never on /connect", () => {
+    const typed = {
+      channel: WINDOW_CHANNEL,
+      type: "signTyped",
+      id: "req-3",
+      chainId: 10143,
+      typed: {
+        domain: { name: "USDC" },
+        types: { Pay: [{ name: "to", type: "address" }] },
+        primaryType: "Pay",
+        message: { to: `0x${"11".repeat(20)}` },
+      },
+    };
+    mount("connect");
+    deliver(typed);
+    expect(seen.request).toBeNull();
+    mount("sign");
+    deliver(typed);
+    expect(seen.request).toEqual(typed);
+  });
 });

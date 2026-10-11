@@ -2,7 +2,7 @@ import { pixeldrop } from "@baret/content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import { type JSX, useId, useRef } from "react";
+import { type JSX, type ReactNode, useId, useRef } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 import { Fill } from "../kit/site/Page.js";
 
@@ -26,6 +26,7 @@ export function MintCard({
   onQuantity,
   error,
   onMint,
+  sign = null,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -34,6 +35,8 @@ export function MintCard({
   error: string | null;
   /** False when the quantity is refused, so the card can move focus to it. */
   onMint: () => boolean;
+  /** "Sign with your wallet", shown under the main button. */
+  sign?: ReactNode;
 }): JSX.Element {
   const inputId = useId();
   const errorId = useId();
@@ -101,6 +104,7 @@ export function MintCard({
       <Button type="submit" variant="primary" size="lg" className="w-full">
         {panel.cta}
       </Button>
+      {sign}
       <p className={T.small}>{panel.note}</p>
 
       <AttackSwitch

@@ -5,12 +5,13 @@ import type {
   Wallet,
   WalletCall,
   WalletSession,
+  WalletTyped,
 } from "@baret/wallet-core";
 import { fromAnalyze, type SignContext, unreachable } from "@baret/wallet-ui/data/analyze";
 import { fromUnits, toUnits } from "@baret/wallet-ui/data/format";
 import { useWallet, type WalletState } from "@baret/wallet-ui/data/store";
 import type { Asset, GuardPolicy, Merchant, SignRequest } from "@baret/wallet-ui/data/types";
-import type { SignReceipt } from "@baret/wallet-ui/sign/SignRequest";
+import type { SignedMessage, SignReceipt } from "@baret/wallet-ui/sign/SignRequest";
 import {
   createContext,
   type JSX,
@@ -78,6 +79,60 @@ export interface LiveRequest {
   readonly signable: { readonly call: WalletCall; readonly verdict: AnalyzeResponse } | null;
 }
 
+/** A typed message a site asked for, with Baret's answer. */
+export interface LiveTyped {
+  readonly request: SignRequest;
+  /** Null when there is no verdict to sign with. */
+  readonly signable: { readonly typed: WalletTyped; readonly verdict: AnalyzeResponse } | null;
+}
+
+/** The context of a typed message for the sign screen: a payment when it is one, else a message. */
+export function typedContext(origin: string, typed: WalletTyped, wallet: string): SignContext {
+  const contract =
+    typeof typed.domain.verifyingContract === "string" ? typed.domain.verifyingContract : "";
+  const { to, value } = typed.message;
+  const pays =
+    typed.primaryType === "TransferWithAuthorization" &&
+    typeof to === "string" &&
+    (typeof value === "string" || typeof value === "number") &&
+    /^\d{1,78}$/.test(String(value));
+  const usdc = contract.toLowerCase() === USDC.toLowerCase();
+  const base = {
+    id: `site-${Date.now()}`,
+    origin,
+    claim: null,
+    // A signature costs no network fee: whoever uses it pays.
+    fee: "0",
+    raw: {
+      to: contract || "0x0000000000000000000000000000000000000000",
+      value: "0",
+      data: "0x",
+      decoded: typed.primaryType,
+    },
+    expires: 300,
+    wallet,
+  };
+  if (pays) {
+    return {
+      ...base,
+      action: "payment",
+      values: {
+        // The amount is only worded in whole units for the token the wallet knows.
+        amount: usdc ? fromUnits(BigInt(String(value)), 6) : String(value),
+        asset: usdc ? "USDC" : contract,
+        merchant: String(to),
+      },
+      impact: "payment",
+    };
+  }
+  return {
+    ...base,
+    action: "message",
+    values: { kind: typed.primaryType, contract: contract || new URL(origin).host },
+    impact: "message",
+  };
+}
+
 export interface Live {
   /** A passkey was made or used in this browser before. */
   readonly known: boolean;
@@ -105,6 +160,10 @@ export interface Live {
    * is the site as the browser reports it.
    */
   siteRequest(origin: string, call: WalletCall): Promise<LiveRequest>;
+  /** Asks Baret about a typed message a site sent (EIP-712). */
+  siteTyped(origin: string, typed: WalletTyped): Promise<LiveTyped>;
+  /** Signs a cleared typed message. Nothing is sent to Monad. */
+  signTyped(signable: NonNullable<LiveTyped["signable"]>): Promise<SignedMessage>;
   /** Asks Baret again about the same call. */
   recheck(context: SignContext, call: WalletCall): Promise<LiveRequest>;
   /** Signs and sends a cleared call; resolves once it is in a block. */
@@ -660,6 +719,43 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
     [check],
   );
 
+  const siteTyped = useCallback(
+    async (origin: string, typed: WalletTyped): Promise<LiveTyped> => {
+      const context = typedContext(origin, typed, session.current?.address ?? "");
+      const signer = wallet.current;
+      if (!signer) return { request: unreachable(context), signable: null };
+      try {
+        const verdict = await signer.checkTyped(typed);
+        patch({ status: statusWith(statusRef, { analyzer: "ok" }) });
+        const request = fromAnalyze(verdict, context);
+        return {
+          request,
+          signable: request.verdict === "unreachable" ? null : { typed, verdict },
+        };
+      } catch {
+        // No verdict: nothing to sign with.
+        patch({ status: statusWith(statusRef, { analyzer: "error" }) });
+        return { request: unreachable(context), signable: null };
+      }
+    },
+    [patch],
+  );
+
+  const signTyped = useCallback(
+    async (signable: NonNullable<LiveTyped["signable"]>): Promise<SignedMessage> => {
+      const signer = wallet.current;
+      if (!signer) throw new Error("the wallet is locked");
+      const ends = deadlineRef.current;
+      if (ends === null || Date.now() >= ends) throw new Error("the session ended");
+      // As in `sign`: the reader pressed sign with the findings on screen.
+      const signature = await signer.signTyped(signable.typed, signable.verdict, {
+        acknowledged: true,
+      });
+      return { signature };
+    },
+    [],
+  );
+
   const sign = useCallback(
     async (
       signable: NonNullable<LiveRequest["signable"]>,
@@ -981,6 +1077,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       refresh,
       transfer,
       siteRequest,
+      siteTyped,
+      signTyped,
       recheck: check,
       sign,
       forget,
@@ -998,6 +1096,8 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       refresh,
       transfer,
       siteRequest,
+      siteTyped,
+      signTyped,
       check,
       sign,
       forget,

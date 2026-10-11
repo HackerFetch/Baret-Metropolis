@@ -14,6 +14,7 @@ import {
   readContract,
   reconnect,
   sendTransaction,
+  signTypedData,
   switchChain,
   watchConnection,
   watchConnectors,
@@ -244,6 +245,24 @@ export async function start(
       const gas = await caughtUp(() => estimateGas(config, { ...request, ...pinned() }));
       // Monad charges the gas limit, so the limit stays a tenth above the estimate.
       return sendTransaction(config, { ...request, gas: gas + gas / 10n });
+    },
+
+    async signTyped(request) {
+      const connection = getConnection(config);
+      if (
+        connection.status !== "connected" ||
+        connection.address.toLowerCase() !== request.from.toLowerCase()
+      ) {
+        throw new SendRefused("account");
+      }
+      if (connection.chainId !== monadTestnet.id) throw new SendRefused("network");
+      return signTypedData(config, {
+        account: connection.address,
+        domain: request.domain,
+        types: request.types,
+        primaryType: request.primaryType,
+        message: request.message,
+      } as never);
     },
 
     async confirm(hash: Hex) {

@@ -85,6 +85,18 @@ export const pixeldrop = {
         args: [DEMO.drainer, true],
       }),
     ),
+
+  /** Closes what `attackApproveAll` opened. The demo sends it right after, so nothing stays open. */
+  revokeApproveAll: (from: Address) =>
+    tx(
+      from,
+      DEMO.pixeldrop.collection,
+      encodeFunctionData({
+        abi: ABI,
+        functionName: "setApprovalForAll",
+        args: [DEMO.drainer, false],
+      }),
+    ),
 };
 
 const stake = encodeFunctionData({ abi: ABI, functionName: "stake" });
@@ -112,6 +124,14 @@ export const claimhub = {
       from,
       DEMO.usdc,
       encodeFunctionData({ abi: ABI, functionName: "approve", args: [DEMO.drainer, maxUint256] }),
+    ),
+
+  /** Sets the drainer's USDC allowance back to zero. The demo sends it right after `attackApprove`. */
+  revokeApprove: (from: Address) =>
+    tx(
+      from,
+      DEMO.usdc,
+      encodeFunctionData({ abi: ABI, functionName: "approve", args: [DEMO.drainer, 0n] }),
     ),
 };
 

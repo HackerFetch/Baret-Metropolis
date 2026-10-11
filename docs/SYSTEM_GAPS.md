@@ -15,8 +15,8 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-01 | Every visitor shares one rate-limit bucket. **Fixed 2026-10-10** | Wrong | closed | Ezgin |
 | G-02 | The landing and `/install` describe the extension as a working wallet; it was a sample. **Built 2026-10-10 (D-040), live after the merge**; what is still empty in it is listed under G-02 | Wrong claim | P2 after the merge | Ezgin |
 | G-03 | The API slept on the free plan. **Starter since 2026-10-10**: the first request after 18 idle minutes took 0.10 s | Half done | closed | Ezgin |
-| G-04 | Five of the six demo sites sign nothing | Sample | P2 | Meriç |
-| G-05 | Scrybe's x402 payment is checked and never made | Sample | P2 | Ezgin, Meriç |
+| G-04 | Five of the six demo sites sign nothing. **Closed 2026-10-11** | Sample | P2 | Meriç |
+| G-05 | Scrybe's x402 payment is checked and never made. **Closed 2026-10-11 (D-046)** | Sample | P2 | Ezgin, Meriç |
 | G-06 | Nansen was off. **On since 2026-10-11**, labels mode inside a daily budget (D-041, D-042) | Missing | closed | Ezgin |
 | G-07 | No Cleanverse settlement has happened | Half done | P2 | Ezgin |
 | G-08 | Qwen's overpay veto sometimes names a mismatch that is not there. **Fixed 2026-10-10** (#66), checked live | Wrong | P1 | Meriç |
@@ -79,15 +79,15 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 
 ### G-04 · Five of the six demo sites sign nothing
 
-Only NovaSwap has "Sign with your wallet" and "Check with Baret" (`SignBlock`, `BaretCheck` and `useSendFlow` are used only under `apps/showcase/src/sites/novaswap`). On PixelDrop, OrbitYield, ClaimHub, LaunchPad and Scrybe a connected wallet only gives the panel an address to simulate from: the verdict is live, and there is no transaction. With no wallet and no `VITE_BARET_DEMO_FROM` a site shows a prepared sample and calls nothing; production has the variable set, so the panels are live there.
+**Closed 2026-10-11** (branch `demo-sites-sign`, and D-046 for Scrybe). PixelDrop, OrbitYield, ClaimHub and LaunchPad have "Sign with your wallet" under their main button: the same request Baret's panel checks, sent to the connected wallet on Monad testnet, each step confirmed, with the token's balance before and after (`apps/showcase/src/sites/kit/wallet/useSiteSign.tsx`). The two attacks that open something to the reported drainer (PixelDrop's collection approval, ClaimHub's unlimited USDC allowance) send a second call that closes it again, so the demo leaves nothing open in a visitor's wallet. Scrybe has "Pay with your wallet" (a real x402 payment). All eight runs were made from a browser with real transactions.
 
-The demo script uses NovaSwap for the signed attack, so the demo path holds. A judge who tries the same on another site finds a panel and no signature.
+What stays only on NovaSwap: "Check with Baret" through the Baret wallet's window (`BaretCheck`), and the line in Baret's panel that reads back what the unchecked signature did.
 
 ### G-05 · Scrybe's x402 payment is checked and never made
 
-Scrybe sends Baret a real EIP-3009 message as typed data with the payment's terms, and the verdict is live. Nothing answers 402, nothing settles the payment, and no question is answered: there is no facilitator and no paywall (`docs/X402_FACILITATOR.md` is a design from 2026-09-13; `/demo/paywall` does not exist). The price, the merchant and the hourly history on the page are fixed values (`apps/showcase/src/sites/scrybe/sample.ts`, `source.ts`). The agent path that does move money is `baret pay` through a PaymentGuard vault, not x402.
+**Closed 2026-10-11 (D-046).** `GET /demo/paywall` answers 402 with the terms, verifies the signed EIP-3009 authorisation and settles it on Monad testnet before it answers; `payX402` and `baret x402` in `@baret/agent-kit` pay it after Baret's check, and Scrybe's "Pay with your wallet" pays it from the connected wallet. Proven with real transfers (`pnpm --filter @baret/server verify:x402`).
 
-Say "Baret checks an x402 payment before it is signed", never "Baret pays over x402".
+What stays a sample: Scrybe's main button ("Pay and ask") still only shows Baret's check, the agent loop's hourly history is built by the page, and the four answers are fixed text. The server is its own facilitator; there is no separate facilitator service. In the extension the x402 payments page is not built, and a typed message it checks carries no `payment` context.
 
 ### G-06 · Nansen is off
 
@@ -163,6 +163,10 @@ The scenario "Cleanverse aUSDC to a wallet with no credential" pays the `--from`
 The per-minute limits are per visitor since #63, and that visitor is the first address in `X-Forwarded-For`, which a direct caller can forge (measured on the live API on 2026-10-10: a forged address started a fresh bucket). The daily caps are counted for the whole process, so one caller with forged addresses can use up a day's KIMI calls or sealed writes in minutes, and those features then fail for everyone until 00:00 UTC. The caps bound what is spent; they do not keep the feature available.
 
 **State (2026-10-11):** the caps are raised in `render.yaml` (`BARET_KIMI_DAILY_LIMIT` 3000, `BARET_SEALED_DAILY_LIMIT` 1000), which makes a drain slower and dearer, not impossible. The fix that closes it is for the sites' own proxy to mark its requests with a secret and for the server to trust `X-Forwarded-For` only on marked requests; it changes how both sites reach the API and cannot be tried without deploying it, so it is not done before the recording. `/v1/review` can also make the demo agent pay 0.10 dUSDC, at most once per 30 minutes, inside the demo vault's caps. Nansen's label lookups have their own daily budget (D-042).
+
+**Server half built 2026-10-11 (branch `proxy-hops`), off until configured.** `GET /health` reports `forwardedHops`, the number of `X-Forwarded-For` entries the request carried. With `BARET_PROXY_HOPS` set to the count a direct request shows, the limits key on the entry the host's proxy wrote, so a made-up address in front buys no new bucket (`apps/server/src/api/client.ts`, tested). A request through a site's rewrite has one more proxy: it is recognised by `x-baret-edge` carrying `BARET_EDGE_SECRET`, and then `BARET_EDGE_PROXY_HOPS` applies. Still to do, in this order: (1) deploy and read `forwardedHops` directly and through both sites' `/api/health`; (2) set `BARET_PROXY_HOPS`; this alone closes the forging for direct callers, and visitors of the sites then share their edge's addresses until (3) an edge middleware on both Vercel projects adds the secret header and `BARET_EDGE_PROXY_HOPS` is set. Step 3 changes how both sites reach the API, so it goes in after the recording, not before.
+
+**Measured on the live API, 2026-10-11 (commit `700dad7`):** a direct request shows `forwardedHops` 3, a direct request with one made-up address 4 (the proxies append, they do not overwrite), and a request through either site's `/api` 4. So `BARET_PROXY_HOPS=3` and, once the sites' edge sends the secret, `BARET_EDGE_PROXY_HOPS=4`.
 
 ### G-18 · Contracts are unaudited testnet deployments
 

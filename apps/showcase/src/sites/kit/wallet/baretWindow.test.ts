@@ -2,6 +2,7 @@ import { WINDOW_CHANNEL, WINDOW_NAME } from "@baret/wallet-core/window";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   askBaret,
+  askBaretTyped,
   focusBaretWindow,
   type Host,
   POLL_MS,
@@ -27,6 +28,9 @@ class FakePopup implements Popup {
   readonly sent: { message: unknown; origin: string }[] = [];
   postMessage(message: unknown, origin: string): void {
     this.sent.push({ message, origin });
+  }
+  close(): void {
+    this.closed = true;
   }
 }
 
@@ -177,6 +181,66 @@ describe("askBaret", () => {
   it("resolves blocked when the browser opens no window", async () => {
     const fake = fakeHost(null);
     await expect(askBaret("connect", undefined, fake.host)).resolves.toEqual({ type: "blocked" });
+    expect(fake.listening()).toBe(false);
+  });
+});
+
+const TYPED = {
+  domain: { name: "USDC", version: "2", chainId: 10143, verifyingContract: ADDRESS },
+  types: { Pay: [{ name: "to", type: "address" }] },
+  primaryType: "Pay",
+  message: { to: ADDRESS },
+};
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe("a typed message through the Baret window", () => {
+  it("opens /sign in the click, and sends the message once it is known", async () => {
+    const popup = new FakePopup();
+    const fake = fakeHost(popup);
+    let hand: (typed: typeof TYPED | null) => void = () => undefined;
+    const asked = askBaretTyped(
+      new Promise((resolve) => {
+        hand = resolve;
+      }),
+      fake.host,
+    );
+    expect(fake.opened[0]?.url).toBe(`${WALLET_URL}/sign`);
+    fake.send(ready);
+    await flush();
+    expect(popup.sent).toHaveLength(0);
+    hand(TYPED);
+    await flush();
+    expect(popup.sent).toEqual([
+      {
+        message: {
+          channel: WINDOW_CHANNEL,
+          type: "signTyped",
+          id: "req-1",
+          chainId: 10143,
+          typed: TYPED,
+        },
+        origin: ORIGIN,
+      },
+    ]);
+    const signature = `0x${"1b".repeat(65)}`;
+    fake.send({
+      channel: WINDOW_CHANNEL,
+      type: "signedTyped",
+      id: "req-1",
+      address: ADDRESS,
+      signature,
+    });
+    expect(await asked).toEqual({ type: "signedTyped", id: "req-1", address: ADDRESS, signature });
+  });
+
+  it("closes the window with nothing asked when there is nothing to sign after all", async () => {
+    const popup = new FakePopup();
+    const fake = fakeHost(popup);
+    const asked = askBaretTyped(Promise.resolve(null), fake.host);
+    fake.send(ready);
+    expect(await asked).toEqual({ type: "closed" });
+    expect(popup.closed).toBe(true);
+    expect(popup.sent).toHaveLength(0);
     expect(fake.listening()).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { DEMO, launchpad } from "@baret/demo";
+import { DEMO, type DemoTx, launchpad } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import type { Address } from "viem";
 import type { DemoCall } from "../kit/live.js";
@@ -29,6 +29,16 @@ export interface ContributeInput {
 export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoCall {
   return mode === "safe" ? launchpad.contribute(from, wei) : launchpad.attackContribute(from, wei);
 }
+
+/** The call "Sign with your wallet" sends: the one the panel checks. */
+export function signCalls(mode: DemoMode, wei: bigint, from: Address): DemoTx[] {
+  return [
+    mode === "safe" ? launchpad.contribute(from, wei) : launchpad.attackContribute(from, wei),
+  ];
+}
+
+/** LNTL, what a sale pays: read before and after a signed contribution. */
+export const SALE_TOKEN = { address: DEMO.launchpad.token, decimals: 18 } as const;
 
 /** The sale a live request pays, for the panel's copy. */
 export function liveSaleOf(mode: DemoMode): string {

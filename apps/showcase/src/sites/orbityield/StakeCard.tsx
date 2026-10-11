@@ -3,7 +3,7 @@ import { orbityieldUnits } from "@baret/content/showcase/orbityield.content";
 import { Button } from "@baret/ui";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import { AttackSwitch } from "../kit/AttackSwitch.js";
 import { format, parseAmount } from "../kit/amount.js";
 import { AmountField } from "../kit/site/AmountField.js";
@@ -26,6 +26,7 @@ export function StakeCard({
   onAmount,
   error,
   onStake,
+  sign = null,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -34,6 +35,8 @@ export function StakeCard({
   error: string | null;
   /** False when the amount is refused, so the card can move focus to it. */
   onStake: () => boolean;
+  /** "Sign with your wallet", shown under the main button. */
+  sign?: ReactNode;
 }): JSX.Element {
   const danger = mode === "danger";
   const value = parseAmount(amount);
@@ -82,6 +85,7 @@ export function StakeCard({
       <Button type="submit" variant="primary" size="lg" className="w-full">
         {panel.cta}
       </Button>
+      {sign}
       <p className={T.small}>{panel.note}</p>
 
       <AttackSwitch

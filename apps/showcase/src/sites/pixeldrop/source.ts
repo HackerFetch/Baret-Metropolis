@@ -1,4 +1,4 @@
-import { DEMO, pixeldrop } from "@baret/demo";
+import { DEMO, type DemoTx, pixeldrop } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import type { Address } from "viem";
 import type { DemoCall } from "../kit/live.js";
@@ -26,6 +26,17 @@ export interface MintInput {
 /** The call each version asks the wallet to sign. */
 export function buildRequest(mode: DemoMode, count: number, from: Address): DemoCall {
   return mode === "safe" ? pixeldrop.mint(from, count) : pixeldrop.attackApproveAll(from);
+}
+
+/**
+ * The calls "Sign with your wallet" sends, in order. Honest: the mint the
+ * panel checks. Attack: the approval the panel checks, then the call that
+ * takes it back, so the demo leaves nothing open to the reported operator.
+ */
+export function signCalls(mode: DemoMode, count: number, from: Address): DemoTx[] {
+  return mode === "safe"
+    ? [pixeldrop.mint(from, count)]
+    : [pixeldrop.attackApproveAll(from), pixeldrop.revokeApproveAll(from)];
 }
 
 /** What a request costs in MON, in wei: the mint price, nothing for the approval. */
