@@ -240,7 +240,7 @@ export const claimhub = {
     outcome: {
       safe: "The distributor sent the HUB to your wallet.",
       danger:
-        "Between the two steps a reported contract could take all the USDC in this wallet, and no HUB arrived. The second step set the allowance back to zero, which no attack site would do. Press Claim to see what Baret says about the first request.",
+        "Between the two steps a reported address could take all the USDC in this wallet, and no HUB arrived. The second step set the allowance back to zero, which no attack site would do. Press Claim to see what Baret says about the first request.",
     },
   },
 } as const satisfies ScenarioSite & { sign: SiteSign };

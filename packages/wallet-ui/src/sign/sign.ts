@@ -2,6 +2,8 @@ import { policy, sign } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
 import type { CheckFinding } from "@baret/web-ui/lib/check-types";
 import { counted, fill } from "@baret/web-ui/lib/util";
+// By file, not through the @baret/guard barrel, as in data/rules.ts.
+import { FINDING_SPECS } from "../../../guard/src/findings.js";
 import { amount } from "../data/format.js";
 import type { ActivityItem, SignRequest } from "../data/types.js";
 import { fillParts, type Part } from "../lib/parts.js";
@@ -55,12 +57,35 @@ export function impactText(request: SignRequest): string {
   return fill(sign.impact[request.impact], values(request));
 }
 
+type RuleHit = SignRequest["rules"][number];
+
+/**
+ * The fired rules a sentence may name. A fail-closed finding (a signature
+ * Baret cannot read, a delegation it cannot simulate, a source that did not
+ * answer) blocks under every rule set and still carries a field, even when
+ * the reader switched that field off. A hit that only such findings explain
+ * is left unnamed, so no line says an off toggle stopped the request.
+ */
+export function namedRules(request: SignRequest): RuleHit[] {
+  const explained = new Set<string>();
+  const failClosed = new Set<string>();
+  for (const finding of request.findings) {
+    const spec = FINDING_SPECS[finding.code as keyof typeof FINDING_SPECS];
+    if (!spec) continue;
+    for (const field of spec.rule.fields) {
+      (spec.rule.kind === "failClosed" ? failClosed : explained).add(field);
+    }
+  }
+  return request.rules.filter((hit) => explained.has(hit.rule) || !failClosed.has(hit.rule));
+}
+
 /**
  * The blocked verdict's summary: the first rule that fired, and how many more.
- * A block with no fired rule (a failed check counts as Blocked) names none.
+ * A block with no fired rule (a failed check counts as Blocked), or one only a
+ * fail-closed finding explains, names none.
  */
 export function blockedSummary(request: SignRequest): string {
-  const [first, ...rest] = request.rules;
+  const [first, ...rest] = namedRules(request);
   const { blocked } = sign.verdict;
   if (!first) return blocked.summaryNoRule;
   const rule = policy.fields[first.rule].label;
@@ -69,16 +94,16 @@ export function blockedSummary(request: SignRequest): string {
     : counted(rest.length, blocked.summaryMany, blocked.summaryManyOne, { rule });
 }
 
-/** The override's warning: the rule it goes past, or none when no rule fired. */
+/** The override's warning: the rule it goes past, or none when no nameable rule fired. */
 export function overrideBody(request: SignRequest): string {
   const { blocked } = sign.override;
-  const first = request.rules[0];
+  const first = namedRules(request)[0];
   return first ? fill(blocked.body, { rule: policy.fields[first.rule].label }) : blocked.bodyNoRule;
 }
 
-/** One row per rule that fired: its label, and the request against the limit when known. */
+/** One row per nameable rule that fired: its label, and the request against the limit when known. */
 export function ruleRows(request: SignRequest): { label: string; detail: string | null }[] {
-  return request.rules.map((hit) => ({
+  return namedRules(request).map((hit) => ({
     label: policy.fields[hit.rule].label,
     detail:
       hit.actual !== undefined && hit.limit !== undefined

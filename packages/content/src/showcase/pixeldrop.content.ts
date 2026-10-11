@@ -242,7 +242,7 @@ export const pixeldrop = {
       danger: ["Approve the collection to list it", "Take the approval back"],
     },
     outcome: {
-      safe: "The collection minted the pieces to your wallet.",
+      safe: "The collection sent your Night Shift mint to your wallet.",
       danger:
         "Between the two steps a reported address could move every Night Shift piece in this wallet. The second step closed it again, which no attack site would do. Press Mint to see what Baret says about the first request.",
     },

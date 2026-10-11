@@ -64,7 +64,7 @@ export const alerts = {
 
   empty: {
     title: "No alerts",
-    body: "Baret keeps watching this wallet after you sign. If funds or allowances change without you, it shows up here.",
+    body: "This version raises no alerts yet. Baret checks every request before you sign it.",
   },
 
   errors: {

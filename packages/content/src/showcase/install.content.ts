@@ -172,7 +172,7 @@ export const install = {
       title: "It cannot",
       points: [
         "Send your key or recovery phrase off this device",
-        "Sign anything you did not approve, or pay past a cap you set",
+        "Sign anything you did not approve, or sign a payment over a cap in your rules",
         "Add a fee to your transactions",
         "Work on any chain other than Monad",
       ],
