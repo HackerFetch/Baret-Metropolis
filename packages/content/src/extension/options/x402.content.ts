@@ -15,7 +15,7 @@ export const x402 = {
 
   wedge: {
     title: "x402 forgets every payment. Baret keeps count.",
-    body: "Each x402 request stands alone, so nothing in the protocol adds up what you have paid. Baret keeps that running total. Your caps do the rest: anything over one stops and asks you first.",
+    body: "Each x402 request stands alone, so nothing in the protocol adds up what you have paid. Baret lists what you have paid. Your rules check each payment: one over your per-payment cap is blocked.",
   },
 
   summary: {
@@ -79,7 +79,7 @@ export const x402 = {
     firstPayment: "The first payment to a new merchant always asks you.",
     empty: {
       title: "No merchants yet",
-      body: "The first time a site asks for an x402 payment, you approve it once and set its caps. It shows up here after that.",
+      body: "This version does not keep caps per site yet. Each x402 payment you sign is listed on this page, and your rules check every one.",
       action: { label: "Try SCRYBE in the showcase" },
     },
   },
@@ -95,7 +95,7 @@ export const x402 = {
     },
     standing: { known: "Used before", new: "New to you" },
     newHint: "You have not paid through this facilitator before. It is worth a look.",
-    empty: "No facilitators yet. One appears with your first payment.",
+    empty: "This version does not list facilitators yet.",
   },
 
   problems: {
@@ -105,6 +105,8 @@ export const x402 = {
       declined: {
         title: "Declined by a rule",
         body: "{merchant} asked for {amount}. {rule} stopped it. Nothing was sent.",
+        /** For a live block whose rule, cap or payees were not read. */
+        bodyNoRule: "{merchant} asked for {amount}. Baret blocked it. Nothing was sent.",
       },
       overCap: {
         title: "Over a cap",

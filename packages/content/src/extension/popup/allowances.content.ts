@@ -14,7 +14,7 @@
 
 export const allowances = {
   title: "Allowances",
-  body: "Everything that can spend from this wallet without asking you again.",
+  body: "What this wallet signed that can still spend without asking you again.",
 
   summary: {
     active: "{count} active",
@@ -62,7 +62,7 @@ export const allowances = {
     title: "Revoke this allowance?",
     payment: "{origin} can't sign payments after this.",
     token: "{spender} can't spend your {asset} after this.",
-    how: "Revoking is a transaction. You review and sign it next, like any other request.",
+    how: "Revoking is a transaction with a network fee. Baret checks it, then signs it when you press Revoke.",
     action: "Revoke",
     cancel: "Keep it",
     working: "Revoking",
@@ -106,13 +106,13 @@ export const allowances = {
 
   empty: {
     title: "No allowances yet",
-    body: "Approve a token or pay a site, and it appears here with its cap and a revoke button.",
+    body: "Approve a token in this wallet, and it appears here with a revoke button. One approved with another wallet is not listed.",
   },
 
   help: {
     title: "What an allowance is",
     body: "Permission for a contract or site to spend from this wallet without asking again. It lasts until you revoke it.",
-    caps: "The caps are the firewall. Anything over a cap stops and asks you first.",
+    caps: "Caps in your rules are the firewall. Baret blocks a payment over one before it is signed.",
   },
 
   errors: {
@@ -125,6 +125,10 @@ export const allowances = {
       title: "The revoke didn't go through",
       body: "The allowance is still active. Check you have MON for the fee, then try again.",
       action: { label: "Try again" },
+    },
+    partial: {
+      title: "{count} of {total} revoked",
+      body: "The rest were declined or failed, so they are still active. Try again.",
     },
   },
 } as const;

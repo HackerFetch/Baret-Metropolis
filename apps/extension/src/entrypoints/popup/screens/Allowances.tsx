@@ -8,6 +8,7 @@ import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useId, useState } from "react";
 import { POPUP_ART } from "../../../assets.js";
 import { ago, capReached, nearCap, now, PAYMENT_ASSET, payments } from "../../../data/derive.js";
+import { revokeOutcome } from "../../../data/revoke-outcome.js";
 import { useExtension } from "../../../data/store.js";
 import type { PaymentPermission, Permission } from "../../../data/types.js";
 import { short } from "../../../data/words.js";
@@ -228,7 +229,10 @@ export function AllowancesTab({
   onEditCaps: () => void;
   onFull: () => void;
 }): JSX.Element {
-  const { state, dispatch } = useExtension();
+  const { state, dispatch, revoke: revokeLive } = useExtension();
+  // Live, caps and pausing set here are not read when a payment is signed
+  // yet (D-047), so their controls stay on the sample only.
+  const live = revokeLive !== null;
   const cards = state.permissions.filter(
     (p): p is Card => p.account === state.active && p.kind !== "operator",
   );
@@ -247,9 +251,38 @@ export function AllowancesTab({
     return () => window.clearTimeout(id);
   }, [said]);
 
-  // The revoke transaction, stood in for by a short wait.
+  // Live: the dialog stays on its working line until Monad confirmed or
+  // refused each revoke, and only a confirmed one is called revoked.
   useEffect(() => {
-    if (!pending) return;
+    if (!pending || !revokeLive) return;
+    let alive = true;
+    void revokeLive(pending).then((closed) => {
+      if (!alive) return;
+      const outcome = revokeOutcome(pending, closed);
+      setPending(null);
+      setTarget(null);
+      setAll(false);
+      if (outcome.kind === "done") setSaid({ text: allowances.revoke.done });
+      else if (outcome.kind === "partial") {
+        setSaid({
+          text: fill(allowances.errors.partial.title, {
+            count: String(outcome.count),
+            total: String(outcome.total),
+          }),
+          note: allowances.errors.partial.body,
+        });
+      } else {
+        setSaid({ text: allowances.errors.revoke.title, note: allowances.errors.revoke.body });
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [pending, revokeLive]);
+
+  // The sample: the revoke transaction, stood in for by a short wait.
+  useEffect(() => {
+    if (!pending || revokeLive) return;
     const id = window.setTimeout(() => {
       dispatch({ type: "revoke", ids: pending, at: new Date().toISOString() });
       setPending(null);
@@ -258,7 +291,7 @@ export function AllowancesTab({
       setSaid({ text: allowances.revoke.done });
     }, 700);
     return () => window.clearTimeout(id);
-  }, [pending, dispatch]);
+  }, [pending, dispatch, revokeLive]);
 
   const pays = payments(cards);
   const asset = pays[0]?.asset ?? PAYMENT_ASSET;
@@ -278,9 +311,11 @@ export function AllowancesTab({
           title={allowances.empty.title}
           body={allowances.empty.body}
           action={
-            <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
-              {summary.add}
-            </Button>
+            live ? undefined : (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
+                {summary.add}
+              </Button>
+            )
           }
         />
         <CapsForm
@@ -319,9 +354,11 @@ export function AllowancesTab({
       </dl>
 
       <div className="flex flex-wrap gap-2 px-4 pt-3 pb-1">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
-          {summary.add}
-        </Button>
+        {live ? null : (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
+            {summary.add}
+          </Button>
+        )}
         <Button type="button" variant="danger" size="sm" onClick={() => setAll(true)}>
           {summary.revokeAll}
         </Button>
@@ -366,7 +403,7 @@ export function AllowancesTab({
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                {p.kind === "payment" ? (
+                {p.kind === "payment" && !live ? (
                   <>
                     <Button
                       type="button"

@@ -182,24 +182,33 @@ export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
   const { state, dispatch, derive } = useExtension();
   const [adding, setAdding] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const next = state.accounts.length + 1;
 
   // Live: the next account of the recovery phrase, so the same phrase brings
-  // it back anywhere. A locked wallet adds nothing.
+  // it back anywhere. A locked wallet, a failed derive or an address already
+  // listed adds nothing: the form stays open and says so.
   useEffect(() => {
     if (working === null || !derive) return;
     let alive = true;
+    const failure = () => {
+      if (!alive) return;
+      setWorking(null);
+      setFailed(true);
+    };
     void derive(next - 1).then((address) => {
       if (!alive) return;
-      if (address && !state.accounts.some((a) => a.address === address)) {
-        dispatch({
-          type: "addAccount",
-          account: { id: `acc-${next}`, name: working, address, balance: "0" },
-        });
+      if (!address || state.accounts.some((a) => a.address === address)) {
+        failure();
+        return;
       }
+      dispatch({
+        type: "addAccount",
+        account: { id: `acc-${next}`, name: working, address, balance: "0" },
+      });
       setWorking(null);
       setAdding(false);
-    });
+    }, failure);
     return () => {
       alive = false;
     };
@@ -252,14 +261,30 @@ export function Accounts({ onClose }: { onClose: () => void }): JSX.Element {
                 {accounts.add.working}
               </p>
             ) : (
-              <NameForm
-                label={accounts.add.field.label}
-                placeholder={fill(accounts.add.field.placeholder, { count: String(next) })}
-                initial=""
-                action={accounts.add.action}
-                onCancel={() => setAdding(false)}
-                onSave={setWorking}
-              />
+              <>
+                {failed && (
+                  <div role="alert" className="grid gap-1">
+                    <p className="text-sm font-semibold text-[color:var(--fg)]">
+                      {accounts.errors.add.title}
+                    </p>
+                    <p className={T.small}>{accounts.errors.add.body}</p>
+                  </div>
+                )}
+                <NameForm
+                  label={accounts.add.field.label}
+                  placeholder={fill(accounts.add.field.placeholder, { count: String(next) })}
+                  initial=""
+                  action={accounts.add.action}
+                  onCancel={() => {
+                    setFailed(false);
+                    setAdding(false);
+                  }}
+                  onSave={(name) => {
+                    setFailed(false);
+                    setWorking(name);
+                  }}
+                />
+              </>
             )}
           </div>
         ) : (
