@@ -160,9 +160,12 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M13 | The KIMI block asks again after a failure: only real answers cached, at most one retry a minute, never for a 404 `verdict_unknown`, and a failed line that is true for any failure. **Done 2026-10-10** (#68), checked on a local build; the hook now survives the React Compiler | Sat 10 to Sun 11 before 12:00 | | KIMI |
 | M14 | One failed rule draft no longer removes the form: the sentence stays, with one inline line. **Done 2026-10-10** (#68), checked with a virtual PRF passkey | Sat 10 to Sun 11 before 12:00 | | KIMI |
 | M15 | The two sentences that call a 429 "no answer" (`hub.content.ts`, `sign.content.ts`) become true for a 429, a 5xx and a timeout; "Can't reach Baret" keeps its name. The wallet's half is in #69. **Done 2026-10-10**: the showcase half in #70 | Sun 11 before 12:00 | | main track |
-| M16 | The copy for Ezgin's typed-data fail-open fix, as commits on his branch, so guard, copy and server land together (P1, allowed after the freeze) | when his pull request opens | Ezgin's fix | main track |
+| M16 | The copy for Ezgin's typed-data fail-open fix, as commits on his branch, so guard, copy and server land together (P1, allowed after the freeze). **Done 2026-10-11** (Ezgin's #83 and #85, the copy finished in `53993ef`) | when his pull request opens | Ezgin's fix | main track |
 | M17 | 🐛 P1 (Hale): with the Baret extension connected, NovaSwap said "with no Baret check" under "Sign with your wallet", over the extension's own Blocked window. **Done 2026-10-10**: the line says the extension checks it with Baret (#77) | Sat 10 | E12 | main track |
 | M18 | 🐛 P2 (Hale): two wallets called "Baret" in the connect dialog. **Done 2026-10-10**: the extension reads "Baret extension", with one line on what it does (#77) | Sat 10 | E12 | main track |
+| M19 | Read and fix what Ezgin added in Meriç's screens (#83 to #94): 47 fixes, each re-checked. **Done 2026-10-11** (`53993ef`, `2bc96e4`, `23a2ebb`) | Sun 11 | Ezgin's merges | all |
+| M20 | `/agents`: an MCP tab (D-045), and the quickstart's samples on the live API. **Done 2026-10-11** (`c4044a7`) | Sun 11 | D-045 live | main track |
+| M21 | `/agents`: a lookup of Baret's reputation registry (the entries a Chainlink CRE workflow wrote from ScamSniffer, served from the Envio indexer). **Done 2026-10-11** (`896370e`) | Sun 11 | | main track, CRE, Envio |
 
 ### Hale
 
