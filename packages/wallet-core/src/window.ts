@@ -22,6 +22,18 @@ export interface WindowCall {
   readonly data: `0x${string}`;
 }
 
+/**
+ * An EIP-712 message, as `eth_signTypedData_v4` takes it. `types` may carry
+ * EIP712Domain or leave it out. Plain JSON only: numbers that do not fit a
+ * JSON number are decimal strings.
+ */
+export interface WindowTyped {
+  readonly domain: Readonly<Record<string, unknown>>;
+  readonly types: Readonly<Record<string, readonly { name: string; type: string }[]>>;
+  readonly primaryType: string;
+  readonly message: Readonly<Record<string, unknown>>;
+}
+
 export type SiteRequest =
   | { readonly channel: typeof WINDOW_CHANNEL; readonly type: "connect"; readonly id: string }
   | {
@@ -30,6 +42,14 @@ export type SiteRequest =
       readonly id: string;
       readonly chainId: typeof WINDOW_CHAIN_ID;
       readonly call: WindowCall;
+    }
+  | {
+      /** A typed message to check and sign. Nothing is sent to the chain. */
+      readonly channel: typeof WINDOW_CHANNEL;
+      readonly type: "signTyped";
+      readonly id: string;
+      readonly chainId: typeof WINDOW_CHAIN_ID;
+      readonly typed: WindowTyped;
     };
 
 export type RefusalReason = "declined" | "blocked" | "unreachable" | "invalid";
@@ -48,6 +68,14 @@ export type WalletAnswer =
       readonly id: string;
       readonly address: `0x${string}`;
       readonly hash: `0x${string}`;
+    }
+  | {
+      /** The answer to "signTyped": the signature, 65 bytes. */
+      readonly channel: typeof WINDOW_CHANNEL;
+      readonly type: "signedTyped";
+      readonly id: string;
+      readonly address: `0x${string}`;
+      readonly signature: `0x${string}`;
     }
   | {
       readonly channel: typeof WINDOW_CHANNEL;
@@ -74,6 +102,12 @@ const HASH = /^0x[0-9a-fA-F]{64}$/;
 const DATA = /^0x([0-9a-fA-F]{2})*$/;
 const DATA_MAX = 100_000;
 const VALUE = /^\d{1,78}$/;
+const SIGNATURE = /^0x[0-9a-fA-F]{130}$/;
+const TYPED_MAX = 20_000;
+const TYPE_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+const FIELD_TYPE = /^[A-Za-z_][A-Za-z0-9_]{0,63}(\[\d{0,6}\]){0,4}$/;
+const TYPES_MAX = 32;
+const FIELDS_MAX = 64;
 const FINDING = /^[A-Z0-9_]{1,64}$/;
 const FINDINGS_MAX = 50;
 const VALUE_KEY = /^[A-Za-z]{1,24}$/;
@@ -114,6 +148,49 @@ function parseCall(data: unknown): WindowCall | null {
   return { to, value, data: input as `0x${string}` };
 }
 
+function isPlain(data: unknown): data is Plain {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) return false;
+  const proto = Object.getPrototypeOf(data);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * A typed message, copied through JSON so nothing but plain data survives.
+ * Refused when it is not plain JSON, is over 20,000 characters, names a type
+ * or a field oddly, or has no definition for its primary type.
+ */
+function parseTyped(data: unknown): WindowTyped | null {
+  if (!exact(data, ["domain", "types", "primaryType", "message"])) return null;
+  let copy: Plain;
+  try {
+    const json = JSON.stringify(data);
+    if (typeof json !== "string" || json.length > TYPED_MAX) return null;
+    copy = JSON.parse(json) as Plain;
+  } catch {
+    return null;
+  }
+  const { domain, types, primaryType, message } = copy;
+  if (!isPlain(domain) || !isPlain(message) || !isPlain(types)) return null;
+  if (!text(primaryType, TYPE_NAME)) return null;
+  const names = Object.keys(types);
+  if (names.length === 0 || names.length > TYPES_MAX || !Object.hasOwn(types, primaryType)) {
+    return null;
+  }
+  const parsed: Record<string, { name: string; type: string }[]> = {};
+  for (const name of names) {
+    const fields = types[name];
+    if (!TYPE_NAME.test(name) || !Array.isArray(fields) || fields.length > FIELDS_MAX) return null;
+    const list: { name: string; type: string }[] = [];
+    for (const field of fields) {
+      if (!exact(field, ["name", "type"])) return null;
+      if (!text(field.name, TYPE_NAME) || !text(field.type, FIELD_TYPE)) return null;
+      list.push({ name: field.name, type: field.type });
+    }
+    parsed[name] = list;
+  }
+  return { domain, types: parsed, primaryType, message };
+}
+
 /** A request from a site, or null when it is not exactly one. */
 export function parseSiteRequest(data: unknown): SiteRequest | null {
   const type = typeOf(data);
@@ -127,6 +204,13 @@ export function parseSiteRequest(data: unknown): SiteRequest | null {
     const call = parseCall(data.call);
     if (!call) return null;
     return { channel: WINDOW_CHANNEL, type, id: data.id, chainId: WINDOW_CHAIN_ID, call };
+  }
+  if (type === "signTyped") {
+    if (!exact(data, ["channel", "type", "id", "chainId", "typed"])) return null;
+    if (!text(data.id, ID) || data.chainId !== WINDOW_CHAIN_ID) return null;
+    const typed = parseTyped(data.typed);
+    if (!typed) return null;
+    return { channel: WINDOW_CHANNEL, type, id: data.id, chainId: WINDOW_CHAIN_ID, typed };
   }
   return null;
 }
@@ -178,6 +262,18 @@ export function parseWalletAnswer(data: unknown): WalletAnswer | null {
       id: data.id,
       address: data.address,
       hash: data.hash as `0x${string}`,
+    };
+  }
+  if (type === "signedTyped") {
+    if (!exact(data, ["channel", "type", "id", "address", "signature"])) return null;
+    if (!text(data.id, ID) || !isAddress(data.address)) return null;
+    if (!text(data.signature, SIGNATURE)) return null;
+    return {
+      channel: WINDOW_CHANNEL,
+      type,
+      id: data.id,
+      address: data.address,
+      signature: data.signature as `0x${string}`,
     };
   }
   if (type === "refused") {

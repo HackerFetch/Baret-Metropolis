@@ -149,7 +149,9 @@ export interface SignRequest {
     | "vaultPauseMerchant"
     | "vaultResumeMerchant"
     | "vaultAgentKey"
-    | "vaultRevokeAgent";
+    | "vaultRevokeAgent"
+    /** A typed message (EIP-712): signed, never sent by the wallet. */
+    | "message";
   readonly values: Readonly<Record<string, string>>;
   /** What the site says about the request, shown and never trusted; null without a site. */
   readonly claim: string | null;
@@ -164,6 +166,7 @@ export interface SignRequest {
     | "vaultDeposit"
     | "vaultWithdraw"
     | "contractCall"
+    | "message"
     | "nothing"
     | "unknown";
   readonly findings: readonly CheckFinding[];

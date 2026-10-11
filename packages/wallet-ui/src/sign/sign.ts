@@ -124,7 +124,8 @@ export function fixFor(request: SignRequest): string {
   return sign.verdict.blocked.fix.fallback;
 }
 
-export type Outcome = "sent" | "overridden" | "declined" | "expired";
+/** "signed": a typed message was signed for the site; nothing was sent, so there is no block or fee. */
+export type Outcome = "sent" | "signed" | "overridden" | "declined" | "expired";
 
 /** The activity row an outcome leaves. A declined request is never logged as Blocked. */
 export function logFor(
@@ -145,6 +146,9 @@ export function logFor(
     return request.verdict === "unreachable" || !rule
       ? { ...base, kind: "unchecked", values: {}, fee: request.fee, block }
       : { ...base, kind: "overridden", values: {}, rule, fee: request.fee, block };
+  }
+  if (outcome === "signed") {
+    return { ...base, kind: "signed", values: { origin: request.origin ?? "" } };
   }
   if (outcome === "sent") {
     return request.action === "transfer"

@@ -32,10 +32,19 @@ export interface Terms {
  * Why a payment stopped: the wallet's reason; "balance", the wallet holds
  * less test USDC than the price; "refused", the server did not take the
  * payment; "unsettled", the transfer did not land; "unavailable", no usable
- * answer from the server. Nothing was paid in any of them except, perhaps,
+ * answer from the server; "blocked", the Baret wallet checked the payment in
+ * its window and refused it. Nothing was paid in any of them except, perhaps,
  * "unsettled", which may still land.
  */
-export type PayError = SendError | "balance" | "refused" | "unsettled" | "unavailable";
+export type PayError = SendError | "balance" | "blocked" | "refused" | "unsettled" | "unavailable";
+
+/** A signer's own reason for not signing, when it is not a wallet error ("blocked": Baret refused it in its window). */
+export class PayStopped extends Error {
+  constructor(readonly kind: PayError) {
+    super(kind);
+    this.name = "PayStopped";
+  }
+}
 
 export interface PayState {
   readonly phase: "idle" | "asking" | "signing" | "settling" | "done" | "stopped";
@@ -180,7 +189,7 @@ export async function payAndAsk(
   try {
     signature = await deps.sign(request);
   } catch (error) {
-    return stop(sendErrorOf(error), amount);
+    return stop(error instanceof PayStopped ? error.kind : sendErrorOf(error), amount);
   }
 
   step({ ...IDLE, phase: "settling", amount });
@@ -205,7 +214,8 @@ export async function payAndAsk(
 
 export function usePay(): {
   state: PayState;
-  run: (from: Address, question: string) => Promise<void>;
+  /** `sign`: another signer than the connected wallet (the Baret wallet's window). */
+  run: (from: Address, question: string, sign?: PayDeps["sign"]) => Promise<void>;
   reset: () => void;
 } {
   const [state, setState] = useState<PayState>(IDLE);
@@ -218,12 +228,17 @@ export function usePay(): {
     [],
   );
 
-  const run = useCallback(async (from: Address, question: string) => {
+  const run = useCallback(async (from: Address, question: string, sign?: PayDeps["sign"]) => {
     latest.current += 1;
     const id = latest.current;
-    await payAndAsk(from, question, (next) => {
-      if (latest.current === id) setState(next);
-    });
+    await payAndAsk(
+      from,
+      question,
+      (next) => {
+        if (latest.current === id) setState(next);
+      },
+      sign ? { ...DEPS, sign } : DEPS,
+    );
   }, []);
 
   const reset = useCallback(() => {

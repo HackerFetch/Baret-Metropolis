@@ -94,6 +94,11 @@ export interface SignReceipt {
   readonly block: string;
 }
 
+/** What a live signature of a typed message returns: the signature, and nothing on-chain. */
+export interface SignedMessage {
+  readonly signature: string;
+}
+
 /** The sample confirmation, as a block number. */
 const SAMPLE_BLOCK = "48212045";
 
@@ -324,7 +329,7 @@ export function SignRequest({
     outcome: "sent" | "overridden",
     sending: () => void,
     progress: (step: "signing" | "sending") => void,
-  ) => Promise<SignReceipt>;
+  ) => Promise<SignReceipt | SignedMessage>;
   /** Writes the outcome to the account's log (Send also moves the balances). */
   onLog: (item: ActivityItem) => void;
   /** Called once with the outcome, after it is logged. */
@@ -453,6 +458,13 @@ export function SignRequest({
     onDone?.(outcome);
   }
 
+  /** A typed message was signed: logged as signed, and the result names no block. */
+  function signedMessage(): void {
+    onLog(logFor(request, "signed", new Date().toISOString(), ""));
+    setPhase({ kind: "result", outcome: "signed", block: "" });
+    onDone?.("signed");
+  }
+
   // The check: the surface's answer when it says so, else a short stand-in
   // pause. Then the verdict, announced once.
   useEffect(() => {
@@ -536,7 +548,10 @@ export function SignRequest({
       };
       onSign(outcome, () => move("sending"), move).then(
         (receipt) => {
-          if (alive.current) finish(outcome, receipt);
+          if (!alive.current) return;
+          // A typed message: signed and handed to the site, with no block to name.
+          if ("signature" in receipt) signedMessage();
+          else finish(outcome, receipt);
         },
         () => {
           if (!alive.current) return;

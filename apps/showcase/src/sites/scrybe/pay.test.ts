@@ -2,7 +2,7 @@ import { type Hex, recoverTypedDataAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { describe, expect, it, vi } from "vitest";
 import { SendRefused } from "../kit/wallet/baret.js";
-import { type PayDeps, type PayState, payAndAsk, termsOf } from "./pay.js";
+import { type PayDeps, type PayState, PayStopped, payAndAsk, termsOf } from "./pay.js";
 
 // A throwaway test key (the first Anvil account); it guards nothing.
 const account = privateKeyToAccount(
@@ -112,6 +112,10 @@ describe("Scrybe's paid question", () => {
     expect(declined.headers).toHaveLength(0);
     const elsewhere = setup({ sign: () => Promise.reject(new SendRefused("network")) });
     expect(await elsewhere.run()).toMatchObject({ phase: "stopped", error: "network" });
+    // The Baret wallet's window checked the payment and refused it.
+    const blocked = setup({ sign: () => Promise.reject(new PayStopped("blocked")) });
+    expect(await blocked.run()).toMatchObject({ phase: "stopped", error: "blocked" });
+    expect(blocked.headers).toHaveLength(0);
   });
 
   it("never reads a refusal or a failed settlement as an answer", async () => {

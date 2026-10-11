@@ -305,7 +305,7 @@ export const scrybe = {
     action: "Pay with your wallet",
     note: "A real x402 payment on Monad testnet: your wallet signs a message for {amount} test USDC and Scrybe settles it. You need no MON. Test USDC has no value.",
     noteChecked:
-      "A real x402 payment on Monad testnet. The Baret extension checks the payment with Baret before it signs. You need no MON. Test USDC has no value.",
+      "A real x402 payment on Monad testnet. Your Baret wallet checks the payment with Baret before it signs. You need no MON. Test USDC has no value.",
     title: "Your payment",
     status: {
       asking: "Asking Scrybe for the price...",
@@ -321,6 +321,7 @@ export const scrybe = {
       account: "The connected account changed. Press the button again.",
       funds: "Your wallet does not hold enough test USDC. Nothing was paid.",
       balance: "Your wallet holds less than {amount} test USDC. Nothing was paid.",
+      blocked: "Baret checked this payment in its window and did not sign it. Nothing was paid.",
       refused: "Scrybe did not take the payment. Nothing was paid.",
       unsettled:
         "The payment did not settle in time, so there is no answer. If it lands later, it shows in your wallet's history.",
