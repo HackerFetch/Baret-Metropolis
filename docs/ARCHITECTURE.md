@@ -339,6 +339,7 @@ The authoritative list is `apps/server/.env.example`, validated by `apps/server/
 | `BARET_CORS_ORIGINS` | No | Comma-separated origins. Empty: any |
 | `BARET_RATE_LIMIT_PER_MINUTE` / `BARET_REQUEST_TIMEOUT_MS` / `BARET_VERDICT_TTL_SECONDS` | No | 120 / 8000 / 30 |
 | `NANSEN_API_KEY` / `NANSEN_MODE` | For the trust-level rule; adds to the blocklist | `sources/nansen.ts` (D-016, D-017). `funder` (default): `profiler/address/first-funder`, 1 credit per wallet. `labels`: `profiler/address/labels`, 100 credits. Unset: only `minNansenTrustLevel` above `new` fails closed |
+| `NANSEN_LABELS_DAILY_LIMIT` | No | 25. Labels mode: label lookups (100 credits each) per UTC day; past it the source answers from first-funder until 00:00 UTC (D-042). `/health/ready` shows `nansenMode`, `nansenAnswering`, `nansenLabelsLeftToday` |
 | `CLEANVERSE_API_KEY` / `CLEANVERSE_API_URL` | For compliance rules | Client not wired yet (Week 3) |
 | `ENVIO_ENDPOINT` | For `/v1/audit/*` | GraphQL endpoint of the deployed indexer |
 | `MONAD_TESTNET_CLEANVERSE_APASS_ADDRESS`, `MONAD_TESTNET_CLEANVERSE_POLICY_ADDRESS` | For identity rules and compliant assets | Cleanverse's A-Pass and aToken policy contracts (`docs/CONTRACTS.md` 4.1). Both or neither; unset, identity rules fail closed. Same pair with `MONAD_MAINNET_` |

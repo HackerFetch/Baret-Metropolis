@@ -111,6 +111,75 @@ describe("NansenHttpSource", () => {
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = Date.parse("2026-10-02T12:00:00Z");
 
+describe("labels mode with a daily budget", () => {
+  const A = "0x00000000000000000000000000000000000000a1";
+  const B = "0x00000000000000000000000000000000000000b2";
+  const C = "0x00000000000000000000000000000000000000c3";
+  const DAY = 24 * 60 * 60 * 1000;
+
+  function setup(labelsDailyLimit: number) {
+    let now = Date.parse("2026-10-11T10:00:00Z");
+    const old = new Date(now - 400 * DAY).toISOString();
+    const { fetch, calls } = fakeFetch((body) =>
+      json({
+        data:
+          body.chain === "monad"
+            ? [{ label: "Binance", kind: ["entity"] }]
+            : [{ block_timestamp: old }],
+      }),
+    );
+    const src = new NansenHttpSource({
+      apiKey: "k",
+      mode: "labels",
+      labelsDailyLimit,
+      timeoutMs: 1000,
+      fetch,
+      now: () => now,
+    });
+    return { src, calls, tomorrow: () => (now += DAY) };
+  }
+
+  it("answers from labels while the budget lasts, then from first-funder", async () => {
+    const { src, calls } = setup(2);
+    expect(src.describe()).toEqual({ mode: "labels", answering: "labels", labelsLeftToday: 2 });
+    const first = await src.lookup([A as never, B as never]);
+    expect(first.get(A as never)?.trustLevel).toBe("identified");
+    expect(src.describe()).toEqual({ mode: "labels", answering: "funder", labelsLeftToday: 0 });
+
+    // The third address still gets an answer: the cheap one.
+    const third = await src.lookup([C as never]);
+    expect(third.get(C as never)).toMatchObject({ trustLevel: "established", freshWallet: false });
+    expect(calls.map((c) => c.url.split("/").pop())).toEqual(["labels", "labels", "first-funder"]);
+  });
+
+  it("does not pay twice for an address it already asked about", async () => {
+    const { src, calls } = setup(5);
+    await src.lookup([A as never]);
+    await src.lookup([A as never]);
+    expect(calls).toHaveLength(1);
+    expect(src.describe().labelsLeftToday).toBe(4);
+  });
+
+  it("starts the count again the next UTC day", async () => {
+    const { src, tomorrow } = setup(1);
+    await src.lookup([A as never]);
+    expect(src.describe().answering).toBe("funder");
+    tomorrow();
+    expect(src.describe()).toEqual({ mode: "labels", answering: "labels", labelsLeftToday: 1 });
+  });
+
+  it("with a budget of zero is first-funder under another name", async () => {
+    const { src, calls } = setup(0);
+    await src.lookup([A as never]);
+    expect(calls[0]?.url.endsWith("first-funder")).toBe(true);
+  });
+
+  it("says funder mode has no label budget", () => {
+    const src = new NansenHttpSource({ apiKey: "k", mode: "funder", timeoutMs: 1000 });
+    expect(src.describe()).toEqual({ mode: "funder", answering: "funder", labelsLeftToday: null });
+  });
+});
+
 describe("a wallet Nansen has no record of, on a chain Nansen does not index", () => {
   it("is unknown, not fresh: its absence says nothing", () => {
     expect(profileFromFirstFunder([], NOW, false)).toEqual({

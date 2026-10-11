@@ -14,6 +14,7 @@ export function createSources(config: AppConfig, network: NetworkConfig): Source
       ? new NansenHttpSource({
           apiKey: config.nansenApiKey,
           mode: config.nansenMode,
+          labelsDailyLimit: config.nansenLabelsDailyLimit,
           timeoutMs: config.requestTimeoutMs,
           // Nansen indexes Monad mainnet only (sources/nansen.ts).
           absenceIsFresh: network.network === "mainnet",

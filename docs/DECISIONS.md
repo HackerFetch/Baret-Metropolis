@@ -288,6 +288,12 @@
 **Rationale:** The key went on Render on 2026-10-11 and `verify:demo` fell from 20 of 20 to 12 of 20: every honest scenario that pays a testnet wallet (the merchant, Scrybe, the verified Cleanverse wallet) read Caution with a fresh-wallet warning. A warning that fires for every counterparty is noise, and it made the product's own honest flows read as risky.
 **Status:** ✅ Final. Merged (#80) and live on `6c4392b`: with Nansen on, `verify:demo` agrees on 20 of 20 again.
 
+### D-042 — Nansen in labels mode, inside a daily budget, and the mode is visible
+**Date:** 2026-10-11
+**Decision:** Ezgin bought 10,000 credits and chose labels: who Nansen says owns a wallet is the stronger case for the prize. (1) `NANSEN_MODE=labels` in `render.yaml`. (2) A label lookup costs 100 credits and the API is open, so labels are budgeted: `NANSEN_LABELS_DAILY_LIMIT` (25, at most 2,500 credits a day) label lookups per UTC day; past it the source answers from first-funder (1 credit) until 00:00 UTC. Every address still gets an answer, so nothing fails closed because the budget ran out. (3) Switching the mode is one setting: both modes fill the same profile (`trustLevel`, `flagged`, `freshWallet`, `whale`) and the rules read either. Labels can say `identified`, whale and an exploiter by name; first-funder never says `identified`. (4) `/health/ready` shows `nansenMode` (the setting), `nansenAnswering` (what the next new address gets) and `nansenLabelsLeftToday`.
+**Rationale:** 10,000 credits are 100 label lookups. The cache lives in memory and empties on every deploy, and one run of `verify:demo` asks about several wallets, so without a cap a day of deploys or one caller with new addresses spends everything. The fallback keeps the product answering; the health fields say which answer is being given, so a mode change or an empty budget is not found by surprise.
+**Status:** ✅ Built on branch `nansen-labels-budget`; 182 server tests green (5 new). Not checked against Nansen: the key is only on Render. Live after the merge and a deploy; then `/health/ready` and `verify:demo`. On testnet a wallet with no label reads `new` and adds nothing (D-041), so a label shows only for an address Nansen knows on Monad mainnet.
+
 ## Open Decisions (not yet taken — to be filled in as we progress)
 
 | # | Topic | Where it has impact | Decision date |
