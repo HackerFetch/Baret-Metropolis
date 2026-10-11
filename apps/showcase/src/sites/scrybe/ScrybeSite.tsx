@@ -1,6 +1,7 @@
 import { hub, scrybe } from "@baret/content";
 import type { WindowTyped } from "@baret/wallet-core/window";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
+import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useState } from "react";
 import type { Address } from "viem";
@@ -19,7 +20,7 @@ import { MONAD_TESTNET_ID, useDemoWallet } from "../kit/wallet/useDemoWallet.js"
 import { AskCard } from "./AskCard.js";
 import { ScrybeGlyph, VIEWS } from "./Glyph.js";
 import { PayBlock } from "./PayBlock.js";
-import { PayStopped, usePay } from "./pay.js";
+import { PayStopped, usePay, windowStop } from "./pay.js";
 import { AgentsBridge, Run } from "./Run.js";
 import { ART, type Cap, SAMPLE, START_CAP, usdc } from "./sample.js";
 import { LIVE_VALUES, SOURCE } from "./source.js";
@@ -108,10 +109,7 @@ export function ScrybeSite(): JSX.Element {
           if (got.address.toLowerCase() !== owner.toLowerCase()) throw new PayStopped("account");
           return got.signature;
         }
-        if (got.type === "refused" && got.reason !== "declined") throw new PayStopped("blocked");
-        if (got.type === "busy") throw new PayStopped("pending");
-        if (got.type === "blocked") throw new PayStopped("failed");
-        throw new PayStopped("rejected");
+        throw new PayStopped(windowStop(got));
       })
       .finally(() => hand(null));
   }
@@ -155,6 +153,7 @@ export function ScrybeSite(): JSX.Element {
   return (
     <>
       <DemoBar
+        pill={scrybe.frame.pill}
         mode={mode}
         onMode={setMode}
         labels={{ safe: analysis.modes.safe.label, danger: analysis.modes.danger.label }}
@@ -195,26 +194,32 @@ export function ScrybeSite(): JSX.Element {
                   onAsk={ask}
                   merchant={values.merchant}
                   pay={
-                    <PayBlock
-                      state={pay.state}
-                      walletName={
-                        connection
-                          ? walletLabel(connection.wallet)
-                          : wallet.baret
-                            ? hub.frame.wallet.baret.name
-                            : ""
-                      }
-                      need={need}
-                      switching={wallet.switching}
-                      onConnect={requestPicker}
-                      onSwitch={() => void switchToMonad()}
-                      price={SAMPLE.price}
-                      merchant={LIVE_VALUES.merchant}
-                      checks={
-                        connection ? isBaretExtension(connection.wallet.id) : wallet.baret !== null
-                      }
-                      onPay={payForReal}
-                    />
+                    <div className="grid gap-3">
+                      {/* A real payment in test USDC: said before the button, not only in the strip. */}
+                      <p className={T.small}>{scrybe.frame.notice}</p>
+                      <PayBlock
+                        state={pay.state}
+                        walletName={
+                          connection
+                            ? walletLabel(connection.wallet)
+                            : wallet.baret
+                              ? hub.frame.wallet.baret.name
+                              : ""
+                        }
+                        need={need}
+                        switching={wallet.switching}
+                        onConnect={requestPicker}
+                        onSwitch={() => void switchToMonad()}
+                        price={SAMPLE.price}
+                        merchant={LIVE_VALUES.merchant}
+                        checks={
+                          connection
+                            ? isBaretExtension(connection.wallet.id)
+                            : wallet.baret !== null
+                        }
+                        onPay={payForReal}
+                      />
+                    </div>
                   }
                 />
               }

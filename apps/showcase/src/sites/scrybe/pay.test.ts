@@ -2,7 +2,7 @@ import { type Hex, recoverTypedDataAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { describe, expect, it, vi } from "vitest";
 import { SendRefused } from "../kit/wallet/baret.js";
-import { type PayDeps, type PayState, PayStopped, payAndAsk, termsOf } from "./pay.js";
+import { type PayDeps, type PayState, PayStopped, payAndAsk, termsOf, windowStop } from "./pay.js";
 
 // A throwaway test key (the first Anvil account); it guards nothing.
 const account = privateKeyToAccount(
@@ -116,6 +116,20 @@ describe("Scrybe's paid question", () => {
     const blocked = setup({ sign: () => Promise.reject(new PayStopped("blocked")) });
     expect(await blocked.run()).toMatchObject({ phase: "stopped", error: "blocked" });
     expect(blocked.headers).toHaveLength(0);
+  });
+
+  it("never shows an unreachable Baret as Blocked: no check ran", async () => {
+    const refused = (reason: "declined" | "blocked" | "unreachable") =>
+      ({ type: "refused", id: "a", reason, address: null, findings: [] }) as const;
+    expect(windowStop(refused("unreachable"))).toBe("unreachable");
+    expect(windowStop(refused("blocked"))).toBe("blocked");
+    expect(windowStop(refused("declined"))).toBe("rejected");
+    expect(windowStop({ type: "blocked" })).toBe("window");
+    expect(windowStop({ type: "busy" })).toBe("pending");
+    expect(windowStop({ type: "closed" })).toBe("rejected");
+    const unreachable = setup({ sign: () => Promise.reject(new PayStopped("unreachable")) });
+    expect(await unreachable.run()).toMatchObject({ phase: "stopped", error: "unreachable" });
+    expect(unreachable.headers).toHaveLength(0);
   });
 
   it("never reads a refusal or a failed settlement as an answer", async () => {
