@@ -224,7 +224,7 @@ The authorisation is an EIP-3009 `TransferWithAuthorization` on the token in `as
 | Monad RPC (Alchemy on Render) | Simulation and reads | `debug_traceCall`, `eth_getBalance`, `eth_getCode`, `eth_getStorageAt`, `eth_gasPrice`, `eth_blockNumber`, `eth_chainId` |
 | `ReputationRegistry` | The blocklist | `isFlagged`, `entry` |
 | Cleanverse (contracts on Monad) | Identity rules and compliant assets | Reads of the A-Pass and the asset's policy |
-| Nansen | Trust level and labels. **Off: no key** | `/api/v1/profiler/address/first-funder`, `/api/v1/profiler/address/labels` |
+| Nansen | Trust level and labels. **Live since 2026-10-11**, `labels` mode, 25 lookups a day, then `first-funder` for the rest of the UTC day | `/api/v1/profiler/address/first-funder`, `/api/v1/profiler/address/labels` |
 | KIMI (Moonshot) | `/v1/explain`, `/v1/policy/draft` | `https://api.moonshot.ai/v1/chat/completions`, model `kimi-k3` |
 | Qwen | `/v1/review` | `https://maas.qwencloudapi.com/compatible-mode/v1/chat/completions`, model `qwen3.8-max` |
 | Envio | `/v1/audit/*` | GraphQL on the hosted indexer |

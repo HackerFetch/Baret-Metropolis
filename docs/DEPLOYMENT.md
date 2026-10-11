@@ -123,7 +123,7 @@ The API starts `tsx` directly: `pnpm start` would make pnpm 11 re-check, and re-
 | Render service | ✅ `baret-monad-api` live, traced analysis verified 2026-10-02 |
 | Vercel projects | ✅ `baret-metropolis` (showcase, main domain, canonical + sitemap verified) and `baret-wallet` live, `/api` rewrite verified 2026-10-02 |
 | Envio indexer (hosted) | ✅ Live since 2026-10-07 at `https://indexer.dev.hyperindex.xyz/b3bc40c/v1/graphql`; its data matches the chain and all four `/v1/audit` routes were checked against it. The free plan deletes a deployment after 30 days, or after 7 days without a request (the keep-warm job asks it every 10 minutes) |
-| Extension release (store / signed zip) | ⬜ Artifact only for now |
+| Extension release (store / signed zip) | ✅ A zip published from every push to `main`, offered on `/install`; loaded unpacked and checked end to end by Hale on 2026-10-10 (E12). Not in the Chrome Web Store |
 
 ## The sites' edge secret (G-17)
 
@@ -156,4 +156,3 @@ Two scripts drive the real product in Chromium, against the live API and Monad t
 | `pnpm --filter @baret/wallet verify:browser` | The web wallet with a virtual passkey: a new account, sealed settings saved, storage cleared, the copy brought back | 8 |
 
 Both passed on 2026-10-11. The extension run makes a new wallet each time and funds it with 1 MON from `BARET_FUNDER_KEY_FILE` (default `~/.baret/deployer.key`), so it needs `cast` and a funded key. Each script's header lists its settings. They are not part of CI: they need a browser, a funded key and the live services.
-
