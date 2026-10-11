@@ -197,7 +197,7 @@ export const policy = {
       group: "approvals",
       label: "Block signed allowances",
       hint: "Blocks a permit: a signature that grants an allowance without a transaction, and is easy to miss.",
-      codes: ["PERMIT_SIGNATURE_DETECTED"],
+      codes: ["PERMIT_SIGNATURE_DETECTED", "SIGNATURE_NOT_UNDERSTOOD"],
     },
 
     // Dangerous calls
@@ -211,7 +211,7 @@ export const policy = {
       group: "dangerous",
       label: "Block borrowed code",
       hint: "Blocks a call where a contract runs another contract's code with its own funds. Upgradeable apps do this too.",
-      codes: ["DELEGATECALL_DETECTED"],
+      codes: ["DELEGATECALL_DETECTED", "ACCOUNT_CODE_DELEGATION"],
     },
     blockOwnershipTransfer: {
       group: "dangerous",
@@ -376,6 +376,7 @@ export const policy = {
       codes: [
         "LOW_CONFIDENCE_INCOMPLETE_DATA",
         "ERC20_APPROVAL_GRANTED",
+        "SIGNATURE_UNRECOGNISED",
         "NANSEN_FLAGGED_FRESH_WALLET",
         "NANSEN_FLAGGED_WHALE_COUNTERPARTY",
         "DEEP_CALL_NESTING",

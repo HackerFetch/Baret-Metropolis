@@ -152,7 +152,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     feeWei = gasLimit !== null ? gasLimit * gasPrice : null;
   } else if (req.typedData) {
     user = getAddress(req.typedData.signer);
-    effects = effectsFromTypedData(req.typedData);
+    effects = effectsFromTypedData(req.typedData, network.chainId);
   } else {
     throw new AnalyzeInputError("send exactly one of `transaction` or `typedData`");
   }
@@ -165,6 +165,9 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     ...effects.approvals.map((a) => a.spender),
     ...effects.transfers.filter((t) => t.from === user).map((t) => t.to),
     ...effects.ownership.map((o) => o.newOwner),
+    // A message Baret cannot read is still meant for a contract: that
+    // contract is checked against the registry like any counterparty.
+    effects.signature?.kind === "unread" ? effects.signature.verifier : null,
     payment ? getAddress(payment.payTo) : null,
   ]).filter((a) => a !== user);
   const recipients = uniq(

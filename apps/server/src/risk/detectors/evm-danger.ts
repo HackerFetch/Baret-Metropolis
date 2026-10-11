@@ -10,6 +10,10 @@ export const evmDanger: Detector = (ctx) => {
   for (const contract of new Set(ctx.selfdestructs)) {
     out.push({ code: "SELFDESTRUCT_CALL", values: { contract } });
   }
+  // EIP-7702: the transaction itself hands the account's code to a contract.
+  for (const contract of new Set(ctx.tx?.delegations ?? [])) {
+    out.push({ code: "ACCOUNT_CODE_DELEGATION", values: { contract } });
+  }
   const seen = new Set<string>();
   for (const d of ctx.delegateCalls) {
     if (d.reverted || d.standardProxy || seen.has(d.contract)) continue;

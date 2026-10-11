@@ -184,6 +184,229 @@ describe("approvals", () => {
   });
 });
 
+describe("signed messages", () => {
+  const PERMIT2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+  const sign = (
+    primaryType: string,
+    message: Record<string, unknown>,
+    over: {
+      verifyingContract?: string;
+      chainId?: number;
+      types?: AnalyzeRequest["typedData"];
+    } = {},
+    policyOver: Parameters<typeof policy>[0] = {},
+  ) =>
+    run({
+      network: "testnet",
+      policy: policy(policyOver),
+      typedData: {
+        signer: USER,
+        domain: {
+          name: "A name the site chose",
+          verifyingContract: over.verifyingContract ?? USDC,
+          chainId: over.chainId ?? 10143,
+        },
+        types: {},
+        primaryType,
+        message,
+      },
+    });
+
+  it("never calls a message it cannot read Safe: an order that names accounts is blocked", async () => {
+    // A marketplace order: an offerer, a zone, items. Baret has no model of it.
+    const r = await sign("OrderComponents", {
+      offerer: USER,
+      zone: DRAINER,
+      offer: [{ itemType: 2, token: DAPP, identifierOrCriteria: "7", startAmount: "1" }],
+      consideration: [],
+    });
+    expect(codes(r)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+    expect(r.decision).toBe("blocked");
+    const finding = r.findings.find((f) => f.code === "SIGNATURE_NOT_UNDERSTOOD");
+    // Nothing the site wrote reaches the screen through the finding.
+    expect(finding?.values).toEqual({});
+    expect(finding?.blocking).toBe(true);
+  });
+
+  it("blocks it under Permissive too: no rule turns an unreadable grant into a pass", async () => {
+    const r = await sign(
+      "Mystery",
+      { beneficiary: DRAINER, amount: "5" },
+      {},
+      { blockPermit: false, allowWarnings: true },
+    );
+    expect(codes(r)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("says so, without stopping, when an unknown message points at no funds", async () => {
+    // A vote: a proposal and a choice. No other account, no amount.
+    const r = await sign("Ballot", { proposalId: "42", support: 1, reason: "yes" });
+    expect(codes(r)).toEqual(["SIGNATURE_UNRECOGNISED"]);
+    expect(r.decision).toBe("caution");
+    // With warnings off, even that is a block.
+    const strict = await sign(
+      "Ballot",
+      { proposalId: "42", support: 1 },
+      {},
+      { allowWarnings: false },
+    );
+    expect(strict.decision).toBe("blocked");
+  });
+
+  it("reads a message's own types to find the accounts in it", async () => {
+    const r = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: {
+        signer: USER,
+        domain: { verifyingContract: DAPP, chainId: 10143 },
+        types: {
+          Grant: [
+            { name: "to", type: "Party" },
+            { name: "memo", type: "string" },
+          ],
+          Party: [{ name: "wallet", type: "address" }],
+        },
+        primaryType: "Grant",
+        // A string that looks like an address is text; the typed address counts.
+        message: { to: { wallet: DRAINER }, memo: PEER },
+      },
+    });
+    expect(codes(r)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+
+    const textOnly = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: {
+        signer: USER,
+        domain: { verifyingContract: DAPP, chainId: 10143 },
+        types: {
+          Note: [
+            { name: "memo", type: "string" },
+            { name: "author", type: "address" },
+          ],
+        },
+        primaryType: "Note",
+        // The signer's own address is not another account.
+        message: { memo: PEER, author: USER },
+      },
+    });
+    expect(codes(textOnly)).toEqual(["SIGNATURE_UNRECOGNISED"]);
+  });
+
+  it("does not read a permit that names another owner, or one with no amount", async () => {
+    const other = await sign("Permit", { owner: PEER, spender: DRAINER, value: "1000000" });
+    expect(codes(other)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+    expect(codes(other)).not.toContain("PERMIT_SIGNATURE_DETECTED");
+    const noAmount = await sign("Permit", { owner: USER, spender: DRAINER });
+    expect(codes(noAmount)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+    expect(noAmount.decision).toBe("blocked");
+  });
+
+  it("blocks a message for another chain, readable or not", async () => {
+    const r = await sign(
+      "Permit",
+      { owner: USER, spender: DAPP, value: "1" },
+      { chainId: 143 },
+      { blockPermit: false },
+    );
+    expect(codes(r)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+    expect(r.findings.find((f) => f.code === "SIGNATURE_NOT_UNDERSTOOD")?.details).toEqual({
+      reason: "chain",
+    });
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("reads the DAI form of a permit: the whole balance, or a revoke", async () => {
+    const all = await sign("Permit", { holder: USER, spender: DRAINER, nonce: 0, allowed: true });
+    expect(codes(all)).toEqual(
+      expect.arrayContaining(["PERMIT_SIGNATURE_DETECTED", "ERC20_APPROVAL_UNLIMITED"]),
+    );
+    expect(all.findings.find((f) => f.code === "PERMIT_SIGNATURE_DETECTED")?.values.amount).toBe(
+      "unlimited",
+    );
+    const revoke = await sign("Permit", { holder: USER, spender: DAPP, nonce: 1, allowed: false });
+    expect(revoke.findings).toEqual([]);
+    expect(revoke.decision).toBe("safe");
+  });
+
+  it("reads Permit2 signature transfers, single, batch and with a witness", async () => {
+    const single = await sign(
+      "PermitTransferFrom",
+      { permitted: { token: USDC, amount: "2500000" }, spender: DRAINER, nonce: 1, deadline: 9 },
+      { verifyingContract: PERMIT2 },
+    );
+    const found = single.findings.find((f) => f.code === "PERMIT_SIGNATURE_DETECTED");
+    expect(found?.values).toMatchObject({ spender: DRAINER, amount: "2.5" });
+    expect(single.decision).toBe("blocked");
+
+    const witness = await sign(
+      "PermitWitnessTransferFrom",
+      { permitted: { token: USDC, amount: "1" }, spender: DAPP, witness: { order: "0x01" } },
+      { verifyingContract: PERMIT2 },
+    );
+    expect(codes(witness)).toContain("PERMIT_SIGNATURE_DETECTED");
+
+    const batch = await sign(
+      "PermitBatchTransferFrom",
+      {
+        permitted: [
+          { token: USDC, amount: "1" },
+          { token: DAPP, amount: "2" },
+        ],
+        spender: DRAINER,
+      },
+      { verifyingContract: PERMIT2 },
+    );
+    expect(codes(batch).filter((c) => c === "PERMIT_SIGNATURE_DETECTED")).toHaveLength(2);
+
+    // One entry that cannot be read hides an allowance: the whole batch is unread.
+    const hidden = await sign(
+      "PermitBatchTransferFrom",
+      {
+        permitted: [
+          { token: USDC, amount: "1" },
+          { token: "not a token", amount: "2" },
+        ],
+        spender: DAPP,
+      },
+      { verifyingContract: PERMIT2 },
+    );
+    expect(codes(hidden)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+  });
+
+  it("lets a vote delegation and a cancelled authorisation through: nothing moves", async () => {
+    const delegation = await sign("Delegation", { delegatee: PEER, nonce: 0, expiry: NOW + 60 });
+    expect(delegation.findings).toEqual([]);
+    expect(delegation.decision).toBe("safe");
+    const cancel = await sign("CancelAuthorization", { authorizer: USER, nonce: "0x01" });
+    expect(cancel.findings).toEqual([]);
+    const notMine = await sign("CancelAuthorization", { authorizer: PEER, nonce: "0x01" });
+    expect(codes(notMine)).toContain("SIGNATURE_NOT_UNDERSTOOD");
+  });
+
+  it("checks the contract an unread message is meant for against the registry", async () => {
+    const r = await run(
+      {
+        network: "testnet",
+        policy: policy(),
+        typedData: {
+          signer: USER,
+          domain: { verifyingContract: DRAINER, chainId: 10143 },
+          types: {},
+          primaryType: "Ballot",
+          message: { proposalId: "1" },
+        },
+      },
+      new FakeRpc(),
+      cleanSources({ registry: { [DRAINER]: { flagged: true, severity: 4, reasonCode: "X" } } }),
+    );
+    expect(codes(r)).toContain("KNOWN_MALICIOUS_ADDRESS");
+    expect(r.decision).toBe("blocked");
+  });
+});
+
 describe("request shapes", () => {
   const unsigned = (chainId = 10143) =>
     serializeTransaction({
@@ -215,6 +438,38 @@ describe("request shapes", () => {
         deps(new FakeRpc()),
       ),
     ).rejects.toThrow(/chain 1/);
+  });
+
+  it("blocks a transaction that hands the account's code to a contract (EIP-7702)", async () => {
+    const raw = serializeTransaction({
+      chainId: 10143,
+      type: "eip7702",
+      to: PEER,
+      value: 0n,
+      maxFeePerGas: 100n * 10n ** 9n,
+      gas: 60_000n,
+      authorizationList: [
+        {
+          address: DRAINER,
+          chainId: 10143,
+          nonce: 0,
+          r: `0x${"11".repeat(32)}`,
+          s: `0x${"22".repeat(32)}`,
+          yParity: 0,
+        },
+      ],
+    });
+    const r = await run({
+      network: "testnet",
+      transaction: { raw },
+      userWallet: USER,
+      // Even with the delegatecall rule off: the simulation does not apply it.
+      policy: policy({ blockDelegatecall: false }),
+    });
+    const finding = r.findings.find((f) => f.code === "ACCOUNT_CODE_DELEGATION");
+    expect(finding?.values).toEqual({ contract: DRAINER });
+    expect(finding?.blocking).toBe(true);
+    expect(r.decision).toBe("blocked");
   });
 
   it("applies a template by name with the network's USDC filled in", async () => {
