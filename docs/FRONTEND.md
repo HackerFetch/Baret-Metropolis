@@ -104,7 +104,7 @@ Each card: name, category tag, tagline, description, "Watch for" list (3 items),
 
 #### 01 — SCRYBE (x402, flagship)
 - **Tagline:** Pay-per-question oracle
-- **Description:** An AI Q&A service that charges $0.001 USDC per answer over x402. Baret checks each payment against the visitor's hourly cap before it is signed. The price, the 402 and the history are fixed values, and nothing settles (G-05).
+- **Description:** An AI Q&A service that charges 0.05 test USDC per answer over x402. "Pay and ask" shows Baret's check of the payment against the visitor's hourly cap before it is signed. Since D-046 "Pay with your wallet" settles one real payment on Monad testnet: the API answers 402 with the terms, verifies the signed EIP-3009 transfer and submits it, then returns the answer with a receipt naming the transaction (G-05 closed). Like NovaSwap's "Sign with your wallet", that path is checked by Baret only when the connected wallet is the Baret wallet or the Baret extension; any other wallet signs it unchecked. The answers are a fixed set of four: Scrybe is a demo merchant, not a model.
 - **Watch for:** Per-merchant rolling spend cap · Facilitator allowlist enforcement · Asset allowlist for the payment leg
 - **Threat class:** Silent agent · Drift risk
 - **Why it matters:** Agent payments repeat by design, so a small leak compounds with every request.
