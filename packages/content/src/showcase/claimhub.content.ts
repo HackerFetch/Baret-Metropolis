@@ -1,4 +1,4 @@
-import type { ScenarioSite } from "../types.js";
+import type { ScenarioSite, SiteSign } from "../types.js";
 
 /**
  * /claimhub on apps/showcase. Drainer. The hub's first stop.
@@ -231,6 +231,18 @@ export const claimhub = {
       body: "A real claim sends tokens to you. If a claim asks to spend your tokens, it is not a claim.",
     },
   },
-} as const satisfies ScenarioSite;
+  sign: {
+    token: "HUB",
+    steps: {
+      safe: ["Claim 2,410 HUB"],
+      danger: ["Verify your wallet to claim", "Take the allowance back"],
+    },
+    outcome: {
+      safe: "The distributor sent the HUB to your wallet.",
+      danger:
+        "Between the two steps a reported contract could take all the USDC in this wallet, and no HUB arrived. The second step set the allowance back to zero, which no attack site would do. Press Claim to see what Baret says about the first request.",
+    },
+  },
+} as const satisfies ScenarioSite & { sign: SiteSign };
 
 export type ClaimhubContent = typeof claimhub;
