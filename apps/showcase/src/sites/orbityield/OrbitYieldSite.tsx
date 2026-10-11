@@ -2,6 +2,7 @@ import { hub, orbityield } from "@baret/content";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
+import type { Address } from "viem";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { parseAmount, toWei } from "../kit/amount.js";
 import { DemoBar } from "../kit/DemoBar.js";
@@ -12,10 +13,11 @@ import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
 import { exceeds, formatMon, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
+import { type SignRun, useSiteSign } from "../kit/wallet/useSiteSign.js";
 import { OrbitGlyph, VIEWS } from "./Glyph.js";
 import { StakeCard } from "./StakeCard.js";
 import { ART, overLimit, poolOf, SAMPLE } from "./sample.js";
-import { livePoolOf, overLimitLive, SOURCE } from "./source.js";
+import { livePoolOf, overLimitLive, RECEIPT, SOURCE, signCalls } from "./source.js";
 
 /**
  * OrbitYield: a liquid staking page in its own observatory palette, with
@@ -27,8 +29,9 @@ import { livePoolOf, overLimitLive, SOURCE } from "./source.js";
  * nothing back: Caution, and Blocked once the deposit is above the loss
  * limit, which is what the expected verdict then says too. With a wallet
  * connected, Baret checks the real request from that address against its
- * real balance; without one, the prepared sample (source.ts). Nothing is
- * signed or sent.
+ * real balance; without one, the prepared sample (source.ts). That button
+ * signs and sends nothing; "Sign with your wallet" under it sends the same
+ * request to the connected wallet for real (kit/wallet/useSiteSign.tsx).
  */
 
 const { site, analysis } = orbityield;
@@ -46,6 +49,19 @@ export function OrbitYieldSite(): JSX.Element {
   const { from, live, balance } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
+  const sign = useSiteSign(orbityield.sign);
+
+  /** The run "Sign with your wallet" starts; null when the amount is refused. */
+  function signRun(owner: Address): SignRun | null {
+    const wei = toWei(amount);
+    if (wei === null) {
+      setError(site.panel.errors.empty);
+      return null;
+    }
+    setError(null);
+    // The receipt token is read in both versions: the attack is the balance that does not move.
+    return { mode, calls: signCalls(mode, wei, owner), values: { amount }, token: RECEIPT };
+  }
 
   function runCheck(version: DemoMode, value: number, wei: bigint): void {
     setChecked(version);
@@ -125,6 +141,7 @@ export function OrbitYieldSite(): JSX.Element {
                   }}
                   error={error}
                   onStake={stake}
+                  sign={sign.block(signRun)}
                 />
               }
             />

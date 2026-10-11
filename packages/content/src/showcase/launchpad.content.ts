@@ -1,4 +1,4 @@
-import type { ScenarioSite } from "../types.js";
+import type { ScenarioSite, SiteSign } from "../types.js";
 
 /**
  * /launchpad on apps/showcase. Trust trap. Blocked under Balanced since
@@ -254,7 +254,19 @@ export const launchpad = {
       body: "A sale page describes launch day. Check whether the code that holds your money can change after it.",
     },
   },
-} as const satisfies ScenarioSite;
+  sign: {
+    token: "LNTL",
+    steps: {
+      safe: ["Contribute {amount} MON"],
+      danger: ["Contribute {amount} MON"],
+    },
+    outcome: {
+      safe: "The sale sent LNTL to your wallet.",
+      danger:
+        "This sale paid today. Its code is borrowed from a contract its owner can replace, so the next contribution may not be. Press Contribute to see what Baret says about the same request.",
+    },
+  },
+} as const satisfies ScenarioSite & { sign: SiteSign };
 
 export type LaunchpadContent = typeof launchpad;
 

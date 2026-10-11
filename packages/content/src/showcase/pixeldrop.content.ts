@@ -1,4 +1,4 @@
-import type { ScenarioSite } from "../types.js";
+import type { ScenarioSite, SiteSign } from "../types.js";
 
 /**
  * /pixeldrop on apps/showcase. Drainer.
@@ -235,6 +235,18 @@ export const pixeldrop = {
       body: "A mint sends one piece to you. Access to your whole collection is never part of minting.",
     },
   },
-} as const satisfies ScenarioSite;
+  sign: {
+    token: "Night Shift pieces",
+    steps: {
+      safe: ["Mint {count} for {price} MON"],
+      danger: ["Approve the collection to list it", "Take the approval back"],
+    },
+    outcome: {
+      safe: "The collection minted the pieces to your wallet.",
+      danger:
+        "Between the two steps a reported address could move every Night Shift piece in this wallet. The second step closed it again, which no attack site would do. Press Mint to see what Baret says about the first request.",
+    },
+  },
+} as const satisfies ScenarioSite & { sign: SiteSign };
 
 export type PixeldropContent = typeof pixeldrop;

@@ -2,6 +2,7 @@ import { hub, launchpad } from "@baret/content";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
+import type { Address } from "viem";
 import { AnalysisPanel } from "../kit/AnalysisPanel.js";
 import { parseAmount, toWei } from "../kit/amount.js";
 import { DemoBar } from "../kit/DemoBar.js";
@@ -12,10 +13,11 @@ import { useSiteView } from "../kit/site/useSiteView.js";
 import { SiteViewPage } from "../kit/site/Views.js";
 import { useCheck } from "../kit/useCheck.js";
 import { exceeds, formatMon, useDemoWallet } from "../kit/wallet/useDemoWallet.js";
+import { type SignRun, useSiteSign } from "../kit/wallet/useSiteSign.js";
 import { ContributeCard } from "./ContributeCard.js";
 import { LaunchGlyph, VIEWS } from "./Glyph.js";
 import { ART, limitOf, SAMPLE, saleOf } from "./sample.js";
-import { liveSaleOf, SOURCE } from "./source.js";
+import { liveSaleOf, SALE_TOKEN, SOURCE, signCalls } from "./source.js";
 
 /**
  * LaunchPad: a token sale page in its own plum palette, with Baret's strip
@@ -26,7 +28,9 @@ import { liveSaleOf, SOURCE } from "./source.js";
  * the attack the same button pays a proxy whose code its deployer can
  * replace after the sale: Caution under Balanced. With a wallet connected,
  * Baret checks the real request from that address; without one, the
- * prepared sample (source.ts). Nothing is signed or sent.
+ * prepared sample (source.ts). That button
+ * signs and sends nothing; "Sign with your wallet" under it sends the same
+ * request to the connected wallet for real (kit/wallet/useSiteSign.tsx).
  */
 
 const { site, analysis } = launchpad;
@@ -44,6 +48,20 @@ export function LaunchPadSite(): JSX.Element {
   const { from, live, balance } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
+  const sign = useSiteSign(launchpad.sign);
+
+  /** The run "Sign with your wallet" starts; null when the amount is refused. */
+  function signRun(owner: Address): SignRun | null {
+    const value = parseAmount(amount);
+    const wei = toWei(amount);
+    const broken = value === null || wei === null ? "empty" : limitOf(value);
+    if (broken || wei === null) {
+      setError(site.panel.errors[broken ?? "empty"]);
+      return null;
+    }
+    setError(null);
+    return { mode, calls: signCalls(mode, wei, owner), values: { amount }, token: SALE_TOKEN };
+  }
 
   function runCheck(version: DemoMode, value: number, wei: bigint): void {
     setChecked(version);
@@ -124,6 +142,7 @@ export function LaunchPadSite(): JSX.Element {
                   }}
                   error={error}
                   onContribute={contribute}
+                  sign={sign.block(signRun)}
                 />
               }
             />

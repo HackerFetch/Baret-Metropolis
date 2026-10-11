@@ -1,4 +1,4 @@
-import { DEMO, orbityield } from "@baret/demo";
+import { DEMO, type DemoTx, orbityield } from "@baret/demo";
 import type { CheckSource, DemoMode } from "@baret/web-ui/lib/check-types";
 import type { Address } from "viem";
 import { LOSS_LIMIT } from "../kit/amount.js";
@@ -30,6 +30,14 @@ export interface StakeInput {
 export function buildRequest(mode: DemoMode, wei: bigint, from: Address): DemoCall {
   return mode === "safe" ? orbityield.stake(from, wei) : orbityield.attackStake(from, wei);
 }
+
+/** The call "Sign with your wallet" sends: the one the panel checks. */
+export function signCalls(mode: DemoMode, wei: bigint, from: Address): DemoTx[] {
+  return [mode === "safe" ? orbityield.stake(from, wei) : orbityield.attackStake(from, wei)];
+}
+
+/** oMON, the receipt the honest pool pays: read before and after a signed stake. */
+export const RECEIPT = { address: DEMO.orbityield.receipt, decimals: 18 } as const;
 
 /** The pool a live request pays, for the panel's copy. */
 export function livePoolOf(mode: DemoMode): string {
