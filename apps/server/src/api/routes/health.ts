@@ -62,7 +62,7 @@ export const healthRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) =
    * carried, a count and nothing else. It tells an operator how many proxies
    * stand in front of the server on each path (direct, through a site's
    * rewrite), which is what decides which of those addresses can be trusted
-   * (docs/SYSTEM_GAPS.md, G-01).
+   * (docs/SYSTEM_GAPS.md, G-17).
    */
   app.get("/health", async (req) => ({
     status: "ok",
