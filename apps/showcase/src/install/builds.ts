@@ -1,17 +1,20 @@
 import { install } from "@baret/content";
 
 /**
- * The install page's two seams: which browser the visitor is on, and where
- * each extension build can be downloaded.
+ * The install page's seams: which browser the visitor is on, and where each
+ * extension build comes from.
  *
- * No build is published yet (the zips are CI artifacts, which need a GitHub
- * login), so each download URL comes from the environment and is null when
- * unset: the page then says so and points at the source instead. Never a
- * guessed URL, size or date.
+ * A build reaches the browser one of three ways, best first: its store
+ * listing (the Chrome Web Store, Firefox Add-ons), a published zip, or the
+ * source. The first two are URLs from the environment and null when unset,
+ * so the page says exactly which one it has and never guesses a URL, size or
+ * date. With a store listing the zip is not offered: the store is the way in.
  */
 
 export type Browser = "chromium" | "firefox" | "unknown";
 export type BuildId = Exclude<Browser, "unknown">;
+/** How a build reaches the browser, best first. */
+export type Source = "store" | "zip" | "source";
 
 /**
  * The browser family from a user-agent string. Chrome, Brave, Edge, Opera and
@@ -31,16 +34,27 @@ export const EXTENSION_VERSION = "0.1.0";
 
 export interface Build {
   readonly id: BuildId;
+  /** The store listing, or null while none is public. */
+  readonly store: string | null;
   /** A published zip, or null while none is published. */
   readonly href: string | null;
   readonly version: string;
   readonly title: string;
   readonly requires: string;
-  /** The hero button for this build. */
+  /** The hero button for the zip. */
   readonly action: string;
 }
 
-/** Only an absolute https URL counts as a published build. */
+/** One of the three steps under the hero. */
+export interface Step {
+  readonly short: string;
+  readonly title: string;
+  readonly body: string;
+  /** A browser page the visitor pastes into the address bar. */
+  readonly address?: string;
+}
+
+/** Only an absolute https URL counts as a published build or a public listing. */
 function urlOrNull(value: unknown): string | null {
   return typeof value === "string" && /^https:\/\/\S+$/.test(value.trim()) ? value.trim() : null;
 }
@@ -50,10 +64,13 @@ const { builds } = install.download;
 export function buildsFrom(env: {
   readonly chromium?: unknown;
   readonly firefox?: unknown;
+  readonly chromiumStore?: unknown;
+  readonly firefoxStore?: unknown;
 }): Record<BuildId, Build> {
   return {
     chromium: {
       id: "chromium",
+      store: urlOrNull(env.chromiumStore),
       href: urlOrNull(env.chromium),
       version: EXTENSION_VERSION,
       title: builds.chromium.title,
@@ -62,6 +79,7 @@ export function buildsFrom(env: {
     },
     firefox: {
       id: "firefox",
+      store: urlOrNull(env.firefoxStore),
       href: urlOrNull(env.firefox),
       version: EXTENSION_VERSION,
       title: builds.firefox.title,
@@ -74,7 +92,16 @@ export function buildsFrom(env: {
 export const BUILDS = buildsFrom({
   chromium: import.meta.env.VITE_BARET_EXTENSION_CHROMIUM_URL,
   firefox: import.meta.env.VITE_BARET_EXTENSION_FIREFOX_URL,
+  chromiumStore: import.meta.env.VITE_BARET_EXTENSION_CHROMIUM_STORE_URL,
+  firefoxStore: import.meta.env.VITE_BARET_EXTENSION_FIREFOX_STORE_URL,
 });
+
+/** The store when the build is listed, else the zip when one is published, else the source. */
+export function sourceOf(build: Build): Source {
+  if (build.store !== null) return "store";
+  if (build.href !== null) return "zip";
+  return "source";
+}
 
 /** The build the hero leads with: the visitor's own, Chromium when unknown. */
 export function leadBuild(browser: Browser): BuildId {
@@ -84,4 +111,30 @@ export function leadBuild(browser: Browser): BuildId {
 /** The other build, offered as a quiet link beside the lead one. */
 export function otherBuild(id: BuildId): BuildId {
   return id === "firefox" ? "chromium" : "firefox";
+}
+
+/**
+ * The three steps for a build. From its store: open, add, pin. Otherwise
+ * extract, open, load, with step 1 building the folder from source while no
+ * zip is published.
+ */
+export function stepsFor(id: BuildId, source: Source): readonly Step[] {
+  if (source === "store") return builds[id].store.steps;
+  const { steps } = install;
+  const chosen = id === "firefox" ? steps.firefox : steps.chrome;
+  const first = id === "firefox" ? steps.pending.firefox : steps.pending.chrome;
+  return source === "source" ? [first, ...chosen.items.slice(1)] : chosen.items;
+}
+
+/**
+ * The troubleshooting items that can still happen. An unpacked load goes
+ * wrong only while the Chromium build is not in its store; a temporary add-on
+ * vanishes only while the Firefox one is not.
+ */
+export function helpItems(all: Record<BuildId, Build>) {
+  return install.troubleshooting.items.filter((item) => {
+    if (!("only" in item)) return true;
+    const id: BuildId = item.only === "unpacked" ? "chromium" : "firefox";
+    return sourceOf(all[id]) !== "store";
+  });
 }

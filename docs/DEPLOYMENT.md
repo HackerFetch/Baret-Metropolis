@@ -13,7 +13,7 @@ Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel 
 | `apps/showcase` | Vercel project `baret-metropolis` | `apps/showcase/vercel.json` | **`https://baret-metropolis.vercel.app`** (main domain) |
 | `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://baret-wallet.vercel.app` |
 | `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` (live) |
-| `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" / store later |
+| `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" until the Chrome Web Store listing is public, then the store (`VITE_BARET_EXTENSION_CHROMIUM_STORE_URL`, below) |
 | `contracts/` | Monad testnet, by hand | `contracts/script/Deploy.s.sol` | addresses in `docs/CONTRACTS.md` |
 
 The two Vercel apps call the API at `/api/...`. Vercel rewrites `/api/:path*` to the Render service, so the browser stays on one origin (no CORS) exactly like the Vite dev proxy does locally. If the Render service gets a different URL, change the rewrite in both `vercel.json` files.
@@ -94,6 +94,7 @@ Checked before the first deployment (2026-10-07), with `ENVIO_API_TOKEN` set: `p
 - **Keep-warm** (`.github/workflows/keep-warm.yml`): asks `/health/ready` every 10 minutes so the free Render instance does not sleep (a sleeping instance needs close to a minute, the demo sites wait 15 seconds).
 - **Wallet, live or sample**: a production build of `apps/wallet` is live (a Mera passkey account, Monad reads, the Baret check before every signature); any `?sample=<name>` in the URL keeps the sample. In dev, `VITE_BARET_WALLET=live pnpm --filter @baret/wallet dev` turns the live side on (a passkey made on `localhost` is a different wallet from one made on `baret-wallet.vercel.app`). `VITE_MONAD_TESTNET_RPC_URL` on the wallet's Vercel project replaces the public RPC for its reads; it is optional.
 - **Extension release** (`ci.yml` → `release-extension`): every push to `main` replaces the `extension-latest` GitHub release with `baret-chrome.zip` and `baret-firefox.zip`. `/install` links to `releases/latest/download/<name>.zip` through `VITE_BARET_EXTENSION_CHROMIUM_URL` and `VITE_BARET_EXTENSION_FIREFOX_URL` on the showcase project.
+- **Store listing (2026-10-11):** once the Chrome Web Store listing is public, set `VITE_BARET_EXTENSION_CHROMIUM_STORE_URL` on the showcase project to its page and redeploy. `/install` then leads Chrome, Brave and Edge visitors to the store: the hero's button opens the listing, the steps are open, add and pin, the developer-mode note goes, and that build's zip is no longer offered. `VITE_BARET_EXTENSION_FIREFOX_STORE_URL` does the same for Firefox Add-ons; each is read on its own, so Firefox keeps the zip until its listing exists. The release job keeps publishing the zips either way (the store takes the Chrome one).
 - **Showcase 404s**: no catch-all rewrite; the build writes a file per route and `404.html`. The wallet keeps its single-page fallback.
 
 ## 4. Running the pipeline locally

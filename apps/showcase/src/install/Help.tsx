@@ -7,16 +7,19 @@ import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
 import { GRID } from "@baret/web-ui/lib/layout";
 import type { JSX } from "react";
 import { INSTALL_ART } from "../shared/assets.js";
+import { BUILDS, helpItems } from "./builds.js";
 
 /**
  * If something goes wrong: the symptom in the browser's own words, the fix
  * one click away. One exclusive group, so opening one closes the others.
+ * Only what can still happen: the unpacked-load items go once the Chromium
+ * build is in its store, the restart item once the Firefox one is.
  * Cutters taking a tag off its wire sit beside the list from 1024 px.
  */
 
 const ID = "help";
 const { troubleshooting } = install;
-const ITEMS = troubleshooting.items.map((item) => ({ summary: item.symptom, body: item.fix }));
+const ITEMS = helpItems(BUILDS).map((item) => ({ summary: item.symptom, body: item.fix }));
 
 export function Help(): JSX.Element {
   return (

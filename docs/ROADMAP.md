@@ -140,6 +140,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E14 | "Sign with your wallet" on PixelDrop, OrbitYield, ClaimHub and LaunchPad (closes G-04): the request the panel checks, sent for real, with the balance before and after; an attack's approval is closed again by a second step. **Built 2026-10-11** on branch `demo-sites-sign`, eight runs made in a browser with real transactions | Sun 11 | E13 | main track |
 | E15 | The Baret wallet's window signs typed messages: `signTyped` / `signedTyped` in the window protocol, `Wallet.checkTyped` and `signTyped` in `wallet-core`, the request on `/sign`, and Scrybe's payment through the Baret wallet. **Built 2026-10-11** on branch `wallet-window-sign`; paid from a browser through the wallet window with a passkey, on testnet | Sun 11 | E13 | main track, Mera UX |
 | E16 | The extension keeps what it signed (D-047): more accounts from the phrase, the allowances list checked against Monad, a real revoke, x402 payments and why one was blocked. **Built 2026-10-11** on branch `extension-live-lists`; 32 browser checks with real transactions. The published zip is rebuilt after the merge | Sun 11 | E12, E13 | main track |
+| E17 | Set `VITE_BARET_EXTENSION_CHROMIUM_STORE_URL` on the showcase Vercel project once Google publishes the Chrome Web Store listing, and redeploy: `/install` then leads with the store (M22). Until then the page is unchanged | when the listing is public | Google's review | main track |
 
 ### Meriç
 
@@ -166,6 +167,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M19 | Read and fix what Ezgin added in Meriç's screens (#83 to #94): 47 fixes, each re-checked. **Done 2026-10-11** (`53993ef`, `2bc96e4`, `23a2ebb`) | Sun 11 | Ezgin's merges | all |
 | M20 | `/agents`: an MCP tab (D-045), and the quickstart's samples on the live API. **Done 2026-10-11** (`c4044a7`) | Sun 11 | D-045 live | main track |
 | M21 | `/agents`: a lookup of Baret's reputation registry (the entries a Chainlink CRE workflow wrote from ScamSniffer, served from the Envio indexer). **Done 2026-10-11** (`896370e`) | Sun 11 | | main track, CRE, Envio |
+| M22 | `/install` store-ready: with the Chrome Web Store (or Firefox Add-ons) listing's URL set, the page leads with the store and its steps are open, add, pin; the zip and the developer-mode notes stay until then. **Done 2026-10-11** (branch `install-store`); Ezgin sets the URL once Google publishes the listing | Sun 11 | Ezgin's listing | main track |
 
 ### Hale
 
@@ -187,6 +189,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H14 | Final documents: README and ARCHITECTURE, status tables, access instructions for judges, the tracked root notes, one submission text per prize | Sun 11 to Mon 12 | E8 | all forms |
 | H15 | Final regression and submit | Mon 12 | | all |
 | H16 | Test on the live URLs after the merge deploy and E7 (**2026-10-09:** deployed with #51; waits only on E7): `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page **Done 2026-10-10** (API `25b7581`): all three `/review` scenarios live (honest sent, status 1; overpay and injected vetoed), the recorded fallback labelled, KIMI's words in en/tr/zh on NovaSwap and in the wallet window with the verdict unchanged, rules from a sentence (loosening unticked, nothing saved), fail-closed with the API or explain down. One 🐛 P1 for Meriç: overpay's veto also names a false ref mismatch | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
+| H17 | Test `/install` in Chrome once E17 lands: the button opens the listing, the steps are open, add, pin, the help has no "Load unpacked" item; Firefox still gets the zip and its own steps | after E17 | E17 | main track |
 
 ### What is cut first
 
