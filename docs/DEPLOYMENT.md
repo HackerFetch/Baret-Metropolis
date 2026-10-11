@@ -131,18 +131,20 @@ Both Vercel projects run `middleware.ts` in front of their `/api` rewrite. With 
 
 ## Publishing the SDK to npm
 
-`@baret/guard`, `@baret/llm` and `@baret/agent-kit` can be published since 2026-10-11; none is published yet. In the workspace they still resolve to their TypeScript sources (`main` and `exports` point at `src/`), so nothing changes for the apps. A published copy is built JavaScript with type declarations: `pnpm build` in a package runs `tsc -p tsconfig.build.json` into `dist/`, and `publishConfig` swaps `main`, `types`, `exports` and (for agent-kit) `bin` to `dist/` when the package is packed. `prepack` runs the build, so a tarball cannot ship without it. pnpm rewrites `workspace:*` to the real version.
+`@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm as 0.1.0 since 2026-10-11, built from `main` at `d35094a` and published by the npm account `buildonbaret`, owner of the `baret` organisation. In the workspace they still resolve to their TypeScript sources (`main` and `exports` point at `src/`), so nothing changes for the apps. A published copy is built JavaScript with type declarations: `pnpm build` in a package runs `tsc -p tsconfig.build.json` into `dist/`, and `publishConfig` swaps `main`, `types`, `exports` and (for agent-kit) `bin` to `dist/` when the package is packed. `prepack` runs the build, so a tarball cannot ship without it. pnpm rewrites `workspace:*` to the real version.
 
-Checked on 2026-10-11: the three tarballs from `pnpm pack`, installed in an empty project with nothing else from this repository, ran `TransactionGuard.evaluate` against the live API (answer `safe`) and the `baret` CLI through plain `node`.
+Checked on 2026-10-11: the three tarballs from `pnpm pack`, installed in an empty project with nothing else from this repository, ran `TransactionGuard.evaluate` against the live API (answer `safe`) and the `baret` CLI through plain `node`. After the publish, the same day: `npm install @baret/agent-kit` in an empty folder took all three from the registry, the smallest call from `packages/guard/README.md` answered `blocked` with `KNOWN_MALICIOUS_ADDRESS`, and `npx baret policy list` printed the three templates.
 
-To publish (needs the npm account that owns the `@baret` organisation; create it at `https://www.npmjs.com/org/create`, the free plan allows public packages):
+To publish the next version (needs a login of the npm account that owns the `baret` organisation). Raise `version` in the three `package.json` files first: a published version number cannot be used again.
 
 1. `npm login`
 2. In this order, because agent-kit depends on the other two: `pnpm --filter @baret/guard publish`, `pnpm --filter @baret/llm publish`, `pnpm --filter @baret/agent-kit publish`. Each asks for a one-time password when the account has one.
 3. Check: in an empty folder, `npm install @baret/guard`, then the smallest call from `packages/guard/README.md`.
-4. Then, in one pull request: the "not published" sentences in `packages/guard/README.md`, `packages/agent-kit/README.md` and the `/agents` page (`packages/content/src/showcase/agents.content.ts`), and the version in `package.json` for the next release.
 
-If `@baret` is taken on npm, the scope has to change in every `package.json` and import of the three packages: decide the new name before publishing anything.
+Two things 0.1.0 taught:
+
+- The READMEs on the npm pages are the ones packed with 0.1.0, which still say "not published". The corrected ones go out with the next version.
+- On Windows, build from a checkout with LF line endings (`git -c core.autocrlf=false worktree add ...`) and with Git's `usr/bin` on the `PATH`: the build script calls `rm`, and a CRLF checkout fails `pnpm lint`. The tarballs can also be made with `pnpm pack` and published one by one with `npm publish <file>.tgz --access public`, which is how 0.1.0 went out.
 
 ## Browser checks
 

@@ -27,7 +27,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-13 | Documents that describe an older state | Wrong | P2 | Hale (H14) |
 | G-14 | `verify:demo` reports a false failure from the deploy wallet | Wrong (test) | P3 | Ezgin |
 | G-15 | Sealed settings: saved by hand, and two things to watch | Limit | P3 | Ezgin |
-| G-16 | The SDKs are not on npm | Missing | P3 | Ezgin |
+| G-16 | The SDKs were not on npm. **Published 2026-10-11** (`@baret/guard`, `@baret/llm`, `@baret/agent-kit`, 0.1.0) | Missing | closed | Ezgin |
 | G-17 | The API is open: no keys, any origin; the daily caps can be used up by one caller | Limit | P2 | Ezgin |
 | G-18 | Contracts are unaudited testnet deployments | Limit | P3 | Ezgin |
 | G-19 | The indexer does not cover two contracts | Limit | P3 | Ezgin |
@@ -152,7 +152,9 @@ The scenario "Cleanverse aUSDC to a wallet with no credential" pays the `--from`
 
 ### G-16 · The SDKs are not on npm
 
-`@baret/guard` and `@baret/agent-kit` are `private` workspace packages. A developer clones the repository; `/agents` says so. For "which applications would adopt it", this is the first step missing.
+**Closed 2026-10-11.** `@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm as 0.1.0. Checked the same day: `npm install @baret/agent-kit` in an empty folder, then `TransactionGuard.evaluate` against the live API (answer `blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. What is left: the READMEs shown on the npm pages are the ones packed with 0.1.0 and still say "not published"; they change with the next version (`docs/DEPLOYMENT.md`, "Publishing the SDK to npm").
+
+Before: the packages were `private` workspace packages, and a developer had to clone the repository.
 
 ### G-17 · The API is open
 

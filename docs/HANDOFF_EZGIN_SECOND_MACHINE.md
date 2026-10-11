@@ -59,6 +59,8 @@ Machine facts that cost time on the first one and may apply here: no `jq` or Doc
 
 **Done means:** `npm view @baret/agent-kit version` answers, and a clean install runs against the live API.
 
+- 2026-10-11, from the second machine: done. The three are on npm as 0.1.0 (account `buildonbaret`, owner of the organisation `baret`), built from `main` at `d35094a`. `npm view @baret/agent-kit version` answers `0.1.0`; a clean `npm install @baret/agent-kit` ran the smallest call against the live API (`blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. Ezgin ran the three `npm publish` commands by hand on the tarballs from `pnpm pack`. The second machine is Windows: `~/.baret/` is not at that path there, and the notes for the next version are in `docs/DEPLOYMENT.md`.
+
 ## 5. Task B: Cleanverse, one real settlement
 
 **The prize asks** for identity verification "structurally coupled to asset movement": the credential (CVI, the A-Pass) checked before any transfer of the compliant asset (CVA, here aUSDC), a real compliance use case and a video of up to five minutes. Full text: `docs/QA_AND_DELIVERY.md` §8.1.
