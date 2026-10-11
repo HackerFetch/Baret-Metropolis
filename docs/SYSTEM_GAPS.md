@@ -27,7 +27,7 @@ Priority: **P1** a judge can hit it or it makes a public claim false; **P2** rea
 | G-13 | Documents that describe an older state | Wrong | P2 | Hale (H14) |
 | G-14 | `verify:demo` reports a false failure from the deploy wallet | Wrong (test) | P3 | Ezgin |
 | G-15 | Sealed settings: saved by hand, and two things to watch | Limit | P3 | Ezgin |
-| G-16 | The SDKs are not on npm | Missing | P3 | Ezgin |
+| G-16 | The SDKs were not on npm. **Published 2026-10-11** (`@baret/guard`, `@baret/llm`, `@baret/agent-kit`, 0.1.0) | Missing | closed | Ezgin |
 | G-17 | The API is open: no keys, any origin; the daily caps can be used up by one caller | Limit | P2 | Ezgin |
 | G-18 | Contracts are unaudited testnet deployments | Limit | P3 | Ezgin |
 | G-19 | The indexer does not cover two contracts | Limit | P3 | Ezgin |
@@ -154,7 +154,9 @@ The scenario "Cleanverse aUSDC to a wallet with no credential" pays the `--from`
 
 ### G-16 · The SDKs are not on npm
 
-`@baret/guard` and `@baret/agent-kit` are `private` workspace packages. A developer clones the repository; `/agents` says so. For "which applications would adopt it", this is the first step missing.
+**Closed 2026-10-11.** `@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm as 0.1.0. Checked the same day: `npm install @baret/agent-kit` in an empty folder, then `TransactionGuard.evaluate` against the live API (answer `blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. What is left: the READMEs shown on the npm pages are the ones packed with 0.1.0 and still say "not published"; they change with the next version (`docs/DEPLOYMENT.md`, "Publishing the SDK to npm").
+
+Before: the packages were `private` workspace packages, and a developer had to clone the repository.
 
 ### G-17 · The API is open
 
@@ -171,6 +173,8 @@ The per-minute limits are per visitor since #63, and that visitor is the first a
 **Edge middleware written 2026-10-11 (branch `edge-secret`), off until the secret is set.** `apps/showcase/middleware.ts` and `apps/wallet/middleware.ts` (Vercel Routing Middleware on `/api/:path*`) put `BARET_EDGE_SECRET` into `x-baret-edge` on every request the site sends on, replacing whatever the browser sent under that name; with no secret set they remove the header and the rewrite goes on as before. `GET /health` now also answers `viaEdge` (true only when the request carried the secret), so each step can be checked from outside. Order to switch it on: (1) merge and let both sites deploy, check `/api/health` still answers through each; (2) one secret (`openssl rand -hex 24`) as `BARET_EDGE_SECRET` on Render and on both Vercel projects (Production), redeploy all three; (3) `viaEdge` must read true through each site and false directly, and `forwardedHops` through a site is the value for `BARET_EDGE_PROXY_HOPS`; (4) set `BARET_PROXY_HOPS=3` and `BARET_EDGE_PROXY_HOPS` on Render; (5) check: a direct request with a made-up address gets no fresh bucket, and two visitors of a site have a bucket each.
 
 **Switched on 2026-10-11 (API `18fb4f3`), one hole found and closed (branch `edge-client-address`).** With the secret on all three and `BARET_PROXY_HOPS=3`, `BARET_EDGE_PROXY_HOPS=4` on Render: 8 of 8 direct requests with a made-up `X-Forwarded-For` stayed in the caller's own bucket, also with a guessed `x-baret-edge`. Through a site, 12 of 12 plain requests landed in the visitor's bucket, but about half of the requests that carried a made-up `X-Forwarded-For` got a fresh one, with `forwardedHops` still 4: the first entry the rewrite forwards is not always Vercel's own. The middleware now names the visitor itself in `x-baret-client` (the address Vercel saw the connection from), and the server uses that on a request that carries the secret; the hop count stays as the fallback when the edge names none.
+
+**Closed 2026-10-11 (API and both sites on `3d9c6ca`).** 54 of 54 requests stayed in the caller's own bucket: through each site with a made-up `X-Forwarded-For` (12 and 12), with a made-up `x-baret-client`, `x-real-ip` and `x-vercel-forwarded-for` (6 and 6), directly with all of them plus a guessed `x-baret-edge` (6), and plain. Not checked from outside, because it needs two networks: two real visitors of one site getting a bucket each; the unit test in `apps/server/src/api/app.test.ts` covers that rule.
 
 ### G-18 · Contracts are unaudited testnet deployments
 

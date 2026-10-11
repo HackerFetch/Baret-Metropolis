@@ -63,3 +63,21 @@ Not done: deployment needs CRE Early Access (`cre account access`). When access 
 ```
 
 The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xa1b9799281003c7a6d9113007540f31735033d6fba125fa20619395b16e359e8), block 68851519) went to the mock forwarder, which called the receiver, which wrote ten `ReputationFlagged` entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0xa8f3762b03ae73cbbdb9173d3537c632628727a4`, and `safe` for the same transfer to an address that is not on the feed. The receiver was back on the production forwarder with the workflow-owner check on when the script ended.
+
+## Second recorded run (2026-10-11, Monad testnet, Ezgin's second machine)
+
+`./workflows/simulate.sh --broadcast`, CRE CLI v1.38.0, SDK 1.23.0, Bun 1.4.3, on Windows from Git Bash:
+
+```
+[SIMULATION] Running trigger trigger=cron-trigger@1.0.0
+[USER LOG] Threat feed: 2530 addresses, window 87/253 holds 10
+[USER LOG] Registry does not know 10 of 10
+[USER LOG] Wrote 10 entries as SCAMSNIFFER_BLACKLIST, severity 3: 0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09
+
+✓ Workflow Simulation Result:
+{ "checked": 10, "feedEntries": 2530, "txHash": "0xe655…7c09", "window": "87/253", "written": 10 }
+```
+
+The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09), block 70195240) went through the mock forwarder to the receiver and wrote ten entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0x57862f4c20fd3450bf63381235b1d36095daf364`, and `safe` for the same transfer to a wallet that is not on the feed; `GET /v1/audit/reputation/0x57862f4c20fd3450bf63381235b1d36095daf364` names this transaction. The receiver was back on the production forwarder with the workflow-owner check on when the script ended (read from the chain).
+
+Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11.

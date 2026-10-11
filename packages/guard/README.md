@@ -2,17 +2,15 @@
 
 A pre-sign check for Monad transactions. Send Baret the transaction (or the x402 payment) before you sign it, and it answers `safe`, `caution` or `blocked` with the reasons — your own code decides what to do with the answer.
 
-This package is not published; it is the client for `https://baret-monad-api.onrender.com`, which anyone can call without it. Clone this repository to use the SDK, or skip straight to the HTTP API below.
+Published on npm as `@baret/guard`. It is the client for `https://baret-monad-api.onrender.com`, which anyone can call without it: install the package, or skip straight to the HTTP API below.
 
 ## Install
 
 ```
-git clone https://github.com/HackerFetch/Baret-Metropolis
-cd Baret-Metropolis
-pnpm install
+npm install @baret/guard
 ```
 
-Inside the workspace, add `"@baret/guard": "workspace:*"` to a package's dependencies and import from `@baret/guard`. The package ships its TypeScript source (`src/index.ts`), so run it through a TypeScript-aware tool (tsx, Vite, a bundler). Outside this repository, copy `src/guard.ts` (`TransactionGuard`) with the four files it reads, `analyze.ts`, `chains.ts`, `findings.ts` and `policy.ts`: no chain library inside, and the only runtime dependency is `zod`.
+The published package is built JavaScript with type declarations and runs on plain Node: no chain library inside, and the only runtime dependency is `zod`. Inside this repository, add `"@baret/guard": "workspace:*"` to a package's dependencies instead; the workspace resolves it to the TypeScript source (`src/index.ts`), so run it through a TypeScript-aware tool (tsx, Vite, a bundler).
 
 ## The smallest working call
 

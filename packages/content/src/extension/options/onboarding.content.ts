@@ -135,6 +135,8 @@ export const extOnboarding = {
     },
     waiting: "Watching your address for MON",
     arrived: "{amount} arrived.",
+    /** A restored account that was funded before: nothing arrived, it was there. */
+    holds: "This account already holds {amount}.",
     minimum: "You need at least 0.1 MON to continue.",
     next: { label: "Continue" },
     errors: {

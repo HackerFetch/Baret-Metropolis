@@ -59,6 +59,8 @@ Machine facts that cost time on the first one and may apply here: no `jq` or Doc
 
 **Done means:** `npm view @baret/agent-kit version` answers, and a clean install runs against the live API.
 
+- 2026-10-11, from the second machine: done. The three are on npm as 0.1.0 (account `buildonbaret`, owner of the organisation `baret`), built from `main` at `d35094a`. `npm view @baret/agent-kit version` answers `0.1.0`; a clean `npm install @baret/agent-kit` ran the smallest call against the live API (`blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. Ezgin ran the three `npm publish` commands by hand on the tarballs from `pnpm pack`. The second machine is Windows: `~/.baret/` is not at that path there, and the notes for the next version are in `docs/DEPLOYMENT.md`.
+
 ## 5. Task B: Cleanverse, one real settlement
 
 **The prize asks** for identity verification "structurally coupled to asset movement": the credential (CVI, the A-Pass) checked before any transfer of the compliant asset (CVA, here aUSDC), a real compliance use case and a video of up to five minutes. Full text: `docs/QA_AND_DELIVERY.md` §8.1.
@@ -99,6 +101,8 @@ A trap from the first machine: `verify:demo --from` must be a wallet **without**
 3. With access: link the workflow owner key (the deploy wallet), deploy the `production-settings` target (`workflows/reputation-oracle/config.production.json`, `workflow.yaml`), keep `workflowOwner` on the receiver equal to that key's address, and leave the receiver on the real forwarder.
 4. Prove it: one report written by the DON (a transaction through the real forwarder that changes a registry entry), then `POST /mcp` `address_reputation` or a `/v1/analyze` on that address showing the flag.
 5. Record the workflow id and the transaction in `workflows/README.md` and `docs/CONTRACTS.md`, update the Chainlink row in `docs/BOUNTIES_AND_TRACKS.md` and the board, and tell Hale.
+
+- 2026-10-11, from the second machine: the CRE CLI (v1.38.0) and Bun are installed and `cre login` is done. `cre whoami` shows "Deploy Access: Not enabled", so step 2 is where it stops: Ezgin asks for access with `cre account access`. The simulator runs here, dry and with `--broadcast`: transaction `0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09` (block 70195240) wrote ten entries, the live API blocks a transfer to the first of them, and the receiver is back on the real forwarder (`workflows/README.md`, "Second recorded run").
 
 **To run the simulator here:** `MONAD_TESTNET_RPC_URL=https://testnet-rpc.monad.xyz workflows/simulate.sh`; for `--broadcast` also `CRE_ETH_PRIVATE_KEY="$(cat ~/.baret/deployer.key)"`.
 

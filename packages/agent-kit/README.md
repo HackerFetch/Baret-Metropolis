@@ -4,13 +4,11 @@ A guarded wallet for AI agents on Monad: every call goes through Baret's `/v1/an
 
 ## Install
 
-Not published; clone the repository and use it from the workspace.
+```
+npm install @baret/agent-kit
+```
 
-```
-git clone https://github.com/HackerFetch/Baret-Metropolis
-cd Baret-Metropolis
-pnpm install
-```
+It brings `@baret/guard` and `@baret/llm` with it, and the `baret` CLI: `npx baret policy list`. The commands below that start with `pnpm --filter @baret/agent-kit baret` run the same CLI from a clone of this repository.
 
 ## The smallest working call
 
