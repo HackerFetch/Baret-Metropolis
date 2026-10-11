@@ -1,7 +1,6 @@
 {
   "name": "@baret/guard",
   "version": "0.1.0",
-  "private": true,
   "description": "TransactionGuard SDK: the GuardPolicy schema, the policy templates and the /v1/analyze contract. No chain library inside.",
   "license": "MIT",
   "repository": {
@@ -25,7 +24,9 @@
   },
   "scripts": {
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "zod": "4.6.5"
@@ -33,5 +34,53 @@
   "devDependencies": {
     "@baret/content": "workspace:*",
     "typescript": "6.0.3"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./analyze": {
+        "types": "./dist/analyze.d.ts",
+        "default": "./dist/analyze.js"
+      },
+      "./chains": {
+        "types": "./dist/chains.d.ts",
+        "default": "./dist/chains.js"
+      },
+      "./explain": {
+        "types": "./dist/explain.d.ts",
+        "default": "./dist/explain.js"
+      },
+      "./findings": {
+        "types": "./dist/findings.d.ts",
+        "default": "./dist/findings.js"
+      },
+      "./guard": {
+        "types": "./dist/guard.d.ts",
+        "default": "./dist/guard.js"
+      },
+      "./policy": {
+        "types": "./dist/policy.d.ts",
+        "default": "./dist/policy.js"
+      },
+      "./policy-draft": {
+        "types": "./dist/policy-draft.d.ts",
+        "default": "./dist/policy-draft.js"
+      },
+      "./policy-templates": {
+        "types": "./dist/policy-templates.d.ts",
+        "default": "./dist/policy-templates.js"
+      }
+    }
   }
 }
