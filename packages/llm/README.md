@@ -12,13 +12,14 @@ npm install @baret/llm
 
 ## The smallest working call
 
+Set `KIMI_API_KEY` to a key from the Moonshot platform first. A missing key is one more way of having no model, so the constructor throws `LlmUnavailableError` like the calls do; the sample below catches both.
+
 ```ts
 import { KIMI, LlmClient, LlmUnavailableError } from "@baret/llm";
 import { z } from "zod";
 
-const client = new LlmClient({ provider: KIMI, apiKey: process.env.KIMI_API_KEY ?? "" });
-
 try {
+  const client = new LlmClient({ provider: KIMI, apiKey: process.env.KIMI_API_KEY ?? "" });
   const answer = await client.json({
     system: "Answer with a JSON object.",
     user: "Is 0.1 MON more than 0.01 MON? Reply as {\"more\": true|false}.",
@@ -39,7 +40,7 @@ try {
 - `json(request)`: one system and one user message in, one object out, checked against your `zod` schema.
 - `agent(request)`: the same, after the model has called your tools for a few turns.
 
-A model's answer is treated as input like any other. When the provider cannot be reached, answers with an error, or returns something the schema refuses, both calls throw `LlmUnavailableError`: the caller never gets a half-read answer.
+A model's answer is treated as input like any other. When the key is missing, the provider cannot be reached, answers with an error, or returns something the schema refuses, the constructor and both calls throw `LlmUnavailableError`: the caller never gets a half-read answer.
 
 ## Licence
 

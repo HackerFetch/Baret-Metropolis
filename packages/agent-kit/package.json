@@ -18,7 +18,7 @@
     "./abi": "./src/abi.ts"
   },
   "bin": {
-    "baret": "./src/cli.ts"
+    "baret": "./dist/cli.js"
   },
   "scripts": {
     "typecheck": "tsc -b",
@@ -27,16 +27,27 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json && node scripts/bin.mjs",
     "prepack": "pnpm build"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@baret/guard": "workspace:*",
     "@baret/llm": "workspace:*",
-    "@dynamic-labs-wallet/node-evm": "1.1.28",
-    "tsx": "4.23.15",
     "viem": "2.56.5",
     "zod": "4.6.5"
   },
+  "peerDependencies": {
+    "@dynamic-labs-wallet/node-evm": "1.1.28"
+  },
+  "peerDependenciesMeta": {
+    "@dynamic-labs-wallet/node-evm": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@dynamic-labs-wallet/node-evm": "1.1.28",
     "@types/node": "24.10.1",
+    "tsx": "4.23.15",
     "typescript": "6.0.3"
   },
   "files": [

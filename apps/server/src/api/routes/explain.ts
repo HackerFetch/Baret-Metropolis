@@ -1,10 +1,12 @@
-import { randomUUID } from "node:crypto";
 import { type ExplainResponse, explainRequestSchema } from "@baret/guard";
 import { LlmUnavailableError } from "@baret/llm";
 import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
 
 class ExplainDailyLimitError extends Error {}
+
+/** The shape of every `meta.requestId` /v1/analyze returns (a UUID). */
+const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
   /**
@@ -13,6 +15,8 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
    * from the request. No model, or no usable answer from it: 503, and the
    * client keeps showing the findings as it does today. Every call can spend
    * paid model credit, so the route has a tighter rate limit of its own.
+   * The answer carries the verdict's own requestId, so a client can match an
+   * explanation to the verdict it explains.
    */
   const limit = { max: deps.config.explainRateLimitPerMinute, timeWindow: "1 minute" };
   app.post("/v1/explain", { config: { rateLimit: limit } }, async (req, reply) => {
@@ -32,6 +36,12 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
 
     const requestId =
       "requestId" in body.data ? body.data.requestId : body.data.verdict.meta.requestId;
+    if (!REQUEST_ID.test(requestId)) {
+      return reply.code(400).send({
+        error: "invalid_request",
+        issues: [{ path: "requestId", message: "not a requestId this server issues" }],
+      });
+    }
     const verdict = deps.verdicts?.get(requestId);
     if (!verdict) {
       return reply.code(404).send({
@@ -55,7 +65,7 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
         explanation,
         language,
         model: explainer.model,
-        requestId: randomUUID(),
+        requestId,
       };
       return answer;
     } catch (err) {

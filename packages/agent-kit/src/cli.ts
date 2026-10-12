@@ -1,41 +1,9 @@
 #!/usr/bin/env -S npx tsx
 /**
- * baret: the agent wallet from a terminal.
- *
- *   baret address
- *   baret analyze --to 0x.. [--data 0x..] [--value <wei>]
- *   baret submit  --to 0x.. [--data 0x..] [--value <wei>] [--intent <text>]
- *   baret pay     --vault 0x.. --merchant 0x.. --amount <base units> --ref <text> [--intent <text>]
- *   baret x402 <url> [--max <base units>]
- *                 Pays an HTTP 402 (x402, EIP-3009): reads what the server
- *                 asks, has Baret check that exact payment, signs it and
- *                 requests again. Needs BARET_AGENT_PRIVATE_KEY.
- *   baret review  --intent <text> [--from 0x..] and either the flags of pay
- *                 (--vault ...) or of submit (--to ...). Never signs.
- *   baret wallet create            (Dynamic: a new server wallet for the agent)
- *   baret policy list
- *
- * Flags for submit, pay and review:
- *   --transcript <file>  write the verdict, the review and the reviewer's
- *                        plan and tool calls as JSON (on a veto too)
- *   --trace              print the reviewer's steps on stderr as they happen
- * Only review takes --from: the account to review for. Default: the signer's.
- *
- * Exit codes: 0 Baret cleared it (and, for submit and pay, it was sent; for
- * review, the reviewer approved), 1 Baret did not clear it or the reviewer
- * vetoed it and nothing was signed, 2 anything else went wrong.
- *
- * Settings come from the environment (or packages/agent-kit/.env when run
- * with `pnpm baret`), never from flags, so a key never lands in shell
- * history: BARET_API_URL, BARET_API_KEY, BARET_NETWORK, MONAD_TESTNET_RPC_URL,
- * BARET_POLICY_TEMPLATE, BARET_ALLOW_CAUTION=1, QWEN_API_KEY (turns the Qwen
- * reviewer on: it plans, reads the decoded call, Baret's verdict, the vault
- * and the reputation registry, then approves or vetoes; submit and pay then
- * need an intent; optional QWEN_BASE_URL and QWEN_MODEL), and one signer:
- *   BARET_AGENT_PRIVATE_KEY                      a local key (tests, local runs)
- *   DYNAMIC_ENVIRONMENT_ID + DYNAMIC_AUTH_TOKEN + BARET_AGENT_WALLET_PASSWORD
- *     a Dynamic server wallet, kept in BARET_AGENT_WALLET_FILE
- *     (default ~/.baret/agent-wallet.json)
+ * baret: the agent wallet from a terminal. `baret --help` lists the commands,
+ * their flags, the settings and the exit codes; the text is in cli-help.ts.
+ * Settings come from the environment (and a .env in the current directory,
+ * when there is one), never from flags, so a key never lands in shell history.
  */
 import { writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -49,6 +17,7 @@ import {
 } from "@baret/guard";
 import { type Address, getAddress, type Hex, isAddress, isHex } from "viem";
 import { type AgentCall, AgentWallet, payCall } from "./agent-wallet.js";
+import { commandHelp, findCommand, parseOptions, usage, usageLine } from "./cli-help.js";
 import { createDynamicWallet, dynamicSignerFromFile } from "./dynamic.js";
 import { GuardBlockedError } from "./errors.js";
 import { qwenAgentReviewer } from "./review-agent.js";
@@ -59,6 +28,13 @@ import { payX402 } from "./x402.js";
 const EXIT = { allowed: 0, blocked: 1, error: 2 } as const;
 
 class UsageError extends Error {}
+
+/** The .env of the current directory, when there is one. A variable already set wins. */
+function loadDotEnv() {
+  try {
+    process.loadEnvFile();
+  } catch {}
+}
 
 const env = process.env;
 const baretUrl = () => env.BARET_API_URL ?? "https://baret-monad-api.onrender.com";
@@ -206,6 +182,15 @@ function amount(value: string | undefined, flag: string): bigint {
 
 type CallFlags = { to?: string; data?: string; value?: string };
 type PayFlags = { vault?: string; merchant?: string; amount?: string; ref?: string };
+type Flags = CallFlags &
+  PayFlags & {
+    intent?: string;
+    from?: string;
+    transcript?: string;
+    trace?: boolean;
+    max?: string;
+    help?: boolean;
+  };
 
 function callFrom(values: CallFlags): AgentCall {
   const data = values.data;
@@ -240,26 +225,33 @@ const shown = (f: {
   ...(f.details ? { details: f.details } : {}),
 });
 
+/** Something parseArgs refused: the message, without Node's advice about `--`. */
+function parseHint(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  return message.split(". To specify")[0] ?? message;
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const { values, positionals } = parseArgs({
-    args: rest,
-    allowPositionals: true,
-    options: {
-      to: { type: "string" },
-      data: { type: "string" },
-      value: { type: "string" },
-      vault: { type: "string" },
-      merchant: { type: "string" },
-      amount: { type: "string" },
-      ref: { type: "string" },
-      intent: { type: "string" },
-      from: { type: "string" },
-      transcript: { type: "string" },
-      trace: { type: "boolean" },
-      max: { type: "string" },
-    },
-  });
+  if (command === undefined || command === "help" || command === "--help" || command === "-h") {
+    console.log(usage());
+    return command === undefined ? EXIT.error : EXIT.allowed;
+  }
+  const spec = findCommand(command);
+  if (!spec) throw new UsageError(`unknown command "${command}"\n${usageLine()}`);
+  let values: Flags;
+  let positionals: string[];
+  try {
+    const parsed = parseArgs({ args: rest, allowPositionals: true, options: parseOptions(spec) });
+    values = parsed.values as Flags;
+    positionals = parsed.positionals;
+  } catch (err) {
+    throw new UsageError(`${parseHint(err)}\n${commandHelp(spec)}`);
+  }
+  if (values.help) {
+    console.log(commandHelp(spec));
+    return EXIT.allowed;
+  }
   if (values.from !== undefined && command !== "review")
     throw new UsageError("--from is for baret review only: submit and pay use the signer");
   if (command) run.command = command;
@@ -397,12 +389,11 @@ async function main(argv: string[]): Promise<number> {
     }
 
     default:
-      throw new UsageError(
-        "usage: baret address | analyze | submit | pay | x402 | review | wallet create | policy list (see the header of cli.ts)",
-      );
+      throw new UsageError(usageLine());
   }
 }
 
+loadDotEnv();
 main(process.argv.slice(2))
   .then((code) => process.exit(code))
   .catch((err: unknown) => {

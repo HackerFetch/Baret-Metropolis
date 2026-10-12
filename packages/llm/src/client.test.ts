@@ -102,6 +102,13 @@ describe("LlmClient.json", () => {
   });
 });
 
+describe("LlmClient without a key", () => {
+  it("throws LlmUnavailableError, like every other way of having no model", () => {
+    expect(() => new LlmClient({ provider: KIMI, apiKey: "" })).toThrow(LlmUnavailableError);
+    expect(() => new LlmClient({ provider: KIMI, apiKey: "" })).toThrow("an API key is required");
+  });
+});
+
 describe("extractJson", () => {
   it("takes the outermost object", () => {
     expect(extractJson('noise {"a":{"b":1}} trailing')).toEqual({ a: { b: 1 } });

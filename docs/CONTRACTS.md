@@ -2,7 +2,7 @@
 
 > Design of the contracts to be deployed to Monad testnet/mainnet with Foundry. Before code is written, this file is used as the spec; after deployment the address table is filled in and this file is kept up to date.
 
-Last updated: 2026-10-01 · Status: **Both contracts deployed to Monad testnet on 2026-10-02 and source-verified (Sourcify exact match). 26 forge tests passing**
+Last updated: 2026-10-12 · Status: **Six core contracts on Monad testnet (`PaymentGuard`, `PaymentGuardFactory`, `ReputationRegistry`, `ReputationOracleReceiver`, `CompliantPaymentGuard` twice, `SealedStore`) plus the demo-site contracts, all source-verified on Monad's Sourcify. `forge test` on 2026-10-12: 85 tests in 10 suites (84 run, the Cleanverse fork test skipped unless `BARET_FORK_CLEANVERSE=1`)**
 
 ---
 
@@ -10,7 +10,7 @@ Last updated: 2026-10-01 · Status: **Both contracts deployed to Monad testnet o
 
 - Solidity + Foundry (`forge build`, `forge test`, `forge fmt`).
 - At least one **fuzz invariant test** per contract (e.g. "the vault balance can never drop below the total active merchant reserve").
-- Monad gas pricing active in local tests (`ARCHITECTURE.md` §9, `RESOURCES.md` §2).
+- Forge tests run standard EVM gas. Monad charges the whole gas limit (`ARCHITECTURE.md` section 5, the fee row of `estimatedChanges`); the server models that, the tests do not.
 - Storage layout: per-user fields are grouped in a single struct (MIP-8 locality advantage — see `notes (4).txt`), no unnecessary bit-packing.
 - No other chain's name appears in contract names/comments; references to Monad only.
 
@@ -74,13 +74,19 @@ The address passed to `setAgentSigner` is the address of a **sub-key** derived f
 
 State of the testnet vault since 2026-10-05: 5 USDC deposited; agent signer `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`, a Dynamic server wallet (D-019); merchant `0x1365566191bAA9872A64AcDce963751d5343ff49` (the Scrybe demo merchant) with caps 0.50 per payment, 1 per hour, 2 per day. Payments through `baret pay`: `0x0b01928b2ec0edc8fa325a89c702cea78268582621c4db4f16a02df8de4e845b` (0.25 USDC, local test key, before the handover) and `0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3` (0.25 USDC, signed by the Dynamic wallet). The same command above the cap, a send to the flagged wallet, and a payment from the replaced test key are each stopped by Baret before anything is signed.
 
-The testnet vault is Baret's own demo and test vault: its owner is the deploy key, which lives only on Ezgin's machine (`~/.baret/deployer.key`, never committed). Users get their own vaults from the wallet app later; `owner` is immutable, so this instance never changes hands. The deploy record is `contracts/broadcast/Deploy.s.sol/10143/run-latest.json` (start blocks for the Envio indexer).
+The testnet vault above is the Dynamic agent's vault: its owner is the deploy key, which lives only on Ezgin's machine (`~/.baret/deployer.key`, never committed). Users get their own vaults from the wallet app later; `owner` is immutable, so this instance never changes hands. The deploy record is `contracts/broadcast/Deploy.s.sol/10143/run-latest.json` (start blocks for the Envio indexer).
 
 
 | Network | Address | Token (USDC) | Owner | Deploy date | Deployer |
 |---|---|---|---|---|---|
 | Monad testnet (10143) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) | USDC `0x534b2f3A21130d7a60830c2Df862319e593943A3` (6 decimals, checked on-chain) | `0x5aE13F1028144842f0384d09091067D6184F8197` (deployer) | 2026-10-02, block 67604750 | `0x5aE13F1028144842f0384d09091067D6184F8197` |
 | Monad mainnet (143) | _(empty)_ | _(empty)_ | _(empty)_ | — | — |
+
+**The review demo vault.** A second vault, opened through the factory (section 2.7) on 2026-10-09 at block 69536190, is the one `/review`, `POST /v1/review` and `docs/evidence/` use. Checked on chain 2026-10-12: owner `0x8c1453CD190c75Cf9Efa1968Cb36B5384aC02A5C`, agent `0x227ba9d7B649988C48662Ac42360727bA971647E`, token dUSDC `0x5BB6fF1FCbE31ED8FBce6805852Ce279475522fc`, merchant `0x1365566191bAA9872A64AcDce963751d5343ff49` with caps 1 / 2 / 5 dUSDC per payment / hour / day, `isVault` true on the factory.
+
+| Network | Address | Token | Owner | Opened | Source |
+|---|---|---|---|---|---|
+| Monad testnet (10143) | [`0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`](https://testnet.monadexplorer.com/address/0x46F159DA1aD40A78526d35ea1Adb8531aDa52158) | dUSDC | `0x8c1453CD190c75Cf9Efa1968Cb36B5384aC02A5C` | 2026-10-09, block 69536190, by the factory | Verified on Monad's Sourcify on 2026-10-12 (`forge verify-contract ... src/PaymentGuard.sol:PaymentGuard --constructor-args <owner, token>`, runtime `exact_match`) |
 
 ### 2.7 `PaymentGuardFactory.sol` — a vault for every owner
 
@@ -145,7 +151,7 @@ function setProtected(address[] calldata targets, bool isProtected) external;   
 function supportsInterface(bytes4 interfaceId) external pure returns (bool);      // IReceiver (0x805f2132) and ERC-165
 ```
 
-Three checks before a report is written: the caller is the forwarder; the report's metadata names a workflow owned by `workflowOwner` (bytes 42 to 62 of `abi.encodePacked(bytes32 workflowId, bytes10 workflowName, address workflowOwner)`); no target is on the protected list, or the whole report reverts. The protected list holds the contracts Baret vouches for (`MONAD_TESTNET_KNOWN_CONTRACTS`), so a poisoned feed cannot turn the demo router or the vault factory into blocklist entries.
+Three checks before a report is written: the caller is the forwarder; the report's metadata names a workflow owned by `workflowOwner` (bytes 42 to 62 of `abi.encodePacked(bytes32 workflowId, bytes10 workflowName, address workflowOwner)`); no target is on the protected list, or the whole report reverts. The protected list was set once at deployment from the known-contracts list of 2026-10-07: on chain (checked 2026-10-12 with `isProtected`) it holds the NovaSwap router, dUSDC, the four demo-site contracts and their tokens, and the Dynamic agent's vault `0x0A82...0A35`. It does not yet hold the vault factory, `CompliantPaymentGuard`, `SealedStore`, USDC or the review demo vault `0x46F1...2158`; adding them is an open task for Ezgin (`setProtected(address[],bool)` from the owner key). Until then a poisoned feed naming one of those would reach the registry.
 
 | Network | Address | CRE forwarder | Workflow owner | Deploy date |
 |---|---|---|---|---|
@@ -179,7 +185,7 @@ The asset says no without saying why (`execution reverted`). `apps/server` reads
 
 ### 4.3 `CompliantPaymentGuard`: agent payments in a CVA, settled only between verified identities (D-034)
 
-`contracts/src/CompliantPaymentGuard.sol`, on Monad testnet at `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`, source verified on Sourcify (exact match). Owner: the deploy wallet. Minimum tier: 1.
+`contracts/src/CompliantPaymentGuard.sol`, on Monad testnet at `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`, source verified on Monad's Sourcify (exact match). Owner: the deploy wallet. Minimum tier: 1. Deployed 2026-10-09 in tx `0xf7a89da2ddcc638cabe06b00adcd7a6afb81b1e1cd70da8b98f825593e3cb3ae`; its broadcast record (`contracts/broadcast/DeployCompliantPaymentGuard.s.sol/10143/run-latest.json`) was overwritten by the BVUSD guard's deploy on 2026-10-11 and survives in git history (commit `ad29292`).
 
 **What it is.** The owner keeps aUSDC in their own wallet and gives the guard an allowance. They list merchants with a cap per payment and a cap per day and name one agent. The agent calls `pay(merchant, amount, ref)`, the same signature as `PaymentGuard`, so `baret pay --vault <guard>` works unchanged. Before any value moves, `pay` reads the A-Pass of the payer (the owner) and of the payee on-chain: each must hold a credential (`balanceOf > 0`) that is active (record word 0 equals `STATUS_ACTIVE`, 1) and of at least the owner's minimum tier (record word 1), and Cleanverse's `policy.canTransfer` must answer yes. Then `aUSDC.transferFrom(owner, merchant, amount)` and a `Settled` event that names both credentials and their tiers. A refusal is a typed error: `NotVerified(address party, Reason reason)` with `NoCredential`, `NotActive` or `TierTooLow`, or `RefusedByPolicy(from, to)`.
 
@@ -195,7 +201,7 @@ The asset says no without saying why (`execution reverted`). `apps/server` reads
 
 **Settled for real, 2026-10-11 (D-048).** aUSDC still cannot be had (the sandbox's faucet and deposit routes answer "Internal server error", and Access Core takes deposits from its members only), so the settlement was made in a CVA Baret issued through Cleanverse's own route: **`BVUSD`** (Baret Verified Dollar, 6 decimals) at [`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`](https://testnet.monadexplorer.com/address/0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2), issued by `POST /atoken/launch` (request `IA20261012032315903786`, issuance `0x8ea48e32bbfe4ac3cc75c76437187f4dbd7d5180f36c6b5943635f45411f7dfc`), rule: minimum tier 1; `policy.isTokenRegistered(BVUSD)` is true. The deploy wallet is its admin, granted itself `MINTER_ROLE` (`0x3c54d5ff8b836b440d976d5706c335d987b7133e554953cefa6e9e440df790b6`) and minted 100 (`0xcba3b3997f9632b65ed8d8b152a67737cb2946da2ec409bb55217ce71be019f7`).
 
-A second guard, the same source with BVUSD as its asset, is at [`0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`](https://testnet.monadexplorer.com/address/0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af) (Sourcify, exact match): `BARET_CVA=0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2 forge script script/DeployCompliantPaymentGuard.s.sol …`. Owner the deploy wallet, minimum tier 1, agent the Dynamic wallet, the same two merchants at 0.5 per payment and 2 per day, an allowance of 5 BVUSD.
+A second guard, the same source with BVUSD as its asset, is at [`0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`](https://testnet.monadexplorer.com/address/0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af) (source verified: on sourcify.dev on 2026-10-11, and on Monad's own Sourcify instance, the one the explorer reads, on 2026-10-12 with `forge verify-contract --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org`, runtime `exact_match`): `BARET_CVA=0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2 forge script script/DeployCompliantPaymentGuard.s.sol …`. Owner the deploy wallet, minimum tier 1, agent the Dynamic wallet, the same two merchants at 0.5 per payment and 2 per day, an allowance of 5 BVUSD.
 
 | What | Result |
 |---|---|
@@ -205,7 +211,7 @@ A second guard, the same source with BVUSD as its asset, is at [`0xFB70F98f6dd3A
 
 Those two runs went through a local Baret server that has the guard and BVUSD on `MONAD_TESTNET_KNOWN_CONTRACTS`. On 2026-10-12, with both on Render's list (API `46a49a7`), the same pair ran through the live API: settled [`0x080da603d4ff462d16dce5d7c079c69b665437dcd900ecff9f7c31a2427829f9`](https://testnet.monadexplorer.com/tx/0x080da603d4ff462d16dce5d7c079c69b665437dcd900ecff9f7c31a2427829f9) (ref `live-1`), and Blocked before signing for the wallet with no credential. Cleanverse's own index lists the BVUSD mint and settlement for the owner (`POST /query_txs`).
 
-Still no aUSDC: the route Cleanverse's admin described was followed on 2026-10-12 (the deposit address from `query_deposit_address`, `0xCd65bdBCd0a64Ea226b73A3d02E45e3026284506`, funded with 20 USDC from Circle's faucet and 6 from the sandbox's `/faucet`); 40 minutes later the USDC is still there and nothing was minted. Not claimed: aUSDC through a Baret contract; BVUSD is a sandbox test asset with nothing behind it.
+Still no aUSDC: the route Cleanverse's admin described was followed on 2026-10-12 (the deposit address from `query_deposit_address`, `0xCd65bdBCd0a64Ea226b73A3d02E45e3026284506`, funded with 20 USDC from Circle's faucet and 6 from the sandbox's `/faucet`); Cleanverse's operator (`0xBd8428761efB5384C4945d16de56817Caa6903dF`, the account that issued BVUSD) returned the deposit to the owner the same day: 5 USDC in `0x65ab5790a23de7e099289c5ef090506e746fee7470de9c4a13a616cb9dc6227f` (block 70403112) and 20 USDC in `0x65382c962252258b345541161d5b1efa71aed0c3d58d155bc98fa23bceb510b7` (block 70403945), both checked with `cast receipt` on 2026-10-12; no aUSDC was minted. Not claimed: aUSDC through a Baret contract; BVUSD is a sandbox test asset with nothing behind it.
 
 ---
 
@@ -229,7 +235,7 @@ Deploy: `forge script script/DeploySealedStore.s.sol --rpc-url monad_testnet --b
 
 ## 5. Test Plan
 
-- [x] `forge test -vv` — all unit + fuzz tests green (26 tests, 2026-10-01).
+- [x] `forge test -vv`: all unit + fuzz tests green (85 tests in 10 suites, 2026-10-12: PaymentGuard 17 + invariant 2, CompliantPaymentGuard 15 + fork 1 (skipped without `BARET_FORK_CLEANVERSE=1`), ReputationOracleReceiver 13, SealedStore 11, DemoSites 10, ReputationRegistry 7, NovaSwap 6, Factory 3).
 - [x] `PaymentGuard`: cap overflow, old agent after revoke, and two merchants' reserves not getting mixed up scenarios.
 - [x] `ReputationRegistry`: only the forwarder can write, a non-owner cannot write.
 - [x] `ReputationOracleReceiver` (13 tests, one fuzz): only the forwarder reports, another workflow owner is refused, a protected target stops the whole report, `pending` skips flagged, protected and zero, ERC-165 answers for `IReceiver`.

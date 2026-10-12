@@ -112,7 +112,7 @@ Said plainly, so that nothing above is read as more than it is:
 
 - **A `personal_sign` message is not checked.** There is nothing to simulate in a plain-text message, so the wallet and extension show it as the text it signs and sign on the reader's press, with no call to Baret first.
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
-- **No aUSDC has moved through `CompliantPaymentGuard`.** The settlement of 2026-10-11 is in `BVUSD`, a test Cleanverse Verified Asset Baret issued itself; Cleanverse's sandbox does not hand out aUSDC.
+- **No aUSDC has moved through `CompliantPaymentGuard`.** The settlement of 2026-10-11 is in `BVUSD`, a test Cleanverse Verified Asset Baret issued itself, through a second deployment of the same contract (`0xFB70...18Af`). The USDC deposited for aUSDC on 2026-10-12 was returned by Cleanverse's operator and no aUSDC was minted.
 - **Mainnet:** nothing is deployed there.
 
 The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
@@ -122,7 +122,8 @@ The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
 | Contract | Address |
 |---|---|
 | `PaymentGuardFactory` | [`0xDe897d4dF6E1c34aB868948dE035AE29D32eA822`](https://testnet.monadexplorer.com/address/0xDe897d4dF6E1c34aB868948dE035AE29D32eA822) |
-| `PaymentGuard` (the demo agent's vault) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) |
+| `PaymentGuard` (the Dynamic agent's vault, USDC, not from the factory) | [`0x0A82671420114E47c672D5e8e23017DdCE850A35`](https://testnet.monadexplorer.com/address/0x0A82671420114E47c672D5e8e23017DdCE850A35) |
+| `PaymentGuard` (the review demo vault, dUSDC, opened through the factory; used by `/review` and `/v1/review`) | [`0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`](https://testnet.monadexplorer.com/address/0x46F159DA1aD40A78526d35ea1Adb8531aDa52158) |
 | `ReputationRegistry` | [`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`](https://testnet.monadexplorer.com/address/0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411) |
 | `ReputationOracleReceiver` (CRE) | [`0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d`](https://testnet.monadexplorer.com/address/0x7105Fb53bA2a9d96c4587280F2696438Aca51d9d) |
 | `CompliantPaymentGuard` (Cleanverse) | [`0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`](https://testnet.monadexplorer.com/address/0x6E867b840f11cC1d9c6e16d1f76D737199bc907c) |
@@ -145,7 +146,7 @@ pnpm --filter @baret/server dev             # the API on http://localhost:8080
 pnpm --filter @baret/server verify:demo -- --api http://localhost:8080 --from <a funded testnet address>
 ```
 
-On 2026-10-10 `pnpm check` passed 1,072 tests in 99 files and `pnpm contracts:test` 85 forge tests. `verify:demo` sends all twenty demo scenarios (six sites, honest and attack, the agent and Cleanverse cases) to an API and checks each verdict; against the live API on 2026-10-10 it agreed on 20 of 20. Deployment: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+On 2026-10-12 (`main` `8c0d7f4`) `pnpm check` passed 1,232 tests in 117 files and `pnpm contracts:test` 85 forge tests in 10 suites (84 run, 1 fork test skipped unless `BARET_FORK_CLEANVERSE=1`). `verify:demo` sends all twenty demo scenarios (six sites, honest and attack, the agent and Cleanverse cases) to an API and checks each verdict; against the live API on 2026-10-10 it agreed on 20 of 20. Deployment: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Repository layout
 

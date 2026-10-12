@@ -20,7 +20,7 @@ A bug still goes to the owner's task file (`docs/QA_AND_DELIVERY.md` §6). Here 
 
 ## 1. Where things stand (rewritten every session)
 
-Last updated: 2026-10-12 · by: Hale's agent (session 4, continued) · API commit `5b92f54`, `qa` merged up to `main` `8614711`
+Last updated: 2026-10-12 · by: Hale's agent (session 4, continued; facts corrected by Meriç's agent on 2026-10-12) · API commit `46a49a7` (live `/health`), `main` `8c0d7f4`
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ Last updated: 2026-10-12 · by: Hale's agent (session 4, continued) · API commi
 | **In progress** | H11 scripts drafted, the script's ~2:45 trim still open; H14 (4) drafted, waiting on E8; the sealed settings' two-device run needs a real passkey; D-047 not yet tested |
 | **Blocked on** | The extension's `verify:browser` and D-047's manual test need a permission this sandbox refused (writing a private key to a file). `gh` has no auth in this sandbox, so the `qa`→`main` PR could not be opened (compare URL left for Hale). The platform team (E1 (1)) → H2. H3 (MetaMask) is Ezgin's since 2026-10-10 |
 | **Next step** | **Today is submission day.** There is no more agent-doable testing queued — everything left needs Hale the person: open the `qa` PR, publish the two articles (H12), H2 (platform profiles), H9 (2) Discord, the real-passkey two-device run, H13 (record), H15 (final regression and submit) |
-| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension (fix merged as #77, now live), P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived" |
+| **Open bugs filed by Hale** | 5 (M11 fixed and verified) — Meriç: P1 NovaSwap "with no Baret check" under the extension (fix merged as #77, now live), P2 two "Baret" entries; Ezgin: P2 over-cap reason "unknown", P2 extension activity/tokens for a received token, P2 restore's "arrived", all three fixed in #101 (2026-10-11), re-test by Hale pending; one new P2 for Meriç (OrbitYield's stake card) filed 2026-10-12 |
 | **Days to the deadline** | **Today is the feature freeze (Sun 11 Oct, 12:00); recording starts this afternoon.** Submit Mon 12 Oct, the platform closes Wed 14 Oct 06:59 (GMT+3) |
 
 ---

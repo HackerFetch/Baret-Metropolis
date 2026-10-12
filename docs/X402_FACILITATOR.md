@@ -87,7 +87,7 @@ These fields are **conceptually the same model** as `setMerchantCap` in `Payment
 
 - [x] Happy path: a payment within the cap to a merchant on the allowlist — passes automatically.
 - [x] Rejection path: asset outside the allowlist — `X402_NON_CANONICAL_ASSET`, payment is not sent.
-- [x] Rejection path: destination address mismatch (a fake 402 response is simulated) — `X402_DESTINATION_MISMATCH`.
+- [x] Caution path: destination address mismatch (a fake 402 response is simulated): `X402_DESTINATION_MISMATCH`, a warning by design (D-014): the engine answers Caution under Balanced and Permissive and Blocked under Strict; the agent-kit refuses a Caution unless `allowCaution` is set (D-022), so the payment is not sent.
 - [x] Cap overflow: consecutive requests exceeding the hourly limit — blocked.
 - [x] A real settlement on Monad testnet (D-046, 2026-10-11): `pnpm --filter @baret/server verify:x402` against the live API — the 402 terms, Baret's verdict before signing, the 200 answer, the on-chain transaction, both balances moving, and the same authorisation replayed answering 402 again. 8 of 8 (Hale, 2026-10-11, API commit `5b92f54`, tx `0x207612b6021852a76b63569dc4b9504c1a9036debf2fb8e9581e46d0d7dc2d61`, block 70138038).
 

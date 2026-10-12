@@ -332,7 +332,8 @@ contract CompliantPaymentGuardForkTest is Test {
     address constant VERIFIED = 0xC448042edaC1899B023cAa0E9dA5E4a8833de873;
 
     function test_settlesOnTheRealAssetOnlyBetweenVerifiedWallets() public {
-        if (vm.envOr("BARET_FORK_CLEANVERSE", uint256(0)) == 0) return;
+        // vm.skip, not an early return, so a run without the fork is reported as skipped, not passed.
+        if (vm.envOr("BARET_FORK_CLEANVERSE", uint256(0)) == 0) vm.skip(true);
         vm.createSelectFork(vm.envString("MONAD_TESTNET_RPC_URL"));
 
         address agent = makeAddr("agent");

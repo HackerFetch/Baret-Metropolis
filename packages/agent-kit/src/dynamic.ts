@@ -1,7 +1,6 @@
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { DynamicEvmWalletClient } from "@dynamic-labs-wallet/node-evm";
-import { type Address, getAddress, type Hex } from "viem";
+import { type Address, getAddress, type Hex, type TransactionSerializable } from "viem";
 import type { AgentSigner } from "./signer.js";
 
 /**
@@ -15,14 +14,44 @@ import type { AgentSigner } from "./signer.js";
  * needed too.
  */
 
-type SignArgs = Parameters<DynamicEvmWalletClient["signTransaction"]>[0];
-type CreateArgs = Parameters<DynamicEvmWalletClient["createWalletAccount"]>[0];
+/**
+ * The SDK is an optional peer dependency: `@dynamic-labs-wallet/node-evm`
+ * is loaded the first time a Dynamic wallet is created or signs, and a
+ * wallet with a local signer never needs it. The types it hands over are
+ * kept opaque here, so the package's own declarations do not reach for it.
+ */
+export const DYNAMIC_PACKAGE = "@dynamic-labs-wallet/node-evm";
+
+/** Dynamic's description of a wallet: stored as is, handed back as is. */
+export type DynamicWalletMetadata = object;
+/** This machine's share of the wallet's key: stored as is, handed back as is. */
+export type DynamicServerKeyShare = object;
+
+/** The part of Dynamic's EVM client this file uses. */
+export interface DynamicClient {
+  authenticateApiToken(token: string): Promise<unknown>;
+  createWalletAccount(args: {
+    thresholdSignatureScheme: "TWO_OF_TWO";
+    password?: string;
+    onError?: (error: Error) => void;
+    backUpToDynamic?: boolean;
+  }): Promise<{
+    walletMetadata: DynamicWalletMetadata & { accountAddress: string };
+    externalServerKeyShares: DynamicServerKeyShare[];
+  }>;
+  signTransaction(args: {
+    walletMetadata: DynamicWalletMetadata;
+    transaction: TransactionSerializable;
+    password?: string;
+    externalServerKeyShares?: DynamicServerKeyShare[];
+  }): Promise<string>;
+}
 
 /** What `baret wallet create` saves. */
 export interface StoredDynamicWallet {
   address: Address;
-  walletMetadata: SignArgs["walletMetadata"];
-  externalServerKeyShares: NonNullable<SignArgs["externalServerKeyShares"]>;
+  walletMetadata: DynamicWalletMetadata;
+  externalServerKeyShares: DynamicServerKeyShare[];
 }
 
 export interface DynamicCredentials {
@@ -37,14 +66,33 @@ export interface DynamicCredentials {
   password: string;
 }
 
-async function connect(c: DynamicCredentials): Promise<DynamicEvmWalletClient> {
-  // Loaded on demand: the SDK ships native code, and a wallet with a local
-  // signer should not need it.
-  const { DynamicEvmWalletClient } = await import("@dynamic-labs-wallet/node-evm");
+/** Loads the SDK on demand, and says what to install when it is not there. */
+async function loadDynamic(): Promise<
+  new (options: {
+    environmentId: string;
+    enableMPCAccelerator: boolean;
+  }) => unknown
+> {
+  try {
+    const sdk = await import(DYNAMIC_PACKAGE);
+    return sdk.DynamicEvmWalletClient;
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "ERR_MODULE_NOT_FOUND" || code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        `the Dynamic signer needs ${DYNAMIC_PACKAGE}, which is not installed: npm install ${DYNAMIC_PACKAGE}@1.1.28 (a local signer does not need it)`,
+      );
+    }
+    throw err;
+  }
+}
+
+async function connect(c: DynamicCredentials): Promise<DynamicClient> {
+  const DynamicEvmWalletClient = await loadDynamic();
   const client = new DynamicEvmWalletClient({
     environmentId: c.environmentId,
     enableMPCAccelerator: false,
-  });
+  }) as DynamicClient;
   await client.authenticateApiToken(c.authToken);
   return client;
 }
@@ -56,7 +104,7 @@ export async function createDynamicWallet(
   const client = await connect(options);
   let failure: Error | null = null;
   const created = await client.createWalletAccount({
-    thresholdSignatureScheme: "TWO_OF_TWO" as CreateArgs["thresholdSignatureScheme"],
+    thresholdSignatureScheme: "TWO_OF_TWO",
     backUpToDynamic: true,
     password: options.password,
     onError: (error) => {
@@ -81,7 +129,7 @@ export function dynamicSigner(
   credentials: DynamicCredentials,
   wallet: StoredDynamicWallet,
 ): AgentSigner {
-  let client: Promise<DynamicEvmWalletClient> | null = null;
+  let client: Promise<DynamicClient> | null = null;
   return {
     address: wallet.address,
     async signTransaction(transaction) {

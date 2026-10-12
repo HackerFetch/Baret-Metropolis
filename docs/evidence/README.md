@@ -28,7 +28,7 @@ The sent payment: tx
 (status 1, block 69536894).
 
 The three `review` runs read an earlier test vault (`0x0A82671420114E47c672D5e8e23017DdCE850A35`)
-and never sign. The two `pay` runs used Baret's demo vault (PaymentGuard from the factory
+and never sign. The two `pay` runs used the review demo vault (PaymentGuard from the factory
 `0xDe897d4dF6E1c34aB868948dE035AE29D32eA822`):
 
 - vault [`0x46F159DA1aD40A78526d35ea1Adb8531aDa52158`](https://testnet.monadexplorer.com/address/0x46F159DA1aD40A78526d35ea1Adb8531aDa52158)
@@ -43,7 +43,7 @@ Swap `review` for `pay` to send when the reviewer approves.
 
 ### The route `POST /v1/review` and the `/review` page (round 2)
 
-The same reviewer behind the server route, on Baret's demo vault above, with a real key
+The same reviewer behind the server route, on the review demo vault above, with a real key
 against a local server (Monad testnet RPC; the vault and reputation reads came from the
 deployed API). The route runs one of three fixed scenarios; with
 `accept: text/event-stream` it streams each step as it happens. Not live in production yet:

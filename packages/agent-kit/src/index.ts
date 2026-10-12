@@ -1,3 +1,10 @@
+export {
+  type AnalyzeResponse,
+  type Finding,
+  GuardUnreachableError,
+  isSafe,
+  POLICY_TEMPLATES,
+} from "@baret/guard";
 export * from "./abi.js";
 export * from "./agent-wallet.js";
 export * from "./dynamic.js";
