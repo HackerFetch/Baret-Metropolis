@@ -80,7 +80,7 @@ Without the reviewer, Baret answers whether a transaction is dangerous. With it,
 
 ## Try it
 
-- Watch it run: <https://baret-metropolis.vercel.app/review> (each card runs the review live; if the service is unavailable the page shows the run recorded on 9 October, labelled as recorded)
+- Watch it run: <https://usebaret.com/review> (each card runs the review live; if the service is unavailable the page shows the run recorded on 9 October, labelled as recorded)
 - The API: `POST https://baret-monad-api.onrender.com/v1/review` with `{"scenario": "honest" | "overpay" | "injected"}` and `accept: text/event-stream`
 - The vault's payments, indexed by Envio: <https://baret-monad-api.onrender.com/v1/audit/vault/0x46F159DA1aD40A78526d35ea1Adb8531aDa52158>
 - The code: [`packages/agent-kit/src/review-agent.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/agent-kit/src/review-agent.ts), [`apps/server/src/application/review.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/apps/server/src/application/review.ts), the CLI (`baret review`, `baret pay`) in [`packages/agent-kit`](https://github.com/HackerFetch/Baret-Metropolis/tree/main/packages/agent-kit)

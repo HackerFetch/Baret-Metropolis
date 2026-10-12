@@ -8,8 +8,8 @@ Where things run:
 
 | Part | Where |
 |---|---|
-| Showcase (landing, six demo sites, `/agents`, `/review`) | `https://baret-metropolis.vercel.app` |
-| Wallet | `https://baret-wallet.vercel.app` |
+| Showcase (landing, six demo sites, `/agents`, `/review`) | `https://usebaret.com` |
+| Wallet | `https://wallet.usebaret.com` |
 | Analysis API | `https://baret-monad-api.onrender.com`; both sites reach it at `/api/...` through a Vercel rewrite |
 | Contracts | Monad testnet, chain id `10143` |
 | Indexer | Envio HyperIndex, hosted; read only through the API's `/v1/audit/*` |

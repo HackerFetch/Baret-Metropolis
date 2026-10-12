@@ -10,22 +10,22 @@ Built for Monad Metropolis, track **Trust, Identity & AI Infrastructure**, by Ez
 
 ## Try it in two minutes (no wallet needed)
 
-1. Open **<https://baret-metropolis.vercel.app/novaswap>**. It is a fake swap site.
+1. Open **<https://usebaret.com/novaswap>**. It is a fake swap site.
 2. Turn on **"Suspicious swap"** and press **"Enable dUSDC trading"**.
 3. Baret's panel opens with the live verdict for that exact request: **Blocked**. The site asks for an unlimited dUSDC allowance to a look-alike address that is on Baret's reputation registry. Under the findings, **"In plain words"** explains it in English, Turkish or Chinese (KIMI).
 4. Turn "Suspicious swap" off and press the button again: the honest swap is **Safe**.
 
-The five other demo sites, OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe, each have an honest version and an attack: <https://baret-metropolis.vercel.app/showcase>.
+The five other demo sites, OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe, each have an honest version and an attack: <https://usebaret.com/showcase>.
 
 ## The live product
 
 | What | Where | What to do there |
 |---|---|---|
-| Demo sites | <https://baret-metropolis.vercel.app/showcase> | Six sites, honest and attack versions, each checked live |
-| Agents | <https://baret-metropolis.vercel.app/agents> | The playground: an agent asks Baret before eight kinds of payment. Below it, a real Dynamic agent's payments from its vault, read live from the Envio indexer; a lookup of Baret's on-chain reputation registry; and a quickstart with HTTP, TypeScript, the CLI and MCP samples on the live API |
-| Agent reviewer (Qwen) | <https://baret-metropolis.vercel.app/review> | Three payments an agent was asked to make. Qwen 3.8 Max plans, calls four read-only tools and can veto; the honest one is sent on testnet |
-| Baret wallet | <https://baret-wallet.vercel.app> | A passkey wallet (Mera): no seed phrase, every request checked before the sign button exists |
-| Browser extension | <https://baret-metropolis.vercel.app/install> | A wallet extension for Chrome that refuses a Blocked request in its own window |
+| Demo sites | <https://usebaret.com/showcase> | Six sites, honest and attack versions, each checked live |
+| Agents | <https://usebaret.com/agents> | The playground: an agent asks Baret before eight kinds of payment. Below it, a real Dynamic agent's payments from its vault, read live from the Envio indexer; a lookup of Baret's on-chain reputation registry; and a quickstart with HTTP, TypeScript, the CLI and MCP samples on the live API |
+| Agent reviewer (Qwen) | <https://usebaret.com/review> | Three payments an agent was asked to make. Qwen 3.8 Max plans, calls four read-only tools and can veto; the honest one is sent on testnet |
+| Baret wallet | <https://wallet.usebaret.com> | A passkey wallet (Mera): no seed phrase, every request checked before the sign button exists |
+| Browser extension | <https://usebaret.com/install> | A wallet extension for Chrome that refuses a Blocked request in its own window |
 | API | <https://baret-monad-api.onrender.com/health> | The check itself; see "Call it from your app" below |
 
 ## Access instructions for judges

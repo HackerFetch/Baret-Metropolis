@@ -55,8 +55,8 @@ Rule of thumb: **Hale finds and reports, the owner fixes, Hale checks the fix.**
 
 | Surface | URL | Notes |
 |---|---|---|
-| Showcase (landing, hub, six demo sites, agents, docs, install) | `https://baret-metropolis.vercel.app` | Demo sites: `/scrybe`, `/novaswap`, `/pixeldrop`, `/orbityield`, `/claimhub`, `/launchpad`; hub `/showcase` |
-| Wallet | `https://baret-wallet.vercel.app` | A passkey belongs to the domain it was made on: this URL and `localhost` are two different wallets |
+| Showcase (landing, hub, six demo sites, agents, docs, install) | `https://usebaret.com` | Demo sites: `/scrybe`, `/novaswap`, `/pixeldrop`, `/orbityield`, `/claimhub`, `/launchpad`; hub `/showcase` |
+| Wallet | `https://wallet.usebaret.com` | A passkey belongs to the domain it was made on: this URL and `localhost` are two different wallets |
 | API | `https://baret-monad-api.onrender.com` | `/health` shows the running commit, `/health/ready` what is configured. The free plan sleeps after 15 idle minutes; the first request can take about 50 s. That is not a bug |
 | Extension | zip artifact of the CI `Build apps` job | A preview on a sample wallet. Its live background is cut for the hackathon: do not report "does not connect to sites" |
 | Contracts | Monad testnet, chain `10143` | Addresses: `docs/CONTRACTS.md` §2.6, §3.4, §7 |
@@ -100,7 +100,7 @@ The exact verdict and codes per attack are in the two docs above; the table is o
 
 ### 5.3 Wallet, end to end
 
-On `https://baret-wallet.vercel.app`, once Meriç's live wiring is merged (`tasks/FOR_MERIC.md`, "The wallet can go live"): create the passkey account → receive MON and USDC → open a vault → deposit (two sign requests: an exact allowance, then the deposit) → add a merchant with caps → set the agent → pay as the agent → pause → revoke → the agent's payment is refused. Each step shows a verdict before the signature; a Blocked verdict has no sign button. Then the unhappy paths: a passkey provider without PRF, the prompt dismissed, an expired verdict (wait past the countdown), history while the indexer is down ("history unavailable", not an empty list).
+On `https://wallet.usebaret.com`, once Meriç's live wiring is merged (`tasks/FOR_MERIC.md`, "The wallet can go live"): create the passkey account → receive MON and USDC → open a vault → deposit (two sign requests: an exact allowance, then the deposit) → add a merchant with caps → set the agent → pay as the agent → pause → revoke → the agent's payment is refused. Each step shows a verdict before the signature; a Blocked verdict has no sign button. Then the unhappy paths: a passkey provider without PRF, the prompt dismissed, an expired verdict (wait past the countdown), history while the indexer is down ("history unavailable", not an empty list).
 
 Until the wiring is merged, the same flow runs from the terminal with `verify:wallet` (5.1).
 

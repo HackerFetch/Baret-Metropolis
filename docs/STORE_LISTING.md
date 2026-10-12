@@ -21,7 +21,7 @@ The manifest asks for `storage` and `alarms` only. `notifications` was declared 
 | Store icon | `icon/128.png` from the zip |
 | Screenshots | 1280 × 800, taken from the built extension on the live system: a blocked request, a safe request, the wallet, the overview |
 | Small promo tile | 440 × 280 |
-| Homepage URL | `https://baret-metropolis.vercel.app` |
+| Homepage URL | `https://usebaret.com` |
 | Support URL | `https://github.com/HackerFetch/Baret-Metropolis/issues` |
 
 **Description:**
@@ -103,7 +103,7 @@ No login is needed. Paste:
 No account or credentials are needed. The extension runs on Monad testnet only.
 1. Open the extension's setup page, choose a passphrase and write down the recovery phrase.
 2. Get testnet MON from https://faucet.monad.xyz for the address shown.
-3. Open https://baret-metropolis.vercel.app/novaswap and connect Baret. A normal transfer shows Safe and can be signed.
+3. Open https://usebaret.com/novaswap and connect Baret. A normal transfer shows Safe and can be signed.
 4. An unlimited token allowance to a reported address shows Blocked and has no sign button.
 ```
 

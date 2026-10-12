@@ -2,7 +2,7 @@
 
 > How Baret is built, checked and shipped. Frontend on Vercel, the analysis API on Render, contracts with Foundry. Keep this file in sync with `.github/workflows/ci.yml`, `render.yaml` and `apps/*/vercel.json`.
 
-Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel are live; main domain `baret-metropolis.vercel.app` live**
+Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel are live; product domain `usebaret.com` and `wallet.usebaret.com` since 2026-10-12; the `*.vercel.app` hosts stay as aliases**
 
 ---
 
@@ -10,8 +10,8 @@ Last updated: 2026-10-01 · Status: **API on Render and both web apps on Vercel 
 
 | Piece | Host | Config | URL (target) |
 |---|---|---|---|
-| `apps/showcase` | Vercel project `baret-metropolis` | `apps/showcase/vercel.json` | **`https://baret-metropolis.vercel.app`** (main domain) |
-| `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://baret-wallet.vercel.app` |
+| `apps/showcase` | Vercel project `baret-metropolis` | `apps/showcase/vercel.json` | **`https://usebaret.com`** (the product domain since 2026-10-12; `baret-metropolis.vercel.app` stays as an alias) |
+| `apps/wallet` | Vercel project `baret-wallet` | `apps/wallet/vercel.json` | `https://wallet.usebaret.com` (since 2026-10-12; `baret-wallet.vercel.app` stays as an alias, with its own passkeys) |
 | `apps/server` | Render web service `baret-monad-api` | `render.yaml` (Blueprint) | `https://baret-monad-api.onrender.com` (live) |
 | `apps/extension` | GitHub Actions artifact (zip) | `ci.yml` → `build` job | Chrome "Load unpacked" until the Chrome Web Store listing is public, then the store (`VITE_BARET_EXTENSION_CHROMIUM_STORE_URL`, below) |
 | `contracts/` | Monad testnet, by hand | `contracts/script/Deploy.s.sol` | addresses in `docs/CONTRACTS.md` |
@@ -70,7 +70,8 @@ Do this twice, once per app:
 3. **Environment variable**: `ENABLE_EXPERIMENTAL_COREPACK=1` (All environments). The repo pins pnpm 11 in `packageManager`; without this Vercel installs with an older pnpm.
 4. Settings → General → **Node.js Version**: 22.x.
 5. Project name: `baret-metropolis` (showcase) / `baret-wallet`. Deploy.
-6. Showcase only: Environment Variables → `BARET_SITE_URL` = `https://baret-metropolis.vercel.app`. The build writes the canonical URL, `og:url`, absolute `og:image` and `sitemap.xml` from it; without it Vercel falls back to `VERCEL_PROJECT_PRODUCTION_URL`.
+5b. Domains (2026-10-12): the showcase project carries `usebaret.com` (and `www.usebaret.com`, redirected to it), the wallet project `wallet.usebaret.com`. DNS is at Cloudflare, records "DNS only": the apex as an A record to the IP Vercel shows, `www` and `wallet` as CNAME `cname.vercel-dns.com`; Vercel issues the certificates. The `*.vercel.app` hosts keep working as aliases. A passkey belongs to its origin, so a wallet account made on one host does not open on the other.
+6. Showcase only: Environment Variables → `BARET_SITE_URL` = `https://usebaret.com`. The build writes the canonical URL, `og:url`, absolute `og:image` and `sitemap.xml` from it; without it Vercel falls back to `VERCEL_PROJECT_PRODUCTION_URL`.
 
 **Why the install command runs the extension's `postinstall`:** Vite's native tsconfig resolution in the web apps follows the workspace project references into `apps/extension/tsconfig.json`, which extends `.wxt/tsconfig.json`. `wxt prepare` generates that file in `postinstall`, but when Vercel restores `node_modules` from its build cache, `pnpm install` is a no-op and skips lifecycle scripts, so the file is missing and the build fails with `Tsconfig not found .../apps/extension/.wxt/tsconfig.json`. Running the script explicitly makes cached and fresh builds behave the same.
 

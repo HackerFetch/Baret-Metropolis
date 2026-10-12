@@ -92,8 +92,8 @@ And none of it moved the decision away from code that can be tested. That was th
 
 ## Try it
 
-- The demo site, no wallet needed: <https://baret-metropolis.vercel.app/novaswap> (turn on "Suspicious swap", press "Enable dUSDC trading")
-- The Baret wallet's Rules page: <https://baret-wallet.vercel.app> (one passkey, no seed phrase)
+- The demo site, no wallet needed: <https://usebaret.com/novaswap> (turn on "Suspicious swap", press "Enable dUSDC trading")
+- The Baret wallet's Rules page: <https://wallet.usebaret.com> (one passkey, no seed phrase)
 - The API: `POST https://baret-monad-api.onrender.com/v1/explain`
 - The code: [`apps/server/src/api/routes/explain.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/apps/server/src/api/routes/explain.ts), [`apps/server/src/application/policy-draft.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/apps/server/src/application/policy-draft.ts), [`packages/llm`](https://github.com/HackerFetch/Baret-Metropolis/tree/main/packages/llm)
 
