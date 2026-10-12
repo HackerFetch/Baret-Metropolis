@@ -669,6 +669,7 @@ export function Component() {
                     key={run}
                     request={flow.request}
                     pending={flow.pending}
+                    monBalance={state.assets.find((a) => a.symbol === "MON")?.balance ?? null}
                     onCheckAgain={async () => {
                       const step = current.current;
                       if (!step) return null;

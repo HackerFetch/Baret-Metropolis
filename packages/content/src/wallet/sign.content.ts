@@ -88,8 +88,9 @@ export const sign = {
     caution: {
       title: "Allowed, with something to read first",
       summary: "No rule stopped this, but a check found something. Read it before you sign.",
-      primary: "Sign and send",
-      primaryMessage: "Sign",
+      /** One ordinary press, but the label says the reader goes past a finding. */
+      primary: "Sign anyway",
+      primaryMessage: "Sign anyway",
       secondary: "Decline",
     },
     blocked: {
@@ -113,7 +114,9 @@ export const sign = {
         singleItem: "Allow the one item this needs, not the whole collection.",
         lowerAmount: "Send less. Your rule allows up to {limit}.",
         keepFloor: "Send less, so you keep at least {limit} after this.",
-        fallback: "Decline, then ask the site for a request that fits your rules.",
+        /** Worded for a site's request and for the wallet's own Send and Agents flows alike. */
+        fallback:
+          "Decline. Check the amount and the balance, then try again with a request that fits your rules.",
       },
     },
     unreachable: {
@@ -128,7 +131,7 @@ export const sign = {
     checkedBy: {
       label: "Checked by",
       value: "Baret server",
-      detail: "Simulated over Alchemy RPC on Monad. Your key signs on this device only.",
+      detail: "Simulated on Monad before anything is signed. Your key signs on this device only.",
       detailMessage: "Checked by the Baret server. Your key signs on this device only.",
       sources: {
         reputation: "Reputation from Nansen and threat reports from Chainlink CRE",
@@ -180,6 +183,8 @@ export const sign = {
     allow: "You allow",
     revoke: "You revoke",
     fee: "Network fee",
+    /** Live: the network could not estimate the call, which usually means it reverts. */
+    feeUnknown: "Not estimated: the call reverts",
     unlimited: "Unlimited",
     none: "Nothing leaves your wallet.",
     unknown: "Baret could not work out what changes. Treat that as a reason to stop.",
@@ -197,6 +202,11 @@ export const sign = {
     more: "{count} more",
     why: "Why it matters",
     batched: "Inside a batched call",
+    /** A failed simulation: what Monad answered, word for word, when it said why. */
+    revertReason: "Monad's answer: {reason}",
+    /** The account has no MON: the real reason a fresh account's request fails. */
+    noMon: "This account holds 0 MON, so the transaction would fail. Get test MON from the faucet.",
+    faucet: "Open the faucet",
     severity: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },
   },
 
@@ -205,6 +215,8 @@ export const sign = {
     title: "Rules this breaks",
     none: "No rule broken.",
     row: "Requested {actual}. Your rule allows {limit}.",
+    /** A floor rule (keep at least this much): a minimum, never an allowance. */
+    floorRow: "Keeps at least {limit} in the account; this request would leave {actual}.",
     unchecked: "{rule} could not be checked, so it counts as broken.",
     edit: "Change this rule",
   },

@@ -69,7 +69,6 @@ export default defineConfig({
     permissions: [
       "storage", // keystore, activity, permissions ledger
       "alarms", // auto-lock deadline
-      "notifications", // drift alerts
     ],
 
     host_permissions: [`${baretApiOrigin()}/*`, `${monadRpcOrigin()}/*`],

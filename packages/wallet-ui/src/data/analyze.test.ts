@@ -246,3 +246,60 @@ describe("fromAnalyze fails closed", () => {
     expect("wallet" in request).toBe(false);
   });
 });
+
+describe("what changes, beyond MON and tokens", () => {
+  const PIXEL = "0x4444444444444444444444444444444444444444";
+  function withChange(change: Record<string, unknown>): AnalyzeResponse {
+    return {
+      ...answer(),
+      estimatedChanges: [change as AnalyzeResponse["estimatedChanges"][number]],
+    };
+  }
+
+  it("shows a minted piece as one item of the collection, with its token id", () => {
+    const request = fromAnalyze(
+      withChange({
+        account: WALLET,
+        asset: { kind: "erc721", address: PIXEL, symbol: "PIXEL", decimals: 0, tokenId: "42" },
+        before: null,
+        after: null,
+        delta: "1",
+      }),
+      CONTEXT,
+      NOW,
+    );
+    expect(request.verdict).not.toBe("unreachable");
+    expect(request.changes).toEqual([{ direction: "in", value: "1", unit: "PIXEL #42" }]);
+  });
+
+  it("counts pieces without a token id, and names a collection without a symbol by its address", () => {
+    const request = fromAnalyze(
+      withChange({
+        account: WALLET,
+        asset: { kind: "erc721", address: PIXEL, symbol: "", decimals: 0 },
+        before: null,
+        after: null,
+        delta: "-2",
+      }),
+      CONTEXT,
+      NOW,
+    );
+    expect(request.changes).toEqual([{ direction: "out", value: "2", unit: "0x4444...4444" }]);
+  });
+
+  it("reads a kind it does not know as a plain amount instead of failing closed on it", () => {
+    const request = fromAnalyze(
+      withChange({
+        account: WALLET,
+        asset: { kind: "erc1155", address: PIXEL, symbol: "GEM", decimals: 0 },
+        before: null,
+        after: null,
+        delta: "3",
+      }),
+      CONTEXT,
+      NOW,
+    );
+    expect(request.verdict).toBe("blocked");
+    expect(request.changes).toEqual([{ direction: "in", value: "3", unit: "GEM" }]);
+  });
+});

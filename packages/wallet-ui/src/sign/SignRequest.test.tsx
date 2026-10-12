@@ -506,3 +506,115 @@ describe("SignRequest, a typed message", () => {
     expect(screen.queryByRole("button", { name: sign.verdict.safe.primary })).toBeNull();
   });
 });
+
+describe("SignRequest, what the live answer says about itself", () => {
+  it("says a fee was not estimated instead of printing 0.00 MON", () => {
+    render(
+      <SignRequest request={{ ...sample("safe"), fee: null }} pending={false} onLog={vi.fn()} />,
+    );
+    expect(screen.getByText(sign.changes.feeUnknown)).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/0\.00 MON/);
+  });
+
+  it("claims no simulation under Can't reach Baret", () => {
+    const request: Request = {
+      ...sample("safe"),
+      verdict: "unreachable",
+      findings: [],
+      changes: [],
+      approvals: [],
+      rules: [],
+    };
+    render(<SignRequest request={request} pending={false} onLog={vi.fn()} />);
+    expect(screen.getByText(sign.changes.unknown)).toBeTruthy();
+    expect(screen.queryByText(sign.changes.disclaimer)).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Simulated against Monad/);
+  });
+
+  it("labels a Caution verdict's button Sign anyway, so the choice is visible", () => {
+    render(<SignRequest request={sample("caution")} pending={false} onLog={vi.fn()} />);
+    expect(screen.getByRole("button", { name: sign.verdict.caution.primary })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: SEND })).toBeNull();
+  });
+
+  it("moves focus to the headline once a live answer reveals the verdict and focus was lost", () => {
+    const context = sample("blocked");
+    const { rerender } = render(<SignRequest request={context} pending onLog={vi.fn()} />);
+    expect(document.activeElement).toBe(document.body);
+    rerender(<SignRequest request={context} pending={false} onLog={vi.fn()} />);
+    expect(document.activeElement?.tagName).toBe("H1");
+  });
+
+  it("leaves focus alone when the reader still holds it somewhere", () => {
+    const context = sample("blocked");
+    const { rerender } = render(
+      <>
+        <button type="button" id="elsewhere">
+          Elsewhere
+        </button>
+        <SignRequest request={context} pending onLog={vi.fn()} />
+      </>,
+    );
+    document.querySelector<HTMLButtonElement>("#elsewhere")?.focus();
+    rerender(
+      <>
+        <button type="button" id="elsewhere">
+          Elsewhere
+        </button>
+        <SignRequest request={context} pending={false} onLog={vi.fn()} />
+      </>,
+    );
+    expect(document.activeElement?.id).toBe("elsewhere");
+  });
+
+  it("names the real reason a fresh account's request fails, with the faucet", () => {
+    const request: Request = {
+      ...sample("blocked"),
+      findings: [
+        {
+          code: "SIMULATION_FAILED",
+          values: {},
+          details: {
+            revertReason:
+              "The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account.",
+          },
+        },
+      ],
+      rules: [{ rule: "requireSuccessfulSimulation" }],
+    };
+    render(<SignRequest request={request} pending={false} monBalance="0" onLog={vi.fn()} />);
+    expect(screen.getByText(sign.findings.noMon, { exact: false })).toBeTruthy();
+    const faucet = screen.getByRole("link", { name: sign.findings.faucet });
+    expect(faucet.getAttribute("href")).toBe("https://faucet.monad.xyz");
+    expect(screen.getByText(/Monad's answer: The total cost/)).toBeTruthy();
+    // The fix line no longer talks about a site: this is the wallet's own send.
+    expect(document.body.textContent).not.toMatch(/on the site/);
+  });
+
+  it("claims nothing about the balance when the account holds MON and Monad gave no reason", () => {
+    const request: Request = {
+      ...sample("blocked"),
+      findings: [{ code: "SIMULATION_FAILED", values: {} }],
+      rules: [{ rule: "requireSuccessfulSimulation" }],
+    };
+    render(<SignRequest request={request} pending={false} monBalance="1.5" onLog={vi.fn()} />);
+    expect(screen.queryByText(sign.findings.noMon, { exact: false })).toBeNull();
+    expect(screen.queryByRole("link", { name: sign.findings.faucet })).toBeNull();
+  });
+
+  it("keeps an address in its own case inside an uppercase finding title", () => {
+    const spender = "0xA1f2000000000000000000000000000000002568";
+    const request: Request = {
+      ...sample("caution"),
+      findings: [
+        { code: "ERC20_APPROVAL_GRANTED", values: { spender, amount: "3", asset: "USDC" } },
+      ],
+    };
+    render(<SignRequest request={request} pending={false} onLog={vi.fn()} />);
+    const kept = Array.from(document.querySelectorAll("span.normal-case")).find((node) =>
+      /^0xA1f2/.test(node.textContent ?? ""),
+    );
+    expect(kept).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/done with this site/);
+  });
+});

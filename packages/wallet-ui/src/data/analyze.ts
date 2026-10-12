@@ -112,18 +112,41 @@ function map(response: AnalyzeResponse, context: SignContext, now: number): Sign
     .flatMap((c) => {
       const delta = BigInt(c.delta);
       if (delta === 0n) return [];
+      // The server may name kinds this build does not know yet (erc721 with
+      // a tokenId): read them defensively, never as a crash or a blank row.
+      const asset = c.asset as {
+        kind: string;
+        address: string | null;
+        symbol: string;
+        decimals?: number;
+        tokenId?: string;
+      };
+      const decimals = asset.kind === "erc721" ? 0 : (asset.decimals ?? 0);
+      const name = asset.symbol || (asset.address ? shortAddress(asset.address) : "MON");
       // The wallet's own MON going out includes gas, and the fee has its own
       // row: show the call's value instead, and no row when it sends none.
-      if (c.asset.kind === "native" && delta < 0n) {
+      if (asset.kind === "native" && delta < 0n) {
         const sent = BigInt(context.raw.value);
         if (sent <= 0n) return [];
-        return [{ direction: "out", value: display(sent, c.asset.decimals), unit: "MON" } as const];
+        return [{ direction: "out", value: display(sent, decimals), unit: "MON" } as const];
+      }
+      // One piece of a collection: "1 PIXEL #42", the piece named when the server names it.
+      if (asset.kind === "erc721") {
+        const count = delta < 0n ? -delta : delta;
+        const piece = typeof asset.tokenId === "string" && asset.tokenId !== "";
+        return [
+          {
+            direction: delta < 0n ? "out" : "in",
+            value: piece ? "1" : count.toString(),
+            unit: piece ? `${name} #${asset.tokenId}` : name,
+          } as const,
+        ];
       }
       return [
         {
           direction: delta < 0n ? "out" : "in",
-          value: display(delta < 0n ? -delta : delta, c.asset.decimals),
-          unit: c.asset.symbol || (c.asset.address ? shortAddress(c.asset.address) : "MON"),
+          value: display(delta < 0n ? -delta : delta, decimals),
+          unit: name,
         } as const,
       ];
     });

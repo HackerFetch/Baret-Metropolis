@@ -5,7 +5,7 @@ import { counted, fill } from "@baret/web-ui/lib/util";
 // By file, not through the @baret/guard barrel, as in data/rules.ts.
 import { FINDING_SPECS } from "../../../guard/src/findings.js";
 import { amount } from "../data/format.js";
-import type { ActivityItem, SignRequest } from "../data/types.js";
+import type { ActivityItem, GuardPolicyField, SignRequest } from "../data/types.js";
 import { fillParts, type Part } from "../lib/parts.js";
 
 /**
@@ -32,6 +32,8 @@ export const KEEP_CASE: ReadonlySet<string> = new Set([
   "contract",
   "merchant",
   "origin",
+  "agent",
+  "address",
 ]);
 
 function shortValues(request: SignRequest): Record<string, string> {
@@ -101,13 +103,29 @@ export function overrideBody(request: SignRequest): string {
   return first ? fill(blocked.body, { rule: policy.fields[first.rule].label }) : blocked.bodyNoRule;
 }
 
+/** The rules that set a floor (keep at least this much): their row says so, not "allows". */
+const FLOOR_RULES: ReadonlySet<string> = new Set(["minPostNativeBalance", "minPostStableBalance"]);
+
+/**
+ * A limit or an observed value with the rule's unit, when the rule's unit is
+ * a symbol (MON, USDC). A worded unit ("percent of balance") is left off: the
+ * server already formats those values.
+ */
+function withUnit(value: string, rule: GuardPolicyField): string {
+  const field = policy.fields[rule] as { unit?: string };
+  return field.unit && !field.unit.includes(" ") ? `${value} ${field.unit}` : value;
+}
+
 /** One row per nameable rule that fired: its label, and the request against the limit when known. */
 export function ruleRows(request: SignRequest): { label: string; detail: string | null }[] {
   return namedRules(request).map((hit) => ({
     label: policy.fields[hit.rule].label,
     detail:
       hit.actual !== undefined && hit.limit !== undefined
-        ? fill(sign.rules.row, { actual: hit.actual, limit: hit.limit })
+        ? fill(FLOOR_RULES.has(hit.rule) ? sign.rules.floorRow : sign.rules.row, {
+            actual: withUnit(hit.actual, hit.rule),
+            limit: withUnit(hit.limit, hit.rule),
+          })
         : null,
   }));
 }
@@ -166,11 +184,13 @@ export function logFor(
     findings: request.findings,
     changes: request.changes,
   };
+  // A fee that was not estimated leaves no fee on the row.
+  const fee = request.fee === null ? {} : { fee: request.fee };
   if (outcome === "overridden") {
     const rule = request.rules[0]?.rule;
     return request.verdict === "unreachable" || !rule
-      ? { ...base, kind: "unchecked", values: {}, fee: request.fee, block }
-      : { ...base, kind: "overridden", values: {}, rule, fee: request.fee, block };
+      ? { ...base, kind: "unchecked", values: {}, ...fee, block }
+      : { ...base, kind: "overridden", values: {}, rule, ...fee, block };
   }
   if (outcome === "signed") {
     return { ...base, kind: "signed", values: { origin: request.origin ?? "" } };
@@ -185,14 +205,14 @@ export function logFor(
             asset: request.values.asset ?? "",
             recipient: request.values.recipient ?? "",
           },
-          fee: request.fee,
+          ...fee,
           block,
         }
       : {
           ...base,
           kind: "signed",
           values: { origin: request.origin ?? "" },
-          fee: request.fee,
+          ...fee,
           block,
         };
   }

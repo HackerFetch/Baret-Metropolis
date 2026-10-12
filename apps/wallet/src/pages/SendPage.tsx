@@ -20,7 +20,7 @@ import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { type JSX, useId, useRef, useState } from "react";
+import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { WALLET_ART } from "../assets.js";
 import { type LiveRequest, useLive } from "../live/live.js";
@@ -99,6 +99,26 @@ export function Component() {
   const [kept, setKept] = useState<string | null>(null);
   const [review, setReview] = useState<Request | null>(null);
   const [run, setRun] = useState(0);
+  // Live: whether the recipient is a contract, read from Monad (eth_getCode)
+  // for the address it was asked about; null when Monad did not answer.
+  const [code, setCode] = useState<{ address: string; result: boolean | null } | null>(null);
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const typed = recipient.trim();
+  useEffect(() => {
+    const target = liveRef.current;
+    if (!target || !/^0x[0-9a-fA-F]{40}$/.test(typed)) return;
+    let alive = true;
+    const id = window.setTimeout(() => {
+      target.hasCode(typed).then((result) => {
+        if (alive) setCode({ address: typed.toLowerCase(), result });
+      });
+    }, 300);
+    return () => {
+      alive = false;
+      window.clearTimeout(id);
+    };
+  }, [typed]);
 
   const asset = state.assets.find((a) => a.symbol === symbol) ?? state.assets[0];
   // Fail-closed: no readable balance, or nothing held, means nothing to send.
@@ -130,10 +150,17 @@ export function Component() {
   const sentTo = state.activity
     .filter((item) => item.kind === "sent")
     .map((item) => item.values.recipient ?? "");
-  const toIssue =
+  const formIssue =
     recipient.trim() === ""
       ? { issue: "invalidAddress" as const }
       : checkRecipient(recipient, state.address, state.assets);
+  // Live: the chain's answer about the recipient replaces the sample's list.
+  const codeKnown = live && code !== null && code.address === typed.toLowerCase();
+  const toIssue =
+    formIssue === null && codeKnown && code.result === true
+      ? { issue: "contractAddress" as const }
+      : formIssue;
+  const codeUnchecked = formIssue === null && codeKnown && code.result === null;
   const amountIssue = checkAmount(value, asset, state.assets);
   const blocking = toIssue && toIssue.issue !== "contractAddress";
   const expected = lookalikeOf(recipient, sentTo);
@@ -208,6 +235,7 @@ export function Component() {
           <SignRequest
             key={run}
             request={review}
+            monBalance={state.assets.find((a) => a.symbol === "MON")?.balance ?? null}
             onDecline={() => setReview(null)}
             onAgain={() => {
               setReview(null);
@@ -306,6 +334,8 @@ export function Component() {
                 tone={toIssue.issue === "contractAddress" ? "note" : "error"}
               />
             ) : null}
+            {/* Fail-safe: no warning is not a clean bill when the check itself did not run. */}
+            {codeUnchecked ? <p className={T.small}>{errors.contractUnchecked}</p> : null}
           </div>
 
           <div className="grid gap-2">

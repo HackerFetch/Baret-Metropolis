@@ -67,6 +67,9 @@ export const send = {
       title: "That address is a contract",
       body: "A contract that does not expect a plain transfer can strand what you send. Baret checks it on the next screen.",
     },
+    /** Live: Monad did not answer eth_getCode, so no warning is no proof. */
+    contractUnchecked:
+      "Baret could not check whether this address is a contract. Monad did not answer.",
     amountTooHigh: {
       title: "Not enough {asset}",
       body: "You need {amount} more. The network fee is paid in MON on top.",

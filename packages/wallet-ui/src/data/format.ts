@@ -40,27 +40,39 @@ export function amount(text: string, decimals = 18): string {
   return units === null ? text : fromUnits(units, decimals, { group: true });
 }
 
-const DATE = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "UTC",
-});
-
-const DAY = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-/** "3 Oct, 13:42" (UTC, so sample dates read the same everywhere). */
-export function when(iso: string): string {
-  return DATE.format(new Date(iso));
+/**
+ * Dates read in the reader's own time zone, like the session line in the same
+ * frame; a live Activity row at 00:53 local never shows as 21:53 of the day
+ * before. `zone` pins a zone (the tests and screenshots use "UTC").
+ */
+function dateFormat(zone?: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(zone ? { timeZone: zone } : {}),
+  });
 }
 
-/** "30 Sept 2026". */
-export function day(iso: string): string {
-  return DAY.format(new Date(iso));
+function dayFormat(zone?: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    ...(zone ? { timeZone: zone } : {}),
+  });
+}
+
+const DATE = dateFormat();
+const DAY = dayFormat();
+
+/** "3 Oct, 13:42" in the reader's time zone, or in `zone` when given. */
+export function when(iso: string, zone?: string): string {
+  return (zone ? dateFormat(zone) : DATE).format(new Date(iso));
+}
+
+/** "30 Sept 2026" in the reader's time zone, or in `zone` when given. */
+export function day(iso: string, zone?: string): string {
+  return (zone ? dayFormat(zone) : DAY).format(new Date(iso));
 }

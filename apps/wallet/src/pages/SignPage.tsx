@@ -152,6 +152,7 @@ function SiteSign(): JSX.Element {
         <SignRequest
           request={shown}
           pending={pending}
+          monBalance={state.assets.find((a) => a.symbol === "MON")?.balance ?? null}
           onCheckAgain={ask}
           onSign={signLive}
           onDecline={decline}
