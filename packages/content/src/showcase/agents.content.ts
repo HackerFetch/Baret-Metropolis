@@ -331,13 +331,14 @@ export const agents = {
     cli: {
       title: "Any language",
       before:
-        "Settings come from the environment, never from flags, so a key never lands in shell history. Works today, from npm: npx baret.",
+        "Settings come from the environment, never from flags, so a key never lands in shell history. Works today, from npm: npx baret. A .env file in the project directory is read too, and npx baret --help lists every command.",
       code: [
         "npm install @baret/agent-kit",
         "# a funded Monad testnet key; from a clone, packages/agent-kit/.env works too",
         "export BARET_AGENT_PRIVATE_KEY=0x...",
         "export BARET_POLICY_TEMPLATE=balanced",
         "",
+        "npx baret --help     # every command and its flags",
         "npx baret address    # prints the agent address",
         "npx baret analyze --to 0x... --value 100000000000000000",
         "npx baret submit --to 0x... --value 100000000000000000",
