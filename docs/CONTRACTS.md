@@ -203,7 +203,9 @@ A second guard, the same source with BVUSD as its asset, is at [`0xFB70F98f6dd3A
 | The same to `0x1365566191bAA9872A64AcDce963751d5343ff49` (no credential), `--ref demo-2` | Baret: Blocked before signing, `COMPLIANCE_NO_CREDENTIAL` (`NoCredential`, refused by the guard). Nothing signed. On the chain the call reverts with `NotVerified(merchant, NoCredential)` |
 | A plain `transfer` of BVUSD to that wallet | Reverts in the token: Cleanverse's policy refuses it |
 
-Both `baret pay` runs went through a Baret server that has the guard and BVUSD on `MONAD_TESTNET_KNOWN_CONTRACTS`. Not claimed: aUSDC through a Baret contract; BVUSD is a sandbox test asset with nothing behind it.
+Those two runs went through a local Baret server that has the guard and BVUSD on `MONAD_TESTNET_KNOWN_CONTRACTS`. On 2026-10-12, with both on Render's list (API `46a49a7`), the same pair ran through the live API: settled [`0x080da603d4ff462d16dce5d7c079c69b665437dcd900ecff9f7c31a2427829f9`](https://testnet.monadexplorer.com/tx/0x080da603d4ff462d16dce5d7c079c69b665437dcd900ecff9f7c31a2427829f9) (ref `live-1`), and Blocked before signing for the wallet with no credential. Cleanverse's own index lists the BVUSD mint and settlement for the owner (`POST /query_txs`).
+
+Still no aUSDC: the route Cleanverse's admin described was followed on 2026-10-12 (the deposit address from `query_deposit_address`, `0xCd65bdBCd0a64Ea226b73A3d02E45e3026284506`, funded with 20 USDC from Circle's faucet and 6 from the sandbox's `/faucet`); 40 minutes later the USDC is still there and nothing was minted. Not claimed: aUSDC through a Baret contract; BVUSD is a sandbox test asset with nothing behind it.
 
 ---
 
