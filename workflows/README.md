@@ -46,7 +46,7 @@ Unit tests: `pnpm exec vitest run --project reputation-oracle`. Contract tests: 
 
 ## Deploying to a DON
 
-Not done: deployment needs CRE Early Access (`cre account access`). When access is granted, link the workflow owner key, deploy the `production-settings` target, and keep `workflowOwner` on the receiver equal to that key's address.
+Not done, and not planned before the deadline: deployment needs deploy access on the Chainlink account, which Chainlink grants after a mutual NDA and commercial terms (their answer of 2026-10-12, below). When access is granted, link the workflow owner key, deploy the `production-settings` target, and keep `workflowOwner` on the receiver equal to that key's address.
 
 ## Recorded run (2026-10-07, Monad testnet)
 
@@ -80,4 +80,4 @@ The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xa1b9799281003
 
 The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09), block 70195240) went through the mock forwarder to the receiver and wrote ten entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0x57862f4c20fd3450bf63381235b1d36095daf364`, and `safe` for the same transfer to a wallet that is not on the feed; `GET /v1/audit/reputation/0x57862f4c20fd3450bf63381235b1d36095daf364` names this transaction. The receiver was back on the production forwarder with the workflow-owner check on when the script ended (read from the chain).
 
-Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11.
+Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11. Access was requested that day with `cre account access`. Chainlink answered on 2026-10-12: local simulation is open to everyone, and deploying to testnet or mainnet goes through a mutual NDA and commercial terms. Decided by Ezgin the same day: the hackathon entry is the simulation, and deployment is taken up after the event.
