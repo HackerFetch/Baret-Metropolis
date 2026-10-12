@@ -137,6 +137,8 @@ Both Vercel projects run `middleware.ts` in front of their `/api` rewrite. With 
 
 Checked on 2026-10-11: the three tarballs from `pnpm pack`, installed in an empty project with nothing else from this repository, ran `TransactionGuard.evaluate` against the live API (answer `safe`) and the `baret` CLI through plain `node`. After the publish, the same day: `npm install @baret/agent-kit` in an empty folder took all three from the registry, the smallest call from `packages/guard/README.md` answered `blocked` with `KNOWN_MALICIOUS_ADDRESS`, and `npx baret policy list` printed the three templates.
 
+0.1.2 (versions raised 2026-10-12, published by Ezgin from the tarballs of this commit) carries the tester run's changes: guard's schema knows `CALL_TO_ADDRESS_WITHOUT_CODE` and ERC-721 rows in `estimatedChanges`, agent-kit installs without `tsx` and with Dynamic as an optional peer (about 75 MB installed), and `baret --help` exists. All three go out together, because agent-kit pins the other two at its own version. Checked before the publish from the three tarballs in an empty folder: the README call answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` from the live API, `npx baret --help` exited 0 and a wrong command exited 2.
+
 To publish the next version (needs a login of the npm account that owns the `baret` organisation). Raise `version` in the three `package.json` files first: a published version number cannot be used again.
 
 1. `npm login`

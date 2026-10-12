@@ -63,11 +63,15 @@ describe("the CLI's help text", () => {
   });
 });
 
-/** The CLI as a process: tsx is a dev dependency of the workspace. */
+/**
+ * The CLI as a process: tsx is a dev dependency of the workspace. It is loaded
+ * into node itself, not run through pnpm: pnpm is a .cmd file on Windows, which
+ * execFileSync cannot start without a shell.
+ */
 function baret(...args: string[]): { stdout: string; stderr: string; status: number } {
   const cli = fileURLToPath(new URL("./cli.ts", import.meta.url));
   try {
-    const stdout = execFileSync("pnpm", ["exec", "tsx", cli, ...args], {
+    const stdout = execFileSync(process.execPath, ["--import", "tsx", cli, ...args], {
       cwd: fileURLToPath(new URL("..", import.meta.url)),
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],

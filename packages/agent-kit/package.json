@@ -1,6 +1,6 @@
 {
   "name": "@baret/agent-kit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A guarded wallet for AI agents on Monad: every transaction is checked by Baret before it is signed.",
   "license": "MIT",
   "repository": {
