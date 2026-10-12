@@ -4,8 +4,8 @@
  * - `dist/<route>/index.html` for every marketing route: the built index.html
  *   with that route's title, description, og:* and canonical, so a shared
  *   inner link unfurls with its own card. The host serves these files before
- *   the SPA fallback. The body stays the SPA shell: only "/" is prerendered,
- *   after this runs (prerender.mjs).
+ *   the SPA fallback. The body is still the empty shell here: prerender.mjs
+ *   runs after this and writes each route's markup into its file.
  * - The same file, marked noindex and left out of the sitemap, for the demo
  *   sites and the utility pages, so they never receive the landing's markup
  *   or its hero preload through the fallback; and `dist/404.html`, the same
@@ -146,7 +146,7 @@ export async function writeRouteHeads({
   }
   // A real 404 for hosts that serve one for unmatched paths (Vercel serves
   // dist/404.html with status 404 once no catch-all rewrite answers first):
-  // the empty shell, noindex, so the router renders the not-found page.
+  // the shell, noindex; prerender.mjs fills it with the not-found page.
   const notFound = source.match(/notFound: \{[^}]*title: "([^"]+)"/)?.[1];
   if (!notFound) throw new Error("route-heads: no notFound route found");
   const head404 = headFor({ path: "/404", title: notFound, description, site, noindex: true });

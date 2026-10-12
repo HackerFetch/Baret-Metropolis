@@ -1,4 +1,4 @@
-import type { RouteObject } from "react-router";
+import { matchRoutes, type RouteObject } from "react-router";
 import * as RootLayout from "./layouts/RootLayout.js";
 import * as HomePage from "./pages/HomePage.js";
 import { routes } from "./routes.js";
@@ -66,8 +66,8 @@ const HEAD: Partial<Record<keyof typeof routes, () => Promise<Head>>> = {
  *
  * Data mode rather than framework mode: this is a client-rendered site with
  * twelve routes, so loaders and error boundaries are worth having and a route
- * config file and generated types are not. Only "/" is prerendered
- * (scripts/prerender.mjs); every other route renders in the browser.
+ * config file and generated types are not. Every route is prerendered at
+ * build time (scripts/prerender.mjs) and hydrated in the browser.
  *
  * The layout and the landing are imported statically (IMPROVE E2): "/" is the
  * entry for nearly every visit, and two lazy hops in a row held the first
@@ -96,3 +96,23 @@ export const routeObjects: RouteObject[] = [
     ),
   },
 ];
+
+/**
+ * Loads the lazy page of `pathname` into the route tree before the browser
+ * router is made, so a prerendered page hydrates against the page itself. Left
+ * lazy, the router's first render would be the HydrateFallback (the layout
+ * alone), which does not match the markup in the HTML, and React would throw
+ * the whole page away and draw it again. The route is changed in place, the
+ * way the router itself does once a lazy route has loaded.
+ */
+export async function resolveRoute(pathname: string): Promise<void> {
+  const matches = matchRoutes(routeObjects, pathname) ?? [];
+  await Promise.all(
+    matches.map(async ({ route }) => {
+      if (typeof route.lazy !== "function") return;
+      const loaded = await route.lazy();
+      Object.assign(route, loaded);
+      delete route.lazy;
+    }),
+  );
+}

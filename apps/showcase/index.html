@@ -52,9 +52,12 @@
     />
     <link rel="stylesheet" href="/src/fonts.css" />
     <!--
-      "/" is prerendered into #root (scripts/prerender.mjs). A host answers an
-      unknown path with this same file, so on any other path the markup stays
-      hidden until main.tsx swaps in the right page.
+      Every route is prerendered into #root of its own file, which carries
+      its path in data-prerender (scripts/prerender.mjs; "*" is the 404). A
+      host may answer an unknown path with this file, and a query string
+      (?view=, ?filter=) changes what the page shows, so unless the URL is
+      the one the markup was made for, it stays hidden until main.tsx swaps
+      in the right page.
     -->
     <style>
       [data-prerender-hidden] #root > * {
@@ -62,7 +65,12 @@
       }
     </style>
     <script>
-      if (location.pathname !== "/") document.documentElement.dataset.prerenderHidden = "";
+      (() => {
+        const made = document.documentElement.dataset.prerender;
+        const path = location.pathname.replace(/\/+$/, "") || "/";
+        const same = made === "*" || made === path;
+        if (!same || location.search !== "") document.documentElement.dataset.prerenderHidden = "";
+      })();
     </script>
     <script>
       // Resolve the theme before first paint so the page never flashes the
@@ -93,6 +101,12 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <p style="margin: 0; padding: 12px 16px; font: 15px/1.5 system-ui, sans-serif">
+        Baret needs JavaScript to run its live checks. The wallet is at
+        <a href="https://baret-wallet.vercel.app" style="color: inherit">baret-wallet.vercel.app</a>.
+      </p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
