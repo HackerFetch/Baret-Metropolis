@@ -148,6 +148,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E16 | The extension keeps what it signed (D-047): more accounts from the phrase, the allowances list checked against Monad, a real revoke, x402 payments and why one was blocked. **Built 2026-10-11** on branch `extension-live-lists`; 32 browser checks with real transactions. The published zip is rebuilt after the merge | Sun 11 | E12, E13 | main track |
 | E17 | Set `VITE_BARET_EXTENSION_CHROMIUM_STORE_URL` on the showcase Vercel project once Google publishes the Chrome Web Store listing, and redeploy: `/install` then leads with the store (M22). Until then the page is unchanged | when the listing is public | Google's review | main track |
 | E18 | The SDK on npm (closes G-16): `@baret/guard`, `@baret/llm` and `@baret/agent-kit` published as 0.1.0. **Done 2026-10-11**: a clean `npm install @baret/agent-kit` ran against the live API. 0.1.1 on 2026-10-12 with the corrected READMEs | Sun 11 | | main track |
+| E18 | Before judging: top up the demo agent `0x227b...647E` (1.42 MON on 2026-10-12; it pays the gas of every /review send), confirm Render deployed `main` (live `/health` answered `46a49a7` while `main` was `8c0d7f4`), read the server changes of M23 in `tasks/FOR_EZGIN.md`, publish @baret/agent-kit 0.1.2 | Mon 12 to Tue 13 | M23 | all |
 
 ### Meriç
 
@@ -175,6 +176,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | M20 | `/agents`: an MCP tab (D-045), and the quickstart's samples on the live API. **Done 2026-10-11** (`c4044a7`) | Sun 11 | D-045 live | main track |
 | M21 | `/agents`: a lookup of Baret's reputation registry (the entries a Chainlink CRE workflow wrote from ScamSniffer, served from the Envio indexer). **Done 2026-10-11** (`896370e`) | Sun 11 | | main track, CRE, Envio |
 | M22 | `/install` store-ready: with the Chrome Web Store (or Firefox Add-ons) listing's URL set, the page leads with the store and its steps are open, add, pin; the zip and the developer-mode notes stay until then. **Done 2026-10-11** (branch `install-store`); Ezgin sets the URL once Google publishes the listing | Sun 11 | Ezgin's listing | main track |
+| M23 | Tester run (2026-10-12): every surface tested as an independent tester, 92 verified findings (1 P0 on the submission checklist, 13 P1, 78 P2), then every fix the agent could make in all three areas on PR `fix-findings-2026-10-12`: the extension's Permit window and hold-to-sign, the fresh wallet's Blocked honest swap, the Seaport and vault registry checks, the self-multicall operation count, 400s for requests no node can run, the KIMI prompt, the SDK's help and install, the judge-facing texts, every showcase route prerendered. **Done 2026-10-12** on the branch; merges on Meriç's word | Mon 12 | | all |
 
 ### Hale
 
@@ -197,6 +199,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | H15 | Final regression and submit | Mon 12 | | all |
 | H16 | Test on the live URLs after the merge deploy and E7 (**2026-10-09:** deployed with #51; waits only on E7): `/review` (the three scenarios live, the honest payment sent, the recorded fallback labelled as such), KIMI's plain words in the panel and in the wallet, "Check it live" with no wallet, and rules from a sentence on the live wallet's Rules page **Done 2026-10-10** (API `25b7581`): all three `/review` scenarios live (honest sent, status 1; overpay and injected vetoed), the recorded fallback labelled, KIMI's words in en/tr/zh on NovaSwap and in the wallet window with the verdict unchanged, rules from a sentence (loosening unticked, nothing saved), fail-closed with the API or explain down. One 🐛 P1 for Meriç: overpay's veto also names a false ref mismatch | Sat 10 or Sun 11, after E7 | E7, M4, M5 | KIMI, Qwen |
 | H17 | Test `/install` in Chrome once E17 lands: the button opens the listing, the steps are open, add, pin, the help has no "Load unpacked" item; Firefox still gets the zip and its own steps | after E17 | E17 | main track |
+| H18 | Re-test the tester run's fixes on the live product once PR `fix-findings-2026-10-12` is merged and deployed (the list is at the top of `tasks/FOR_HALE.md`), then the before-recording gate again | after M23 merges | M23 | all |
 
 ### What is cut first
 
