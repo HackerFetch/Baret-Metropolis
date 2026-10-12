@@ -69,7 +69,8 @@ export default defineConfig({
     permissions: [
       "storage", // keystore, activity, permissions ledger
       "alarms", // auto-lock deadline
-      "notifications", // drift alerts
+      // "notifications" comes back with the first call to it: the store
+      // rejects a permission the package never uses.
     ],
 
     host_permissions: [`${baretApiOrigin()}/*`, `${monadRpcOrigin()}/*`],
