@@ -2,7 +2,7 @@
 
 > The answers for the Chrome Web Store form of the Baret extension, ready to paste. The store account is Ezgin's. The form is filled by hand in the [developer dashboard](https://chrome.google.com/webstore/devconsole); this file is what goes into it, so the listing and the product say the same thing.
 
-Last updated: 2026-10-12 · Status: **written, not submitted yet**
+Last updated: 2026-10-12 · Status: **submitted 2026-10-12, pending Google's review; not public yet**
 
 ## The package
 
@@ -108,5 +108,7 @@ No account or credentials are needed. The extension runs on Monad testnet only.
 ```
 
 ## After Google publishes it
+
+Submitted by Ezgin on 2026-10-12 with the zip built after the `notifications` permission was removed. The dashboard warned at submit that publishing is delayed for an in-depth review because of broad host permissions: the content scripts match every site, which a wallet needs (`activeTab` and a fixed list of sites both leave a page without a wallet when it loads). Until the listing is public, every text says "submitted for review", never "in the store".
 
 A wallet whose content scripts run on every site gets the longer review: expect days, not hours. Once the listing is public, do E17 (`tasks/FOR_EZGIN.md`): set `VITE_BARET_EXTENSION_CHROMIUM_STORE_URL` on the showcase Vercel project and redeploy. Until then `/install` keeps offering the zip, and that stays true.
