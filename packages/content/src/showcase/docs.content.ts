@@ -180,7 +180,7 @@ export const docs = {
       },
       {
         title: "Simulate",
-        body: "Run it against live Monad state over Alchemy RPC, without sending it, and record every internal call.",
+        body: "Run it against live Monad state without sending it, with chain reads over Alchemy's Monad RPC, and record every internal call.",
       },
       {
         title: "Detect",

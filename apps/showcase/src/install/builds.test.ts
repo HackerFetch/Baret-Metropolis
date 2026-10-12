@@ -24,6 +24,11 @@ const UA = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Safari/605.1.15",
   iosChrome:
     "Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/149.0 Mobile/15E148 Safari/604.1",
+  iphoneSafari:
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Mobile/15E148 Safari/604.1",
+  androidChrome:
+    "Mozilla/5.0 (Linux; Android 16; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
+  androidFirefox: "Mozilla/5.0 (Android 16; Mobile; rv:143.0) Gecko/143.0 Firefox/143.0",
 };
 
 const ZIP = "https://example.org/baret-chrome.zip";
@@ -41,10 +46,16 @@ describe("detectBrowser", () => {
     expect(detectBrowser(UA.firefox)).toBe("firefox");
   });
 
-  it("does not guess for Safari or any iOS browser", () => {
+  it("does not guess for desktop Safari or an empty agent", () => {
     expect(detectBrowser(UA.safari)).toBe("unknown");
-    expect(detectBrowser(UA.iosChrome)).toBe("unknown");
     expect(detectBrowser("")).toBe("unknown");
+  });
+
+  it("calls every phone and tablet a phone: no extension loads there", () => {
+    expect(detectBrowser(UA.iosChrome)).toBe("phone");
+    expect(detectBrowser(UA.iphoneSafari)).toBe("phone");
+    expect(detectBrowser(UA.androidChrome)).toBe("phone");
+    expect(detectBrowser(UA.androidFirefox)).toBe("phone");
   });
 });
 
@@ -69,6 +80,7 @@ describe("the builds seam", () => {
   it("leads with the visitor's build, Chromium when unknown", () => {
     expect(leadBuild("firefox")).toBe("firefox");
     expect(leadBuild("unknown")).toBe("chromium");
+    expect(leadBuild("phone")).toBe("chromium");
     expect(otherBuild("chromium")).toBe("firefox");
   });
 

@@ -48,6 +48,7 @@ export function Run({ cap }: { cap: bigint }): JSX.Element {
           </li>
         ))}
       </ol>
+      <p className={T.small}>{run.note}</p>
     </PanelBlock>
   );
 }

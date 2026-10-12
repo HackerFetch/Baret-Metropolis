@@ -25,7 +25,7 @@ export const hub = {
   hero: {
     /** Not rendered on /showcase since 2026-10-03. */
     eyebrow: "Showcase",
-    title: "Six sites. Six threats. Read them before you sign.",
+    title: "Six sites. Six traps. Read them before you sign.",
     body: "Each site looks finished and works like the real thing. Each one hides a different threat in the transaction it builds. Press its main button and see what Baret checks before anything is signed.",
     actions: {
       primary: { label: "See the six sites", href: "#scenarios" },
@@ -96,7 +96,7 @@ export const hub = {
       {
         short: "Press",
         title: "Press the main button",
-        body: "Swap, mint, stake, claim, buy or ask. The site builds a real transaction and hands it to your wallet.",
+        body: "Swap, mint, stake, claim, buy or ask. The site builds a real transaction and sends it to Baret's check before any wallet sees it.",
       },
       {
         short: "Read",
@@ -277,7 +277,8 @@ export const hub = {
        */
       checkLive: {
         label: "Check it live",
-        note: "Checked live from a demo address, not your wallet.",
+        /** {address} is Baret's demo account, shortened. */
+        note: "Checked live from Baret's demo account {address}, not your wallet. Balances and changes are that account's.",
       },
       /** When the check did not finish: no answer means Blocked. */
       failed: {
@@ -362,19 +363,30 @@ export const hub = {
       balance: "{token} in your wallet: {before} before, {after} after.",
       /** Why a press did not start: shown under the button with the action that fixes it. */
       needs: {
-        wallet: "Connect a wallet to sign. The sample wallet cannot sign.",
+        wallet:
+          "Connect a wallet to sign: the Baret wallet or any wallet in the picker. The sample wallet cannot sign.",
         network: "Your wallet is on another network. Switch it to Monad testnet to sign.",
       },
       errors: {
         rejected: "You declined in {wallet}. Nothing more was sent.",
         pending: "{wallet} already has a request open. Finish it there, then try again.",
         network: "Your wallet is on another network. Switch it to Monad testnet, then try again.",
-        funds: "Your wallet does not hold enough test MON for the network fee.",
+        funds: "Your wallet does not hold enough test MON for this amount and the network fee.",
         account: "The connected account changed. Press the button again.",
         reverted: "Monad testnet ran the transaction and it failed. Nothing more was sent.",
         timeout: "Monad testnet has not confirmed it yet. Follow it on the explorer.",
         failed: "The wallet did not send it. Try again in a moment.",
+        /** The Baret wallet's window, which checks each request with Baret before it signs. */
+        checked: "The Baret wallet checked it with Baret and refused to sign. Nothing was sent.",
+        unreachable:
+          "The Baret wallet could not reach Baret, so it did not sign. Nothing was sent.",
+        closed: "The Baret wallet window closed before it answered. Nothing was sent.",
+        window:
+          "Your browser stopped the Baret wallet window. Allow pop-ups for this site, then try again.",
       },
+      /** Under the note when the request goes to the Baret wallet's window. */
+      noteBaret:
+        "Sends this request to your Baret wallet, in its own window. Baret checks it before you can sign. These are real transactions on Monad testnet, with test tokens that have no value.",
       /** Read out when a step changes: "Step 1 of 2, Confirmed". */
       announce: "Step {n} of {total}, {status}",
     },
@@ -387,9 +399,16 @@ export const hub = {
       action: "Check with Baret",
       note: "Sends the same request to your Baret wallet, in its own window. Baret checks it before you can sign.",
       waiting: "Answer in the Baret wallet window...",
-      blocked: "The Baret wallet refused it. Nothing was signed.",
+      blocked:
+        "Baret's check in your wallet stopped this request, so the wallet did not sign. Nothing was signed.",
+      /** The wallet could not read the request (the protocol's "invalid"): no check ran. */
+      invalid:
+        "The Baret wallet could not read this request, so it did not sign. Nothing was signed.",
       /** Above the list of finding titles under a refusal. */
       findings: "Why it refused",
+      /** Under a refusal whose findings say the simulation failed: a fresh account with no MON fails this way. */
+      failedHint:
+        "A wallet with no test MON fails this way, honest request or not. Get test MON for the wallet's address, then press again.",
       declined: "You declined in the Baret wallet. Nothing was signed.",
       unreachable: "The Baret wallet could not reach Baret, so it did not sign. Nothing moved.",
       signed: "Signed in the Baret wallet and confirmed on Monad testnet.",

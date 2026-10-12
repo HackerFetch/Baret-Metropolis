@@ -282,8 +282,10 @@ export const scrybe = {
     run: {
       title: "The agent's payments",
       payment: "Payment {n}",
-      paid: "Paid",
+      /** Payments 1 to 5 are the agent's earlier payments, assumed for the demo; none was made here. */
+      paid: "Assumed paid",
       total: "Last hour {total}",
+      note: "Payments 1 to 5 are the agent's earlier payments this hour, assumed for this demo and never sent. Only the last payment is checked live.",
     },
   },
 
@@ -332,6 +334,9 @@ export const scrybe = {
       funds: "Your wallet does not hold enough test USDC. Nothing was paid.",
       balance: "Your wallet holds less than {amount} test USDC. Nothing was paid.",
       blocked: "Baret did not sign this payment in its window. Nothing was paid.",
+      /** The same refusal, as the shared send path names it (kit/wallet/baretSend.ts). */
+      checked: "Baret did not sign this payment in its window. Nothing was paid.",
+      closed: "The Baret wallet window closed before it answered. Nothing was paid.",
       // A refusal with no check behind it: never shown as Blocked.
       unreachable:
         "The Baret wallet could not reach Baret, so the check did not finish. Nothing was paid.",
@@ -351,6 +356,8 @@ export const scrybe = {
   amount: string;
   pay: object;
   frame: { pill: string; notice: string };
+  /** The run's extra line: the assumed payments are named as such (types.ts owns the rest). */
+  analysis: { run: { note: string } };
 };
 
 export type ScrybeContent = typeof scrybe;

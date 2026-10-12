@@ -11,19 +11,22 @@ import { install } from "@baret/content";
  * date. With a store listing the zip is not offered: the store is the way in.
  */
 
-export type Browser = "chromium" | "firefox" | "unknown";
-export type BuildId = Exclude<Browser, "unknown">;
+export type Browser = "chromium" | "firefox" | "phone" | "unknown";
+export type BuildId = Exclude<Browser, "phone" | "unknown">;
 /** How a build reaches the browser, best first. */
 export type Source = "store" | "zip" | "source";
 
 /**
  * The browser family from a user-agent string. Chrome, Brave, Edge, Opera and
- * other Chromium browsers load the same build. iOS browsers are WebKit under
- * any name and load no extension, so they are "unknown", like Safari.
+ * other Chromium browsers load the same build. A phone or tablet loads no
+ * extension at all: iOS browsers are WebKit under any name, and Chrome or
+ * Firefox for Android take no unpacked build, so these are "phone" and the
+ * page points at the web wallet instead. Desktop Safari is "unknown".
  */
 export function detectBrowser(userAgent: string): Browser {
   const ua = userAgent;
-  if (/\b(iPhone|iPad|iPod)\b/.test(ua) || /\b(CriOS|FxiOS|EdgiOS)\//.test(ua)) return "unknown";
+  if (/\b(iPhone|iPad|iPod)\b/.test(ua) || /\b(CriOS|FxiOS|EdgiOS)\//.test(ua)) return "phone";
+  if (/\bAndroid\b/.test(ua) || /\bMobile\b/.test(ua)) return "phone";
   if (/\bFirefox\//.test(ua)) return "firefox";
   if (/\b(Chrome|Chromium|Edg|OPR)\//.test(ua)) return "chromium";
   return "unknown";
@@ -103,7 +106,7 @@ export function sourceOf(build: Build): Source {
   return "source";
 }
 
-/** The build the hero leads with: the visitor's own, Chromium when unknown. */
+/** The build the hero leads with: the visitor's own, Chromium when unknown or on a phone. */
 export function leadBuild(browser: Browser): BuildId {
   return browser === "firefox" ? "firefox" : "chromium";
 }

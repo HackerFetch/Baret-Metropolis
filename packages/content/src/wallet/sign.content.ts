@@ -187,6 +187,8 @@ export const sign = {
     feeUnknown: "Not estimated: the call reverts",
     unlimited: "Unlimited",
     none: "Nothing leaves your wallet.",
+    /** The trial run reverted, so there is no list of changes to show. */
+    failed: "Baret could not work out what changes: the trial run failed on Monad.",
     unknown: "Baret could not work out what changes. Treat that as a reason to stop.",
     disclaimer:
       "Simulated against Monad as it is right now. If the chain changes before this lands, the result can differ.",

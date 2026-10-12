@@ -27,6 +27,9 @@ export function StakeCard({
   error,
   onStake,
   sign = null,
+  live = false,
+  liveBalance = null,
+  walletConnected = false,
 }: {
   mode: DemoMode;
   onMode: (mode: DemoMode) => void;
@@ -37,10 +40,31 @@ export function StakeCard({
   onStake: () => boolean;
   /** "Sign with your wallet", shown under the main button. */
   sign?: ReactNode;
+  /** Live mode: Baret checks the real request, so the sample's 25 MON is never shown. */
+  live?: boolean;
+  /** The connected wallet's MON, formatted, once read. */
+  liveBalance?: string | null;
+  /** A wallet of the visitor's is connected (not Baret's demo account). */
+  walletConnected?: boolean;
 }): JSX.Element {
   const danger = mode === "danger";
   const value = parseAmount(amount);
   const [stake, receive, ...rest] = panel.rows;
+  // Live, the card shows the connected wallet's real MON and Max fills it.
+  // With no wallet it says when a balance shows; a wallet whose balance is
+  // not read yet shows nothing rather than a guess. The sample has its own.
+  const balanceText = !live
+    ? `${panel.balance} ${format(SAMPLE.mon)} ${orbityieldUnits.stake}`
+    : liveBalance !== null
+      ? `${panel.balance} ${liveBalance} ${orbityieldUnits.stake}`
+      : walletConnected
+        ? undefined
+        : orbityield.live.balance;
+  const max = !live
+    ? { label: panel.max, onMax: () => onAmount(String(SAMPLE.mon)) }
+    : liveBalance !== null
+      ? { label: panel.max, onMax: () => onAmount(liveBalance) }
+      : undefined;
 
   return (
     <form
@@ -56,8 +80,8 @@ export function StakeCard({
 
       <AmountField
         label={stake?.label ?? panel.input}
-        balance={`${panel.balance} ${format(SAMPLE.mon)} ${orbityieldUnits.stake}`}
-        max={{ label: panel.max, onMax: () => onAmount(String(SAMPLE.mon)) }}
+        {...(balanceText ? { balance: balanceText } : {})}
+        {...(max ? { max } : {})}
         unit={orbityieldUnits.stake}
         value={amount}
         onChange={onAmount}

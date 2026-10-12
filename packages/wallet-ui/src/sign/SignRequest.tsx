@@ -875,7 +875,11 @@ export function SignRequest({
                 ) : (
                   <div className="grid gap-2">
                     {request.changes.length === 0 && request.approvals.length === 0 ? (
-                      <p className={T.body}>{sign.changes.none}</p>
+                      <p className={T.body}>
+                        {request.findings.some((f) => f.code === "SIMULATION_FAILED")
+                          ? sign.changes.failed
+                          : sign.changes.none}
+                      </p>
                     ) : null}
                     {request.changes.map((change) => (
                       <ChangeRow

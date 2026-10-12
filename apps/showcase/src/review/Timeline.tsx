@@ -152,6 +152,12 @@ export function Timeline({ state }: { state: TimelineState }): JSX.Element {
                 </li>
               ))}
             </ol>
+            {/* Which model answered, from the answer itself, so a recorded run and a live one read apart. */}
+            {state.model ? (
+              <p className={T.small}>
+                {fill(copy.model, { name: state.model.name, provider: state.model.provider })}
+              </p>
+            ) : null}
           </Block>
         ) : null}
 

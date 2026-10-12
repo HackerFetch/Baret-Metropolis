@@ -45,7 +45,7 @@ export const novaswap = {
     watchFor: [
       "An unlimited allowance the swap does not need",
       "A spender one character off the real router",
-      "A spender on the reported list",
+      "A spender on Baret's reported list",
     ],
     threatClass: "drainer",
     whyItMatters:
@@ -226,7 +226,7 @@ export const novaswap = {
         call: "approve(spender, unlimited)",
         expected: "blocked",
         expectedBody:
-          "Two rules should fire. The allowance has no limit, and the spender is on the reported list. Balanced rules block both.",
+          "Two rules should fire. The allowance has no limit, and the spender is on Baret's reported list. Balanced rules block both.",
       },
     },
     claims: [

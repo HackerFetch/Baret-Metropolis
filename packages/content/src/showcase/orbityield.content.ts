@@ -83,7 +83,8 @@ export const orbityield = {
       note: "oMON arrives in your wallet in the same transaction.",
       balance: "Balance",
       max: "Max",
-      start: "5",
+      /** Under most faucet grants, so a judge's fresh account can stake it. */
+      start: "0.02",
       errors: {
         empty: "Enter an amount of MON.",
         tooHigh: "That is more MON than this wallet holds.",
@@ -266,6 +267,9 @@ export const orbityield = {
       body: "When a deposit promises a receipt, check that the receipt arrives. A missing receipt is the first sign of a one-way door.",
     },
   },
+  /** Live mode, with no wallet: the sample's 25 MON is never shown. */
+  live: { balance: "Connect a wallet to see your balance" },
+
   sign: {
     token: "oMON",
     steps: {
@@ -278,7 +282,7 @@ export const orbityield = {
         "The pool kept your MON and paid nothing back: the oMON balance did not move. Press Stake to see what Baret says about the same request.",
     },
   },
-} as const satisfies ScenarioSite & { sign: SiteSign };
+} as const satisfies ScenarioSite & { sign: SiteSign; live: { balance: string } };
 
 export type OrbityieldContent = typeof orbityield;
 

@@ -9,10 +9,12 @@ import { addressOf, useWallet, type WalletState } from "./store.js";
 const envFrom: unknown = import.meta.env.VITE_BARET_DEMO_FROM;
 
 /**
- * A developer's stand-in for a wallet: a funded testnet address in
- * VITE_BARET_DEMO_FROM (no key; Baret only simulates). A connected wallet,
- * or the Baret wallet connected through its window, always wins over it.
- * Unset, a site with no wallet shows its samples and never calls the API.
+ * Baret's demo account, a funded testnet address in VITE_BARET_DEMO_FROM
+ * (no key; Baret only simulates). It is set in production, so a visitor with
+ * no wallet still gets a live answer, simulated from this address and said
+ * so on the panel (`demo` below). A connected wallet, or the Baret wallet
+ * connected through its window, always wins over it. Unset, a site with no
+ * wallet shows its samples and never calls the API.
  */
 export const DEMO_FROM: Address | null =
   typeof envFrom === "string" && isAddress(envFrom) ? envFrom : null;
@@ -37,6 +39,10 @@ export interface DemoWallet {
   readonly live: boolean;
   /** MON in wei for the connected wallet once read; null otherwise. */
   readonly balance: bigint | null;
+  /** True when `from` is Baret's demo account, not a wallet of the visitor's. */
+  readonly demo: boolean;
+  /** True when a wallet of the visitor's is connected: injected, or the Baret wallet's window. */
+  readonly walletConnected: boolean;
 }
 
 export function useDemoWallet(): DemoWallet {
@@ -45,7 +51,20 @@ export function useDemoWallet(): DemoWallet {
   const from = connected ?? wallet.baret?.address ?? DEMO_FROM;
   // The Baret window address has its MON read too, so every site's balance guard holds for it.
   const balance = connected ? wallet.balance : wallet.baret ? wallet.baretBalance : null;
-  return { wallet, from, live: from !== null, balance };
+  const walletConnected = connected !== null || wallet.baret !== null;
+  return {
+    wallet,
+    from,
+    live: from !== null,
+    balance,
+    demo: !walletConnected && from !== null,
+    walletConnected,
+  };
+}
+
+/** Whether an address a check simulates from is Baret's demo account, not the visitor's. */
+export function isDemoAddress(from: Address | null): boolean {
+  return from !== null && (from === DEMO_FROM || from === DEMO_CHECK_FROM);
 }
 
 /** Whether a request of `wei` asks for more MON than a known balance holds. */

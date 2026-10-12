@@ -46,7 +46,7 @@ export function OrbitYieldSite(): JSX.Element {
   const [connected, setConnected] = useState(false);
   const [open, setOpen] = useState(false);
   const check = useCheck(hub.frame.panel.phases.length, SOURCE);
-  const { from, live, balance } = useDemoWallet();
+  const { from, live, balance, walletConnected } = useDemoWallet();
   const { view, go } = useSiteView(VIEWS);
   const page = site.pages.views.find((v) => v.id === view);
   const sign = useSiteSign(orbityield.sign);
@@ -56,6 +56,11 @@ export function OrbitYieldSite(): JSX.Element {
     const wei = toWei(amount);
     if (wei === null) {
       setError(site.panel.errors.empty);
+      return null;
+    }
+    // A stake above the wallet's MON never reaches the wallet: the site says why, like stake().
+    if (exceeds(wei, balance)) {
+      setError(fill(hub.frame.wallet.short, { balance: formatMon(balance ?? 0n) }));
       return null;
     }
     setError(null);
@@ -142,6 +147,9 @@ export function OrbitYieldSite(): JSX.Element {
                   error={error}
                   onStake={stake}
                   sign={sign.block(signRun)}
+                  live={live}
+                  liveBalance={balance === null ? null : formatMon(balance)}
+                  walletConnected={walletConnected}
                 />
               }
             />

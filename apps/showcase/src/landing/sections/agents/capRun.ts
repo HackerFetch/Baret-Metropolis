@@ -29,10 +29,11 @@ export function amount(n: number): string {
 export function capSentence(cap: number): string {
   const result = capRun(demo.price, demo.run, cap);
   if (result.kind === "fits") return fill(demo.fits, { count: String(demo.run) });
+  // The finding's own template names the unit, so the numbers go in bare.
   return fill(findings[demo.findingCode].body, {
-    amount: amount(demo.price),
-    actual: amount(result.next),
-    cap: amount(cap),
+    amount: String(demo.price),
+    actual: String(result.next),
+    cap: String(cap),
   });
 }
 
