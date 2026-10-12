@@ -7,7 +7,7 @@ Rule for every entry: a prize whose feature is not working on the live URL at th
 Common links, used below:
 
 - Repository: <https://github.com/HackerFetch/Baret-Metropolis>
-- Live: <https://baret-metropolis.vercel.app> (demo sites, `/agents`, `/review`, `/install`), <https://baret-wallet.vercel.app>, API <https://baret-monad-api.onrender.com>
+- Live: <https://usebaret.com> (demo sites, `/agents`, `/review`, `/install`), <https://wallet.usebaret.com>, API <https://baret-monad-api.onrender.com>
 - Access instructions for judges: the README's "Access instructions for judges"
 
 ---
@@ -26,7 +26,7 @@ Common links, used below:
 >
 > Everything is live on Monad testnet. `verify:demo` sends all twenty demo scenarios to the live API and agrees on 20 of 20.
 
-**Live link field:** <https://baret-metropolis.vercel.app>, with: "No login needed. Start at /novaswap: turn on 'Suspicious swap' and press 'Enable dUSDC trading'. Full instructions, including the wallet and the extension: README, 'Access instructions for judges'."
+**Live link field:** <https://usebaret.com>, with: "No login needed. Start at /novaswap: turn on 'Suspicious swap' and press 'Enable dUSDC trading'. Full instructions, including the wallet and the extension: README, 'Access instructions for judges'."
 
 **[gate]** the two videos recorded and uploaded (H13); the traction sentence of the pitch only if H9 (2) has evidence.
 
@@ -52,7 +52,7 @@ Common links, used below:
 
 > Baret's agents hold Dynamic server wallets. The agent in our demo is a Dynamic MPC wallet (`@dynamic-labs-wallet/node-evm`, `packages/agent-kit/src/dynamic.ts`): its key is split between Dynamic and the machine the agent runs on, and every signature needs both. That wallet is authorised as the agent signer of a PaymentGuard vault on Monad. The vault's owner is a person on a Mera passkey wallet who can revoke it at any time. This is the "agent wallets + delegated access" combination: the Dynamic wallet can pay only listed merchants, inside per-payment, hourly and daily caps the contract enforces, and Baret checks every payment before the Dynamic wallet signs it (`guardedSubmit`, or `baret pay` from the CLI).
 >
-> Judges can see it on <https://baret-metropolis.vercel.app/agents>, "A real agent, paying from a real vault": the agent `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`, the Dynamic agent's vault `0x0A82671420114E47c672D5e8e23017DdCE850A35`, and its payment read live from the Envio indexer (tx `0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3`).
+> Judges can see it on <https://usebaret.com/agents>, "A real agent, paying from a real vault": the agent `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`, the Dynamic agent's vault `0x0A82671420114E47c672D5e8e23017DdCE850A35`, and its payment read live from the Envio indexer (tx `0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3`).
 
 **[gate]** none open; optional clip in `docs/submission/SCRIPTS.md` 3.3.
 
@@ -64,7 +64,7 @@ Common links, used below:
 
 **Text:**
 
-> The Baret wallet (<https://baret-wallet.vercel.app>) has no account layer of its own: Mera is the whole of it. "Create my wallet" is one passkey ceremony, with no seed phrase, extension or email. Signing runs in a Mera session that the sidebar states ("Signing without a prompt until …"); after 15 minutes the wallet locks itself and says so. Every request, the wallet's own vault calls included, goes through Baret's check before the sign button exists, and a Blocked request has none.
+> The Baret wallet (<https://wallet.usebaret.com>) has no account layer of its own: Mera is the whole of it. "Create my wallet" is one passkey ceremony, with no seed phrase, extension or email. Signing runs in a Mera session that the sidebar states ("Signing without a prompt until …"); after 15 minutes the wallet locks itself and says so. Every request, the wallet's own vault calls included, goes through Baret's check before the sign button exists, and a Blocked request has none.
 >
 > The stateless test passes: clear the site's storage or open a fresh profile, press "Open with my passkey", and the same account comes back from the passkey. The agents' vault, merchants and history then come back from the chain and the Envio indexer, and the rules come back from an encrypted copy on Monad (see the Many Keys entry). Measured on a fork: four taps from the landing page to a confirmed send, plus the faucet.
 
@@ -96,7 +96,7 @@ Common links, used below:
 >
 > A payment settled through the BVUSD guard between two verified identities on 2026-10-11: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b` (block 70195328), 0.25 BVUSD (`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`) from the owner to the merchant, `Settled` with both credentials. No aUSDC has moved: the aUSDC guard holds none.
 >
-> Judges can run it on <https://baret-metropolis.vercel.app/agents>: "Pay aUSDC to a verified wallet" (`0xC448042edaC1899B023cAa0E9dA5E4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
+> Judges can run it on <https://usebaret.com/agents>: "Pay aUSDC to a verified wallet" (`0xC448042edaC1899B023cAa0E9dA5E4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
 
 **Settled 2026-10-11 (D-048):** the settlement is in BVUSD, a CVA Baret issued through Cleanverse's API, never in aUSDC. The text must not say aUSDC moved. The USDC deposited for aUSDC on 2026-10-12 was returned by Cleanverse's operator (blocks 70403112 and 70403945) and no aUSDC was minted.
 

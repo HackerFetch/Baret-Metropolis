@@ -106,7 +106,7 @@ export const walletFrame = {
   /** Where the wallet's outside links go. */
   links: {
     faucet: "https://faucet.monad.xyz",
-    showcase: "https://baret-metropolis.vercel.app/showcase",
+    showcase: "https://usebaret.com/showcase",
     source: "https://github.com/HackerFetch/Baret-Metropolis",
     /** The Monad testnet explorer, for a transaction hash in the history. */
     explorer: "https://testnet.monadexplorer.com",

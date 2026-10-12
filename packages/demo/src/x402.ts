@@ -12,7 +12,7 @@ import { DEMO } from "./sites.js";
 
 /** The merchant's site and wallet. A plain wallet; Baret holds no opinion on it. */
 export const SCRYBE = {
-  origin: "https://baret-metropolis.vercel.app",
+  origin: "https://usebaret.com",
   payTo: "0x1365566191bAA9872A64AcDce963751d5343ff49",
   /** 0.05 USDC per answer. */
   price: 50_000n,

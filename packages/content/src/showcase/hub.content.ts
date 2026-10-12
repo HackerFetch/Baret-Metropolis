@@ -175,7 +175,7 @@ export const hub = {
       looking: "Looking for wallets in this browser...",
       baret: {
         name: "Baret",
-        /** The Baret wallet (https://baret-wallet.vercel.app), opened in its own window. */
+        /** The Baret wallet (https://wallet.usebaret.com), opened in its own window. */
         window: "Your Baret wallet, in its own window. Your passkey stays on the wallet's site.",
         connecting: "Answer in the Baret wallet window...",
         declined: "You declined in the Baret wallet. Nothing was connected.",

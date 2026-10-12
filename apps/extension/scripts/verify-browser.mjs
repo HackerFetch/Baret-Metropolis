@@ -39,7 +39,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_CORE ?? "playwright-cor
 const EXT =
   process.env.BARET_EXTENSION_DIR ??
   fileURLToPath(new URL("../.output/chrome-mv3", import.meta.url));
-const SITE = process.env.BARET_SITE ?? "https://baret-metropolis.vercel.app/novaswap";
+const SITE = process.env.BARET_SITE ?? "https://usebaret.com/novaswap";
 const FUNDER =
   process.env.BARET_FUNDER_KEY_FILE ?? join(process.env.HOME ?? "", ".baret/deployer.key");
 const RPC = process.env.MONAD_TESTNET_RPC_URL ?? "https://testnet-rpc.monad.xyz";

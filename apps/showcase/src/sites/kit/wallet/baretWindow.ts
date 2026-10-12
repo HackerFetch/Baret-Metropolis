@@ -27,7 +27,7 @@ const envUrl: unknown = import.meta.env.VITE_BARET_WALLET_URL;
 export const WALLET_URL: string =
   typeof envUrl === "string" && envUrl !== ""
     ? envUrl.replace(/\/+$/, "")
-    : "https://baret-wallet.vercel.app";
+    : "https://wallet.usebaret.com";
 
 /** How often the site looks whether the wallet window is still open. */
 export const POLL_MS = 500;

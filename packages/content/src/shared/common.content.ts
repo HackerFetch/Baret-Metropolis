@@ -262,7 +262,7 @@ export const common = {
         links: [
           { label: "Showcase", href: "/showcase" },
           { label: "Install", href: "/install" },
-          { label: "Web wallet", href: "https://baret-wallet.vercel.app" },
+          { label: "Web wallet", href: "https://wallet.usebaret.com" },
         ],
       },
       {
