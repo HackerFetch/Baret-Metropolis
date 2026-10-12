@@ -14,7 +14,7 @@
  * loses nothing: the passphrase, funds, the account check and rules.
  */
 
-import { common } from "@baret/content";
+import { common, extOnboarding } from "@baret/content";
 import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Brand } from "@baret/wallet-ui/components/Brand";
@@ -22,11 +22,13 @@ import { ArrowLeft } from "lucide-react";
 import { type JSX, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useGate } from "../../../data/gate.js";
+import { useExtension } from "../../../data/store.js";
 import { SampleNotice } from "../parts/kit.js";
 import { routes } from "../routes.js";
 import { Account } from "./onboarding/Account.js";
 import { Backup } from "./onboarding/Backup.js";
 import { Done } from "./onboarding/Done.js";
+import { Exists } from "./onboarding/Exists.js";
 import { MovedContext, Steps } from "./onboarding/Frame.js";
 import { Funds } from "./onboarding/Funds.js";
 import { Key } from "./onboarding/Key.js";
@@ -87,6 +89,7 @@ export function Component(): JSX.Element {
   // Live: the keystore makes the wallet at the passphrase step. A phrase the
   // reader typed to restore waits here until then, in memory only.
   const gate = useGate();
+  const { dispatch } = useExtension();
   const typedPhrase = useRef<string | null>(null);
   const saved = readState(location.state);
   const screen = saved?.step ?? firstScreen();
@@ -133,7 +136,11 @@ export function Component(): JSX.Element {
           </div>
         ) : null}
         <MovedContext value={moved}>
-          {screen === "welcome" ? (
+          {screen === "welcome" && gate?.exists ? (
+            // A wallet is already made: setup resumes past the key, or the wallet opens.
+            <Exists onOpen={() => navigate("/")} onFinish={() => go("fund", true)} />
+          ) : null}
+          {screen === "welcome" && !gate?.exists ? (
             <Welcome onStart={() => go("passphrase")} onRestore={() => go("restore")} />
           ) : null}
           {screen === "restore" ? (
@@ -154,8 +161,14 @@ export function Component(): JSX.Element {
                 // A restore whose words were lost to a reload: the reader types them again.
                 if (restored && !phrase) return void go("restore");
                 return gate.create(passphrase, phrase ?? undefined).then((made) => {
-                  if ("error" in made) return made.error;
+                  if ("error" in made) {
+                    return /already exists/i.test(made.error)
+                      ? extOnboarding.exists.error
+                      : made.error;
+                  }
                   typedPhrase.current = null;
+                  // The reader typed the words from their own copy: the wallet is backed up.
+                  if (restored) dispatch({ type: "settings", patch: { backedUp: true } });
                   next();
                   return null;
                 });

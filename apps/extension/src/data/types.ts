@@ -263,7 +263,8 @@ export interface TypedDataRequest {
     readonly asset: string;
     /** Null: no limit. */
     readonly amount: string | null;
-    readonly deadline: string;
+    /** An ISO date. Null: no deadline, or one the wallet could not read. */
+    readonly deadline: string | null;
   } | null;
   readonly expires: number;
 }

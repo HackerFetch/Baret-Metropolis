@@ -5,6 +5,8 @@ import {
   createIndexerClient,
   type IndexerClient,
   IndexerUnavailableError,
+  newestFirst,
+  type Ordered,
   QUERIES,
 } from "../../sources/indexer.js";
 
@@ -57,15 +59,23 @@ export const auditRoutes: FastifyPluginAsync<AnalyzeDeps & { indexer?: IndexerCl
     return getAddress(raw).toLowerCase();
   };
 
+  // The indexer serves one network; the chain is asked on the same one.
+  const network = Object.values(deps.config.networks)[0] ?? null;
+
   app.get<{ Querystring: { limit?: string } }>("/v1/audit/recent", async (req, reply) => {
-    const data = await run<{ Payment: unknown[]; ReputationChange: unknown[] }>(
+    const data = await run<{ Payment: Ordered[]; ReputationChange: Ordered[] }>(
       reply,
       QUERIES.recent,
       {
         limit: limitOf(req.query.limit),
       },
     );
-    if (data) return { payments: data.Payment, reputationChanges: data.ReputationChange };
+    if (data) {
+      return {
+        payments: newestFirst(data.Payment),
+        reputationChanges: newestFirst(data.ReputationChange),
+      };
+    }
   });
 
   app.get<{ Params: { address: string }; Querystring: { limit?: string } }>(
@@ -73,18 +83,29 @@ export const auditRoutes: FastifyPluginAsync<AnalyzeDeps & { indexer?: IndexerCl
     async (req, reply) => {
       const id = addressParam(reply, req.params.address);
       if (!id) return;
-      const data = await run<{ Vault: unknown[]; VaultActivity: unknown[]; Payment: unknown[] }>(
-        reply,
-        QUERIES.vault,
-        { id, limit: limitOf(req.query.limit) },
-      );
+      const data = await run<{
+        Vault: { owner?: string | null }[];
+        VaultActivity: Ordered[];
+        Payment: Ordered[];
+      }>(reply, QUERIES.vault, { id, limit: limitOf(req.query.limit) });
       if (!data) return;
-      if (data.Vault.length === 0) {
+      const vault = data.Vault[0];
+      if (!vault) {
         return reply
           .code(404)
           .send({ error: "not_found", message: "the indexer has no such vault" });
       }
-      return { vault: data.Vault[0], activity: data.VaultActivity, payments: data.Payment };
+      // A vault the indexer first saw through a deposit, not through the
+      // factory, has no owner on record: the chain knows it.
+      if (vault.owner == null && network) {
+        const owner = await deps.rpcFor(network).vaultOwner(getAddress(id));
+        if (owner) vault.owner = owner.toLowerCase();
+      }
+      return {
+        vault,
+        activity: newestFirst(data.VaultActivity),
+        payments: newestFirst(data.Payment),
+      };
     },
   );
 
@@ -98,11 +119,16 @@ export const auditRoutes: FastifyPluginAsync<AnalyzeDeps & { indexer?: IndexerCl
   app.get<{ Params: { address: string } }>("/v1/audit/reputation/:address", async (req, reply) => {
     const id = addressParam(reply, req.params.address);
     if (!id) return;
-    const data = await run<{ ReputationEntry: unknown[]; ReputationChange: unknown[] }>(
+    const data = await run<{ ReputationEntry: unknown[]; ReputationChange: Ordered[] }>(
       reply,
       QUERIES.reputation,
       { id },
     );
-    if (data) return { entry: data.ReputationEntry[0] ?? null, history: data.ReputationChange };
+    if (data) {
+      return {
+        entry: data.ReputationEntry[0] ?? null,
+        history: newestFirst(data.ReputationChange),
+      };
+    }
   });
 };

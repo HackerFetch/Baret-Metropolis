@@ -153,15 +153,15 @@ Request (`analyzeRequestSchema`):
 |---|---|
 | `network` | `"testnet"` (or `"mainnet"`, not configured) |
 | `transaction` | `{ from, to?, value?, data?, gas?, ... }` or a raw signed transaction. Exactly one of `transaction` and `typedData` |
-| `typedData` | An EIP-712 message to be signed (permits, x402 payments) |
-| `policy` or `policyTemplate` | The full 25 rules, or `strict` / `balanced` / `permissive`. Neither: Balanced |
+| `typedData` | An EIP-712 message to be signed (permits, x402 payments): `{ signer, domain, types, primaryType, message }`, `signer` required |
+| `policy` or `policyTemplate` | The full 25 rules, or `strict` / `balanced` / `permissive`. Neither: Balanced. Both: 400 |
 | `userWallet` | Whose balances the loss rules protect; default the sender |
 | `payment` | For an x402 payment: `{ origin, payTo, asset, amount, memo?, spendHistory? }`. Caps need `spendHistory` or they fail closed |
 | `integratorRequestId` | Echoed back |
 
-Response: `decision` (`safe` / `caution` / `blocked`), `findings` (`{ code, severity, values, blocking }`), `firedRules`, `suggestions`, `confidence`, `estimatedChanges` (balance before and after per asset), `approvals`, `sources` (each data source and whether it answered), `expiresAt`, `meta` (`requestId`, `chainId`, `blockNumber`, ...).
+Response: `decision` (`safe` / `caution` / `blocked`), `findings` (`{ code, severity, values, blocking }`), `firedRules`, `suggestions`, `confidence`, `estimatedChanges` (balance before and after per asset; `asset.kind` is `native`, `erc20` or `erc721`, the last with `decimals` 0, `delta` 1 or -1 and `asset.tokenId` when the trace named the piece), `approvals`, `sources` (each data source and whether it answered), `expiresAt`, `meta` (`requestId`, `chainId`, `blockNumber`, ...).
 
-Errors: 400 `invalid_request`; 503 `rpc_unavailable`. A source that does not answer does not produce an error: the rules that need it fail closed inside the verdict.
+Errors: 400 `invalid_request` (a field at fault, and also a request no node can run: a zero-address sender or signer, a gas limit over 30M, a legacy transaction with no chain id); 503 `rpc_unavailable`. A source that does not answer does not produce an error: the rules that need it fail closed inside the verdict.
 
 ### `POST /v1/explain`
 
@@ -181,18 +181,18 @@ Errors: 400 `invalid_request`; 503 `rpc_unavailable`. A source that does not ans
 
 ### `GET /v1/audit/*`
 
-Read from the indexer. Amounts are base units as strings; addresses lowercase. `?limit=` on `recent` and `vault`. 400 for a bad address; 404 when the indexer has not seen the vault; 503 `indexer_unavailable`.
+Read from the indexer. Amounts are base units as strings; addresses lowercase. `?limit=` on `recent` and `vault`. Every feed (activity, payments, registry changes, history) is newest first by block, then by the event's place in the block, then by timestamp. A vault the indexer first saw through a deposit, not through the factory, has its `owner` read from the chain (`owner()`) when the indexer has none. 400 for a bad address (a mixed-case address with a wrong checksum is refused too; use lowercase or the right checksum); 404 when the indexer has not seen the vault; 503 `indexer_unavailable`.
 
 ### `POST /mcp` (D-045)
 
-Baret as tools for an AI agent, over the Model Context Protocol (Streamable HTTP, one JSON-RPC message per POST, one JSON answer, no session and no stream; `GET` and `DELETE` answer 405). Protocol versions `2025-06-18`, `2025-03-26` and `2024-11-05`.
+Baret as tools for an AI agent, over the Model Context Protocol (Streamable HTTP, one JSON-RPC message per POST, one JSON answer, no session and no stream; `GET` and `DELETE` answer 405). Protocol versions `2025-06-18`, `2025-03-26` and `2024-11-05`. Errors are JSON-RPC too: a body that is not JSON is `400 { jsonrpc, id: null, error: { code: -32700 } }`, a batch or a body that is not one JSON-RPC message `400 ... -32600`, an unknown method `-32601`, an unknown tool `-32602`.
 
 | Tool | Arguments | What it returns |
 |---|---|---|
 | `check_transaction` | `from`, `to?`, `value?`, `data?`, `policyTemplate?`, `network?` | The verdict of `/v1/analyze` for an unsigned transaction |
 | `check_signature` | `signer`, `typedData { domain, types, primaryType, message }`, `policyTemplate?`, `network?` | The verdict for an EIP-712 message |
 | `address_reputation` | `address`, `network?` | The registry entry: flagged, severity, reason code |
-| `policy_templates` | none | The three rule sets |
+| `policy_templates` | none (an argument is refused as `isError`) | The three rule sets |
 
 Every result starts with a sentence a model can act on ("Decision: blocked. Do not sign. Findings: ...") and carries the whole verdict as `structuredContent`. No verdict (bad arguments, a node that does not answer, a registry that is not configured) is a result with `isError: true` that says to treat it as blocked: never an empty or safe answer. The tools only read: nothing is signed, sent or stored. 60 requests a minute (`BARET_MCP_RATE_LIMIT_PER_MINUTE`).
 
@@ -204,18 +204,18 @@ Scrybe's paid resource, and the facilitator that settles it. `?q=<question>`.
 
 | Request | Answer |
 |---|---|
-| No `X-PAYMENT` header | **402** `{ x402Version: 1, error, accepts: [{ scheme: "exact", network: "monad-testnet", maxAmountRequired, resource, description, mimeType, payTo, maxTimeoutSeconds, asset, extra: { name, version } }] }` |
+| No `X-PAYMENT` header | **402** `{ x402Version: 1, error, accepts: [{ scheme: "exact", network: "monad-testnet", maxAmountRequired, resource, description, mimeType, payTo, maxTimeoutSeconds, asset, extra: { name, version } }] }`. `resource` is the path with its query (`/demo/paywall?q=...`), relative to the API's origin, not a full URL |
 | `X-PAYMENT`: base64 of `{ x402Version: 1, scheme: "exact", network: "monad-testnet", payload: { signature, authorization: { from, to, value, validAfter, validBefore, nonce } } }` | **200** `{ answer, payment: { success, transaction, network, payer, amount } }`, and the same receipt base64 in `X-PAYMENT-RESPONSE` |
 
 The authorisation is an EIP-3009 `TransferWithAuthorization` on the token in `asset`, signed over the domain `{ name, version, chainId: 10143, verifyingContract: asset }`. The server takes it only when it pays `payTo` exactly `maxAmountRequired`, is valid now and for at least 10 more seconds, recovers to `from` and has an unused nonce; then it submits `transferWithAuthorization` itself (the payer needs no MON) and answers after the receipt. Anything else is 402 again with the reason in `error` and nothing sent. 429 `paywall_daily_limit`; 502 `settlement_failed` (no answer; the transfer may still land); 503 `paywall_unavailable` when no facilitator key or test USDC is configured. 12 requests a minute, 300 settlements a UTC day.
 
 ### `GET /health`, `GET /health/ready`
 
-`/health`: `{ status, analysisVersion, commit, forwardedHops, viaEdge }` (`forwardedHops`: how many `X-Forwarded-For` entries the request carried, a count only; `viaEdge`: whether the request carried the sites' edge secret, in which case the client for the rate limits is the address the edge named in `x-baret-client`). `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `x402`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday`.
+`/health`: `{ status, analysisVersion, commit, forwardedHops, viaEdge }` (`forwardedHops`: how many `X-Forwarded-For` entries the request carried, a count only; `viaEdge`: whether the request carried the sites' edge secret, in which case the client for the rate limits is the address the edge named in `x-baret-client`). `/health/ready`: `{ status: "ready" | "not_ready", networks }`, and it answers 503 `not_ready` when a network's chain id does not match; per network `{ ok, chainId, configured }`, where `configured` holds booleans and counts only: `nansen`, `cleanverse`, `indexer`, `explain`, `policyDraft`, `review`, `reviewSends`, `sealed`, `x402`, `usdc`, `reputationRegistry`, `knownContracts`, `paymentGuardFactory`, `separateTraceRpc`. Since D-042 also `nansenMode` (`funder`, `labels` or null), `nansenAnswering` (what the next new address is answered from: `funder` once the day's label lookups are used up) and `nansenLabelsLeftToday` (an in-memory counter: it starts again at 25 on every deploy, like the daily caps below). Each entry also carries `network` (`testnet`), and the server-wide `unreadSignatures` and `unreadSignatureKinds` count the signed messages Baret could not read since start.
 
 ### Limits
 
-120 requests a minute over all routes, then the tighter per-route limits above, counted per visitor since #63 (G-01, closed: the server trusts the proxy's `X-Forwarded-For`). Over a per-minute limit the answer is 429 from the rate limiter, `{ statusCode, error: "Too Many Requests", message }`. Daily caps: KIMI 500 fresh calls (explain and draft together), review 200 fresh runs, sealed 200 writes; they are counted for the whole server, not per visitor, and reset at 00:00 UTC and on every restart.
+120 requests a minute over all routes, then the tighter per-route limits above, counted per visitor since #63 (G-01, closed: the server trusts the proxy's `X-Forwarded-For`). Over a per-minute limit the answer is 429 from the rate limiter, `{ statusCode, error: "Too Many Requests", message }`. A body that is not JSON answers `400 { error: "invalid_request" }` on every route (`/mcp` answers it in JSON-RPC, above); a body over 256 KiB answers `413 { error: "payload_too_large" }`. An unknown route, or a known route with the wrong method, answers the framework's `404 { statusCode, error, message }` and is not counted by the rate limiter (only `/mcp` answers 405). Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, a `Permissions-Policy` and a `Content-Security-Policy` of `default-src 'none'`. Daily caps: KIMI 500 fresh calls (explain and draft together), review 200 fresh runs, sealed 200 writes; they are counted for the whole server, not per visitor, and reset at 00:00 UTC and on every restart.
 
 ## 5. What the server calls
 

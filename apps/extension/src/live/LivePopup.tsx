@@ -10,6 +10,7 @@ import { Locked } from "../entrypoints/popup/screens/Locked.js";
 import { Uninitialized } from "../entrypoints/popup/screens/Uninitialized.js";
 import { sendMessage } from "../lib/messaging.js";
 import type { Start } from "../lib/start.js";
+import { RequestBoundary } from "./RequestBoundary.js";
 import { LiveRequest, OwnTransfer } from "./requests.js";
 import { liveSource } from "./source.js";
 import { useRecords } from "./useRecords.js";
@@ -179,20 +180,18 @@ function Live(): JSX.Element | null {
       setAnswered(true);
       void sendMessage("resolve", { id: shown.id, outcome });
     };
+    const done = () => {
+      finished.current.add(shown.id);
+      refresh();
+      setAnswered(false);
+      setShown(null);
+    };
     body = (
       <div className="flex h-full flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <LiveRequest
-            key={shown.id}
-            pending={shown}
-            onAnswer={answer}
-            onFinished={() => {
-              finished.current.add(shown.id);
-              refresh();
-              setAnswered(false);
-              setShown(null);
-            }}
-          />
+          <RequestBoundary key={shown.id} onAnswer={answer} onFinished={done}>
+            <LiveRequest pending={shown} onAnswer={answer} onFinished={done} />
+          </RequestBoundary>
         </div>
       </div>
     );

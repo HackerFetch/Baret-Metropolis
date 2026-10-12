@@ -18,7 +18,7 @@ import { type Decision, MessageView, TypedDataView } from "../entrypoints/popup/
 import { ConnectPhase } from "../entrypoints/popup/screens/Connect.js";
 import { fromTransaction } from "../entrypoints/popup/screens/Sign.js";
 import { grantsFrom, isPayment, paymentFrom, problemFrom, withGrants } from "./records.js";
-import { loggedRow } from "./row.js";
+import { declinedKind, loggedRow } from "./row.js";
 import { capsOf, cardAfter, type SiteStop, siteStop } from "./site-caps.js";
 import {
   type AnalyzeResponse,
@@ -234,12 +234,7 @@ export function LiveTransaction({
         // Every answer lands in the log, the refused ones too.
         if (!answered.current) {
           const at = new Date().toISOString();
-          const kind =
-            shown.verdict === "blocked"
-              ? "blocked"
-              : shown.verdict === "unreachable"
-                ? "unchecked"
-                : "declined";
+          const kind = declinedKind(shown.verdict);
           dispatch({
             type: "log",
             item: row(
@@ -308,7 +303,7 @@ export function transferCall(
 
 // ── Structured data and messages ──
 
-interface TypedData {
+export interface TypedData {
   domain: Record<string, unknown>;
   types: Record<string, readonly { name: string; type: string }[]>;
   primaryType: string;
@@ -340,8 +335,27 @@ function fieldsOf(message: Record<string, unknown>): { name: string; value: stri
   }));
 }
 
+/** Deadlines this far out (past the year 9999) are shown as none, like the maximum. */
+const DEADLINE_MAX_SECONDS = 253_402_300_799n;
+
+/**
+ * A permit's deadline, a uint256 of unix seconds, as an ISO date. Null for
+ * the maximum, a value past any calendar, or one that is not a number: the
+ * screen then says there is no deadline instead of a date it cannot format.
+ */
+export function deadlineOf(raw: unknown): string | null {
+  if (raw === undefined || raw === null) return null;
+  try {
+    const seconds = BigInt(typeof raw === "number" ? Math.trunc(raw) : String(raw));
+    if (seconds < 0n || seconds >= DEADLINE_MAX_SECONDS) return null;
+    return new Date(Number(seconds) * 1000).toISOString();
+  } catch {
+    return null;
+  }
+}
+
 /** The allowance a Permit hides in its fields. */
-function permitOf(typed: TypedData): TypedDataRequest["permit"] {
+export function permitOf(typed: TypedData): TypedDataRequest["permit"] {
   if (typed.primaryType !== "Permit") return null;
   const { spender, value, deadline } = typed.message;
   if (typeof spender !== "string") return null;
@@ -355,7 +369,7 @@ function permitOf(typed: TypedData): TypedDataRequest["permit"] {
     spender,
     asset: String(typed.domain.name ?? typed.domain.verifyingContract ?? ""),
     amount,
-    deadline: String(deadline ?? ""),
+    deadline: deadlineOf(deadline),
   };
 }
 
@@ -518,7 +532,14 @@ function LiveTypedData({
     onFinished();
   }
 
-  return <TypedDataView request={request} onDecide={(decision) => void decide(decision)} />;
+  return (
+    <TypedDataView
+      request={request}
+      onDecide={(decision) => void decide(decision)}
+      // The key never signs a block or an unchecked request: no hold is offered.
+      canOverride={false}
+    />
+  );
 }
 
 function LiveMessage({
@@ -649,7 +670,7 @@ export function LiveRequest({
   onAnswer: Answer;
   onFinished: () => void;
 }): JSX.Element | null {
-  const { state } = useExtension();
+  const firstTime = useSiteRequest(pending);
   const props = { pending, onAnswer, onFinished };
   if (pending.kind === "connect") return <LiveConnect {...props} />;
   if (pending.kind === "typedData") return <LiveTypedData {...props} />;
@@ -659,18 +680,36 @@ export function LiveRequest({
     // Not a call the wallet can read: refused, and the site is told why.
     return <Refuse onAnswer={onAnswer} onFinished={onFinished} />;
   }
-  const site = state.sites.find((s) => s.origin === siteOf(pending.origin));
   return (
     <LiveTransaction
       id={pending.id}
       origin={pending.origin}
       call={call}
       words={{ action: "contractCall", values: { contract: call.to }, impact: "contractCall" }}
-      firstTime={(site?.requests ?? 0) <= 1}
+      firstTime={firstTime}
       onAnswer={onAnswer}
       onFinished={onFinished}
     />
   );
+}
+
+/**
+ * Counts the request on its site once it is on screen, and says whether it
+ * is the site's first after connecting. The count is read before it moves,
+ * so the screen's "first time" line does not change under the reader.
+ */
+function useSiteRequest(pending: Pending): boolean {
+  const { state, dispatch } = useExtension();
+  const [firstTime] = useState(() => {
+    const site = state.sites.find((s) => s.origin === siteOf(pending.origin));
+    return (site?.requests ?? 0) <= 1;
+  });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: counted once per request
+  useEffect(() => {
+    if (pending.kind === "connect") return;
+    dispatch({ type: "request", origin: siteOf(pending.origin), at: new Date().toISOString() });
+  }, [pending.id]);
+  return firstTime;
 }
 
 function Refuse({ onAnswer, onFinished }: { onAnswer: Answer; onFinished: () => void }): null {

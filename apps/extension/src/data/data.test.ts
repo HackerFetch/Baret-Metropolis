@@ -172,6 +172,21 @@ describe("the store", () => {
     expect(next.activity[0]?.kind).toBe("connect");
   });
 
+  it("counts every request a connected site sends, not only its connects", () => {
+    const connected = reduce(full(), {
+      type: "connect",
+      origin: "atlas.example",
+      account: "main",
+      at: SAMPLE_NOW,
+    });
+    const once = reduce(connected, { type: "request", origin: "atlas.example", at: SAMPLE_NOW });
+    const twice = reduce(once, { type: "request", origin: "atlas.example", at: SAMPLE_NOW });
+    expect(twice.sites.find((s) => s.origin === "atlas.example")?.requests).toBe(3);
+    // A site the wallet never connected is not added by a request alone.
+    const unknown = reduce(full(), { type: "request", origin: "nobody.example", at: SAMPLE_NOW });
+    expect(unknown.sites.some((s) => s.origin === "nobody.example")).toBe(false);
+  });
+
   it("moves the balances when a transfer goes out, the fee in MON", () => {
     const item = { ...ACTIVITY[4], id: "t" } as (typeof ACTIVITY)[number];
     const next = reduce(full(), {

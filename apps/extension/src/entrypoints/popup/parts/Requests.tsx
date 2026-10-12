@@ -293,15 +293,23 @@ function TypedActions({
 export function TypedDataView({
   request,
   onDecide,
+  canOverride = true,
 }: {
   request: TypedDataRequest;
   onDecide: (decision: Decision) => void;
+  /**
+   * Whether a Blocked or unreachable request offers the hold to sign it
+   * anyway. The live wallet never signs past a block, so it offers none:
+   * a stopped request has Decline alone.
+   */
+  canOverride?: boolean;
 }): JSX.Element {
   const { typedData } = signRequest;
   const left = useCountdown(request.expires, true, () => onDecide("expired"));
   const permit = request.permit;
   const words = typedVerdict(request);
-  const stopped = request.verdict === "blocked" || request.verdict === "unreachable";
+  const stopped =
+    canOverride && (request.verdict === "blocked" || request.verdict === "unreachable");
   const firstRule = request.rules[0];
   const override =
     request.verdict === "unreachable"
@@ -348,7 +356,7 @@ export function TypedDataView({
             </p>
             <p className={`text-sm text-[color:var(--fg)] ${T.num}`}>
               <span className="text-[color:var(--fg-muted)]">{typedData.permit.validUntil}: </span>
-              {day(permit.deadline)}
+              {permit.deadline ? day(permit.deadline) : typedData.permit.noDeadline}
             </p>
           </div>
         </Block>

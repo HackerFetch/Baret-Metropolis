@@ -11,14 +11,30 @@ describe("what a live revoke says", () => {
   });
 
   it("says failed when nothing closed: a refusal, a locked wallet or a failed transaction", () => {
-    expect(revokeOutcome(["a"], [])).toEqual({ kind: "failed", total: 1 });
+    expect(revokeOutcome(["a"], [])).toEqual({ kind: "failed", total: 1, stop: null });
+  });
+
+  it("carries why the wallet stopped: Baret's refusal names its first finding", () => {
+    const result = {
+      closed: [],
+      stopped: [{ id: "a", why: "blocked", code: "KNOWN_MALICIOUS_ADDRESS" }],
+    } as const;
+    expect(revokeOutcome(["a"], result)).toEqual({
+      kind: "failed",
+      total: 1,
+      stop: { why: "blocked", code: "KNOWN_MALICIOUS_ADDRESS" },
+    });
+    const away = { closed: [], stopped: [{ id: "a", why: "unreachable", code: null }] } as const;
+    expect(
+      revokeOutcome(["a"], away).kind === "failed" && revokeOutcome(["a"], away),
+    ).toMatchObject({ stop: { why: "unreachable" } });
   });
 
   it("does not count an id that was not asked for", () => {
-    expect(revokeOutcome(["a"], ["z"])).toEqual({ kind: "failed", total: 1 });
+    expect(revokeOutcome(["a"], ["z"])).toEqual({ kind: "failed", total: 1, stop: null });
   });
 
   it("never says done for an empty request", () => {
-    expect(revokeOutcome([], [])).toEqual({ kind: "failed", total: 0 });
+    expect(revokeOutcome([], [])).toEqual({ kind: "failed", total: 0, stop: null });
   });
 });

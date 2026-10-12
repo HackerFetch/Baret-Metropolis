@@ -18,6 +18,7 @@ export const FINDING_CODES = [
   "RISKY_CONTRACT_INTERACTION",
   "UNKNOWN_CONTRACT_EXPOSURE",
   "VALUE_KEPT_BY_UNKNOWN_CONTRACT",
+  "CALL_TO_ADDRESS_WITHOUT_CODE",
   "SELFDESTRUCT_CALL",
   "DELEGATECALL_DETECTED",
   "ACCOUNT_CODE_DELEGATION",
@@ -102,6 +103,9 @@ export const FINDING_SPECS = {
   RISKY_CONTRACT_INTERACTION: { severity: "high", rule: toggle("blockRiskyContracts") },
   UNKNOWN_CONTRACT_EXPOSURE: { severity: "medium", rule: toggle("blockUnknownContractExposure") },
   VALUE_KEPT_BY_UNKNOWN_CONTRACT: { severity: "high", rule: toggle("blockRiskyContracts") },
+  // Calldata sent to an account that has no code: whatever the site says the
+  // call does will not happen (a wrong or poisoned token address).
+  CALL_TO_ADDRESS_WITHOUT_CODE: { severity: "medium", rule: warning },
   SELFDESTRUCT_CALL: { severity: "critical", rule: toggle("blockSelfdestruct") },
   DELEGATECALL_DETECTED: { severity: "medium", rule: toggle("blockDelegatecall") },
   // Not a toggle: the simulation does not apply a delegation, so its effect is unknown.

@@ -38,6 +38,32 @@ export async function buildApp(deps: AnalyzeDeps): Promise<FastifyInstance> {
     keyGenerator: (req) => clientOf(req, config.proxyTrust),
   });
 
+  // A body the framework cannot read is answered in the API's own error
+  // shape (`{ error, message }`), like a body the routes refuse. Everything
+  // else keeps the framework's answer (the rate limiter's 429, a 404).
+  app.setErrorHandler((err, _req, reply) => {
+    const code = (err as { code?: string }).code;
+    if (code === "FST_ERR_CTP_INVALID_JSON_BODY" || code === "FST_ERR_CTP_EMPTY_JSON_BODY") {
+      return reply.code(400).send({ error: "invalid_request", message: "the body is not JSON" });
+    }
+    if (code === "FST_ERR_CTP_BODY_TOO_LARGE") {
+      return reply
+        .code(413)
+        .send({ error: "payload_too_large", message: "the body is over 256 KiB" });
+    }
+    return reply.send(err);
+  });
+
+  // Every answer is data, never a page: no sniffing it into one, no framing
+  // it, no referrer out of it, no browser feature for it.
+  app.addHook("onSend", async (_req, reply) => {
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("x-frame-options", "DENY");
+    reply.header("referrer-policy", "no-referrer");
+    reply.header("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+    reply.header("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
+  });
+
   // API keys: required when configured. Health stays open for uptime checks.
   app.addHook("onRequest", async (req, reply) => {
     if (config.apiKeys.length === 0 || req.url.startsWith("/health")) return;

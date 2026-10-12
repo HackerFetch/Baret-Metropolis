@@ -14,18 +14,35 @@ interface Log {
   transaction: { hash: string };
 }
 
-/** The vault's row. The demo vault predates the factory, so it may not exist yet. */
+/**
+ * Vaults listed in config.yaml by address, which predate the factory and so
+ * emit no VaultCreated: their owner, token and deploy block, as the chain
+ * has them (docs/CONTRACTS.md). The first testnet vault, used by the Dynamic
+ * agent (0x0A82...0A35), is one. Without this the row says owner null and
+ * "created" at its first deposit.
+ */
+const STATIC_VAULTS: Record<string, { owner: string; token: string; createdAtBlock: number }> = {
+  "0x0a82671420114e47c672d5e8e23017ddce850a35": {
+    owner: "0x5ae13f1028144842f0384d09091067d6184f8197",
+    token: "0x534b2f3a21130d7a60830c2df862319e593943a3",
+    createdAtBlock: 67604750,
+  },
+};
+
+/** The vault's row. A vault that predates the factory may not exist yet. */
 function vaultOf(context: Context, event: Log) {
+  const id = lower(event.srcAddress);
+  const known = STATIC_VAULTS[id];
   return context.Vault.getOrCreate({
-    id: lower(event.srcAddress),
-    owner: undefined,
-    token: undefined,
+    id,
+    owner: known?.owner,
+    token: known?.token,
     agent: undefined,
     deposited: 0n,
     withdrawn: 0n,
     paid: 0n,
     paymentCount: 0,
-    createdAtBlock: event.block.number,
+    createdAtBlock: known?.createdAtBlock ?? event.block.number,
   });
 }
 

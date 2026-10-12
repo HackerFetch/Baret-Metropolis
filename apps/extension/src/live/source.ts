@@ -1,6 +1,9 @@
 import { KEYS, local } from "../core/storage.js";
 import { type ExtState, initialState, type LiveSource } from "../data/store.js";
 import { sendMessage } from "../lib/messaging.js";
+import { API_URL } from "./config.js";
+import { revokeGrants } from "./revoke.js";
+import { addressAt } from "./wallet.js";
 
 /**
  * The live wallet's side of the store (data/store.tsx `LiveSource`): where a
@@ -14,15 +17,6 @@ import { sendMessage } from "../lib/messaging.js";
  * Loaded only on a live page (lib/live.ts), so the sample pages and the
  * tests never touch the extension's APIs.
  */
-
-/** Baret's server: fixed into the build, like the manifest's host permission. */
-export const API_URL: string = (
-  (import.meta.env.WXT_BARET_API_URL as string | undefined) || "http://localhost:8080"
-).replace(/\/+$/, "");
-
-export const RPC_URL: string =
-  (import.meta.env.WXT_MONAD_TESTNET_RPC_URL as string | undefined) ||
-  "https://testnet-rpc.monad.xyz";
 
 /** The parts of the state that are the wallet's own record. */
 const SAVED = [
@@ -109,9 +103,7 @@ export async function liveSource(): Promise<LiveSource> {
     },
     unlock: (passphrase) => sendMessage("unlock", passphrase),
     reach,
-    // Loaded when asked: wallet.ts reads this module's constants as it loads.
-    derive: async (index) => (await import("./wallet.js")).addressAt(index),
-    revoke: async (permissions, state) =>
-      (await import("./revoke.js")).revokeGrants(permissions, state.accounts, state.policy),
+    derive: addressAt,
+    revoke: (permissions, state) => revokeGrants(permissions, state.accounts, state.policy),
   };
 }

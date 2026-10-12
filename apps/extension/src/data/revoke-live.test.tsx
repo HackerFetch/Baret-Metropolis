@@ -6,6 +6,7 @@
 
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import type { RevokeResult } from "./revoke-outcome.js";
 import {
   ExtensionProvider,
   type ExtState,
@@ -58,22 +59,27 @@ const listed = (probe: Probe) => probe.store?.state.permissions.some((p) => p.id
 
 describe("a live revoke", () => {
   it("resolves with the confirmed id, and only then the row leaves", async () => {
-    const probe = mount(source(async (grants) => grants.map((g) => g.id)));
+    const probe = mount(
+      source(async (grants) => ({ closed: grants.map((g) => g.id), stopped: [] })),
+    );
     let closed: readonly string[] = [];
     await act(async () => {
-      closed = (await probe.store?.revoke?.([GRANT])) ?? [];
+      closed = (await probe.store?.revoke?.([GRANT]))?.closed ?? [];
     });
     expect(closed).toEqual([GRANT]);
     expect(listed(probe)).toBe(false);
   });
 
   it("resolves empty and keeps the row when Monad did not confirm", async () => {
-    const probe = mount(source(async () => []));
-    let closed: readonly string[] = ["x"];
+    const probe = mount(
+      source(async () => ({ closed: [], stopped: [{ id: GRANT, why: "failed", code: null }] })),
+    );
+    let result: RevokeResult = { closed: ["x"], stopped: [] };
     await act(async () => {
-      closed = (await probe.store?.revoke?.([GRANT])) ?? ["x"];
+      result = (await probe.store?.revoke?.([GRANT])) ?? result;
     });
-    expect(closed).toEqual([]);
+    expect(result.closed).toEqual([]);
+    expect(result.stopped[0]).toMatchObject({ id: GRANT, why: "failed" });
     expect(listed(probe)).toBe(true);
   });
 
@@ -83,16 +89,17 @@ describe("a live revoke", () => {
         throw new Error("rejected");
       }),
     );
-    let closed: readonly string[] = ["x"];
+    let result: RevokeResult = { closed: ["x"], stopped: [] };
     await act(async () => {
-      closed = (await probe.store?.revoke?.([GRANT])) ?? ["x"];
+      result = (await probe.store?.revoke?.([GRANT])) ?? result;
     });
-    expect(closed).toEqual([]);
+    expect(result.closed).toEqual([]);
+    expect(result.stopped[0]).toMatchObject({ id: GRANT, why: "failed" });
     expect(listed(probe)).toBe(true);
   });
 
   it("keeps one function across state changes, so a revoke screen does not send twice", async () => {
-    const probe = mount(source(async () => []));
+    const probe = mount(source(async () => ({ closed: [], stopped: [] })));
     const first = probe.store?.revoke;
     expect(first).toBeTypeOf("function");
     await act(async () => {

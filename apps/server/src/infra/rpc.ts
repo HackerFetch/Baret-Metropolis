@@ -5,8 +5,10 @@ import {
   ContractFunctionRevertedError,
   createPublicClient,
   erc20Abi,
+  getAddress,
   type Hex,
   http,
+  isAddress,
   type PublicClient,
   parseAbi,
 } from "viem";
@@ -75,9 +77,12 @@ export interface MonadRpc {
   erc20Meta(token: Address): Promise<{ symbol: string | null; decimals: number | null }>;
   /** Which of `addresses` are vaults the PaymentGuardFactory deployed. A failed read is "no". */
   factoryVaults(factory: Address, addresses: readonly Address[], block: bigint): Promise<Address[]>;
+  /** A vault's `owner()`, at the head. Null when the address has none or the read failed. */
+  vaultOwner(vault: Address): Promise<Address | null>;
 }
 
 const FACTORY_ABI = parseAbi(["function isVault(address vault) view returns (bool)"]);
+const OWNER_ABI = parseAbi(["function owner() view returns (address)"]);
 
 const toHex = (n: bigint) => `0x${n.toString(16)}` as Hex;
 
@@ -298,6 +303,19 @@ export class ViemMonadRpc implements MonadRpc {
       ),
     );
     return addresses.filter((_, i) => answers[i] === true);
+  }
+
+  async vaultOwner(vault: Address) {
+    try {
+      const owner = await this.client.readContract({
+        address: vault,
+        abi: OWNER_ABI,
+        functionName: "owner",
+      });
+      return isAddress(owner) ? getAddress(owner) : null;
+    } catch {
+      return null;
+    }
   }
 
   async erc20Meta(token: Address) {

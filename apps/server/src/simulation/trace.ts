@@ -12,6 +12,13 @@ export interface TraceFrame {
   reverted: boolean;
   /** This frame is a STATICCALL or runs inside one: it can only read. */
   readOnly: boolean;
+  /**
+   * A DELEGATECALL that forwards its parent's call unchanged (same input): a
+   * proxy handing over to its implementation. Any other DELEGATECALL runs a
+   * call of its own (a self-multicall item, a library batch) and is an
+   * operation in its own right.
+   */
+  forwarded: boolean;
 }
 
 export interface TraceLog {
@@ -61,6 +68,7 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
     contractDepth: number,
     parentReverted: boolean,
     parentReadOnly: boolean,
+    parentInput: Hex | null,
   ) => {
     const reverted = parentReverted || Boolean(f.error) || Boolean(f.revertReason);
     const to = addr(f.to);
@@ -68,16 +76,22 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
     const type = (f.type ?? "CALL").toUpperCase();
     const level = type === "DELEGATECALL" ? Math.max(contractDepth - 1, 0) : contractDepth;
     const readOnly = parentReadOnly || type === "STATICCALL";
+    const input = (f.input ?? "0x") as Hex;
+    const forwarded =
+      type === "DELEGATECALL" &&
+      parentInput !== null &&
+      input.toLowerCase() === parentInput.toLowerCase();
     maxDepth = Math.max(maxDepth, level);
     frames.push({
       type,
       from: addr(f.from) ?? ("0x0000000000000000000000000000000000000000" as Address),
       to,
       value: amount(f.value),
-      input: (f.input ?? "0x") as Hex,
+      input,
       depth,
       reverted,
       readOnly,
+      forwarded,
     });
     if (!reverted) {
       for (const log of f.logs ?? []) {
@@ -85,9 +99,11 @@ export function parseCallTrace(root: RawCallFrame | null): CallTrace | null {
         if (a) logs.push({ address: a, topics: log.topics as Hex[], data: log.data as Hex });
       }
     }
-    for (const child of f.calls ?? []) walk(child, depth + 1, level + 1, reverted, readOnly);
+    for (const child of f.calls ?? []) {
+      walk(child, depth + 1, level + 1, reverted, readOnly, input);
+    }
   };
 
-  walk(root, 0, 0, false, false);
+  walk(root, 0, 0, false, false, null);
   return { frames, logs, maxDepth, touched: [...touched] };
 }

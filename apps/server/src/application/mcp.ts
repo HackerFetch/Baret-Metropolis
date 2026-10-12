@@ -228,10 +228,14 @@ export const MCP_TOOLS: readonly Tool[] = [
       "Returns Baret's three starting rule sets (strict, balanced, permissive) with every rule's value, so an agent can say which rules a check ran under.",
     input: z.object({}).strict(),
     inputSchema: { type: "object", additionalProperties: false, properties: {} },
-    run: async () => ({
-      text: `Rule sets: ${POLICY_TEMPLATE_NAMES.join(", ")}. Each has ${Object.keys(POLICY_TEMPLATES.balanced).length} rules.`,
-      structured: POLICY_TEMPLATES,
-    }),
+    run: async (input) => {
+      // No arguments are taken; an argument is a sign the caller meant another tool.
+      z.object({}).strict().parse(input);
+      return {
+        text: `Rule sets: ${POLICY_TEMPLATE_NAMES.join(", ")}. Each has ${Object.keys(POLICY_TEMPLATES.balanced).length} rules.`,
+        structured: POLICY_TEMPLATES,
+      };
+    },
   },
 ];
 

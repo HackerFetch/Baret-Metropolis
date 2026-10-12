@@ -49,6 +49,14 @@ export function createIndexerClient(
 
 const ACTIVITY = "id kind merchant agent amount timestamp block txHash";
 const PAYMENT = "id vault_id merchant agent amount ref timestamp block txHash";
+/**
+ * Newest first. Monad makes several blocks a second, so `timestamp` ties
+ * across blocks, and one transaction's events share a block: the block, then
+ * the log's place in it, decide. The id is `<block>-<logIndex>`, which the
+ * store compares as text ("-10" before "-9"), so `newestFirst` below settles
+ * the order once the rows are here.
+ */
+const NEWEST = "[{ block: desc }, { id: desc }]";
 
 export const QUERIES = {
   vault: `query Vault($id: String!, $limit: Int!) {
@@ -56,8 +64,8 @@ export const QUERIES = {
       id owner token agent deposited withdrawn paid paymentCount createdAtBlock
       merchants { address perTxCap hourlyCap dailyCap paused active paid paymentCount }
     }
-    VaultActivity(where: { vault_id: { _eq: $id } }, order_by: { timestamp: desc }, limit: $limit) { ${ACTIVITY} }
-    Payment(where: { vault_id: { _eq: $id } }, order_by: { timestamp: desc }, limit: $limit) { ${PAYMENT} }
+    VaultActivity(where: { vault_id: { _eq: $id } }, order_by: ${NEWEST}, limit: $limit) { ${ACTIVITY} }
+    Payment(where: { vault_id: { _eq: $id } }, order_by: ${NEWEST}, limit: $limit) { ${PAYMENT} }
   }`,
   vaultsOf: `query VaultsOf($owner: String!) {
     Vault(where: { owner: { _eq: $owner } }, order_by: { createdAtBlock: desc }) {
@@ -65,15 +73,48 @@ export const QUERIES = {
     }
   }`,
   recent: `query Recent($limit: Int!) {
-    Payment(order_by: { timestamp: desc }, limit: $limit) { ${PAYMENT} }
-    ReputationChange(order_by: { timestamp: desc }, limit: $limit) {
+    Payment(order_by: ${NEWEST}, limit: $limit) { ${PAYMENT} }
+    ReputationChange(order_by: ${NEWEST}, limit: $limit) {
       id target kind severity reasonCode timestamp block txHash
     }
   }`,
   reputation: `query Reputation($id: String!) {
     ReputationEntry(where: { id: { _eq: $id } }) { id severity reasonCode flaggedAt block txHash }
-    ReputationChange(where: { target: { _eq: $id } }, order_by: { timestamp: desc }) {
+    ReputationChange(where: { target: { _eq: $id } }, order_by: ${NEWEST}) {
       id kind severity reasonCode timestamp block txHash
     }
   }`,
 } as const;
+
+/** An indexed event row, as far as its order is concerned. */
+export interface Ordered {
+  /** `<block>-<logIndex>`. */
+  id?: unknown;
+  block?: unknown;
+  timestamp?: unknown;
+}
+
+const num = (v: unknown): bigint => {
+  if (typeof v === "bigint") return v;
+  if (typeof v === "number" && Number.isFinite(v)) return BigInt(Math.trunc(v));
+  if (typeof v === "string" && /^\d+$/.test(v)) return BigInt(v);
+  return -1n;
+};
+
+const logIndexOf = (id: unknown): bigint =>
+  typeof id === "string" ? num(id.slice(id.lastIndexOf("-") + 1)) : -1n;
+
+/**
+ * Newest first: by block, then by the event's place in the block, then by
+ * timestamp. Stable, so rows the indexer already ordered keep their order
+ * when none of the three tells them apart.
+ */
+export function newestFirst<T extends Ordered>(rows: readonly T[]): T[] {
+  const cmp = (a: bigint, b: bigint) => (a === b ? 0 : a > b ? -1 : 1);
+  return [...rows].sort(
+    (a, b) =>
+      cmp(num(a.block), num(b.block)) ||
+      cmp(logIndexOf(a.id), logIndexOf(b.id)) ||
+      cmp(num(a.timestamp), num(b.timestamp)),
+  );
+}

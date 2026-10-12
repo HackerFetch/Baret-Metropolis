@@ -1,4 +1,4 @@
-import { common, extFrame, optionsAllowances } from "@baret/content";
+import { common, extFrame, findings as findingCopy, optionsAllowances } from "@baret/content";
 import { Button, Meter, Tag, truncateAddress } from "@baret/ui";
 import { Block, Empty } from "@baret/wallet-ui/components/Block";
 import { Screen } from "@baret/wallet-ui/components/Screen";
@@ -343,10 +343,10 @@ export function Component() {
     if (!progress || !revokeLive) return;
     let alive = true;
     const ids = progress.ids;
-    void revokeLive(ids).then((closed) => {
+    void revokeLive(ids).then((result) => {
       if (!alive) return;
-      const outcome = revokeOutcome(ids, closed);
-      const open = ids.filter((id) => !closed.includes(id));
+      const outcome = revokeOutcome(ids, result);
+      const open = ids.filter((id) => !result.closed.includes(id));
       setSelected(new Set(open));
       if (outcome.kind === "done") {
         setSaid(
@@ -360,6 +360,17 @@ export function Component() {
           total: String(outcome.total),
         });
         setSaid(`${title}. ${errors.partial.body}`);
+      } else if (outcome.stop?.why === "blocked") {
+        const reason = outcome.stop.code ? findingCopy[outcome.stop.code].title : null;
+        setSaid(
+          `${errors.revokeBlocked.title}. ${
+            reason ? fill(errors.revokeBlocked.body, { reason }) : errors.revokeBlocked.bodyNoReason
+          }`,
+        );
+      } else if (outcome.stop?.why === "unreachable") {
+        setSaid(`${errors.revokeUnreachable.title}. ${errors.revokeUnreachable.body}`);
+      } else if (outcome.stop?.why === "locked") {
+        setSaid(`${errors.revokeLocked.title}. ${errors.revokeLocked.body}`);
       } else {
         setSaid(`${errors.revoke.title}. ${errors.revoke.body}`);
       }

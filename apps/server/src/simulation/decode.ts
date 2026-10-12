@@ -90,7 +90,15 @@ export async function decodeTransaction(
       throw new TxDecodeError("an unsigned transaction needs `userWallet` as its sender");
     }
     const delegations = delegationsOf(parsed);
-    if (parsed.chainId !== undefined && parsed.chainId !== chainId) {
+    // A legacy transaction with no chain id (pre-EIP-155) is valid on every
+    // chain the account has the same nonce on: once signed it can be replayed
+    // anywhere. It is not quietly taken for Monad's.
+    if (parsed.chainId === undefined) {
+      throw new TxDecodeError(
+        `the transaction names no chain id: it could be replayed on any chain, expected ${chainId}`,
+      );
+    }
+    if (parsed.chainId !== chainId) {
       throw new TxDecodeError(`signed for chain ${parsed.chainId}, expected ${chainId}`);
     }
     return {

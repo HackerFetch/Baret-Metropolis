@@ -19,11 +19,20 @@ export const extOnboarding = {
     points: [
       "Simulated before you sign",
       "A cap and a revoke button on every permission",
-      "An alert when funds move without you",
+      "Every request in one activity list",
     ],
     action: { label: "Set up Baret" },
     restore: { label: "I already have a recovery phrase" },
     footnote: "Monad testnet. Self-custody. Open source under the MIT licence.",
+  },
+
+  /** The welcome when a wallet is already made in this browser. */
+  exists: {
+    title: "Your wallet is already set up",
+    body: "A wallet exists in this browser. Open it, or finish the setup steps that are left: funds, the account check and your rules.",
+    error:
+      "A wallet already exists in this browser. Open it from the toolbar, or finish setup from the welcome.",
+    actions: { open: "Open the overview", finish: "Finish setup" },
   },
 
   restore: {
@@ -186,7 +195,7 @@ export const extOnboarding = {
       "Each request is simulated on Monad, so you see what it changes.",
       "Allowances and collection access requests are checked against your rules.",
       "Automatic payments stay inside your caps. Anything over a cap stops and asks you.",
-      "If funds leave without your signature, you get an alert.",
+      "Every request, signed or stopped, goes into your activity list with its verdict.",
       "If Baret cannot finish a check, the request is treated as Blocked.",
     ],
     suggestions: [
@@ -201,7 +210,7 @@ export const extOnboarding = {
       },
       {
         title: "Pin Baret to your toolbar",
-        body: "Browsers hide new extensions behind the extensions menu. Pinned, Baret shows its alerts at a glance.",
+        body: "Browsers hide new extensions behind the extensions menu. Pinned, Baret is one click away when a site asks you to sign.",
       },
     ],
     action: { label: "Go to the overview", href: "/" },

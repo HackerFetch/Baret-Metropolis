@@ -1,7 +1,7 @@
 import { createPublicClient, encodeFunctionData, type Hex, http, parseAbi } from "viem";
 import type { Account, Payment, Permission } from "../data/types.js";
+import { RPC_URL } from "./config.js";
 import { grantOf } from "./records.js";
-import { RPC_URL } from "./source.js";
 
 /**
  * What Monad says about the live wallet's lists now. A grant that the chain

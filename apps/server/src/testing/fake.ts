@@ -135,6 +135,10 @@ export class FakeRpc implements MonadRpc {
   async factoryVaults(_factory: Address, addresses: readonly Address[]) {
     return addresses.filter((a) => this.vaults.has(a));
   }
+  owners = new Map<string, Address>();
+  async vaultOwner(vault: Address) {
+    return this.owners.get(vault.toLowerCase()) ?? null;
+  }
   async erc20Meta(token: Address) {
     return this.meta.get(token) ?? { symbol: null, decimals: null };
   }

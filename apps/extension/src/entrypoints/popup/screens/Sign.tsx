@@ -293,7 +293,8 @@ export function SignPhase({
                   type: "send",
                   asset: current.request.values.asset ?? "MON",
                   amount: current.request.values.amount ?? "0",
-                  fee: current.request.fee,
+                  // A fee the wallet could not estimate moves nothing off the balance.
+                  fee: current.request.fee ?? "0",
                   item: row,
                 });
               } else {

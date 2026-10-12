@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Activity } from "../data/types.js";
-import { loggedRow } from "./row.js";
+import { declinedKind, loggedRow } from "./row.js";
 
 const item: Activity = {
   id: "1",
@@ -52,5 +52,14 @@ describe("the log row of a site's transaction", () => {
     expect(allowance.kind).toBe("allowance");
     expect(allowance.values).toEqual({ asset: "dUSDC" });
     expect(loggedRow(item, { approvals: [], changes: [] }, 0n).values.asset).toBe("MON");
+  });
+});
+
+describe("a refused transaction's log kind", () => {
+  it("logs a decline while Baret is unreachable as declined, never as signed unchecked", () => {
+    expect(declinedKind("unreachable")).toBe("declined");
+    expect(declinedKind("safe")).toBe("declined");
+    expect(declinedKind("caution")).toBe("declined");
+    expect(declinedKind("blocked")).toBe("blocked");
   });
 });

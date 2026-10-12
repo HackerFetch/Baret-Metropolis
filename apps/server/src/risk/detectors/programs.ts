@@ -40,8 +40,25 @@ export const programs: Detector = (ctx) => {
     }
   }
   out.push(...keptValue(ctx, unknown));
+  out.push(...callWithoutCode(ctx));
   return out;
 };
+
+/**
+ * Calldata sent to an account that has no code. The chain accepts such a
+ * call and does nothing with the data, so whatever the site says it does (a
+ * token transfer, a swap) will not happen: a wrong, stale or poisoned
+ * address. Not reported for a plain transfer (no calldata), nor for a
+ * deployment (no `to`).
+ */
+function callWithoutCode(ctx: AnalysisContext): FindingDraft[] {
+  const to = ctx.tx?.to ?? null;
+  if (!ctx.tx || !to || ctx.tx.data === "0x" || ctx.contracts.includes(to)) return [];
+  // Exactly 20 bytes is no call: an ERC-2771 forwarder relaying a plain
+  // transfer appends the signer's address to empty data (effects.ts).
+  if (ctx.tx.data.length === 42) return [];
+  return [{ code: "CALL_TO_ADDRESS_WITHOUT_CODE", values: { address: to } }];
+}
 
 /**
  * A call that pays an unknown contract and brings nothing back: the user

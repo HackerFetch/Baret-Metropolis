@@ -96,6 +96,7 @@ function Gated({ children }: { children: ReactNode }): JSX.Element | null {
   const gate = useMemo<Gate | null>(() => {
     if (!status) return null;
     return {
+      exists: status.initialized,
       // During setup there is nothing to lock yet.
       locked: status.initialized && !status.unlocked,
       lockReason: status.lockReason,
