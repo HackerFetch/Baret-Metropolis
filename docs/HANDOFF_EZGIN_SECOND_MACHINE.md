@@ -111,6 +111,8 @@ A trap from the first machine: `verify:demo --from` must be a wallet **without**
 
 **To run the simulator here:** `MONAD_TESTNET_RPC_URL=https://testnet-rpc.monad.xyz workflows/simulate.sh`; for `--broadcast` also `CRE_ETH_PRIVATE_KEY="$(cat ~/.baret/deployer.key)"`.
 
+- 2026-10-12, Chrome Web Store: the listing's answers (`docs/STORE_LISTING.md`) and the privacy policy (`docs/PRIVACY.md`) are written, and the unused `notifications` permission is out of the manifest. Ezgin submits the form by hand; E17 stays open until Google publishes.
+
 ## 7. When a task ends
 
 Each task ends with: the proof (a command and what it printed, a transaction hash), the docs named above changed in the same pull request, the task ticked in `tasks/FOR_EZGIN.md` with a one-line result, its line on the board in `docs/ROADMAP.md` updated, and a note for whoever is now unblocked. Add a dated line under the task in this file too, so the first machine's agent finds it.
