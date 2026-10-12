@@ -50,6 +50,8 @@ Machine facts that cost time on the first one and may apply here: no `jq` or Doc
 
 **Only Ezgin can:** create the npm organisation `baret` (`https://www.npmjs.com/org/create`, the free plan allows public packages) and run `npm login` in a real terminal (in Claude Code: `! npm login`).
 
+- 2026-10-12: 0.1.1 is published the same way (the READMEs on the npm pages now say how to install; `@baret/llm` has one). The next version: `docs/DEPLOYMENT.md`.
+
 **Then the agent:**
 1. `npm whoami` and `npm org ls baret` to confirm the login and the organisation.
 2. If `@baret` is taken, stop and ask Ezgin for the new scope before publishing anything: the scope then changes in every `package.json` and import of the three packages.
