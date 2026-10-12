@@ -79,10 +79,13 @@ export function Locked({
           <p className={T.body}>{locked.expired.unsent}</p>
         </div>
       ) : null}
+      {/* Once declined, the "waiting for your answer" line gives way to the answer below. */}
       {request ? (
-        <p className={`${T.body} [overflow-wrap:anywhere]`}>
-          {origin ? fill(locked.requestFrom, { origin }) : locked.request}
-        </p>
+        declined ? null : (
+          <p className={`${T.body} [overflow-wrap:anywhere]`}>
+            {origin ? fill(locked.requestFrom, { origin }) : locked.request}
+          </p>
+        )
       ) : expiredAt ? null : (
         <p className={T.body}>{locked.body}</p>
       )}

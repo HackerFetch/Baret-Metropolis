@@ -17,7 +17,10 @@ import { KIMI, LlmClient, type LlmProvider } from "@baret/llm";
  * Rules from a sentence (KIMI). The model only proposes: every change is
  * checked against the policy schema here, the merged rule set is checked
  * again, and a change that allows more than the current rules is marked
- * `loosens` so the screen leaves it unticked. Nothing is applied by the server.
+ * `loosens` so the screen leaves it unticked. The returned `policy` is never
+ * looser than the current one: a loosening change is listed in `changes` for
+ * the person to tick and in `refused` with its reason, and is not applied.
+ * Nothing is applied by the server.
  */
 
 export interface PolicyDrafter {
@@ -222,11 +225,18 @@ export function loosens(field: GuardPolicyField, from: unknown, to: unknown): bo
   }
 }
 
+/** The reason a loosening change carries in `refused`. */
+export const LOOSENS_REASON =
+  "allows more than the current rule; proposed only, not applied to the returned policy";
+
 /**
  * Checks the model's answer against the schema and merges it over `current`.
  * A field the schema does not know, a value it refuses, or a second change to
  * the same field goes to `refused`; a change to the value already set is
- * dropped. The merged rules are validated again (fail-closed: they throw).
+ * dropped. A change that loosens a rule stays in `changes` (marked `loosens`)
+ * and is listed in `refused` too, but is not merged: the returned `policy` is
+ * never looser than `current`. The merged rules are validated again
+ * (fail-closed: they throw).
  */
 export function buildPolicyDraft(
   answer: PolicyDraftModelAnswer,
@@ -271,14 +281,13 @@ export function buildPolicyDraft(
     const from = current[field as GuardPolicyField];
     const to = parsed.data;
     if (JSON.stringify(from) === JSON.stringify(to)) continue;
-    merged[field] = to;
-    changes.push({
-      field,
-      from,
-      to,
-      why: change.why,
-      loosens: loosens(field as GuardPolicyField, from, to),
-    });
+    const looser = loosens(field as GuardPolicyField, from, to);
+    if (looser) {
+      refused.push({ field, reason: LOOSENS_REASON });
+    } else {
+      merged[field] = to;
+    }
+    changes.push({ field, from, to, why: change.why, loosens: looser });
   }
 
   const whole = guardPolicySchema.safeParse(merged);

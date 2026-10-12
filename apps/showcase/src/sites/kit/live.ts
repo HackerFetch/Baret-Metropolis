@@ -104,6 +104,66 @@ export function shortAddress(address: string): string {
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 /**
+ * The asset of a balance change, read loosely: the server may name kinds
+ * the client's contract does not know yet (an ERC-721 piece with its token
+ * id), and an unknown kind still has to render rather than throw.
+ */
+interface LooseAsset {
+  readonly kind?: unknown;
+  readonly address?: unknown;
+  readonly symbol?: unknown;
+  readonly decimals?: unknown;
+  readonly tokenId?: unknown;
+}
+
+/**
+ * One change's amount and unit. A piece (kind "erc721") is counted, never
+ * divided: "1 NIGHT #42" in or out, so a mint shows the piece arriving.
+ * Everything else is a token amount in display units.
+ */
+export function changeOf(abs: bigint, asset: LooseAsset): { value: string; unit: string } {
+  const symbol = typeof asset.symbol === "string" ? asset.symbol : "";
+  const address = typeof asset.address === "string" ? asset.address : null;
+  const name = symbol || (address ? shortAddress(address) : "");
+  if (asset.kind === "erc721") {
+    const id =
+      typeof asset.tokenId === "string" && asset.tokenId !== "" ? ` #${asset.tokenId}` : "";
+    return { value: abs.toString(), unit: `${name}${id}` };
+  }
+  const decimals = typeof asset.decimals === "number" && asset.decimals >= 0 ? asset.decimals : 0;
+  return { value: displayAmount(abs, decimals), unit: name };
+}
+
+/** Severity order for the panel: the finding that decides the verdict reads first. */
+const SEVERITY_RANK: Readonly<Record<string, number>> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+/**
+ * Findings with the blocking ones first, then by severity, else in the
+ * server's order. The server lists them in detector order, which can put the
+ * one reason for Blocked under two cards that block nothing.
+ */
+export function orderFindings<
+  F extends { readonly blocking?: boolean; readonly severity?: string },
+>(list: readonly F[]): F[] {
+  return list
+    .map((finding, index) => ({ finding, index }))
+    .sort((a, b) => {
+      const blocking = Number(b.finding.blocking === true) - Number(a.finding.blocking === true);
+      if (blocking !== 0) return blocking;
+      const severity =
+        (SEVERITY_RANK[b.finding.severity ?? ""] ?? 0) -
+        (SEVERITY_RANK[a.finding.severity ?? ""] ?? 0);
+      return severity !== 0 ? severity : a.index - b.index;
+    })
+    .map((entry) => entry.finding);
+}
+
+/**
  * AnalyzeResponse to what the panel reads. Only the visitor's own balance
  * changes and allowances are shown: that is the "What changes" a wallet
  * would show before signing. A token with no symbol is named by its
@@ -118,13 +178,7 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
       const delta = BigInt(c.delta);
       if (delta === 0n) return [];
       const abs = delta < 0n ? -delta : delta;
-      return [
-        {
-          direction: delta < 0n ? "out" : "in",
-          value: displayAmount(abs, c.asset.decimals),
-          unit: c.asset.symbol || (c.asset.address ? shortAddress(c.asset.address) : ""),
-        } as const,
-      ];
+      return [{ direction: delta < 0n ? "out" : "in", ...changeOf(abs, c.asset) } as const];
     });
 
   const approvals: CheckApproval[] = response.approvals
@@ -142,7 +196,7 @@ export function fromAnalyzeResponse(response: AnalyzeResponse, wallet: string): 
   return {
     source: "live",
     verdict: response.decision,
-    findings: response.findings.map((f) => ({
+    findings: orderFindings(response.findings).map((f) => ({
       code: f.code,
       values: f.values,
       ...(f.details ? { details: f.details } : {}),

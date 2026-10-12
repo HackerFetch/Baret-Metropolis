@@ -155,6 +155,8 @@ export interface Live {
   refresh(): Promise<void>;
   /** Builds a transfer and asks Baret about it. */
   transfer(asset: Asset, amount: string, recipient: string): Promise<LiveRequest>;
+  /** True when code is deployed at `address`; null when Monad did not answer. */
+  hasCode(address: string): Promise<boolean | null>;
   /**
    * Asks Baret about a call a site sent (request/siteRequest.tsx); `origin`
    * is the site as the browser reports it.
@@ -326,9 +328,12 @@ function statusWith(
   return ref.current;
 }
 
-/** The most the network may charge for the call, in MON; "0" when it cannot be estimated. */
-async function feeOf(from: string | undefined, call: WalletCall): Promise<string> {
-  if (!from) return "0";
+/**
+ * The most the network may charge for the call, in MON; null when it cannot
+ * be estimated (the call reverts), so the screen says so instead of 0.00.
+ */
+async function feeOf(from: string | undefined, call: WalletCall): Promise<string | null> {
+  if (!from) return null;
   try {
     const { createWalletChain } = await import("@baret/wallet-core");
     const tx = await chainOf(createWalletChain).prepare(from as `0x${string}`, call);
@@ -342,7 +347,21 @@ async function feeOf(from: string | undefined, call: WalletCall): Promise<string
     return fromUnits(gas * price, 18, { min: 2, max: 6 });
   } catch {
     // A call that cannot be estimated reverts; Baret's check will say why.
-    return "0";
+    return null;
+  }
+}
+
+/**
+ * Whether code is deployed at `address` (eth_getCode), for the Send form's
+ * contract warning; null when the RPC did not answer, so the form can say it
+ * could not check rather than stay quiet.
+ */
+async function hasCode(address: string): Promise<boolean | null> {
+  try {
+    const { createWalletChain } = await import("@baret/wallet-core");
+    return await chainOf(createWalletChain).hasCode(address as `0x${string}`);
+  } catch {
+    return null;
   }
 }
 
@@ -1076,6 +1095,7 @@ export function LiveProvider({ children }: { children: ReactNode }): JSX.Element
       expiredAt,
       refresh,
       transfer,
+      hasCode,
       siteRequest,
       siteTyped,
       signTyped,

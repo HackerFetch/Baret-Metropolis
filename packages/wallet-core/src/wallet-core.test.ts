@@ -187,6 +187,7 @@ function setup(answer: AnalyzeResponse) {
       return keccak256(raw);
     },
     wait: async (hash) => ({ hash, ok: true, block: 1n, fee: 1n }),
+    hasCode: async () => false,
   };
   const session = new WalletSession(PRF);
   const wallet = new Wallet({

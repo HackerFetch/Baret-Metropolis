@@ -3,7 +3,7 @@ import type { CheckResult, CheckSource } from "@baret/web-ui/lib/check-types";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Address } from "viem";
-import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
+import { DEMO_CHECK_FROM, isDemoAddress } from "./wallet/useDemoWallet.js";
 
 /**
  * The panel's state: idle, then a walk through the analysis phases, then the
@@ -47,6 +47,16 @@ export function demoInput<I extends FromInput>(input: I): I {
  */
 function noAddress(input: unknown): input is FromInput {
   return typeof input === "object" && input !== null && "from" in input && input.from === null;
+}
+
+/** Whether a site's input simulates from Baret's demo account (no wallet, DEMO_FROM set). Pure, exported for tests. */
+export function fromDemo(input: unknown): boolean {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "from" in input &&
+    isDemoAddress((input as { from: unknown }).from as Address | null)
+  );
 }
 
 /** Whether "Check it live" is offered: a sample answer to an input with no address. */
@@ -109,7 +119,8 @@ export function useCheck<I>(
     [reduce, steps, source, stop],
   );
 
-  const start = useCallback((input: I) => begin(input, false), [begin]);
+  // A site with no wallet simulates from the demo account: the answer is marked so the panel says it.
+  const start = useCallback((input: I) => begin(input, fromDemo(input)), [begin]);
 
   const checkLive = useCallback(() => {
     const input = last.current;

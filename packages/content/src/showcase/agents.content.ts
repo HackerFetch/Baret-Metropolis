@@ -76,7 +76,7 @@ export const agents = {
     items: [
       {
         title: "The check",
-        body: "Baret simulates the transaction over Alchemy RPC without sending it. Nine detectors read the result. Your policy decides what blocks.",
+        body: "Baret simulates the transaction against live Monad state without sending it, reading the chain over Alchemy's Monad RPC. Nine detectors read the result. Your policy decides what blocks.",
         points: [
           "Simulate on Monad",
           "Run nine detectors",
@@ -86,7 +86,7 @@ export const agents = {
       },
       {
         title: "The guarded signer",
-        body: "Asks Baret first and signs only what Baret clears. The HTTP API is live. The TypeScript SDK and the CLI work today from a clone of the repository, not yet from npm.",
+        body: "Asks Baret first and signs only what Baret clears. The HTTP API is live. The TypeScript SDK and the CLI are on npm: npm i @baret/agent-kit.",
         points: [
           "HTTP API, works today",
           "TypeScript SDK (@baret/agent-kit), works today",
@@ -167,8 +167,15 @@ export const agents = {
     reasons: {
       SCAMSNIFFER_BLACKLIST:
         "it is on ScamSniffer's public blacklist, written to Monad by Baret's Chainlink CRE workflow",
+      NOVASWAP_LOOKALIKE_DRAINER:
+        "it is the NovaSwap look-alike router that takes every allowed dUSDC and pays nothing back, reported by Baret for the showcase",
+      DEMO_DRAINER:
+        "it is the spender and operator behind the ClaimHub and PixelDrop attacks, which drains tokens and whole collections, reported by Baret for the showcase",
+      DRAINER_SINK:
+        "it is the address where the showcase drainers send what they take, reported by Baret for the showcase",
     },
-    otherReason: "it was flagged with code {code}",
+    /** A code the map does not know, written out in words ({reason} is the code in lower case with spaces). */
+    otherReason: "it was flagged for {reason}",
     view: "View the transaction that wrote it",
     clear:
       "This address is not on Baret's registry. The registry holds only part of ScamSniffer's blacklist, so this does not mean the address is clean. Baret still checks every transaction against your rules.",
@@ -239,7 +246,7 @@ export const agents = {
       {
         short: "Install",
         title: "Install the kit",
-        body: "Clone the repository and run pnpm install. @baret/agent-kit and the baret CLI then work from the workspace, and any language can call the HTTP API.",
+        body: "Run npm install @baret/agent-kit. The package brings @baret/guard and the baret CLI with it, and any language can call the HTTP API.",
       },
       {
         short: "Policy",
@@ -287,23 +294,36 @@ export const agents = {
     sdk: {
       title: "TypeScript",
       before:
-        "Wrap the signer, then send the way you already do. Works today, from the npm package, and asks the live Baret API.",
+        "Wrap the signer, then send the way you already do. Works today, from the npm package, and asks the live Baret API. Save it as quickstart.ts and set RECIPIENT to the address your agent pays. Set BARET_AGENT_PRIVATE_KEY to a funded Monad testnet key, then run: npx tsx quickstart.ts",
       code: [
         'import { AgentWallet, localSigner } from "@baret/agent-kit";',
-        'import { type Hex, parseEther } from "viem";',
+        'import { type Hex, isHex, parseEther } from "viem";',
         "",
-        "const agent = new AgentWallet({",
-        "  signer: localSigner(process.env.BARET_AGENT_PRIVATE_KEY as Hex),",
-        '  baretUrl: "https://baret-monad-api.onrender.com",',
-        '  rpcUrl: "https://testnet-rpc.monad.xyz",',
-        '  policyTemplate: "balanced",',
-        "});",
+        'const RECIPIENT = "0x0000000000000000000000000000000000000000" as Hex;',
+        'if (RECIPIENT === "0x0000000000000000000000000000000000000000") {',
+        '  throw new Error("Set RECIPIENT to the address your agent pays.");',
+        "}",
         "",
-        "const { hash } = await agent.guardedSubmit({",
-        '  to: "0x...",',
-        '  value: parseEther("0.1"),',
+        "async function main(): Promise<void> {",
+        "  const key = process.env.BARET_AGENT_PRIVATE_KEY;",
+        '  if (!isHex(key)) throw new Error("Set BARET_AGENT_PRIVATE_KEY to a funded testnet key.");',
+        "  const agent = new AgentWallet({",
+        "    signer: localSigner(key as Hex),",
+        '    baretUrl: "https://baret-monad-api.onrender.com",',
+        '    rpcUrl: "https://testnet-rpc.monad.xyz",',
+        '    policyTemplate: "balanced",',
+        "  });",
+        "  const { hash } = await agent.guardedSubmit({",
+        "    to: RECIPIENT,",
+        '    value: parseEther("0.01"),',
+        "  });",
+        '  console.log("sent", hash);',
+        "}",
+        "",
+        "main().catch((error) => {",
+        "  console.error(error instanceof Error ? error.message : error);",
+        "  process.exit(1);",
         "});",
-        'console.log("sent", hash);',
       ],
       after:
         "A Blocked answer, or a Caution unless allowCaution is set, throws GuardBlockedError. The key never signed, so there is nothing to undo.",
@@ -311,16 +331,16 @@ export const agents = {
     cli: {
       title: "Any language",
       before:
-        "Settings come from the environment or packages/agent-kit/.env, never from flags, so a key never lands in shell history. Works today, from a clone of the repository.",
+        "Settings come from the environment, never from flags, so a key never lands in shell history. Works today, from npm: npx baret.",
       code: [
-        "# packages/agent-kit/.env (git-ignored), read by the baret script:",
-        "# BARET_AGENT_PRIVATE_KEY=0x...",
-        "cd packages/agent-kit",
+        "npm install @baret/agent-kit",
+        "# a funded Monad testnet key; from a clone, packages/agent-kit/.env works too",
+        "export BARET_AGENT_PRIVATE_KEY=0x...",
         "export BARET_POLICY_TEMPLATE=balanced",
         "",
-        "pnpm baret address    # prints the agent address",
-        "pnpm baret analyze --to 0x... --value 100000000000000000",
-        "pnpm baret submit --to 0x... --value 100000000000000000",
+        "npx baret address    # prints the agent address",
+        "npx baret analyze --to 0x... --value 100000000000000000",
+        "npx baret submit --to 0x... --value 100000000000000000",
       ],
       after:
         "Exit 0 means Baret cleared it (for submit, it was also sent). Exit 1 means Baret did not clear it, or Qwen vetoed it when QWEN_API_KEY is set, and nothing was signed. Exit 2 means anything else went wrong, such as Baret not answering.",
@@ -500,7 +520,7 @@ export const agents = {
     /** Not rendered on /agents since 2026-10-03. */
     eyebrow: "Playground",
     title: "Watch an agent ask first.",
-    body: "Pick something an agent might try and a starting policy. The playground shows what your agent would get back for a prepared example.",
+    body: "Pick something an agent might try and a starting policy. The playground asks Baret's live API from a funded testnet agent and shows what your agent gets back.",
     picker: {
       label: "What the agent tries",
       items: {
@@ -564,7 +584,7 @@ export const agents = {
       safe: ["baret > Safe. No rule broken.", "agent > signing and sending."],
       caution: [
         "baret > Caution. {count} findings, no rule broken.",
-        "agent > signing and logging the findings.",
+        "agent > refusing to sign: Caution needs allowCaution. transaction dropped.",
       ],
       /** The first caution line when there is exactly one finding. */
       cautionOne: "baret > Caution. {count} finding, no rule broken.",
@@ -624,7 +644,7 @@ export const agents = {
         body: "The check did not run, so your agent would sign nothing. Try again in a moment.",
       },
     },
-    note: "To check a real transaction, start the server locally and post it to /v1/analyze, as the HTTP API sample shows.",
+    note: "To check your own transaction, paste it below, or post it to the live API at /v1/analyze as the HTTP API sample shows.",
     /** Shown only when this build sends live checks to the server. */
     liveNote:
       "Every check here, the eight actions and a pasted transaction alike, goes to the same /v1/analyze endpoint, on a rate-limited testnet server.",
@@ -697,7 +717,7 @@ export const agents = {
 
   cta: {
     title: "Your agent stops instead of signing blind.",
-    body: "Pick a policy and call the HTTP API today, or use the SDK and the CLI from a clone of the repository. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
+    body: "Pick a policy and call the HTTP API today, or use the SDK and the CLI from npm. A transaction that breaks your rules ends as an error in your logs, not as a signature.",
     actions: {
       primary: { label: "Read the quickstart", href: "#quickstart" },
       secondary: { label: "Read the vault spec", href: "/docs#contracts-and-payments" },

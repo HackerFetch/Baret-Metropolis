@@ -15,9 +15,12 @@ import { PlainWords } from "@baret/web-ui/components/PlainWords";
 import { StaggerItem } from "@baret/web-ui/components/Reveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
+import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useLayoutEffect, useRef } from "react";
 import type { ImgAsset } from "../../shared/assets.js";
+import { shortAddress } from "./live.js";
 import type { CheckState } from "./useCheck.js";
+import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
 
 /**
  * Baret's panel on top of a demo dApp. It opens when the site's main button
@@ -127,7 +130,9 @@ export function AnalysisPanel({
           {/* A visitor with no wallet can still ask Baret's server: the same
               request from a demo address, labelled as such. */}
           {state.phase === "done" && state.demo ? (
-            <p className={`${T.small} text-[color:var(--fg)]`}>{panel.checkLive.note}</p>
+            <p className={`${T.small} text-[color:var(--fg)]`}>
+              {fill(panel.checkLive.note, { address: shortAddress(DEMO_CHECK_FROM) })}
+            </p>
           ) : null}
           {state.phase === "done" && state.checkLive ? (
             <div className="flex">

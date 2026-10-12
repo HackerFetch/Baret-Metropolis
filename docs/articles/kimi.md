@@ -6,7 +6,7 @@ status: draft for H12, publish on dev.to / Medium / Mirror and put the link in t
 
 # The model that is not allowed to decide: KIMI inside a transaction firewall on Monad
 
-Every wallet asks you the same question before it signs: *do you approve this?* And almost every wallet gives you the same material to answer it with: a contract address, a function name and a blob of hex. Most people press Approve because there is nothing else to do. One unlimited allowance to the wrong address later, the money is gone.
+A wallet asks you the same question before it signs: *do you approve this?* A wallet tells you what you are about to sign, not what will change once it lands. Most people press Approve because there is nothing else to do. One unlimited allowance to the wrong address later, the money is gone.
 
 We built **Baret** for the Monad Metropolis hackathon: a pre-sign check that any wallet, dapp or AI agent calls before a transaction is signed. Baret simulates the transaction on Monad, runs it through its risk detectors, applies the user's own policy and returns **Safe**, **Caution** or **Blocked**, with the reasons.
 
@@ -26,23 +26,23 @@ The last line is enforced in code as well as stated on screen. The explain route
 
 ## What it looks like
 
-On the live demo, the NovaSwap site asks you to "enable dUSDC trading". The real request is an unlimited dUSDC allowance to a look-alike router that is on Baret's reputation registry. With no wallet connected, Baret's panel checks the request live and shows:
+On the live demo, the NovaSwap site asks you to "enable dUSDC trading". The real request is an unlimited dUSDC allowance to a look-alike router that is on Baret's reputation registry. With no wallet connected, Baret's panel checks the request live from a demo account and shows (captured on the live site on 12 October 2026):
 
 - **Live verdict: Blocked.** Its findings include an unlimited allowance and an address on a blocklist.
 - Under them, **In plain words**, KIMI's version:
 
-> **Blocked: this request would give a blocklisted address unlimited access to your dUSDC and drain your MON**
+> **Blocked: this transaction would give a blocklisted address unlimited access to your dUSDC**
 >
-> Baret will not let you sign this. It asks for an unlimited allowance over your dUSDC to an address that is on a blocklist for past theft, and the simulation shows you would end with 0 MON, breaking your own rules. It would also cost far more than the loss limit you set.
+> Baret will not let this transaction be signed. The address asking for permission, 0xeB9E...3888, is on a blocklist of addresses tied to theft, and the transaction would grant it an unlimited allowance over your dUSDC. Both findings break your own rules, and either one alone is enough to block.
 >
-> - 0xeB9E…3888 is on a blocklist of addresses tied to theft, so anything you give it may be gone for good.
-> - It asks for unlimited access to your dUSDC, including any you receive later, until you revoke it.
-> - You would be left with 0 MON, below the 0.1 MON minimum your rules require to keep the account usable.
-> - The estimated loss is 552.1% of your balance, while your rules allow at most 50%.
+> - 0xeB9E...3888 is on a blocklist, meaning it has been linked to theft before; anything you give it may be gone for good.
+> - The transaction asks for an unlimited allowance, so this address could take all of your dUSDC now and any you receive later, until you revoke it.
+> - The only balance change in the simulation is a small amount of MON leaving your account 0x5aE1...8197, so the real danger is the permission, not an immediate transfer.
+> - Your rules blockUnlimitedApprovals and blockKnownMalicious both fired.
 >
-> Decline this request, and only proceed with a project you have independently verified, approving just the amount needed.
+> Decline this request, and only reconsider if you have confirmed the address directly with the project and the approval is limited to the exact amount needed.
 
-That is the same information as the findings, put in the order a person reads it: what happens, why it is dangerous, what to do. It adds that you would be left with 0 MON, below the floor your rules require.
+That is the same information as the findings, put in the order a person reads it: what happens, why it is dangerous, what to do. It adds the point the raw findings do not make: nothing moves today except the fee, and the danger is the permission itself. The model's words change a little from run to run; the verdict above them does not.
 
 The same block appears in the Baret wallet's own sign window, where a site's request is checked before the user can sign.
 
@@ -50,13 +50,15 @@ The same block appears in the Baret wallet's own sign window, where a site's req
 
 A pre-sign warning has to be read by the person signing, in their language. The block has a language switch: **English, Turkish and Chinese**. Each language is a fresh call with the same `requestId`, so all three explain the same stored verdict:
 
-> **Engellendi: bu işlem hem bilinen kötü niyetli bir adrese sınırsız izin veriyor hem de kendi belirlediğiniz limitleri aşıyor**
+> **Baret bu işlemi engelledi: 0xeB9E...3888 engelli listesinde ve sınırsız dUSDC izni istiyor**
 >
-> Baret bu işlemi imzalatmıyor. İşlem, dolandırıcılıkla ilişkilendirilmiş bir adrese dUSDC bakiyenizin tamamını (gelecekte alacaklarınız dahil) alma yetkisi veriyor. Ayrıca simülasyona göre bakiyeniz %552.1'i kadar kayıp oluşturuyor ve işlem sonrası hiç MON kalmıyor; kendi kurallarınız en fazla %50 kayba ve en az 0.1 MON kalmasına izin veriyor.
+> Bu işlem, daha önce hırsızlıkla bağlantılı olduğu için engelli listesinde bulunan 0xeB9E...3888 adresine tüm dUSDC bakiyenizi sınırsız olarak çekme yetkisi veriyor. Bu izin hiç bitmez; adres gelecekte cüzdanınıza girecek dUSDC'leri bile alabilir. Baret kendi kurallarınız (sınırsız izinleri ve kötü amaçlı adresleri engelleme) nedeniyle bu işlemin imzalanmasına izin vermiyor.
 >
-> **已阻止：这笔交易要把 dUSDC 的无限授权给一个在黑名单上的地址**
+> **已阻止: 此交易要把您的 dUSDC 无限授权给一个已被列入黑名单的地址**
 >
-> Baret 已阻止这笔交易，它不会被签名。收款地址 0xeB9E…3888 在黑名单上，曾被关联盗窃行为，而这笔交易会给它对你全部 dUSDC 的无限授权。模拟还显示它会花掉你余额的 552.1%，远超过你设定的 50% 上限，并且会让账户里的 MON 归零。
+> Baret 已阻止此交易, 不会让您签名。它请求授权 0xeB9E...3888 取走您全部(包括未来的)dUSDC, 而这个地址已在恶意地址名单上, 曾与盗窃有关。此交易还会花费约 0.0054 个 MON。
+
+Both captured from the live site on 12 October 2026, in the same session as the English text above.
 
 We checked on the live site that switching languages never touches the verdict: it reads Blocked through every switch. On a run against a local server on 9 October, the verdict came back in 817 ms; the English explanation took 11.5 s, Turkish 15.0 s and Chinese 24.6 s; switching back to a language already written came from cache in 16 ms. The verdict never waits for the model. It is on screen first, and the plain words fill in under it.
 

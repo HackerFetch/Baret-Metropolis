@@ -12,11 +12,18 @@ export default defineConfig({
     port: 5180,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        // BARET_API_URL points the dev proxy at another local API (a second port).
+        target: process.env.BARET_API_URL ?? "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
-  build: { target: "baseline-widely-available", sourcemap: true },
+  build: {
+    target: "baseline-widely-available",
+    // A security product does not publish its source: same rule as the
+    // showcase. BARET_SOURCEMAPS=1 writes hidden maps (no sourceMappingURL
+    // comment) for a local look at a stack trace.
+    sourcemap: process.env.BARET_SOURCEMAPS === "1" ? "hidden" : false,
+  },
 });

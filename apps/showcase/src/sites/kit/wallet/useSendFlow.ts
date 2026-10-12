@@ -91,9 +91,16 @@ export function finished(state: FlowState, after: bigint | null): FlowState {
   return { ...state, phase: "done", after };
 }
 
+/** How one step reaches a wallet: the injected provider by default, else the Baret window (baretSend.ts). */
+export type Sender = (call: SendCall, index: number) => Promise<Hex>;
+
 export function useSendFlow(): {
   state: FlowState;
-  run: (calls: readonly SendCall[], track?: { token: Address; owner: Address }) => Promise<boolean>;
+  run: (
+    calls: readonly SendCall[],
+    track?: { token: Address; owner: Address },
+    send?: Sender,
+  ) => Promise<boolean>;
   reset: () => void;
 } {
   const [state, setState] = useState<FlowState>(IDLE);
@@ -110,6 +117,7 @@ export function useSendFlow(): {
     async (
       calls: readonly SendCall[],
       track?: { token: Address; owner: Address },
+      send: Sender = sendCall,
     ): Promise<boolean> => {
       latest.current += 1;
       const id = latest.current;
@@ -135,7 +143,7 @@ export function useSendFlow(): {
           set(asking(flow, i));
           let hash: Hex;
           try {
-            hash = await sendCall(call);
+            hash = await send(call, i);
           } catch (error) {
             if (current()) set(stopped(flow, i, sendErrorOf(error)));
             return false;

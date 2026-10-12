@@ -2,7 +2,7 @@ import type { history } from "@baret/content";
 import { describe, expect, it } from "vitest";
 import { groups } from "../lib/address.js";
 import { matches, rowText, toCsv } from "./activity.js";
-import { amount, fromUnits, toUnits } from "./format.js";
+import { amount, day, fromUnits, toUnits, when } from "./format.js";
 import { changedFields, decide, fromTemplate } from "./rules.js";
 import { ACCOUNT, ACTIVITY, ADDRESS, POLICY, SIGN_REQUESTS, VAULT } from "./sample.js";
 import { free, initialState, reduce, reserved } from "./store.js";
@@ -213,5 +213,23 @@ describe("the activity log", () => {
       "6f21",
       "c21e",
     ]);
+  });
+});
+
+describe("dates", () => {
+  it("prints a row in the reader's own zone, and in a named zone on request", () => {
+    const iso = "2026-10-11T21:53:00Z";
+    expect(when(iso, "UTC")).toBe("11 Oct, 21:53");
+    expect(when(iso, "Europe/Istanbul")).toBe("12 Oct, 00:53");
+    expect(day(iso, "UTC")).toBe("11 Oct 2026");
+    // No zone: the browser's own, the same one the session line uses.
+    const local = new Date(iso);
+    const expected = new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(local);
+    expect(when(iso)).toBe(expected);
   });
 });

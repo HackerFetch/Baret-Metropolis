@@ -62,6 +62,8 @@ export const review = {
     baretStopped: "Baret did not clear this call, so the model is not asked. Nothing is signed.",
     findings: "{count} findings",
     plan: "The plan",
+    /** Under the plan: the model the answer names. {name} is its id (qwen3.8-max), {provider} its maker (qwen). */
+    model: "Reviewed by {provider} {name}, as the answer reports it.",
     tools: "Tool calls",
     toolOk: "ok",
     toolError: "error",

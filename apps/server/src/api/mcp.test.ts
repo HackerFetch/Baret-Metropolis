@@ -189,4 +189,35 @@ describe("the MCP endpoint", () => {
     const templates = await call("policy_templates", {});
     expect(Object.keys(templates.structuredContent)).toEqual(["strict", "balanced", "permissive"]);
   });
+
+  it("answers a body that is not JSON as a JSON-RPC parse error", async () => {
+    const { app } = await client();
+    const res = await app.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: { "content-type": "application/json" },
+      payload: "not json",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({
+      jsonrpc: "2.0",
+      id: null,
+      error: { code: -32700, message: expect.stringMatching(/^Parse error/) },
+    });
+    // The other routes keep the framework's own answer for bad JSON.
+    const analyze = await app.inject({
+      method: "POST",
+      url: "/v1/analyze",
+      headers: { "content-type": "application/json" },
+      payload: "not json",
+    });
+    expect(analyze.statusCode).toBe(400);
+    expect(analyze.json().error).toBe("invalid_request");
+  });
+
+  it("refuses arguments policy_templates does not take", async () => {
+    const { rpc } = await client();
+    const res = await rpc("tools/call", { name: "policy_templates", arguments: { x: 1 } });
+    expect(res.body.result.isError).toBe(true);
+  });
 });

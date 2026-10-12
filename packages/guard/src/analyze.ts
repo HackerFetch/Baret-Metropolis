@@ -137,11 +137,14 @@ export const firedRuleSchema = z
 
 export const assetRefSchema = z
   .object({
-    kind: z.enum(["native", "erc20"]),
+    /** erc721: one collectible; `decimals` is 0 and the change's delta is 1 or -1. */
+    kind: z.enum(["native", "erc20", "erc721"]),
     /** Null for MON. */
     address: address.nullable(),
     symbol: z.string(),
     decimals: z.number().int().nonnegative(),
+    /** erc721 only: the piece, when the simulation named it. Shown as "1 SYMBOL #tokenId". */
+    tokenId: z.string().regex(/^\d+$/).optional(),
   })
   .strict();
 

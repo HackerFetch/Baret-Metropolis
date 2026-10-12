@@ -70,6 +70,11 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
   const body =
     source === "store" ? copy.store.body : source === "zip" ? download.body : download.pending.body;
 
+  // A phone loads no extension: the web wallet is the way in, and the desktop
+  // builds stay as quiet links for a visitor who comes back on a computer.
+  const phone = browser === "phone";
+  const leadHref = lead.store ?? lead.href;
+
   return (
     <PageHero
       title={hero.title}
@@ -79,14 +84,45 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
           <p className={`${T.small} w-full min-h-[2lh] text-[color:var(--fg)] md:min-h-[1lh]`}>
             {(source === "source" ? hero.detectedPending : hero.detected)[browser]}
           </p>
-          {action}
+          {phone ? (
+            <LinkButton
+              href={hero.phone.action.href}
+              label={hero.phone.action.label}
+              variant="primary"
+              size="lg"
+              icon="arrow-up-right"
+              fullOnPhone
+              newTab
+            />
+          ) : (
+            action
+          )}
         </>
       }
       after={
         <div className="grid gap-3 border-t border-[color:var(--rule)] pt-4">
-          <p className={`${T.small} max-w-[56ch]`}>{body}</p>
+          <p className={`${T.small} max-w-[56ch]`}>{phone ? hero.phone.body : body}</p>
           <Meta id={lead.id} />
-          {source !== "source" && otherHref ? (
+          {phone ? (
+            <p className={T.small}>
+              {hero.phone.desktop}{" "}
+              {[lead, other]
+                .filter((build) => (build.store ?? build.href) !== null)
+                .map((build, i) => (
+                  <span key={build.id}>
+                    {i > 0 ? ", " : null}
+                    <a
+                      href={build.store ?? build.href ?? ""}
+                      rel="noreferrer"
+                      className="font-medium text-[color:var(--fg)] underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]"
+                    >
+                      {build.title}
+                    </a>
+                  </span>
+                ))}
+              {leadHref === null && otherHref === null ? download.pending.action.label : null}
+            </p>
+          ) : source !== "source" && otherHref ? (
             <p className={T.small}>
               {download.other}{" "}
               <a

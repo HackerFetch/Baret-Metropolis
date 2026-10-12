@@ -167,6 +167,20 @@ export const optionsAllowances = {
       body: "The transaction was not confirmed, so the permission is still active. Try again.",
       action: { label: "Try again" },
     },
+    revokeBlocked: {
+      title: "Baret stopped this revoke",
+      body: "Its check found: {reason}. Nothing was sent, so the permission is still active.",
+      bodyNoReason:
+        "Its check did not clear the transaction. Nothing was sent, so the permission is still active.",
+    },
+    revokeUnreachable: {
+      title: "Baret could not be reached",
+      body: "The revoke was not checked, so nothing was sent and the permission is still active. Try again in a moment.",
+    },
+    revokeLocked: {
+      title: "The wallet is locked",
+      body: "Nothing was sent, so the permission is still active. Unlock the wallet and try again.",
+    },
     partial: {
       title: "{count} of {total} revoked",
       body: "The rest were declined or failed, so they are still active. They stay selected for another try.",
@@ -175,7 +189,7 @@ export const optionsAllowances = {
 
   help: {
     title: "Why this page exists",
-    body: "Most wallets never show a permission again after you grant it. A forgotten allowance can be used months later, with no new signature from you. Here each one this wallet signed has a revoke button.",
+    body: "A permission stays in force after you grant it, and a forgotten allowance can be used months later with no new signature from you. Baret keeps each one this wallet signed in view, with a revoke button.",
     exposure:
       "Exposure is the most a permission can take right now. An allowance with no limit counts as your whole balance of that token.",
   },

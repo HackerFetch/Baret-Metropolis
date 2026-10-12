@@ -42,7 +42,7 @@ export const claimhub = {
       "An airdrop page with a countdown and an eligibility check. In the attack version, the claim button asks for an unlimited allowance that lets a stranger take your USDC.",
     watchFor: [
       "An unlimited allowance on your USDC",
-      "A spender on the Baret blocklist",
+      "A spender on Baret's reported list",
       "A claim where no tokens arrive",
     ],
     threatClass: "drainer",
@@ -201,7 +201,7 @@ export const claimhub = {
         call: "approve(spender, unlimited)",
         expected: "blocked",
         expectedBody:
-          "Balanced rules block unlimited allowances, so that rule should fire. For this demo, the spender is also on the Baret blocklist.",
+          "Balanced rules block unlimited allowances, so that rule should fire. For this demo, the spender is also on Baret's reported list.",
       },
     },
     claims: [

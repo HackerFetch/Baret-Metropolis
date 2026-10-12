@@ -107,7 +107,7 @@ Filed by Hale as P1 for Meriç (`tasks/FOR_MERIC.md`). On `overpay` the veto is 
 
 ### G-09 · The CRE workflow runs only as a simulation
 
-`workflows/reputation-oracle` is written and writes to the registry through `simulate.sh --broadcast`. It is not deployed to a DON: that needs CRE Early Access, which the account does not have. So nothing runs on a schedule, the registry is as fresh as the last hand run, and the run needs this machine (`cre login`, `workflows/.env`). The prize page accepts a simulation; the clip is recorded on Ezgin's machine.
+`workflows/reputation-oracle` is written and writes to the registry through `simulate.sh --broadcast`. It is not deployed to a DON: Chainlink grants deploy access after a mutual NDA and commercial terms (their answer of 2026-10-12), so the hackathon entry is the simulation. So nothing runs on a schedule, the registry is as fresh as the last hand run, and the run needs this machine (`cre login`, `workflows/.env`). The prize page accepts a simulation; the clip is recorded on Ezgin's machine.
 
 ### G-10 · The server keeps its state in memory
 

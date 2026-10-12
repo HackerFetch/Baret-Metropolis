@@ -183,7 +183,7 @@ importers:
         version: link:../../packages/web-ui
       '@vercel/functions':
         specifier: 3.9.11
-        version: 3.9.11(ws@8.21.0)
+        version: 3.9.11(ws@8.21.3)
       '@wagmi/core':
         specifier: 3.6.5
         version: 3.6.5(@types/react@19.3.0)(react@19.3.0)(typescript@6.0.3)(viem@2.56.5(typescript@6.0.3)(zod@4.6.5))
@@ -340,12 +340,6 @@ importers:
       '@baret/llm':
         specifier: workspace:*
         version: link:../llm
-      '@dynamic-labs-wallet/node-evm':
-        specifier: 1.1.28
-        version: 1.1.28(@dynamic-labs-wallet/forward-mpc-client@2.0.2(@dynamic-labs-wallet/primitives@1.1.28))(@dynamic-labs-wallet/primitives@1.1.28)(@types/react@19.3.0)(@vercel/functions@3.9.11(ws@8.21.3))(@zerodev/webauthn-key@5.5.0(viem@2.56.5(typescript@6.0.3)(zod@4.6.5)))(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(viem@2.56.5(typescript@6.0.3)(zod@4.6.5))(zod@4.6.5)
-      tsx:
-        specifier: 4.23.15
-        version: 4.23.15
       viem:
         specifier: 2.56.5
         version: 2.56.5(typescript@6.0.3)(zod@4.6.5)
@@ -353,9 +347,15 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@dynamic-labs-wallet/node-evm':
+        specifier: 1.1.28
+        version: 1.1.28(@dynamic-labs-wallet/forward-mpc-client@2.0.2(@dynamic-labs-wallet/primitives@1.1.28))(@dynamic-labs-wallet/primitives@1.1.28)(@types/react@19.3.0)(@vercel/functions@3.9.11(ws@8.21.3))(@zerodev/webauthn-key@5.5.0(viem@2.56.5(typescript@6.0.3)(zod@4.6.5)))(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(viem@2.56.5(typescript@6.0.3)(zod@4.6.5))(zod@4.6.5)
       '@types/node':
         specifier: 24.10.1
         version: 24.10.1
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
       typescript:
         specifier: 6.0.3
         version: 6.0.3
@@ -10334,12 +10334,6 @@ snapshots:
   '@vercel/cli-exec@1.0.1':
     dependencies:
       execa: 5.1.1
-
-  '@vercel/functions@3.9.11(ws@8.21.0)':
-    dependencies:
-      '@vercel/oidc': 4.0.0
-    optionalDependencies:
-      ws: 8.21.0
 
   '@vercel/functions@3.9.11(ws@8.21.3)':
     dependencies:

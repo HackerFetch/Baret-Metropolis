@@ -11,7 +11,7 @@ import {
   type SourceStatus,
   type Suggestion,
 } from "@baret/guard";
-import { type Address, getAddress } from "viem";
+import { type Address, getAddress, zeroAddress } from "viem";
 import type { AnalysisContext, DelegateCall, Lookup, TokenMeta } from "../analysis/context.js";
 import {
   carriedCall,
@@ -21,7 +21,7 @@ import {
   effectsFromTypedData,
   namesAnotherChain,
 } from "../analysis/effects.js";
-import { tokenMeta } from "../analysis/format.js";
+import { tokenMeta, unknownToken } from "../analysis/format.js";
 import type { AppConfig, NetworkConfig } from "../config/env.js";
 import type { CallParams, MonadRpc } from "../infra/rpc.js";
 import { decide, netDelta, policyFindings } from "../policy/evaluate.js";
@@ -41,6 +41,12 @@ import type { X402Paywall } from "./x402.js";
 export const ANALYSIS_VERSION = "1";
 /** Bounds the reads one request can cause. */
 const MAX_ADDRESSES = 40;
+/**
+ * Monad's gas limit for one transaction (the block holds 200M). A request
+ * above it can never be included: the node refuses to simulate it, and that
+ * refusal is the request's fault, not an outage.
+ */
+export const MAX_TX_GAS = 30_000_000n;
 
 export class AnalyzeInputError extends Error {
   constructor(message: string) {
@@ -167,10 +173,22 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
       throw new AnalyzeInputError(err instanceof Error ? err.message : String(err));
     }
     user = req.userWallet ? getAddress(req.userWallet) : tx.from;
+    // Nobody signs as the zero address: such a request is malformed, not safe.
+    if (tx.from === zeroAddress || user === zeroAddress) {
+      throw new AnalyzeInputError("the sender cannot be the zero address");
+    }
+    if (tx.gas !== null && tx.gas > MAX_TX_GAS) {
+      throw new AnalyzeInputError(
+        `gas limit ${tx.gas} is above Monad's limit of ${MAX_TX_GAS} for one transaction`,
+      );
+    }
     ({ trace, simulation, feeWei, effects } = await simulate(tx, user, true));
   } else if (req.typedData) {
     // A message that carries a call is not guessed at: its call is simulated,
     // exactly as a transaction's would be.
+    if (getAddress(req.typedData.signer) === zeroAddress) {
+      throw new AnalyzeInputError("the signer cannot be the zero address");
+    }
     const carried = carriedCall(req.typedData);
     if (carried) {
       tx = carried.tx;
@@ -198,6 +216,10 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     tx?.to,
     ...effects.approvals.map((a) => a.spender),
     ...effects.transfers.filter((t) => t.from === user).map((t) => t.to),
+    // Whoever ends up with value, whoever paid it: the merchant a vault pays
+    // for the agent, the recipient of an order's consideration. A drainer is
+    // a drainer however the money reaches it.
+    ...effects.paidAddresses,
     ...effects.ownership.map((o) => o.newOwner),
     // A message Baret cannot read is still meant for a contract: that
     // contract is checked against the registry like any counterparty.
@@ -347,7 +369,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     firedRules: verdict.firedRules,
     suggestions: suggestionsFor(verdict.findings),
     confidence: confidenceOf(ctx, verdict.findings),
-    estimatedChanges: balanceChanges(ctx),
+    estimatedChanges: balanceChanges(ctx, symbols),
     approvals: effects.approvals.map(
       (a): ApprovalChange => ({
         owner: user,
@@ -377,7 +399,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   return analyzeResponseSchema.parse(response);
 }
 
-function balanceChanges(ctx: AnalysisContext): BalanceChange[] {
+function balanceChanges(ctx: AnalysisContext, symbols: Map<Address, string>): BalanceChange[] {
   const assets = uniq(ctx.effects.transfers.filter((t) => !t.nft).map((t) => t.token));
   const rows: BalanceChange[] = [];
   const row = (token: Address | null) => {
@@ -386,6 +408,9 @@ function balanceChanges(ctx: AnalysisContext): BalanceChange[] {
     const meta = tokenMeta(ctx, token);
     const pre =
       token === null ? ctx.balancesBefore.native : (ctx.balancesBefore.tokens.get(token) ?? null);
+    // A balance cannot go below zero: a request that takes more than the
+    // account holds leaves it empty, and the loss rules say the rest.
+    const post = pre === null ? null : pre + delta < 0n ? 0n : pre + delta;
     rows.push({
       account: ctx.user,
       asset: {
@@ -395,13 +420,51 @@ function balanceChanges(ctx: AnalysisContext): BalanceChange[] {
         decimals: meta.decimals,
       },
       before: pre?.toString() ?? null,
-      after: pre === null ? null : (pre + delta).toString(),
+      after: post?.toString() ?? null,
       delta: delta.toString(),
     });
   };
   if (ctx.tx || ctx.effects.transfers.some((t) => t.token === null)) row(null);
   for (const token of assets) row(token);
+  rows.push(...collectibleChanges(ctx, symbols));
   return rows;
+}
+
+/**
+ * Collectibles (ERC-721) the request moves in or out of the user's account:
+ * one row per piece, delta 1 or -1, the token id on the asset. A piece has no
+ * balance before or after. A piece that leaves and comes back is not listed.
+ * A collection has a symbol but no decimals, so it is named from `symbols`.
+ */
+function collectibleChanges(ctx: AnalysisContext, symbols: Map<Address, string>): BalanceChange[] {
+  const net = new Map<string, { token: Address; tokenId: bigint; delta: bigint }>();
+  for (const t of ctx.effects.transfers) {
+    if (!t.nft || t.token === null || t.from === t.to) continue;
+    // For a collectible the log's value is the token id (abi.ts). A move
+    // read from calldata alone carries no id: it is listed as one piece.
+    const key = `${t.token}:${ctx.effects.source === "trace" ? t.amount : "?"}`;
+    const entry = net.get(key) ?? { token: t.token, tokenId: t.amount, delta: 0n };
+    if (t.to === ctx.user) entry.delta += 1n;
+    if (t.from === ctx.user) entry.delta -= 1n;
+    net.set(key, entry);
+  }
+  return [...net.values()]
+    .filter((e) => e.delta !== 0n)
+    .map((e) => {
+      return {
+        account: ctx.user,
+        asset: {
+          kind: "erc721" as const,
+          address: e.token,
+          symbol: symbols.get(e.token) ?? unknownToken(e.token).symbol,
+          decimals: 0,
+          ...(ctx.effects.source === "trace" ? { tokenId: e.tokenId.toString() } : {}),
+        },
+        before: null,
+        after: null,
+        delta: e.delta.toString(),
+      };
+    });
 }
 
 function suggestionsFor(findings: AnalyzeResponse["findings"]): Suggestion[] {

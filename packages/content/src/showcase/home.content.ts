@@ -89,10 +89,10 @@ export const home = {
     label: "Checks Baret runs before you sign",
     /** Summary of the closed <details> under the strip (H4). The number must
      *  match `items.length`; a test in apps/showcase guards it. */
-    allChecks: "See the 17 checks",
+    allChecks: "See 17 of the 44 checks",
     /** Accessible name of the static list inside that disclosure. The
      *  detectors emit more codes than this list, so it never claims "all". */
-    allChecksList: "17 of the checks Baret runs before you sign",
+    allChecksList: "17 of the 44 checks Baret runs before you sign",
     items: [
       "A transaction that would fail", // simulation: SIMULATION_FAILED
       "A simulation with gaps", // simulation: LOW_CONFIDENCE_INCOMPLETE_DATA
@@ -100,11 +100,11 @@ export const home = {
       "Operator grant on a whole collection", // approvals: NFT_OPERATOR_GRANTED
       "Allowance hidden in a signature", // approvals: PERMIT_SIGNATURE_DETECTED
       "Reported contract", // programs: RISKY_CONTRACT_INTERACTION
-      "Unverified contract", // programs: UNKNOWN_CONTRACT_EXPOSURE
+      "Unknown contract", // programs: UNKNOWN_CONTRACT_EXPOSURE
       "Self-destructing contract", // evm-danger: SELFDESTRUCT_CALL
       "Code run from another contract", // evm-danger: DELEGATECALL_DETECTED
       "Ownership handover", // evm-danger: OWNERSHIP_TRANSFER
-      "Blocklisted address", // reputation: KNOWN_MALICIOUS_ADDRESS
+      "Address on Baret's reported list", // reputation: KNOWN_MALICIOUS_ADDRESS
       "Brand-new counterparty", // reputation: NANSEN_FLAGGED_FRESH_WALLET
       "Transfer without a verified identity", // compliance: COMPLIANCE_NO_CREDENTIAL
       "Calls nested deeper than they look", // cpi: DEEP_CALL_NESTING
@@ -125,7 +125,7 @@ export const home = {
         // Rendered in the landing bento tile (since 2026-10-01).
         label: "Reads it",
         title: "Pre-sign Guard",
-        body: "Before your wallet signs, Baret simulates the transaction over Alchemy RPC. Nine detectors read the result. Reputation comes from Nansen and from threat feeds that Chainlink CRE writes on-chain.",
+        body: "Before your wallet signs, Baret simulates the transaction against live Monad state, reading the chain over Alchemy's Monad RPC. Nine detectors read the result. Reputation comes from Nansen and from threat feeds that Chainlink CRE writes on-chain.",
         // Rendered in the landing bento tile (since 2026-10-01).
         points: [
           "Runs without sending",
@@ -183,12 +183,12 @@ export const home = {
         {
           id: "send",
           label: "Send 25 MON to the address you typed",
-          tryLabel: "Try it on NovaSwap",
+          tryLabel: "Try a swap on NovaSwap",
           href: "/novaswap",
         },
         {
           id: "swap",
-          label: "Swap 100 USDC via an unverified contract",
+          label: "Swap 100 USDC via an unknown contract",
           tryLabel: "See an unknown pool blocked on OrbitYield",
           href: "/orbityield",
         },
@@ -234,7 +234,7 @@ export const home = {
       {
         verdict: "blocked",
         title: "Blocked",
-        body: "A rule you set stopped it. Baret names the rule, not a score. Signing anyway takes a separate press\u2011and\u2011hold, and it is logged.",
+        body: "A rule you set stopped it. Baret names the rule, not a score. In the extension, signing anyway takes a separate press\u2011and\u2011hold, and it is logged. The web wallet never signs a blocked request.",
         // Rendered once, in the verdict check result (H1), never in the columns.
         impact: "A site could spend all of your USDC, today or next year.",
       },
@@ -242,7 +242,7 @@ export const home = {
     honesty: {
       title: "The fourth verdict: Can't reach Baret",
       // Not rendered on the landing since 2026-10-01.
-      body: 'If the server is down or the simulation fails, Baret does not guess. The verdict is "Can\'t reach Baret", and it counts as Blocked. Signing without a check takes the same press-and-hold, and it is logged.',
+      body: 'If the server is down or the simulation fails, Baret does not guess. The verdict is "Can\'t reach Baret", and it counts as Blocked. In the extension, signing without a check takes the same press-and-hold, and it is logged.',
     },
   },
 
@@ -451,7 +451,7 @@ export const home = {
     cards: [
       {
         title: "The analysis runs on a server",
-        body: "Simulation needs a Monad node. So the unsigned transaction, your address and the asking site go to Baret's server. The server simulates it over Alchemy RPC. Nansen and Cleanverse see the addresses involved, for reputation and compliance. No key is ever sent.",
+        body: "Simulation needs a Monad node. So the unsigned transaction, your address and the asking site go to Baret's server. The server simulates it on Monad, reading the chain over Alchemy's Monad RPC. Nansen and Cleanverse see the addresses involved, for reputation and compliance. No key is ever sent.",
       },
       {
         title: "Nothing is signed without you",
@@ -459,7 +459,7 @@ export const home = {
       },
       {
         title: "Your keys stay on your device",
-        body: "The web wallet signs with a Mera passkey held by your device. The extension keeps its key encrypted in your browser. Neither one is ever sent to Baret.",
+        body: "The web wallet (baret-wallet.vercel.app) signs with a Mera passkey held by your device. The extension keeps its key encrypted in your browser. Neither one is ever sent to Baret.",
       },
       {
         title: "A simulation is a preflight, not a guarantee",
@@ -481,12 +481,12 @@ export const home = {
       {
         question: "What happens if Baret is down?",
         answer:
-          'The request stops. The verdict reads "Can\'t reach Baret" and counts as Blocked. The sign button stays off. Signing without a check takes a separate press-and-hold, and it is logged.',
+          'The request stops. The verdict reads "Can\'t reach Baret" and counts as Blocked. The sign button stays off. In the extension, signing without a check takes a separate press-and-hold, and it is logged.',
       },
       {
         question: "What data leaves my device?",
         answer:
-          "The unsigned transaction, your address and the site that asked. Baret's server simulates it over Alchemy RPC and checks the addresses with Nansen and Cleanverse. Your keys and your passkey never leave.",
+          "The unsigned transaction, your address and the site that asked. Baret's server simulates it on Monad, reads the chain over Alchemy's Monad RPC, and checks the addresses with Nansen and Cleanverse. Your keys and your passkey never leave.",
       },
       {
         question: "Does it slow me down?",
@@ -496,7 +496,7 @@ export const home = {
       {
         question: "Is it a wallet or an add-on?",
         answer:
-          "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use. Nothing needs uninstalling. There is also a web wallet that signs with a Mera passkey.",
+          "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use. Nothing needs uninstalling. There is also a web wallet that signs with a Mera passkey, at baret-wallet.vercel.app.",
       },
       {
         question: "Will I learn to click through it like every other warning?",
@@ -506,7 +506,7 @@ export const home = {
       {
         question: "What does Blocked actually do?",
         answer:
-          "The sign button stays off, and Baret names the rule that fired. To sign anyway, you press and hold a separate control. The override is written to your activity log.",
+          "The sign button stays off, and Baret names the rule that fired. In the extension, you can press and hold a separate control to sign anyway, and the override is written to your activity log. The web wallet never signs a blocked request.",
       },
       {
         question: "Who writes the rules?",

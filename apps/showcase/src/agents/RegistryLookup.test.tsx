@@ -68,11 +68,18 @@ describe("RegistryLookup", () => {
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
-  it("an unknown reason code is shown as the code", async () => {
+  it("an unknown reason code is written out in words, never as a raw code", async () => {
     serve(200, listed("DRAINER_KIT"));
     render(<RegistryLookup />);
     lookUp(registry.sample);
-    await waitFor(() => expect(status().textContent).toContain("flagged with code DRAINER_KIT"));
+    await waitFor(() => expect(status().textContent).toContain("flagged for drainer kit"));
+    expect(status().textContent).not.toContain("DRAINER_KIT");
+  });
+
+  it("the showcase's own entries (NovaSwap drainer, demo drainer, sink) read as sentences", () => {
+    for (const code of ["NOVASWAP_LOOKALIKE_DRAINER", "DEMO_DRAINER", "DRAINER_SINK"]) {
+      expect(Object.hasOwn(registry.reasons, code)).toBe(true);
+    }
   });
 
   it("a clean address is not on the registry, and never called safe", async () => {

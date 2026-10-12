@@ -1,8 +1,10 @@
-import type { SiteSign } from "@baret/content";
+import { hub, type SiteSign } from "@baret/content";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { isBaretExtension, walletLabel } from "./baret.js";
+import { baretSender, windowCallOf } from "./baretSend.js";
+import { askBaret } from "./baretWindow.js";
 import { SignBlock } from "./SignBlock.js";
 import { addressOf, requestPicker, type SendCall, switchToMonad } from "./store.js";
 import { MONAD_TESTNET_ID, useDemoWallet } from "./useDemoWallet.js";
@@ -18,6 +20,10 @@ import { useSendFlow } from "./useSendFlow.js";
  * tells the story, the token to read before and after. The block keeps the
  * version and the values of the run it shows, not the inputs the visitor may
  * have changed since.
+ *
+ * With the Baret wallet connected through its window and no injected wallet,
+ * the run goes to that window (baretSend.ts): it checks each call with Baret
+ * and signs only what Baret clears, so the button works for it too.
  */
 
 export interface SignRun {
@@ -37,9 +43,11 @@ export function useSiteSign(copy: SiteSign): {
 } {
   const { wallet } = useDemoWallet();
   const flow = useSendFlow();
-  const address = addressOf(wallet);
   const connection = wallet.connection.status === "connected" ? wallet.connection : null;
-  const chainId = connection?.chainId ?? null;
+  // An injected wallet wins; else the Baret wallet's window, which is always on Monad testnet.
+  const viaBaret = connection === null && wallet.baret !== null;
+  const address = addressOf(wallet) ?? (viaBaret ? (wallet.baret?.address ?? null) : null);
+  const chainId = viaBaret ? MONAD_TESTNET_ID : (connection?.chainId ?? null);
   const [need, setNeed] = useState<"wallet" | "network" | null>(null);
   const [ran, setRan] = useState<SignRun | null>(null);
 
@@ -65,14 +73,17 @@ export function useSiteSign(copy: SiteSign): {
       <SignBlock
         flow={flow.state}
         labels={(ran ? copy.steps[mode] : []).map((label) => fill(label, ran?.values ?? {}))}
-        walletName={connection ? walletLabel(connection.wallet) : ""}
+        walletName={
+          connection ? walletLabel(connection.wallet) : viaBaret ? hub.frame.wallet.baret.name : ""
+        }
         need={need}
         switching={wallet.switching}
         onConnect={requestPicker}
         onSwitch={() => void switchToMonad()}
         token={{ symbol: copy.token, decimals: ran?.token?.decimals ?? 18 }}
         outcome={[copy.outcome[mode]]}
-        checks={connection !== null && isBaretExtension(connection.wallet.id)}
+        checks={viaBaret || (connection !== null && isBaretExtension(connection.wallet.id))}
+        viaBaret={viaBaret}
         onSign={() => {
           if (address === null) {
             setNeed("wallet");
@@ -86,10 +97,12 @@ export function useSiteSign(copy: SiteSign): {
           const run = build(address);
           if (run === null) return;
           setRan(run);
-          void flow.run(
-            run.calls,
-            run.token ? { token: run.token.address, owner: address } : undefined,
-          );
+          const track = run.token ? { token: run.token.address, owner: address } : undefined;
+          const first = run.calls[0];
+          // The window opens inside this click; the flow takes its answer as step one.
+          const send =
+            viaBaret && first ? baretSender(askBaret("sign", windowCallOf(first))) : undefined;
+          void flow.run(run.calls, track, send);
         }}
       />
     );

@@ -32,7 +32,9 @@ export function ChangeRow({
       <span className="min-w-0 truncate text-sm text-[color:var(--fg-muted)]">{label}</span>
       <span className="flex shrink-0 items-baseline gap-2">
         {note ? (
-          <span className="font-mono text-label uppercase text-[color:var(--caution)]">{note}</span>
+          <span className="font-mono text-label uppercase text-[color:var(--caution-ink)]">
+            {note}
+          </span>
         ) : null}
         <Amount value={value} {...(unit ? { unit } : {})} direction={direction} size="sm" />
       </span>

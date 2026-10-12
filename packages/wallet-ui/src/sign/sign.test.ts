@@ -1,3 +1,4 @@
+import { sign } from "@baret/content";
 import { describe, expect, it } from "vitest";
 import { SIGN_REQUESTS } from "../data/sample.js";
 import type { SignRequest } from "../data/types.js";
@@ -97,9 +98,7 @@ describe("the request's words", () => {
   });
 
   it("suggests the fallback fix when the allowance carries no amount", () => {
-    expect(fixFor(sample("blocked"))).toBe(
-      "Decline, then ask the site for a request that fits your rules.",
-    );
+    expect(fixFor(sample("blocked"))).toBe(sign.verdict.blocked.fix.fallback);
   });
 
   it("prefers the server's first suggestion for the fix", () => {
@@ -124,7 +123,7 @@ describe("the request's words", () => {
     const blocked = sample("blocked");
     expect(
       fixFor({ ...blocked, suggestions: [{ code: "KNOWN_MALICIOUS_ADDRESS", values: {} }] }),
-    ).toBe("Decline, then ask the site for a request that fits your rules.");
+    ).toBe(sign.verdict.blocked.fix.fallback);
     expect(
       fixFor({
         ...blocked,
@@ -172,5 +171,45 @@ describe("what each outcome leaves in the activity log", () => {
     });
     expect(logFor(sample("caution"), "sent", AT, "1").kind).toBe("signed");
     expect(logFor(sample("safe"), "expired", AT, "1").kind).toBe("expired");
+  });
+});
+
+describe("the rule rows", () => {
+  it("words a floor rule as a minimum, with its unit, never as an allowance", () => {
+    const request: SignRequest = {
+      ...sample("blocked"),
+      verdict: "blocked",
+      findings: [
+        { code: "POST_BALANCE_TOO_LOW", values: { actual: "0", limit: "0.1", asset: "MON" } },
+      ],
+      rules: [{ rule: "minPostNativeBalance", actual: "0", limit: "0.1" }],
+    };
+    expect(ruleRows(request)).toEqual([
+      {
+        label: "Keep at least this much MON",
+        detail: "Keeps at least 0.1 MON in the account; this request would leave 0 MON.",
+      },
+    ]);
+    expect(ruleRows(request)[0]?.detail).not.toMatch(/allows/);
+  });
+
+  it("keeps the allowance wording for a ceiling, and leaves a worded unit off", () => {
+    const request: SignRequest = {
+      ...sample("blocked"),
+      verdict: "blocked",
+      findings: [{ code: "ESTIMATED_LOSS_EXCEEDS_MAX", values: { actual: "62%", limit: "50%" } }],
+      rules: [{ rule: "maxLossPercent", actual: "62%", limit: "50%" }],
+    };
+    expect(ruleRows(request)[0]?.detail).toBe("Requested 62%. Your rule allows 50%.");
+  });
+});
+
+describe("a fee that was not estimated", () => {
+  it("leaves no fee on the activity row instead of 0", () => {
+    const request: SignRequest = { ...sample("safe"), fee: null };
+    const row = logFor(request, "sent", "2026-10-12T00:00:00Z", "1");
+    expect("fee" in row).toBe(false);
+    const estimated = logFor(sample("safe"), "sent", "2026-10-12T00:00:00Z", "1");
+    expect(estimated.fee).toBe(sample("safe").fee);
   });
 });

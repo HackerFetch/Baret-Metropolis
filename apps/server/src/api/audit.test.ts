@@ -3,6 +3,7 @@ import {
   createIndexerClient,
   type IndexerClient,
   IndexerUnavailableError,
+  newestFirst,
 } from "../sources/indexer.js";
 import { deps, FakeRpc } from "../testing/fake.js";
 import { buildApp } from "./app.js";
@@ -79,6 +80,55 @@ describe("audit routes", () => {
       entry: null,
       history: [{ kind: "cleared" }, { kind: "flagged" }],
     });
+  });
+});
+
+describe("order of the feeds", () => {
+  it("puts the events of one block newest first by log index, whatever the indexer sent", async () => {
+    const rows = [
+      { id: "68466682-2", kind: "paid", block: 68466682, timestamp: 1 },
+      { id: "68466640-2", kind: "agentRevoked", block: 68466640, timestamp: 1 },
+      { id: "68466640-3", kind: "agentSet", block: 68466640, timestamp: 1 },
+      { id: "68466640-10", kind: "deposited", block: 68466640, timestamp: 1 },
+      { id: "68466600-1", kind: "created", block: 68466600, timestamp: 0 },
+    ];
+    const { indexer } = fakeIndexer(() => ({
+      Vault: [{ id: VAULT.toLowerCase(), owner: "0xabc" }],
+      VaultActivity: rows,
+      Payment: [...rows].reverse(),
+    }));
+    const app = await buildApp({ ...deps(new FakeRpc()), indexer } as never);
+    const res = await app.inject({ method: "GET", url: `/v1/audit/vault/${VAULT}` });
+    const order = ["68466682-2", "68466640-10", "68466640-3", "68466640-2", "68466600-1"];
+    expect(res.json().activity.map((r: { id: string }) => r.id)).toEqual(order);
+    expect(res.json().payments.map((r: { id: string }) => r.id)).toEqual(order);
+    expect(newestFirst([])).toEqual([]);
+  });
+
+  it("asks the chain for the owner of a vault the indexer has none for", async () => {
+    const OWNER = "0x5aE13F1028144842f0384d09091067D6184F8197";
+    const rpc = new FakeRpc();
+    rpc.owners.set(VAULT.toLowerCase(), OWNER);
+    const { indexer } = fakeIndexer(() => ({
+      Vault: [{ id: VAULT.toLowerCase(), owner: null, createdAtBlock: 1 }],
+      VaultActivity: [],
+      Payment: [],
+    }));
+    const app = await buildApp({ ...deps(rpc), indexer } as never);
+    const res = await app.inject({ method: "GET", url: `/v1/audit/vault/${VAULT}` });
+    expect(res.json().vault.owner).toBe(OWNER.toLowerCase());
+
+    // An owner the indexer knows is not asked for again.
+    rpc.owners.clear();
+    const known = fakeIndexer(() => ({
+      Vault: [{ id: VAULT.toLowerCase(), owner: "0xabc" }],
+      VaultActivity: [],
+      Payment: [],
+    }));
+    const app2 = await buildApp({ ...deps(rpc), indexer: known.indexer } as never);
+    expect(
+      (await app2.inject({ method: "GET", url: `/v1/audit/vault/${VAULT}` })).json().vault.owner,
+    ).toBe("0xabc");
   });
 });
 

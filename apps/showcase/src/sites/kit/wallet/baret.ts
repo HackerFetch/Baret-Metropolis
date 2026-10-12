@@ -65,8 +65,23 @@ export function connectErrorOf(error: unknown): ConnectError {
   return "failed";
 }
 
-/** Why a send did not go through, as the sign block words it. */
-export type SendError = "rejected" | "pending" | "network" | "funds" | "account" | "failed";
+/**
+ * Why a send did not go through, as the sign block words it. The last four
+ * come only from the Baret wallet's window (baretSend.ts): Baret's check
+ * refused it, the wallet could not reach Baret, the window closed before it
+ * answered, or the browser never opened it.
+ */
+export type SendError =
+  | "rejected"
+  | "pending"
+  | "network"
+  | "funds"
+  | "account"
+  | "failed"
+  | "checked"
+  | "unreachable"
+  | "closed"
+  | "window";
 
 /** A send the engine refused before it asked the wallet. */
 export class SendRefused extends Error {

@@ -4,7 +4,7 @@ import {
   analyzeRequestSchema,
   FINDING_CODES,
 } from "@baret/guard";
-import { type Address, getAddress, serializeTransaction, toFunctionSelector } from "viem";
+import { type Address, getAddress, pad, serializeTransaction, toFunctionSelector } from "viem";
 import { afterAll, describe, expect, it } from "vitest";
 import type { CallParams } from "../infra/rpc.js";
 import {
@@ -1360,6 +1360,233 @@ describe("calldata fallback", () => {
     });
     const r = await run(tx({ to: USDC, data }));
     expect(codes(r)).toContain("ESTIMATED_LOSS_EXCEEDS_MAX");
+  });
+});
+
+describe("value that reaches a listed address, whoever pays it", () => {
+  const flagged = () =>
+    cleanSources({
+      registry: { [DRAINER]: { flagged: true, severity: 4, reasonCode: "DRAINER" } },
+    });
+  const SEAPORT = "0x0000000000000068F116a894984e2DB1123eB395";
+  const order = (recipient: string, template: "balanced" | "permissive") => ({
+    network: "testnet" as const,
+    policyTemplate: template,
+    typedData: {
+      signer: USER,
+      domain: { name: "Seaport", verifyingContract: SEAPORT, chainId: 10143 },
+      types: {},
+      primaryType: "OrderComponents",
+      message: {
+        offerer: USER,
+        zone: PEER,
+        orderType: 0,
+        offer: [
+          {
+            itemType: 1,
+            token: USDC,
+            identifierOrCriteria: "0",
+            startAmount: "5000000",
+            endAmount: "5000000",
+          },
+        ],
+        consideration: [
+          {
+            itemType: 0,
+            token: "0x0000000000000000000000000000000000000000",
+            identifierOrCriteria: "0",
+            startAmount: "1",
+            endAmount: "1",
+            recipient,
+          },
+        ],
+      },
+    },
+  });
+
+  it("blocks a Seaport order whose consideration pays a listed drainer, under every template", async () => {
+    const balanced = await run(order(DRAINER, "balanced"), new FakeRpc(), flagged());
+    expect(codes(balanced)).toContain("KNOWN_MALICIOUS_ADDRESS");
+    expect(balanced.findings.find((f) => f.code === "KNOWN_MALICIOUS_ADDRESS")?.values).toEqual({
+      address: DRAINER,
+    });
+    // Permissive turns off blockPermit (ORDER_PAYS_NOTHING) but keeps blockKnownMalicious.
+    const permissive = await run(order(DRAINER, "permissive"), new FakeRpc(), flagged());
+    expect(codes(permissive)).toContain("KNOWN_MALICIOUS_ADDRESS");
+    expect(permissive.decision).toBe("blocked");
+    const honest = await run(order(PEER, "permissive"), new FakeRpc(), flagged());
+    expect(codes(honest)).not.toContain("KNOWN_MALICIOUS_ADDRESS");
+  });
+
+  it("never reports a balance below zero after the request", async () => {
+    const rpc = new FakeRpc();
+    rpc.erc20.set(`${USDC}:${USER}`, 2n * ONE_USDC);
+    const r = await run(order(PEER, "balanced"), rpc, flagged());
+    const usdc = r.estimatedChanges.find((c) => c.asset.address === USDC);
+    expect(usdc).toMatchObject({ before: "2000000", after: "0", delta: "-5000000" });
+  });
+
+  const payData = (merchant: Address) =>
+    calldata({
+      abi: KNOWN_FUNCTIONS,
+      functionName: "pay",
+      args: [merchant, 10_000n, `0x${"ab".repeat(32)}`],
+    });
+  const vaultPay = (merchant: Address) => {
+    const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
+    rpc.code.set(USDC, "0x60");
+    rpc.vaults.add(DAPP);
+    // The agent calls the vault; the vault moves its own USDC to the merchant.
+    rpc.frame = frame({
+      to: DAPP,
+      input: payData(merchant),
+      calls: [frame({ from: DAPP, to: USDC, logs: [transferLog(USDC, DAPP, merchant, 10_000n)] })],
+    });
+    return {
+      ...deps(rpc, flagged()),
+      config: {
+        ...config,
+        networks: { testnet: { ...network, paymentGuardFactoryAddress: IMPL } },
+      },
+    };
+  };
+
+  it("blocks a vault payment to a listed drainer and leaves the honest merchant alone", async () => {
+    const stolen = await analyze(tx({ to: DAPP, data: payData(DRAINER) }), vaultPay(DRAINER));
+    for (const f of stolen.findings) emitted.add(f.code);
+    expect(codes(stolen)).toContain("KNOWN_MALICIOUS_ADDRESS");
+    expect(stolen.decision).toBe("blocked");
+    const honest = await analyze(tx({ to: DAPP, data: payData(PEER) }), vaultPay(PEER));
+    expect(honest.findings).toEqual([]);
+    expect(honest.decision).toBe("safe");
+  });
+
+  it("names the merchant of a vault payment from the calldata when the call reverts", async () => {
+    const d = vaultPay(DRAINER);
+    const rpc = d.rpcFor(network) as FakeRpc;
+    rpc.outcome = { ok: false, revertReason: "UnknownMerchant", revertData: null };
+    rpc.estimate = null;
+    const r = await analyze(tx({ to: DAPP, data: payData(DRAINER) }), d);
+    expect(codes(r)).toEqual(
+      expect.arrayContaining(["SIMULATION_FAILED", "KNOWN_MALICIOUS_ADDRESS"]),
+    );
+  });
+});
+
+describe("requests that cannot be what they say", () => {
+  it("refuses the zero address as the sender, the user or the signer", async () => {
+    const zero = "0x0000000000000000000000000000000000000000";
+    await expect(
+      analyze(tx({ from: zero, to: PEER, value: "1" }), deps(new FakeRpc())),
+    ).rejects.toThrow(/zero address/);
+    await expect(
+      analyze({ ...tx({ to: PEER, value: "1" }), userWallet: zero }, deps(new FakeRpc())),
+    ).rejects.toThrow(/zero address/);
+    await expect(
+      analyze(
+        {
+          network: "testnet",
+          typedData: {
+            signer: zero,
+            domain: { verifyingContract: USDC, chainId: 10143 },
+            types: {},
+            primaryType: "Permit",
+            message: { owner: zero, spender: DAPP, value: "1" },
+          },
+        },
+        deps(new FakeRpc()),
+      ),
+    ).rejects.toThrow(/zero address/);
+  });
+
+  it("refuses a gas limit no Monad transaction can carry, as a bad request, not an outage", async () => {
+    await expect(
+      analyze(tx({ to: PEER, value: "1", gas: "99999999999999999999" }), deps(new FakeRpc())),
+    ).rejects.toThrow(/gas limit .* above Monad's limit/);
+    // The limit itself is a request the node can run.
+    await expect(run(tx({ to: PEER, value: "1", gas: "30000000" }))).resolves.toBeDefined();
+  });
+
+  it("refuses a legacy transaction that names no chain id", async () => {
+    const raw = serializeTransaction({
+      type: "legacy",
+      to: PEER,
+      value: 1n,
+      gas: 21_000n,
+      gasPrice: 1n,
+    });
+    await expect(
+      analyze({ network: "testnet", transaction: { raw }, userWallet: USER }, deps(new FakeRpc())),
+    ).rejects.toThrow(/no chain id/);
+  });
+
+  it("warns when calldata goes to an account that has no code", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = frame({ to: DAPP, input: "0xa9059cbb0000" });
+    const r = await run(tx({ to: DAPP, data: "0xa9059cbb0000" }), rpc);
+    expect(codes(r)).toEqual(["CALL_TO_ADDRESS_WITHOUT_CODE"]);
+    expect(r.findings[0]?.values).toEqual({ address: DAPP });
+    expect(r.decision).toBe("caution");
+    // A plain MON transfer to the same account is a transfer, not a call.
+    rpc.frame = sendMon(DAPP, 1n);
+    const plain = await run(tx({ to: DAPP, value: "1" }), rpc);
+    expect(codes(plain)).not.toContain("CALL_TO_ADDRESS_WITHOUT_CODE");
+  });
+});
+
+describe("collectibles in the balance changes", () => {
+  const erc721Transfer = (from: Address, to: Address, tokenId: bigint) => {
+    const base = transferLog(NFT, from, to, 0n);
+    return {
+      address: NFT,
+      topics: [...base.topics, pad(`0x${tokenId.toString(16)}`, { size: 32 })],
+      data: "0x",
+    };
+  };
+
+  it("lists a minted piece as 1 of the collection with its token id", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(NFT, "0x60");
+    rpc.meta.set(NFT, { symbol: "PIXEL", decimals: null } as never);
+    rpc.frame = frame({
+      to: NFT,
+      value: `0x${(ONE_MON / 100n).toString(16)}`,
+      input: "0xa0712d68",
+      logs: [erc721Transfer("0x0000000000000000000000000000000000000000", USER, 7n)],
+    });
+    const r = await run(
+      {
+        ...tx({ to: NFT, value: (ONE_MON / 100n).toString(), data: "0xa0712d68" }),
+        policy: policy({ blockUnknownContractExposure: false }),
+      },
+      rpc,
+    );
+    const piece = r.estimatedChanges.find((c) => c.asset.kind === "erc721");
+    expect(piece).toEqual({
+      account: USER,
+      asset: { kind: "erc721", address: NFT, symbol: "PIXEL", decimals: 0, tokenId: "7" },
+      before: null,
+      after: null,
+      delta: "1",
+    });
+    expect(r.estimatedChanges.find((c) => c.asset.kind === "native")).toBeDefined();
+  });
+
+  it("lists a piece that leaves, and nothing for one that comes straight back", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(NFT, "0x60");
+    rpc.frame = frame({
+      to: NFT,
+      logs: [
+        erc721Transfer(USER, PEER, 9n),
+        erc721Transfer(PEER, USER, 11n),
+        erc721Transfer(USER, PEER, 11n),
+      ],
+    });
+    const r = await run(tx({ to: NFT, data: "0x42842e0e" }), rpc);
+    const pieces = r.estimatedChanges.filter((c) => c.asset.kind === "erc721");
+    expect(pieces.map((p) => [p.asset.tokenId, p.delta])).toEqual([["9", "-1"]]);
   });
 });
 

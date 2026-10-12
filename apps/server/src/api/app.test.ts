@@ -52,6 +52,38 @@ describe("http", () => {
     expect(res.json().issues.map((i: { path: string }) => i.path)).toContain("network");
   });
 
+  it("sends the security headers on every answer, errors included", async () => {
+    const app = await buildApp(deps(new FakeRpc()));
+    for (const url of ["/health", "/nowhere", "/v1/analyze"]) {
+      const res = await app.inject({ method: url === "/health" ? "GET" : "POST", url });
+      expect(res.headers["x-content-type-options"]).toBe("nosniff");
+      expect(res.headers["x-frame-options"]).toBe("DENY");
+      expect(res.headers["referrer-policy"]).toBe("no-referrer");
+      expect(res.headers["permissions-policy"]).toContain("camera=()");
+      expect(res.headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+    }
+  });
+
+  it("answers malformed JSON as invalid_request, not with the framework's shape", async () => {
+    const app = await buildApp(deps(new FakeRpc()));
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/analyze",
+      headers: { "content-type": "application/json" },
+      payload: "{not json",
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: "invalid_request" });
+    const big = await app.inject({
+      method: "POST",
+      url: "/v1/analyze",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({ pad: "x".repeat(300 * 1024) }),
+    });
+    expect(big.statusCode).toBe(413);
+    expect(big.json()).toMatchObject({ error: "payload_too_large" });
+  });
+
   it("fails closed with 503 when the RPC is down", async () => {
     const rpc = new FakeRpc();
     rpc.down = true;

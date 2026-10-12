@@ -96,7 +96,7 @@ export const optionsSettings = {
       { label: "Monad node", hint: "Where Baret reads your balances and allowances." },
       {
         label: "Analysis server",
-        hint: "Where sign requests are simulated and checked, using Alchemy's Monad RPC. Change it only if you run your own.",
+        hint: "Where sign requests are simulated and checked on Monad. Change it only if you run your own.",
       },
     ],
     custom: {

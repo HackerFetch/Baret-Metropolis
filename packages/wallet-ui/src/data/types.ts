@@ -182,8 +182,8 @@ export interface SignRequest {
   readonly findings: readonly CheckFinding[];
   readonly changes: readonly CheckChange[];
   readonly approvals: readonly CheckApproval[];
-  /** In MON. */
-  readonly fee: string;
+  /** In MON; null when the network could not estimate the call (live: it reverts). */
+  readonly fee: string | null;
   /** The rules that fired, with the limit and the observed value. */
   readonly rules: readonly {
     readonly rule: GuardPolicyField;

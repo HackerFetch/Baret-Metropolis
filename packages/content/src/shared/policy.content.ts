@@ -382,6 +382,7 @@ export const policy = {
         "NANSEN_FLAGGED_WHALE_COUNTERPARTY",
         "DEEP_CALL_NESTING",
         "HIGH_OPERATION_COUNT",
+        "CALL_TO_ADDRESS_WITHOUT_CODE",
         "X402_DESTINATION_MISMATCH",
         "X402_ASSET_MISMATCH",
       ],

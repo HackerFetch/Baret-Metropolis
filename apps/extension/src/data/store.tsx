@@ -12,6 +12,7 @@ import {
   useRef,
 } from "react";
 import { useLatest } from "../lib/useLatest.js";
+import type { RevokeResult } from "./revoke-outcome.js";
 import {
   ACCOUNTS,
   ACTIVITY,
@@ -145,6 +146,8 @@ export type ExtAction =
   | { type: "site"; origin: string; status: SiteStatus; at: string }
   | { type: "forgetSite"; origin: string }
   | { type: "connect"; origin: string; account: string; at: string }
+  /** A site the wallet knows sent a request (a transaction, data or a message to sign). */
+  | { type: "request"; origin: string; at: string }
   | { type: "saveRules"; policy: GuardPolicy; template: TemplateName; at: string }
   | { type: "settings"; patch: Partial<Settings> }
   | { type: "clearActivity" }
@@ -332,6 +335,13 @@ export function reduce(state: ExtState, action: ExtAction): ExtState {
         sites: state.sites.filter((s) => s.origin !== action.origin),
         activity: state.activity.filter((a) => a.origin !== action.origin),
       };
+    case "request":
+      return {
+        ...state,
+        sites: state.sites.map((s) =>
+          s.origin === action.origin ? { ...s, requests: s.requests + 1, lastUsed: action.at } : s,
+        ),
+      };
     case "connect": {
       const known = state.sites.find((s) => s.origin === action.origin);
       const site: Site = known
@@ -445,7 +455,7 @@ interface Store {
    * confirmed closed, once it has. Grants go on-chain; anything else closes
    * at once. Never rejects. Null on the sample, which waits on a timer.
    */
-  readonly revoke: ((ids: readonly string[]) => Promise<readonly string[]>) | null;
+  readonly revoke: ((ids: readonly string[]) => Promise<RevokeResult>) | null;
 }
 
 const ExtensionContext = createContext<Store | null>(null);
@@ -469,9 +479,10 @@ export interface LiveSource {
   derive(index: number): Promise<string | null>;
   /**
    * Closes grants on-chain (an allowance, collection access); resolves with
-   * the ids Monad confirmed closed. The rest stay on the list.
+   * the ids Monad confirmed closed and why each of the rest stopped. The
+   * rest stay on the list.
    */
-  revoke(permissions: readonly Permission[], state: ExtState): Promise<readonly string[]>;
+  revoke(permissions: readonly Permission[], state: ExtState): Promise<RevokeResult>;
 }
 
 /** A grant the live wallet recorded from a signature: its id names the contract and the holder (live/records.ts). */
@@ -518,23 +529,26 @@ export function ExtensionProvider({
   // it, not when the button was pressed. One function for the page's life:
   // effects that depend on `dispatch` must not start over on every change.
   const revokeLive = useCallback(
-    async (ids: readonly string[], at: string): Promise<readonly string[]> => {
-      if (!live) return [];
+    async (ids: readonly string[], at: string): Promise<RevokeResult> => {
+      if (!live) return { closed: [], stopped: [] };
       const now = latest.current;
       const grants = now.permissions.filter((p) => ids.includes(p.id) && LIVE_GRANT.test(p.id));
       const rest = ids.filter((id) => !grants.some((g) => g.id === id));
       if (rest.length > 0) dispatch({ type: "revoke", ids: rest, at });
-      if (grants.length === 0) return rest;
-      let closed: readonly string[] = [];
+      if (grants.length === 0) return { closed: rest, stopped: [] };
+      let result: RevokeResult = {
+        closed: [],
+        stopped: grants.map((g) => ({ id: g.id, why: "failed", code: null })),
+      };
       try {
-        closed = await live.revoke(grants, now);
+        result = await live.revoke(grants, now);
       } catch {
         // Not confirmed: the grants stay on the list.
       }
-      if (closed.length > 0) {
-        dispatch({ type: "revoke", ids: closed, at: new Date().toISOString() });
+      if (result.closed.length > 0) {
+        dispatch({ type: "revoke", ids: result.closed, at: new Date().toISOString() });
       }
-      return [...rest, ...closed];
+      return { closed: [...rest, ...result.closed], stopped: result.stopped };
     },
     [live, latest],
   );
@@ -542,8 +556,7 @@ export function ExtensionProvider({
   // The store's `revoke`: the same function for the page's life, so a revoke
   // screen's effect does not start over (and send again) on a state change.
   const revoke = useCallback(
-    (ids: readonly string[]): Promise<readonly string[]> =>
-      revokeLive(ids, new Date().toISOString()),
+    (ids: readonly string[]): Promise<RevokeResult> => revokeLive(ids, new Date().toISOString()),
     [revokeLive],
   );
 

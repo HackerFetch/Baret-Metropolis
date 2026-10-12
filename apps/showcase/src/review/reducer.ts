@@ -78,6 +78,8 @@ export interface TimelineState {
   readonly tools: readonly ToolStep[];
   readonly decision: ReviewVerdict | null;
   readonly sent: SentPayment | null;
+  /** The model that wrote the plan, as the answer names it (provider and name). */
+  readonly model: { readonly provider: string; readonly name: string } | null;
   /** Set when the answer came from the server's 30-minute cache. */
   readonly cachedAt: string | null;
   readonly ranAt: string | null;
@@ -95,6 +97,7 @@ export const IDLE: TimelineState = {
   tools: [],
   decision: null,
   sent: null,
+  model: null,
   cachedAt: null,
   ranAt: null,
   error: null,
@@ -146,6 +149,13 @@ function verdict(value: Record<string, unknown>): ReviewVerdict | null {
   };
 }
 
+/** The model named in an answer; null unless both its provider and name are text. */
+function modelOf(value: unknown): TimelineState["model"] {
+  if (!isRecord(value)) return null;
+  const { provider, name } = value;
+  return typeof provider === "string" && typeof name === "string" ? { provider, name } : null;
+}
+
 function sent(value: unknown): SentPayment | null {
   if (!isRecord(value)) return null;
   // No hash: the send never left the server, which is a failure.
@@ -178,6 +188,7 @@ export function fromAnswer(
       prev.tools.length > 0 ? prev.tools : (transcript?.steps ?? []).map((s) => toolStep({ ...s })),
     decision: answer.review ? verdict({ ...answer.review }) : null,
     sent: sent(answer.sent),
+    model: modelOf(answer.model) ?? prev.model,
     cachedAt: answer.cached ? answer.ranAt : null,
     ranAt: answer.ranAt,
     error: null,

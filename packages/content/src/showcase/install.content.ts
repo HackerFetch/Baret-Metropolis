@@ -44,6 +44,8 @@ export const install = {
         "You are on a Chromium browser, such as Chrome, Brave or Edge. This build is yours.",
       firefox: "You are on Firefox. This build is yours.",
       unknown: "Pick the build that matches your browser.",
+      phone:
+        "You are on a phone. The extension needs a desktop browser: Chrome, Brave, Edge or Firefox.",
     },
     /** The detected line while no build is published: there is nothing to pick. */
     detectedPending: {
@@ -51,6 +53,18 @@ export const install = {
         "You are on a Chromium browser, such as Chrome, Brave or Edge. Build Baret for it from the source.",
       firefox: "You are on Firefox. Build Baret for it from the source.",
       unknown: "Baret runs in Chrome, Brave, Edge and Firefox. Build it for yours from the source.",
+      phone:
+        "You are on a phone. The extension needs a desktop browser: Chrome, Brave, Edge or Firefox.",
+    },
+    /**
+     * On a phone the hero leads with the web wallet, which signs with a
+     * passkey and runs on any phone browser; the desktop zips stay as links.
+     */
+    phone: {
+      body: "On this phone, use the Baret web wallet instead. It runs in the browser, signs with a passkey and checks every request with Baret the same way.",
+      action: { label: "Open the Baret web wallet", href: "https://baret-wallet.vercel.app" },
+      /** Before the zip links, kept for a visitor who will come back on a desktop. */
+      desktop: "On a desktop, download the extension:",
     },
   },
 
@@ -259,7 +273,7 @@ export const install = {
     others: {
       title: "Who else sees what",
       points: [
-        "Alchemy RPC runs the simulation, so it sees the unsigned transaction.",
+        "Alchemy's Monad RPC serves the chain reads and a public Monad node runs the trace, so both see the unsigned transaction.",
         "Nansen and Cleanverse see the addresses Baret asks them about.",
         "Your key and recovery phrase stay on this device.",
       ],

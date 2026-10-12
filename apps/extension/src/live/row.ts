@@ -11,6 +11,15 @@ interface Shown {
 }
 
 /**
+ * How a refused transaction is logged. A block stays a block; everything
+ * else, Baret unreachable included, is a decline: nothing was signed, so
+ * the log never says "unchecked", which is a signature made without a check.
+ */
+export function declinedKind(verdict: string): "blocked" | "declined" {
+  return verdict === "blocked" ? "blocked" : "declined";
+}
+
+/**
  * The log row with the words its sentence needs. A site's call names no
  * amount or asset by itself: an allowance is logged as one, anything else
  * as what the simulation says left the account, or the MON the call carries.

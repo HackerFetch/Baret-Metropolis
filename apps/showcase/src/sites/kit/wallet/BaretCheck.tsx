@@ -20,6 +20,7 @@ import { BUSY, LINK } from "./SignBlock.js";
 
 const copy = hub.frame.baretCheck;
 const sign = hub.frame.sign;
+const account = hub.frame.wallet.account;
 
 export type BaretCheckState =
   | { readonly phase: "idle" }
@@ -82,9 +83,12 @@ function Result({ answer }: { answer: BaretAnswer }): JSX.Element {
           </a>
         </div>
       );
-    case "refused":
+    case "refused": {
       if (answer.reason === "declined") return <p className={T.small}>{copy.declined}</p>;
       if (answer.reason === "unreachable") return <p className={ALERT}>{copy.unreachable}</p>;
+      if (answer.reason === "invalid") return <p className={ALERT}>{copy.invalid}</p>;
+      // A failed simulation is what a fresh wallet with no MON gets: say so, with the faucet.
+      const failed = answer.findings.some((finding) => finding.code === "SIMULATION_FAILED");
       return (
         <div className="grid gap-2">
           <p className={ALERT}>{copy.blocked}</p>
@@ -103,8 +107,22 @@ function Result({ answer }: { answer: BaretAnswer }): JSX.Element {
               </ul>
             </>
           ) : null}
+          {failed ? (
+            <>
+              <p className={T.small}>{copy.failedHint}</p>
+              <a
+                href={account.faucet.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={LINK}
+              >
+                {account.faucet.label}
+              </a>
+            </>
+          ) : null}
         </div>
       );
+    }
     case "closed":
       return <p className={T.small}>{copy.closed}</p>;
     case "blocked":

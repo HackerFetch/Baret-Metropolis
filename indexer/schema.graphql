@@ -1,7 +1,9 @@
 # One PaymentGuard vault.
 type Vault {
   id: ID! # the vault's address, lowercase
-  # Null for the demo vault, which was not opened through the factory.
+  # Null for a vault that was not opened through the factory (the Dynamic
+  # agent's vault 0x0A82...0A35 and the review demo vault 0x46F1...2158),
+  # until the handler's static list fills it in on a re-sync.
   owner: String
   token: String
   # The key allowed to pay; null when none is authorised.

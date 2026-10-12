@@ -9,6 +9,8 @@ import { createContext, use } from "react";
  * extension's APIs, so the sample and the tests load them as before.
  */
 export interface Gate {
+  /** A wallet is already made in this browser, set up to the end or not. */
+  readonly exists: boolean;
   readonly locked: boolean;
   readonly lockReason: "manual" | "idle" | "restart";
   /** Locks the wallet now. */

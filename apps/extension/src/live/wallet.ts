@@ -12,7 +12,7 @@ import type { Hex } from "viem";
 import type { HDAccount } from "viem/accounts";
 import { accountOf } from "../core/keystore.js";
 import { session } from "../core/storage.js";
-import { API_URL, RPC_URL } from "./source.js";
+import { API_URL, RPC_URL } from "./config.js";
 
 /**
  * The live wallet's working parts, for the popup and the options page: the

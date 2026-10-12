@@ -22,7 +22,7 @@ describe("capRun", () => {
 describe("cap copy", () => {
   it("fills the daily-cap finding with the run numbers", () => {
     expect(capSentence(20)).toBe(
-      "This payment of 2\u00a0USDC would bring the last 24 hours to 22\u00a0USDC. Your daily cap is 20\u00a0USDC.",
+      "This payment of 2 USDC would bring the last 24 hours to 22 USDC. Your daily cap is 20 USDC.",
     );
   });
 

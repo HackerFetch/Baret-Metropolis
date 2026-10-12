@@ -109,6 +109,24 @@ describe("timeline reducer", () => {
     expect(state.decision).toEqual({ decision: "veto", reason: "9x", mismatches: ["amount"] });
   });
 
+  it("names the model from the answer, and only when provider and name are both text", () => {
+    const named = replay([
+      { type: "begin", scenario: "honest" },
+      { type: "event", event: "plan", data: { plan: ["Decode"] } },
+      {
+        type: "event",
+        event: "done",
+        data: { ...answer, model: { provider: "qwen", name: "qwen3.8-max" } },
+      },
+    ]);
+    expect(named.model).toEqual({ provider: "qwen", name: "qwen3.8-max" });
+    const unnamed = replay([
+      { type: "begin", scenario: "honest" },
+      { type: "event", event: "done", data: { ...answer, model: { provider: "qwen" } } },
+    ]);
+    expect(unnamed.model).toBeNull();
+  });
+
   it("reads an unknown decision as a veto (fail-closed)", () => {
     const state = replay([
       { type: "begin", scenario: "honest" },

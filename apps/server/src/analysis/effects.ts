@@ -40,6 +40,14 @@ export interface Effects {
   /** Every value movement out of or into the user's account. */
   transfers: TransferEffect[];
   ownership: OwnershipEffect[];
+  /**
+   * Every account that ends up with value in this request, whoever pays it:
+   * the merchant a vault pays on the user's behalf, the recipient of an
+   * order's consideration, the target of a router's transfer. The user's own
+   * transfers are in `transfers`; this list is for the registry, so a known
+   * drainer is caught however the money reaches it.
+   */
+  paidAddresses: Address[];
   /** Calls bundled into one signature (multicall items, or trace frames). */
   operationCount: number;
   /** Where the effects came from: the trace, or the calldata alone. */
@@ -74,9 +82,11 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
   const approvals: ApprovalEffect[] = [];
   const transfers: TransferEffect[] = [];
   const ownership: OwnershipEffect[] = [];
+  const paid = new Set<Address>();
 
   for (const f of trace.frames) {
     if (f.reverted || f.value === 0n || !NATIVE_VALUE_CALLS.has(f.type) || !f.to) continue;
+    if (f.to !== user) paid.add(f.to);
     if (f.from === user || f.to === user) {
       transfers.push({ token: null, from: f.from, to: f.to, amount: f.value, nft: false });
     }
@@ -87,6 +97,7 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
     if (!ev) continue;
     switch (ev.name) {
       case "Transfer":
+        if (ev.to !== user && ev.to !== zeroAddress) paid.add(ev.to);
         if (ev.from === user || ev.to === user) {
           transfers.push({
             token: ev.token,
@@ -138,35 +149,56 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
   }
 
   // An operation is a call that can change something. A read does not count,
-  // nor does anything inside one, and a DELEGATECALL is the calling contract's
-  // own code (a proxy and its implementation are one contract to the user):
-  // counted, every call to a proxy would be two.
-  const calls = trace.frames.filter(
-    (f) => !f.reverted && !f.readOnly && f.type !== "DELEGATECALL",
-  ).length;
-  return { approvals, transfers, ownership, operationCount: calls, source: "trace" };
+  // nor does anything inside one. A DELEGATECALL that forwards its parent's
+  // call unchanged is a proxy handing over to its implementation (one contract
+  // to the user: counted, every call to a proxy would be two). Any other
+  // DELEGATECALL runs a call of its own in the contract's storage (a
+  // self-multicall item, a library batch) and counts like a CALL.
+  const calls = trace.frames.filter((f) => !f.reverted && !f.readOnly && !f.forwarded).length;
+  return {
+    approvals,
+    transfers,
+    ownership,
+    paidAddresses: [...paid],
+    operationCount: calls,
+    source: "trace",
+  };
 }
 
 function applyCall(
   call: KnownCall,
   target: Address,
   user: Address,
-  out: Pick<Effects, "approvals" | "transfers" | "ownership">,
+  out: Pick<Effects, "approvals" | "transfers" | "ownership" | "paidAddresses">,
 ) {
+  const paid = (to: Address) => {
+    if (to !== user && to !== zeroAddress && !out.paidAddresses.includes(to)) {
+      out.paidAddresses.push(to);
+    }
+  };
   switch (call.functionName) {
     case "transfer": {
       const [to, amount] = call.args;
       out.transfers.push({ token: target, from: user, to, amount, nft: false });
+      paid(to);
       break;
     }
     case "transferFrom": {
       const [from, to, amount] = call.args;
       if (from === user) out.transfers.push({ token: target, from, to, amount, nft: false });
+      paid(to);
       break;
     }
     case "safeTransferFrom": {
       const [from, to] = call.args;
       if (from === user) out.transfers.push({ token: target, from, to, amount: 1n, nft: true });
+      paid(to);
+      break;
+    }
+    case "pay": {
+      // A vault (PaymentGuard, CompliantPaymentGuard) pays the merchant on
+      // the sender's behalf: the money ends with the merchant.
+      paid(call.args[0]);
       break;
     }
     case "approve":
@@ -207,6 +239,7 @@ function applyCall(
     case "transferWithAuthorization": {
       const [from, to, value] = call.args;
       if (from === user) out.transfers.push({ token: target, from, to, amount: value, nft: false });
+      paid(to);
       break;
     }
     case "multicall":
@@ -219,13 +252,15 @@ function applyCall(
  * the call reverts: the request still says what it was trying to do.
  */
 export function effectsFromCalldata(tx: NormalizedTx, user: Address): Effects {
-  const out: Pick<Effects, "approvals" | "transfers" | "ownership"> = {
+  const out: Pick<Effects, "approvals" | "transfers" | "ownership" | "paidAddresses"> = {
     approvals: [],
     transfers: [],
     ownership: [],
+    paidAddresses: [],
   };
   if (tx.value > 0n && tx.to) {
     out.transfers.push({ token: null, from: tx.from, to: tx.to, amount: tx.value, nft: false });
+    if (tx.to !== user) out.paidAddresses.push(tx.to);
   }
   const top = decodeKnownCall(tx.data);
   const inner = multicallInner(top);
@@ -358,8 +393,14 @@ export function effectsFromTypedData(t: TypedDataRequest, chainId?: number): Eff
     approvals: [],
     transfers: [],
     ownership: [],
+    paidAddresses: [],
     operationCount: 1,
     source: "typedData",
+  };
+  const paid = (to: Address) => {
+    if (to !== user && to !== zeroAddress && !out.paidAddresses.includes(to)) {
+      out.paidAddresses.push(to);
+    }
   };
 
   /** Records a permit; false when its fields do not say who may spend what. */
@@ -425,7 +466,13 @@ export function effectsFromTypedData(t: TypedDataRequest, chainId?: number): Eff
       const start = asBig(item.startAmount);
       const end = asBig(item.endAmount);
       if (kind === null || start === null || end === null) return false;
-      if (asAddress(item.recipient) !== user) continue;
+      const recipient = asAddress(item.recipient);
+      if (recipient !== user) {
+        // Somebody else is paid when the order fills: a fee recipient, a
+        // royalty, or a drainer's own account. The registry sees every one.
+        if (recipient && (start > 0n || end > 0n)) paid(recipient);
+        continue;
+      }
       // The least the signer can be paid.
       const amount = start < end ? start : end;
       if (amount === 0n) continue;
@@ -495,6 +542,7 @@ export function effectsFromTypedData(t: TypedDataRequest, chainId?: number): Eff
       const value = asBig(m.value);
       if (token && from === user && to && value !== null) {
         out.transfers.push({ token, from, to, amount: value, nft: false });
+        paid(to);
         read = true;
       }
       break;

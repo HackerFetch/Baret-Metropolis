@@ -60,6 +60,7 @@ export const signRequest = {
       title: "This grants an allowance",
       body: "It looks like a plain signature, but it lets {spender} spend your {asset}.",
       validUntil: "Valid until",
+      noDeadline: "no deadline, it never expires",
     },
     actions: { sign: "Sign data", decline: "Decline" },
   },
@@ -117,6 +118,13 @@ export const signRequest = {
   },
 
   windowNote: "Closing this window counts as declining.",
+
+  /** The request window could not draw the request. The site was refused before this shows. */
+  failed: {
+    title: "Something went wrong",
+    body: "Baret could not show this request, so nothing was signed and the site was told you declined.",
+    action: "Decline",
+  },
 } as const;
 
 export type SignRequestContent = typeof signRequest;

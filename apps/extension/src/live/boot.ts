@@ -1,4 +1,4 @@
-import { API_URL } from "./source.js";
+import { API_URL } from "./config.js";
 
 /**
  * The first thing a live page loads.

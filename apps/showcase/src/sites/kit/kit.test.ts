@@ -8,11 +8,13 @@ import { SOURCE as SCRYBE_SOURCE } from "../scrybe/source.js";
 import {
   analyzeCall,
   analyzePayment,
+  changeOf,
   displayAmount,
   fromAnalyzeResponse,
+  orderFindings,
   shortAddress,
 } from "./live.js";
-import { advance, type CheckState, demoInput, offersLive, settle } from "./useCheck.js";
+import { advance, type CheckState, demoInput, fromDemo, offersLive, settle } from "./useCheck.js";
 import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
 
 const WALLET = "0x7a3f9e21c84b5d06f13a2e9b7c40d58e6f21c21e";
@@ -180,6 +182,60 @@ describe("live answer", () => {
     expect(result.approvals[0]?.unit).not.toBe("");
   });
 
+  it("shows a piece (erc721) as a count with its token id, and never throws on an unknown kind", () => {
+    expect(
+      changeOf(1n, { kind: "erc721", symbol: "NIGHT", address: OTHER, tokenId: "42" }),
+    ).toEqual({ value: "1", unit: "NIGHT #42" });
+    expect(changeOf(1n, { kind: "erc721", symbol: "", address: OTHER })).toEqual({
+      value: "1",
+      unit: shortAddress(OTHER),
+    });
+    expect(changeOf(2500n, { kind: "something-new", symbol: "X", decimals: 2 })).toEqual({
+      value: "25",
+      unit: "X",
+    });
+    expect(changeOf(7n, { kind: "something-new", symbol: "Y" })).toEqual({ value: "7", unit: "Y" });
+    const base = response();
+    const estimatedChanges = [
+      ...base.estimatedChanges,
+      {
+        account: WALLET,
+        asset: { kind: "erc721", address: OTHER, symbol: "NIGHT", decimals: 0, tokenId: "7" },
+        before: null,
+        after: null,
+        delta: "1",
+      },
+    ] as unknown as AnalyzeResponse["estimatedChanges"];
+    const result = fromAnalyzeResponse({ ...base, estimatedChanges }, WALLET);
+    expect(result.changes.at(-1)).toEqual({ direction: "in", value: "1", unit: "NIGHT #7" });
+  });
+
+  it("puts the blocking finding first, then the most severe, else keeps the server's order", () => {
+    const list = [
+      { code: "A", severity: "medium", blocking: false },
+      { code: "B", severity: "low", blocking: false },
+      { code: "C", severity: "high", blocking: true },
+      { code: "D", severity: "medium", blocking: false },
+      { code: "E", severity: "critical", blocking: false },
+    ] as const;
+    expect(orderFindings(list).map((f) => f.code)).toEqual(["C", "E", "A", "D", "B"]);
+    const base = response();
+    const findings = [
+      {
+        code: "UNKNOWN_CONTRACT_EXPOSURE",
+        severity: "medium",
+        values: { contract: OTHER },
+        blocking: false,
+      },
+      ...base.findings,
+    ] as AnalyzeResponse["findings"];
+    const result = fromAnalyzeResponse({ ...base, findings }, WALLET);
+    expect(result.findings.map((f) => f.code)).toEqual([
+      "ERC20_APPROVAL_UNLIMITED",
+      "UNKNOWN_CONTRACT_EXPOSURE",
+    ]);
+  });
+
   it("keeps the visitor's own changes and allowances, whatever the address case", () => {
     const result = fromAnalyzeResponse(response(), WALLET);
     expect(result).toMatchObject({ source: "live", verdict: "blocked", requestId: "r1" });
@@ -256,6 +312,15 @@ describe("check it live, with no wallet", () => {
     expect(offersLive(done(FAILED), { from: null })).toBe(false);
     expect(offersLive({ phase: "idle" }, { from: null })).toBe(false);
     expect(offersLive(done(SAFE), null)).toBe(false);
+  });
+
+  it("marks an input that simulates from the demo account, and never a wallet's", () => {
+    expect(fromDemo({ from: DEMO_CHECK_FROM })).toBe(true);
+    expect(fromDemo(demoInput({ from: null }))).toBe(true);
+    expect(fromDemo({ from: null })).toBe(false);
+    expect(fromDemo({ from: "0x1111111111111111111111111111111111111111" })).toBe(false);
+    expect(fromDemo({ to: DEMO_CHECK_FROM })).toBe(false);
+    expect(fromDemo(null)).toBe(false);
   });
 
   it("sends the same input from the demo address, a valid testnet address", () => {

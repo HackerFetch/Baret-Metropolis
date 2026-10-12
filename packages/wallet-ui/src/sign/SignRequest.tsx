@@ -330,6 +330,7 @@ export function SignRequest({
   message: messageGiven,
   sessionNote,
   explainId,
+  monBalance,
 }: {
   request: Request;
   /** True while Baret's answer is on its way; left out, a sample timer stands in. */
@@ -396,6 +397,12 @@ export function SignRequest({
    * Check again the fresh request's own id is asked about instead.
    */
   explainId?: string;
+  /**
+   * Live: the account's MON balance as a decimal string, so a failed
+   * simulation on an account with no MON can say the real reason and point
+   * at the faucet. Left out (or null, unread), nothing is claimed.
+   */
+  monBalance?: string | null;
 }): JSX.Element {
   const reduce = useReduce();
   const titleId = useId();
@@ -498,6 +505,14 @@ export function SignRequest({
       if (pending === false) setLeft((value) => Math.min(value, request.expires));
       setPhase({ kind: "review" });
       setSaid(common.verdicts[request.verdict].aria);
+      // Live: the control that started the check (a button, the passkey) is
+      // gone by now, so focus that fell back to the document moves to the
+      // headline. A reader whose focus is still somewhere is left alone, and
+      // the sample timer never moves it.
+      if (pending === false && typeof document !== "undefined") {
+        const active = document.activeElement;
+        if (active === null || active === document.body) setFocusTo("review");
+      }
     };
     if (pending === false) {
       reveal();
@@ -860,7 +875,11 @@ export function SignRequest({
                 ) : (
                   <div className="grid gap-2">
                     {request.changes.length === 0 && request.approvals.length === 0 ? (
-                      <p className={T.body}>{sign.changes.none}</p>
+                      <p className={T.body}>
+                        {request.findings.some((f) => f.code === "SIMULATION_FAILED")
+                          ? sign.changes.failed
+                          : sign.changes.none}
+                      </p>
                     ) : null}
                     {request.changes.map((change) => (
                       <ChangeRow
@@ -890,12 +909,25 @@ export function SignRequest({
                   </div>
                 )}
                 {/* A signature costs this account no network fee: no row for one. */}
-                {message ? null : (
+                {message ? null : request.fee === null ? (
+                  // Live: the network could not estimate the call. Said so, never "0.00 MON".
+                  <div className="flex items-baseline justify-between gap-4 py-1">
+                    <span className="min-w-0 truncate text-sm text-[color:var(--fg-muted)]">
+                      {sign.changes.fee}
+                    </span>
+                    <span className="text-sm text-[color:var(--fg)]">
+                      {sign.changes.feeUnknown}
+                    </span>
+                  </div>
+                ) : (
                   <ChangeRow label={sign.changes.fee} value={amount(request.fee)} unit="MON" />
                 )}
-                <p className={T.small}>
-                  {message ? sign.changes.disclaimerMessage : sign.changes.disclaimer}
-                </p>
+                {/* No simulation ran under Can't reach Baret, so no simulation is claimed. */}
+                {unreachable ? null : (
+                  <p className={T.small}>
+                    {message ? sign.changes.disclaimerMessage : sign.changes.disclaimer}
+                  </p>
+                )}
               </Section>
 
               {!unreachable ? (
@@ -909,7 +941,7 @@ export function SignRequest({
                     ) : null
                   }
                 >
-                  <Findings items={request.findings} />
+                  <Findings items={request.findings} monBalance={monBalance ?? null} />
                 </Section>
               ) : null}
 
@@ -1095,7 +1127,13 @@ export function SignRequest({
                         disabled={checking}
                         onClick={() => startSigning("sent")}
                       >
-                        {message ? sign.verdict.safe.primaryMessage : sign.verdict.safe.primary}
+                        {request.verdict === "caution"
+                          ? message
+                            ? sign.verdict.caution.primaryMessage
+                            : sign.verdict.caution.primary
+                          : message
+                            ? sign.verdict.safe.primaryMessage
+                            : sign.verdict.safe.primary}
                       </Button>
                     </>
                   ) : blocked && !canOverride ? (

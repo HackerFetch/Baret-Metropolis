@@ -30,9 +30,18 @@ const INPUT =
 const LINK =
   "underline decoration-[color:var(--rule-strong)] underline-offset-4 hover:decoration-[color:var(--fg)]";
 
+/** A code the copy does not know, in words: "DRAINER_KIT" reads "drainer kit". */
+export function wordsOf(code: string): string {
+  const words = code
+    .replace(/[_\s]+/g, " ")
+    .trim()
+    .toLowerCase();
+  return words === "" ? "an unnamed reason" : words;
+}
+
 function reasonOf(code: string): string {
   const known = (registry.reasons as Readonly<Record<string, string>>)[code];
-  return known ?? fill(registry.otherReason, { code });
+  return known ?? fill(registry.otherReason, { reason: wordsOf(code) });
 }
 
 /** The one line the status announces. */

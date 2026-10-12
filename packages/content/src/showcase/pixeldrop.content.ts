@@ -40,7 +40,7 @@ export const pixeldrop = {
       "A clean mint page for a generative collection. In the attack version, the mint button mints nothing. It gives a stranger access to every piece you hold in the collection.",
     watchFor: [
       "Access to a whole collection, not one piece",
-      "An operator on the Baret blocklist",
+      "An operator on Baret's reported list",
       "A mint where no piece arrives",
     ],
     threatClass: "drainer",
@@ -205,7 +205,7 @@ export const pixeldrop = {
         call: "setApprovalForAll(operator, true)",
         expected: "blocked",
         expectedBody:
-          "Balanced rules block collection-wide access, so that rule should fire. For this demo, the operator is also on the Baret blocklist.",
+          "Balanced rules block collection-wide access, so that rule should fire. For this demo, the operator is also on Baret's reported list.",
       },
     },
     claims: [

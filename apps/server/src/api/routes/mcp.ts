@@ -2,6 +2,9 @@ import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
 import { handleMcp, isRpcRequest } from "../../application/mcp.js";
 
+/** Stands for a body the JSON parser could not read. */
+const UNPARSED = Symbol("unparsed");
+
 export const mcpRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
   /**
    * Baret's tools for AI agents (Model Context Protocol, Streamable HTTP):
@@ -10,7 +13,26 @@ export const mcpRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
    * limit of its own.
    */
   const limit = { max: deps.config.mcpRateLimitPerMinute, timeWindow: "1 minute" };
+
+  // A body that is not JSON is answered in JSON-RPC too (-32700, "Parse
+  // error"), not with the framework's own error shape: a strict MCP client
+  // reads nothing else. The parser is scoped to this plugin's routes.
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
+    try {
+      done(null, JSON.parse(body as string));
+    } catch {
+      done(null, UNPARSED);
+    }
+  });
+
   app.post("/mcp", { config: { rateLimit: limit } }, async (req, reply) => {
+    if (req.body === UNPARSED) {
+      return reply.code(400).send({
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32700, message: "Parse error: the body is not JSON" },
+      });
+    }
     if (!isRpcRequest(req.body)) {
       return reply.code(400).send({
         jsonrpc: "2.0",

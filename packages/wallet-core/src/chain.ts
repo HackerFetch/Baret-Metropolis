@@ -65,6 +65,8 @@ export interface WalletChain {
   prepare(from: Address, call: WalletCall): Promise<TransactionSerializable>;
   send(raw: Hex): Promise<Hex>;
   wait(hash: Hex): Promise<Receipt>;
+  /** True when code is deployed at `address` (eth_getCode). Rejects when the RPC does not answer. */
+  hasCode(address: Address): Promise<boolean>;
 }
 
 export function createWalletChain(options: {
@@ -109,6 +111,11 @@ export function createWalletChain(options: {
           amount,
         })),
       ];
+    },
+
+    async hasCode(address) {
+      const code = await client.getCode({ address });
+      return typeof code === "string" && code !== "0x" && code.length > 2;
     },
 
     async findVault(owner) {

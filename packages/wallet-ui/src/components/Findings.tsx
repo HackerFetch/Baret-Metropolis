@@ -1,4 +1,4 @@
-import { findings as findingCopy, sign } from "@baret/content";
+import { findings as findingCopy, sign, walletFrame } from "@baret/content";
 import { truncateAddress } from "@baret/ui";
 import { bodyOf, hasValues } from "@baret/web-ui/components/CheckBlocks";
 import type { CheckFinding } from "@baret/web-ui/lib/check-types";
@@ -7,6 +7,32 @@ import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId } from "react";
 // By file: findings.ts imports types only, so zod stays out of this chunk.
 import { FINDING_SPECS } from "../../../guard/src/findings.js";
+import { toUnits } from "../data/format.js";
+import { fillParts } from "../lib/parts.js";
+import { KEEP_CASE } from "../sign/sign.js";
+import { Parts } from "./Parts.js";
+
+/** Monad's own words when a call reverts because the account cannot pay for it. */
+const BALANCE_REVERT = /balance|insufficient funds/i;
+
+/**
+ * What a failed simulation can say beyond its sentence: Monad's reason, and
+ * the faucet when the account holds no MON. `monBalance` null or undefined
+ * means the balance is not known; then the faucet shows only when Monad's
+ * reason itself names the balance. Exported for the tests.
+ */
+export function simulationNotes(
+  item: Pick<CheckFinding, "code" | "details">,
+  monBalance: string | null | undefined,
+): { reason: string | null; noMon: boolean } {
+  if (item.code !== "SIMULATION_FAILED") return { reason: null, noMon: false };
+  const raw = item.details?.revertReason;
+  const reason = typeof raw === "string" && raw.trim() !== "" ? raw.trim().slice(0, 240) : null;
+  const units = typeof monBalance === "string" ? toUnits(monBalance, 18) : null;
+  const zero = units === 0n;
+  const unknown = units === null;
+  return { reason, noMon: zero || (unknown && reason !== null && BALANCE_REVERT.test(reason)) };
+}
 
 /**
  * Findings in Baret's own words: the severity, the title, the sentence with
@@ -15,7 +41,14 @@ import { FINDING_SPECS } from "../../../guard/src/findings.js";
  * activity log's details. Addresses are shortened in the title only; the
  * sentence keeps them whole, wrapped.
  */
-export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Element {
+export function Findings({
+  items,
+  monBalance,
+}: {
+  items: readonly CheckFinding[];
+  /** Live: the account's MON balance, for a failed simulation's real reason. */
+  monBalance?: string | null;
+}): JSX.Element {
   // One shared name makes the "why" disclosures exclusive.
   const group = useId();
   if (items.length === 0) return <p className={T.body}>{sign.findings.none}</p>;
@@ -31,6 +64,7 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
           ]),
         );
         const { template, values } = bodyOf(words, item);
+        const notes = simulationNotes(item, monBalance);
         return (
           <li
             // biome-ignore lint/suspicious/noArrayIndexKey: an answer can repeat a code (both sides of a compliance check), and the list never reorders.
@@ -39,9 +73,28 @@ export function Findings({ items }: { items: readonly CheckFinding[] }): JSX.Ele
           >
             <p className={T.label}>{sign.findings.severity[severity]}</p>
             <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
-              {fill(words.title, titleValues)}
+              {/* An address keeps its case inside the uppercase title. */}
+              <Parts parts={fillParts(words.title, titleValues, KEEP_CASE)} />
             </p>
             <p className={`${T.body} [overflow-wrap:anywhere]`}>{fill(template, values)}</p>
+            {notes.noMon ? (
+              <p className={`${T.body} [overflow-wrap:anywhere]`}>
+                {sign.findings.noMon}{" "}
+                <a
+                  href={walletFrame.links.faucet}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 text-[color:var(--fg)]"
+                >
+                  {sign.findings.faucet}
+                </a>
+              </p>
+            ) : null}
+            {notes.reason ? (
+              <p className={`${T.small} [overflow-wrap:anywhere]`}>
+                {fill(sign.findings.revertReason, { reason: notes.reason })}
+              </p>
+            ) : null}
             {"fix" in words && words.fix && hasValues(words.fix, item.values) ? (
               <p className={`${T.small} [overflow-wrap:anywhere]`}>
                 {fill(words.fix, item.values)}

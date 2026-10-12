@@ -224,7 +224,11 @@ export class LlmClient {
   private readonly fetchImpl: typeof globalThis.fetch;
 
   constructor(private readonly options: LlmClientOptions) {
-    if (!options.apiKey) throw new Error(`${options.provider.name}: an API key is required`);
+    // A missing key is one more way of having no model: the same error the
+    // calls throw, so one catch covers it.
+    if (!options.apiKey) {
+      throw new LlmUnavailableError(`${options.provider.name}: an API key is required`);
+    }
     this.provider = options.provider;
     this.baseUrl = options.provider.baseUrl.replace(/\/+$/, "");
     this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);

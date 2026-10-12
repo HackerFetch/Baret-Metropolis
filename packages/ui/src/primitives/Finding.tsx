@@ -54,7 +54,7 @@ export function Finding({ severity, title, body, why, className }: FindingProps)
                 aria-expanded={open}
                 aria-controls={panelId}
                 onClick={() => setOpen((previous) => !previous)}
-                className="w-max font-mono text-label uppercase text-[color:var(--accent)]"
+                className="w-max font-mono text-label uppercase text-[color:var(--fg)] underline decoration-[color:var(--accent)] decoration-2 underline-offset-4"
               >
                 {open ? "Less" : "Why this matters"}
               </button>

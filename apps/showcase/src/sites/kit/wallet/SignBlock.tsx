@@ -55,6 +55,7 @@ export function SignBlock({
   stoppedNote = null,
   busy = false,
   checks = false,
+  viaBaret = false,
   onSign,
 }: {
   flow: FlowState;
@@ -79,6 +80,8 @@ export function SignBlock({
   busy?: boolean;
   /** True when the connected wallet is the Baret extension, which checks the request with Baret itself (D-040). */
   checks?: boolean;
+  /** True when the request goes to the Baret wallet's own window (no injected wallet, Baret connected). */
+  viaBaret?: boolean;
   onSign: () => void;
 }): JSX.Element {
   const titleId = useId();
@@ -131,7 +134,7 @@ export function SignBlock({
       >
         {copy.action}
       </Button>
-      <p className={T.small}>{checks ? copy.noteChecked : copy.note}</p>
+      <p className={T.small}>{viaBaret ? copy.noteBaret : checks ? copy.noteChecked : copy.note}</p>
 
       {need === "wallet" ? (
         <div className="grid gap-2">

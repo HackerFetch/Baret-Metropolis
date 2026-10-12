@@ -178,7 +178,7 @@ This was a read-only run. Nothing was merged, and Ezgin's PRs and commits were n
 - `FRONTEND.md:107` promises an x402 settlement for Scrybe, which never happens.
 - `FRONTEND.md:189-198` gives an npm install and `AgentWallet.fromSecret`; neither exists.
 - The `/docs` page has no API_REFERENCE card (`docs.content.ts:145-159`).
-- `apps/wallet` has no `.env.example`.
+- `apps/wallet` has no `.env.example`. (Stale: the file exists on `main`; checked 2026-10-12.)
 
 ## Team
 
