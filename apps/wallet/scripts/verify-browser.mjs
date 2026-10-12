@@ -25,10 +25,7 @@
  * @baret/wallet dev`) needs an API on port 8080 with the sealed relay set.
  */
 const { chromium } = await import(process.env.PLAYWRIGHT_CORE ?? "playwright-core");
-const base = (process.env.BARET_WALLET_URL ?? "https://baret-wallet.vercel.app").replace(
-  /\/+$/,
-  "",
-);
+const base = (process.env.BARET_WALLET_URL ?? "https://wallet.usebaret.com").replace(/\/+$/, "");
 const browser = await chromium.launch({ args: ["--no-sandbox"] });
 const context = await browser.newContext({ viewport: { width: 1280, height: 1600 } });
 const page = await context.newPage();

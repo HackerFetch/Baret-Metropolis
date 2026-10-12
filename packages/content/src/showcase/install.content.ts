@@ -62,7 +62,7 @@ export const install = {
      */
     phone: {
       body: "On this phone, use the Baret web wallet instead. It runs in the browser, signs with a passkey and checks every request with Baret the same way.",
-      action: { label: "Open the Baret web wallet", href: "https://baret-wallet.vercel.app" },
+      action: { label: "Open the Baret web wallet", href: "https://wallet.usebaret.com" },
       /** Before the zip links, kept for a visitor who will come back on a desktop. */
       desktop: "On a desktop, download the extension:",
     },

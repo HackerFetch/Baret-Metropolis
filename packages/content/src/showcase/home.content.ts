@@ -459,7 +459,7 @@ export const home = {
       },
       {
         title: "Your keys stay on your device",
-        body: "The web wallet (baret-wallet.vercel.app) signs with a Mera passkey held by your device. The extension keeps its key encrypted in your browser. Neither one is ever sent to Baret.",
+        body: "The web wallet (wallet.usebaret.com) signs with a Mera passkey held by your device. The extension keeps its key encrypted in your browser. Neither one is ever sent to Baret.",
       },
       {
         title: "A simulation is a preflight, not a guarantee",
@@ -496,7 +496,7 @@ export const home = {
       {
         question: "Is it a wallet or an add-on?",
         answer:
-          "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use. Nothing needs uninstalling. There is also a web wallet that signs with a Mera passkey, at baret-wallet.vercel.app.",
+          "A wallet, installed as a browser extension. It appears in a site's wallet list beside the wallets you already use. Nothing needs uninstalling. There is also a web wallet that signs with a Mera passkey, at wallet.usebaret.com.",
       },
       {
         question: "Will I learn to click through it like every other warning?",

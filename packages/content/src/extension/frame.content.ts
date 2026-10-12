@@ -91,7 +91,7 @@ export const extFrame = {
   links: {
     explorer: "https://testnet.monadexplorer.com",
     faucet: "https://faucet.monad.xyz",
-    showcase: "https://baret-metropolis.vercel.app/showcase",
+    showcase: "https://usebaret.com/showcase",
     source: "https://github.com/HackerFetch/Baret-Metropolis",
     limits:
       "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/WALLET.md#7-out-of-scope-for-v1-scope-guard",
