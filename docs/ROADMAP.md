@@ -147,7 +147,7 @@ Ezgin's list was the bottleneck and Hale's was only testing, so the work moved (
 | E15 | The Baret wallet's window signs typed messages: `signTyped` / `signedTyped` in the window protocol, `Wallet.checkTyped` and `signTyped` in `wallet-core`, the request on `/sign`, and Scrybe's payment through the Baret wallet. **Built 2026-10-11** on branch `wallet-window-sign`; paid from a browser through the wallet window with a passkey, on testnet | Sun 11 | E13 | main track, Mera UX |
 | E16 | The extension keeps what it signed (D-047): more accounts from the phrase, the allowances list checked against Monad, a real revoke, x402 payments and why one was blocked. **Built 2026-10-11** on branch `extension-live-lists`; 32 browser checks with real transactions. The published zip is rebuilt after the merge | Sun 11 | E12, E13 | main track |
 | E17 | Set `VITE_BARET_EXTENSION_CHROMIUM_STORE_URL` on the showcase Vercel project once Google publishes the Chrome Web Store listing, and redeploy: `/install` then leads with the store (M22). Until then the page is unchanged | when the listing is public | Google's review | main track |
-| E18 | The SDK on npm (closes G-16): `@baret/guard`, `@baret/llm` and `@baret/agent-kit` published as 0.1.0. **Done 2026-10-11**: a clean `npm install @baret/agent-kit` ran against the live API | Sun 11 | | main track |
+| E18 | The SDK on npm (closes G-16): `@baret/guard`, `@baret/llm` and `@baret/agent-kit` published as 0.1.0. **Done 2026-10-11**: a clean `npm install @baret/agent-kit` ran against the live API. 0.1.1 on 2026-10-12 with the corrected READMEs | Sun 11 | | main track |
 
 ### Meriç
 

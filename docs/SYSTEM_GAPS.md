@@ -156,7 +156,7 @@ The scenario "Cleanverse aUSDC to a wallet with no credential" pays the `--from`
 
 ### G-16 · The SDKs are not on npm
 
-**Closed 2026-10-11.** `@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm as 0.1.0. Checked the same day: `npm install @baret/agent-kit` in an empty folder, then `TransactionGuard.evaluate` against the live API (answer `blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. What is left: the READMEs shown on the npm pages are the ones packed with 0.1.0 and still say "not published"; they change with the next version (`docs/DEPLOYMENT.md`, "Publishing the SDK to npm").
+**Closed 2026-10-11.** `@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm as 0.1.0. Checked the same day: `npm install @baret/agent-kit` in an empty folder, then `TransactionGuard.evaluate` against the live API (answer `blocked`, `KNOWN_MALICIOUS_ADDRESS`) and `npx baret policy list`. The READMEs packed with 0.1.0 still said "not published"; 0.1.1 (2026-10-12) carries the corrected ones, checked on the registry.
 
 Before: the packages were `private` workspace packages, and a developer had to clone the repository.
 
