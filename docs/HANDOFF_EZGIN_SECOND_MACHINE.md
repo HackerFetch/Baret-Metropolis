@@ -113,6 +113,7 @@ A trap from the first machine: `verify:demo --from` must be a wallet **without**
 
 - 2026-10-12, Chrome Web Store: the listing's answers (`docs/STORE_LISTING.md`) and the privacy policy (`docs/PRIVACY.md`) are written, and the unused `notifications` permission is out of the manifest. Ezgin submits the form by hand; E17 stays open until Google publishes.
 - 2026-10-12, later: Ezgin submitted the extension. The dashboard reads "Pending review" and warned of an in-depth review (broad host permissions), so the listing may not be public by the deadline. Texts say "submitted for review".
+- 2026-10-12, before judging: six contracts added to the receiver's protected list (`0x6a52aa7afdca8ab299f2ad0f768e76d259a2b7a945e3da431dbe70765e1c3e14`), the demo agent topped up to 11.42 MON, the tester run's server changes checked on the live API. 0.1.2 of the three npm packages is built (tarballs in `~/baret-npm-0.1.2/`); Ezgin publishes.
 
 ## 7. When a task ends
 

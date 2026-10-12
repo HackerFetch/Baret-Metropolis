@@ -6,7 +6,9 @@
  *
  * `--from` is the wallet the requests are simulated from (no key needed). It
  * needs a few MON, and at least 1 real test USDC and 1 fake USDC for the
- * payment scenarios. Exits 1 when any scenario disagrees.
+ * payment scenarios. It must not hold a Cleanverse A-Pass (the deploy wallet
+ * does): the last scenario sends aUSDC to it and expects the asset to refuse.
+ * Exits 1 when any scenario disagrees.
  *
  * The two Cleanverse scenarios are simulated from a third party's verified
  * wallet (packages/demo/src/cleanverse.ts) and need the server to have the
