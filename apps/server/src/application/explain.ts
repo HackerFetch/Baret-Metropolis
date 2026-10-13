@@ -151,6 +151,17 @@ function bodyFor(
   return entry.body;
 }
 
+/**
+ * The fee in MON rounded to four decimals, the way the screens show it, so
+ * the model never prints "0.00541467" next to a screen that says "0.0054".
+ * A fee too small for four decimals stays exact.
+ */
+function feeMon(wei: bigint): string {
+  const exact = formatEther(wei);
+  const rounded = Number(Number(exact).toFixed(4));
+  return rounded > 0 ? String(rounded) : exact;
+}
+
 /** A base-unit amount as a bigint; null for anything that is not a whole number. */
 function units(raw: string | null | undefined, signed = false): bigint | null {
   if (typeof raw !== "string" || !(signed ? /^-?\d+$/ : /^\d+$/).test(raw)) return null;
@@ -220,7 +231,7 @@ export function explainPayload(
     })),
     sent: value === null ? null : { asset: "MON", amount: formatEther(value) },
     networkFee:
-      fee === null ? null : { asset: "MON", amount: formatEther(fee), estimate: true as const },
+      fee === null ? null : { asset: "MON", amount: feeMon(fee), estimate: true as const },
     balanceChanges: balanceRows(verdict.estimatedChanges, fee),
     approvals: verdict.approvals.map((a) => ({
       kind: a.kind,

@@ -423,6 +423,16 @@ describe("what the model is shown", () => {
     expect(shown.balanceChanges).toEqual([]);
   });
 
+  it("rounds the fee to four decimals, the way the screens show it", () => {
+    const fee = (wei: bigint) =>
+      explainPayload(monVerdict(wei), "en", { valueWei: "0", feeWei: wei.toString() }).networkFee
+        ?.amount;
+    expect(fee(5_414_670_000_000_000n)).toBe("0.0054");
+    expect(fee(7_149_999_999_999_999n)).toBe("0.0071");
+    // Too small for four decimals: exact, never "0".
+    expect(fee(12_000_000_000_000n)).toBe("0.000012");
+  });
+
   it("keeps a token that leaves when no MON is sent", () => {
     const usdcOut = {
       account: USER,
