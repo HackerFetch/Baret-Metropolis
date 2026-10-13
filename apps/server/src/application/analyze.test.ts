@@ -42,7 +42,8 @@ import {
   USDC,
   USER,
 } from "../testing/fake.js";
-import { analyze } from "./analyze.js";
+import { analyze, sentFactsOf } from "./analyze.js";
+import { VerdictCache } from "./verdicts.js";
 
 const emitted = new Set<string>();
 
@@ -70,6 +71,18 @@ describe("simulation", () => {
     const mon = r.estimatedChanges.find((c) => c.asset.kind === "native");
     // One MON plus the fee for the whole gas limit (50k gas at 100 gwei).
     expect(mon?.delta).toBe((-(ONE_MON + 50_000n * 100n * 10n ** 9n)).toString());
+  });
+
+  it("keeps what the transaction sends and its fee apart, for /v1/explain", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(PEER, ONE_MON);
+    const r = await run(tx({ to: PEER, value: ONE_MON.toString() }), rpc);
+    const fee = (50_000n * 100n * 10n ** 9n).toString();
+    expect(sentFactsOf(r)).toEqual({ valueWei: ONE_MON.toString(), feeWei: fee });
+    const cache = new VerdictCache();
+    cache.remember(r);
+    expect(cache.facts(r.meta.requestId)).toEqual({ valueWei: ONE_MON.toString(), feeWei: fee });
+    expect(cache.facts("unknown")).toBeUndefined();
   });
 
   it("blocks a request that would revert", async () => {

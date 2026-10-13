@@ -17,12 +17,17 @@ const config = loadConfig();
 const rpcs = new Map<MonadNetwork, MonadRpc>();
 const sources = new Map<MonadNetwork, Sources>();
 
-const deps: AnalyzeDeps = {
+const verdicts = new VerdictCache();
+
+const deps: AnalyzeDeps & {
+  sentFacts: { get: (requestId: string) => ReturnType<VerdictCache["facts"]> };
+} = {
   config,
   explainer: config.explain ? kimiExplainer(config.explain) : null,
   policyDrafter: config.explain ? kimiPolicyDrafter(config.explain) : null,
   kimiBudget: new KimiBudget(config.kimiDailyLimit),
-  verdicts: new VerdictCache(),
+  verdicts,
+  sentFacts: { get: (requestId) => verdicts.facts(requestId) },
   explanations: new ExplanationCache(),
   unreadKinds: new UnreadKinds(),
   rpcFor: (n) => {

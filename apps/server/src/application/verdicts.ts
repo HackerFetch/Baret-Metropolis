@@ -1,4 +1,6 @@
 import type { AnalyzeResponse, Explanation } from "@baret/guard";
+import { sentFactsOf } from "./analyze.js";
+import type { SentFacts } from "./explain.js";
 
 /**
  * What /v1/explain is allowed to explain: the verdicts this server itself
@@ -74,6 +76,12 @@ export class VerdictCache {
 
   get(requestId: string): AnalyzeResponse | undefined {
     return this.map.get(requestId);
+  }
+
+  /** What the verdict's transaction sends and its fee (for /v1/explain), while the verdict is kept. */
+  facts(requestId: string): SentFacts | undefined {
+    const verdict = this.map.get(requestId);
+    return verdict ? sentFactsOf(verdict) : undefined;
   }
 
   get size(): number {

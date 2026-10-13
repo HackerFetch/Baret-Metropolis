@@ -30,7 +30,7 @@ import { PROXY_IMPLEMENTATION_SLOTS } from "../simulation/abi.js";
 import { decodeTransaction, type NormalizedTx } from "../simulation/decode.js";
 import { type CallTrace, parseCallTrace } from "../simulation/trace.js";
 import type { Sources } from "../sources/types.js";
-import type { Explainer } from "./explain.js";
+import type { Explainer, SentFacts } from "./explain.js";
 import type { KimiBudget, PolicyDrafter } from "./policy-draft.js";
 import type { ReviewService } from "./review.js";
 import type { SealedRelay } from "./sealed.js";
@@ -96,6 +96,18 @@ async function lookup<T>(
 const uniq = (xs: (Address | null | undefined)[]): Address[] => [
   ...new Set(xs.filter((x): x is Address => Boolean(x))),
 ];
+
+/**
+ * What a verdict's transaction sends and its estimated fee, kept beside the
+ * verdict object instead of in the response, so the API contract does not
+ * change. /v1/explain reads it to word the amount sent and the fee apart.
+ */
+const SENT = new WeakMap<AnalyzeResponse, SentFacts>();
+
+/** The amount sent and the fee behind a verdict this process made, if any. */
+export function sentFactsOf(verdict: AnalyzeResponse): SentFacts | undefined {
+  return SENT.get(verdict);
+}
 
 export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<AnalyzeResponse> {
   const network = deps.config.networks[req.network];
@@ -407,7 +419,9 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     },
   };
   // The response is a contract with every client: never send one that breaks it.
-  return analyzeResponseSchema.parse(response);
+  const parsed = analyzeResponseSchema.parse(response);
+  if (tx) SENT.set(parsed, { valueWei: tx.value.toString(), feeWei: feeWei?.toString() ?? null });
+  return parsed;
 }
 
 function balanceChanges(ctx: AnalysisContext, symbols: Map<Address, string>): BalanceChange[] {

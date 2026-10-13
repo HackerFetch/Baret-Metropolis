@@ -7,6 +7,7 @@ import {
   explanationSchema,
 } from "@baret/guard";
 import { KIMI, LlmClient, type LlmProvider } from "@baret/llm";
+import { formatEther } from "viem";
 
 /**
  * Turns a verdict into plain language with a language model (KIMI).
@@ -20,9 +21,28 @@ import { KIMI, LlmClient, type LlmProvider } from "@baret/llm";
  * else.
  */
 
+/**
+ * What the transaction behind a verdict sends and what it costs, in MON base
+ * units (wei). The verdict alone cannot say: its MON row is the account's
+ * whole change with the network fee already taken off, and a model that reads
+ * that row as the amount sent adds the fee to it (a 0.01 MON send became
+ * "about 0.0121 MON", a vault that sends nothing "about 0.139 MON").
+ */
+export interface SentFacts {
+  /** The call's own `value`: the MON the transaction sends to the address it calls. "0" when none. */
+  valueWei: string;
+  /** The fee the verdict's MON row already has taken off (Baret's estimate); null when it was not priced. */
+  feeWei: string | null;
+}
+
 export interface Explainer {
   readonly model: { provider: string; name: string };
-  explain(verdict: AnalyzeResponse, language: ExplainLanguage): Promise<Explanation>;
+  /** `sent`: what the verdict's transaction sends and its fee, when the caller knows them. */
+  explain(
+    verdict: AnalyzeResponse,
+    language: ExplainLanguage,
+    sent?: SentFacts,
+  ): Promise<Explanation>;
 }
 
 const LANGUAGE_NAMES: Record<ExplainLanguage, string> = {
@@ -37,8 +57,12 @@ You receive a JSON object with:
 - "decision": Baret's decision. "safe": no rule was broken. "caution": no rule was broken, but there is something worth reading first. "blocked": one of the person's own rules was broken, or a check could not be completed, so Baret advises against signing. The person decides what to do with that advice; Baret does not sign or refuse for them.
 - "findings": what Baret found. Each has the reference text Baret shows for it ("title", "what", "why", "fix"), its severity and whether it alone blocks.
 - "rulesBroken": the person's own rules that fired, each by the name it has on their rules screen, with the limit and the actual value when known.
-- "balanceChanges" and "approvals": what the transaction would do according to a simulation. Amounts are only here.
+- "sent": the MON the transaction itself sends to the address it calls. "0" means it sends no MON. Null when Baret was not told.
+- "networkFee": Baret's estimate of the fee the network charges to run the transaction, in MON. It is a cost, not a payment to anyone. Null when not known.
+- "balanceChanges" and "approvals": what the transaction would do according to a simulation. A MON row with "networkFeeIncluded": true is the account's whole MON change with the network fee already taken off, so it is not the amount sent. A row with "networkFeeIncluded": false leaves the fee out.
 - "checksUnavailable": data sources that did not answer. Baret treats missing data as a reason to block.
+
+Amounts are only in "sent", "networkFee", "balanceChanges" and "approvals".
 
 Write the explanation in the language named by "language".
 
@@ -46,7 +70,11 @@ Rules:
 - The decision is final and already made. Never contradict it, soften it, or suggest that a blocked transaction is fine to sign. Never say a transaction is safe when the decision is not "safe".
 - Say what Baret found and what the person can do about it. Never say that Baret will not let them sign, stops them, or refuses: that is their choice. Never advise them to loosen or turn off a rule.
 - Use only facts present in the input. Do not invent amounts, names, addresses, prices or risks. If the input does not say something, do not say it.
+- Say about an address, a contract or a token only what its finding says, in the finding's own terms: for example, that a list Baret reads flags the address. Never add a cause, a victim, a crime or a history (theft, a hack, a scam, stolen funds) that the finding's "what" does not name. A "why" line says why that kind of finding matters in general; it is not a claim about this address.
 - A value named "count" is a number of things (orders, items, call levels), never an amount of money or tokens. Write "1 item", never "1 token". The amount an order gives away, if known, is in "balanceChanges".
+- The amount sent and the network fee are two separate amounts. Name each on its own, as "sends X MON" and "a network fee of about Y MON". Never add them together, and never give their total, or a MON row with "networkFeeIncluded": true, as the amount sent.
+- When "sent" is "0" and no row in "balanceChanges" shows anything leaving the account, say that nothing is sent besides the network fee. When "sent" is "0" but a token leaves the account, say that no MON is sent and name the token amount that leaves.
+- When "sent" is null, do not say how much MON the transaction sends.
 - Plain words. Name a rule only by the name given in "rulesBroken". Never print a code identifier, a finding code, a function name or a camelCase word.
 - Short addresses like 0x1234...abcd are fine; do not print a full 40-character address more than once.
 - No jargon without a few words of explanation. No markdown, no emoji, no exclamation marks.
@@ -123,9 +151,49 @@ function bodyFor(
   return entry.body;
 }
 
-/** What the model is shown: the verdict's facts plus Baret's own wording for each code. */
-export function explainPayload(verdict: AnalyzeResponse, language: ExplainLanguage) {
+/** A base-unit amount as a bigint; null for anything that is not a whole number. */
+function units(raw: string | null | undefined, signed = false): bigint | null {
+  if (typeof raw !== "string" || !(signed ? /^-?\d+$/ : /^\d+$/).test(raw)) return null;
+  return BigInt(raw);
+}
+
+/**
+ * The simulated balance changes. With the fee known, the MON row gets the fee
+ * back, so it shows only what the transaction itself moves, and goes when
+ * that is nothing. Without it, the row is marked as the whole change, fee
+ * included, so it is never read as the amount sent.
+ */
+function balanceRows(changes: AnalyzeResponse["estimatedChanges"], feeWei: bigint | null) {
+  return changes.flatMap((c) => {
+    const row = {
+      account: shortAddress(c.account),
+      asset: c.asset.symbol,
+      decimals: c.asset.decimals,
+    };
+    if (c.asset.kind !== "native") return [{ ...row, deltaBaseUnits: c.delta }];
+    const delta = units(c.delta, true);
+    if (feeWei === null || delta === null) {
+      return [{ ...row, deltaBaseUnits: c.delta, networkFeeIncluded: true }];
+    }
+    const moved = delta + feeWei;
+    if (moved === 0n) return [];
+    return [{ ...row, deltaBaseUnits: moved.toString(), networkFeeIncluded: false }];
+  });
+}
+
+/**
+ * What the model is shown: the verdict's facts plus Baret's own wording for
+ * each code. `sent` puts the MON the transaction sends and its network fee
+ * next to each other as two amounts, never as one.
+ */
+export function explainPayload(
+  verdict: AnalyzeResponse,
+  language: ExplainLanguage,
+  sent?: SentFacts,
+) {
   const copy = findingCopy as Record<string, FindingWords | undefined>;
+  const value = units(sent?.valueWei);
+  const fee = units(sent?.feeWei);
   return {
     language: LANGUAGE_NAMES[language],
     decision: verdict.decision,
@@ -150,12 +218,10 @@ export function explainPayload(verdict: AnalyzeResponse, language: ExplainLangua
       limit: r.limit,
       actual: r.actual,
     })),
-    balanceChanges: verdict.estimatedChanges.map((c) => ({
-      account: shortAddress(c.account),
-      asset: c.asset.symbol,
-      decimals: c.asset.decimals,
-      deltaBaseUnits: c.delta,
-    })),
+    sent: value === null ? null : { asset: "MON", amount: formatEther(value) },
+    networkFee:
+      fee === null ? null : { asset: "MON", amount: formatEther(fee), estimate: true as const },
+    balanceChanges: balanceRows(verdict.estimatedChanges, fee),
     approvals: verdict.approvals.map((a) => ({
       kind: a.kind,
       token: a.symbol ?? shortAddress(a.contract),
@@ -171,10 +237,10 @@ export function explainPayload(verdict: AnalyzeResponse, language: ExplainLangua
 export function llmExplainer(client: Pick<LlmClient, "json" | "provider">): Explainer {
   return {
     model: { provider: client.provider.name, name: client.provider.model },
-    explain: (verdict, language) =>
+    explain: (verdict, language, sent) =>
       client.json({
         system: EXPLAIN_SYSTEM_PROMPT,
-        user: JSON.stringify(explainPayload(verdict, language)),
+        user: JSON.stringify(explainPayload(verdict, language, sent)),
         schema: explanationSchema,
         // Reasoning tokens count against the cap on kimi-k3.
         maxTokens: 3000,

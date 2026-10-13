@@ -2,13 +2,25 @@ import { type ExplainResponse, explainRequestSchema } from "@baret/guard";
 import { LlmUnavailableError } from "@baret/llm";
 import type { FastifyPluginAsync } from "fastify";
 import type { AnalyzeDeps } from "../../application/analyze.js";
+import type { SentFacts } from "../../application/explain.js";
 
 class ExplainDailyLimitError extends Error {}
+
+/** What /v1/explain reads besides the analyze deps. */
+export interface ExplainRouteDeps extends AnalyzeDeps {
+  /**
+   * What the transaction behind a verdict sends and its network fee, by
+   * `meta.requestId`. The verdict cannot say it: its MON row is the whole
+   * change, fee included. Absent, or no entry: the model is told neither, and
+   * the prompt keeps it from calling that row the amount sent.
+   */
+  sentFacts?: { get(requestId: string): SentFacts | undefined } | null;
+}
 
 /** The shape of every `meta.requestId` /v1/analyze returns (a UUID). */
 const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) => {
+export const explainRoutes: FastifyPluginAsync<ExplainRouteDeps> = async (app, deps) => {
   /**
    * A verdict this server returned, in plain language. The words come from a
    * model; the decision is copied from the server's own cached verdict, never
@@ -50,11 +62,12 @@ export const explainRoutes: FastifyPluginAsync<AnalyzeDeps> = async (app, deps) 
       });
     }
     const language = body.data.language ?? "en";
+    const sent = deps.sentFacts?.get(requestId);
     // A fresh model call counts against the daily KIMI cap; a cached one does not.
     // Over the cap: 503, so the screens keep showing the findings as they do.
     const write = () => {
       if (deps.kimiBudget && !deps.kimiBudget.take()) throw new ExplainDailyLimitError();
-      return explainer.explain(verdict, language);
+      return explainer.explain(verdict, language, sent);
     };
     try {
       const explanation = deps.explanations

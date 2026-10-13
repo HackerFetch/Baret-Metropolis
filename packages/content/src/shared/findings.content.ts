@@ -282,7 +282,7 @@ export const findings = {
      *  SCAMSNIFFER_BLACKLIST (`bodyOf()`), naming the actual list instead of
      *  the generic "the blocklist ... or is flagged by Nansen". */
     bodyReason: "{address} is on ScamSniffer's public blacklist.",
-    why: "A listed address has been tied to theft before. Anything this request gives it may be gone for good.",
+    why: "An address on that list was reported for taking funds it should not take. Anything this request gives it may be gone for good.",
     fix: "Decline. If you are sure the listing is wrong, confirm the address with the project first.",
   },
   LOOKALIKE_ADDRESS: {

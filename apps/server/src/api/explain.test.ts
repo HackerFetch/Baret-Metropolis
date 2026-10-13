@@ -7,6 +7,7 @@ import {
   explainPayload,
   kimiExplainer,
   ruleName,
+  type SentFacts,
 } from "../application/explain.js";
 import { ExplanationCache, VerdictCache } from "../application/verdicts.js";
 import { deps, FakeRpc, PEER, tx } from "../testing/fake.js";
@@ -75,18 +76,49 @@ const explanation = {
   advice: "Approve only the amount this action needs, or do not sign.",
 };
 
+const MON = { kind: "native", address: null, symbol: "MON", decimals: 18 } as const;
+const BEFORE = 1_000_000_000_000_000_000n;
+/** The live case of 2026-10-14: the screen showed "You send 0.01 MON" and a fee of its own. */
+const SENT = 10_000_000_000_000_000n;
+const FEE = 2_100_000_000_000_000n;
+
+/** A verdict whose only change is the sender's MON: `spent` leaves, the fee included. */
+function monVerdict(spent: bigint, extra: AnalyzeResponse["estimatedChanges"] = []) {
+  return {
+    ...verdict,
+    decision: "safe",
+    findings: [],
+    firedRules: [],
+    approvals: [],
+    estimatedChanges: [
+      {
+        account: USER,
+        asset: MON,
+        before: BEFORE.toString(),
+        after: (BEFORE - spent).toString(),
+        delta: (-spent).toString(),
+      },
+      ...extra,
+    ],
+  } satisfies AnalyzeResponse;
+}
+
 function appWith(
   explainer: Explainer | null,
   caches: { verdicts?: VerdictCache; explanations?: ExplanationCache } = {},
+  sentFacts?: Map<string, SentFacts>,
 ) {
   const verdicts = caches.verdicts ?? new VerdictCache();
   verdicts.remember(verdict);
-  return buildApp({
+  // Built apart from the call, so the route's own `sentFacts` rides along on AnalyzeDeps.
+  const appDeps = {
     ...deps(new FakeRpc()),
     explainer,
     verdicts,
     explanations: caches.explanations ?? new ExplanationCache(),
-  });
+    ...(sentFacts ? { sentFacts } : {}),
+  };
+  return buildApp(appDeps);
 }
 
 const fake = (explain: Explainer["explain"]): Explainer => ({
@@ -112,7 +144,18 @@ describe("POST /v1/explain", () => {
       model: { provider: "kimi", name: "kimi-k3" },
     });
     expect(body.requestId).toBe(R1);
-    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en");
+    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en", undefined);
+  });
+
+  it("hands the model what the transaction sends and its fee, when the server knows them", async () => {
+    const explain = vi.fn(async () => explanation);
+    const facts: SentFacts = { valueWei: SENT.toString(), feeWei: FEE.toString() };
+    const app = await appWith(fake(explain), {}, new Map([[R1, facts]]));
+    const res = await post(app, { requestId: R1 });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().decision).toBe("blocked");
+    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en", facts);
   });
 
   it("explains its own copy of a posted verdict, never the posted one", async () => {
@@ -123,7 +166,7 @@ describe("POST /v1/explain", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json().decision).toBe("blocked");
-    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en");
+    expect(explain).toHaveBeenCalledExactlyOnceWith(verdict, "en", undefined);
   });
 
   it("explains a verdict that came out of /v1/analyze", async () => {
@@ -184,8 +227,8 @@ describe("POST /v1/explain", () => {
     const zh = await post(app, { requestId: R1, language: "zh" });
     expect(tr.json().language).toBe("tr");
     expect(zh.json().language).toBe("zh");
-    expect(explain).toHaveBeenNthCalledWith(1, verdict, "tr");
-    expect(explain).toHaveBeenNthCalledWith(2, verdict, "zh");
+    expect(explain).toHaveBeenNthCalledWith(1, verdict, "tr", undefined);
+    expect(explain).toHaveBeenNthCalledWith(2, verdict, "zh", undefined);
   });
 
   it("does not keep a failed answer: the next request asks the model again", async () => {
@@ -347,6 +390,105 @@ describe("what the model is shown", () => {
     expect(EXPLAIN_SYSTEM_PROMPT).toContain("0x1234...abcd");
   });
 
+  it("carries the amount sent and the network fee as two amounts, never their sum", () => {
+    const shown = explainPayload(monVerdict(SENT + FEE), "en", {
+      valueWei: SENT.toString(),
+      feeWei: FEE.toString(),
+    });
+    expect(shown.sent).toEqual({ asset: "MON", amount: "0.01" });
+    expect(shown.networkFee).toEqual({ asset: "MON", amount: "0.0021", estimate: true });
+    // The MON row gets its fee back: what the transaction moves, not the whole change.
+    expect(shown.balanceChanges).toEqual([
+      {
+        account: "0x5aE1...8197",
+        asset: "MON",
+        decimals: 18,
+        deltaBaseUnits: (-SENT).toString(),
+        networkFeeIncluded: false,
+      },
+    ]);
+    const text = JSON.stringify(shown);
+    expect(text).not.toContain("0.0121");
+    expect(text).not.toContain((SENT + FEE).toString());
+  });
+
+  it("shows a call that sends no MON as sending nothing, the fee its only cost", () => {
+    const VAULT_FEE = 139_000_000_000_000_000n;
+    const shown = explainPayload(monVerdict(VAULT_FEE), "en", {
+      valueWei: "0",
+      feeWei: VAULT_FEE.toString(),
+    });
+    expect(shown.sent).toEqual({ asset: "MON", amount: "0" });
+    expect(shown.networkFee).toEqual({ asset: "MON", amount: "0.139", estimate: true });
+    expect(shown.balanceChanges).toEqual([]);
+  });
+
+  it("keeps a token that leaves when no MON is sent", () => {
+    const usdcOut = {
+      account: USER,
+      asset: { kind: "erc20", address: USDC, symbol: "USDC", decimals: 6 },
+      before: "25000000",
+      after: "0",
+      delta: "-25000000",
+    } as const;
+    const shown = explainPayload(monVerdict(FEE, [usdcOut]), "en", {
+      valueWei: "0",
+      feeWei: FEE.toString(),
+    });
+    expect(shown.sent?.amount).toBe("0");
+    expect(shown.balanceChanges).toEqual([
+      { account: "0x5aE1...8197", asset: "USDC", decimals: 6, deltaBaseUnits: "-25000000" },
+    ]);
+  });
+
+  it("marks the MON row as the whole change, fee included, when the amount sent is not known", () => {
+    const shown = explainPayload(monVerdict(SENT + FEE), "en");
+    expect(shown.sent).toBeNull();
+    expect(shown.networkFee).toBeNull();
+    expect(shown.balanceChanges).toEqual([
+      {
+        account: "0x5aE1...8197",
+        asset: "MON",
+        decimals: 18,
+        deltaBaseUnits: (-(SENT + FEE)).toString(),
+        networkFeeIncluded: true,
+      },
+    ]);
+  });
+
+  it("tells the model to name the amount sent and the fee apart and never to add them", () => {
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain('"sent": the MON the transaction itself sends');
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain('"networkFee": Baret\'s estimate of the fee');
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("Never add them together");
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain(
+      'never give their total, or a MON row with "networkFeeIncluded": true, as the amount sent',
+    );
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("say that nothing is sent besides the network fee");
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("say that no MON is sent and name the token amount");
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain(
+      'When "sent" is null, do not say how much MON the transaction sends',
+    );
+    // D-028 stays: the decision is the verdict's, the model only words it.
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("The decision is final and already made");
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("Never contradict it");
+  });
+
+  it("tells the model to say only what a finding says, never a cause, victim or crime it does not name", () => {
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain(
+      "Say about an address, a contract or a token only what its finding says",
+    );
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain(
+      "Never add a cause, a victim, a crime or a history (theft, a hack, a scam, stolen funds)",
+    );
+    expect(EXPLAIN_SYSTEM_PROMPT).toContain("it is not a claim about this address");
+  });
+
+  it("keeps the prompt to plain ASCII punctuation", () => {
+    for (const ch of ["\u2014", "\u2013", "\u2026", "\u2018", "\u2019", "\u201c", "\u201d"]) {
+      expect(EXPLAIN_SYSTEM_PROMPT).not.toContain(ch);
+    }
+  });
+
   it("shows the same compliance sentence the screens show: the asset's rule, or the user's own account", () => {
     const AUSDC = "0xaC0893567D43C3E7e6e35a72803df05416C1f20D";
     const compliance = (details: Record<string, unknown>) =>
@@ -412,6 +554,25 @@ describe("kimiExplainer", () => {
     const body = JSON.parse(String(init?.body));
     expect(body.messages[0].content).toBe(EXPLAIN_SYSTEM_PROMPT);
     expect(body).toMatchObject({ reasoning_effort: "low", max_completion_tokens: 3000 });
+  });
+
+  it("sends KIMI the amount sent and the fee as two fields", async () => {
+    const doFetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ choices: [{ message: { content: JSON.stringify(explanation) } }] }),
+        ),
+    ) as unknown as typeof fetch;
+    const explainer = kimiExplainer({ apiKey: "test-key", fetch: doFetch });
+
+    await explainer.explain(monVerdict(SENT + FEE), "en", {
+      valueWei: SENT.toString(),
+      feeWei: FEE.toString(),
+    });
+    const body = JSON.parse(String(vi.mocked(doFetch).mock.calls[0]?.[1]?.body));
+    const user = JSON.parse(body.messages[1].content);
+    expect(user.sent).toEqual({ asset: "MON", amount: "0.01" });
+    expect(user.networkFee).toEqual({ asset: "MON", amount: "0.0021", estimate: true });
   });
 
   it("switches reasoning off for a k2 model set through KIMI_MODEL", async () => {
