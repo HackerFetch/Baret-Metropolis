@@ -59,6 +59,11 @@ export interface AnalysisContext {
   selfdestructs: Address[];
   /** Touched addresses that hold code. */
   contracts: Address[];
+  /**
+   * Addresses whose code was read and is empty: wallets. An address that was
+   * not read is in neither list.
+   */
+  codeless: Address[];
   /** Addresses that receive funds, rights or calls from the user. */
   counterparties: Address[];
   /** Addresses that receive value from the user (compliance applies to these). */

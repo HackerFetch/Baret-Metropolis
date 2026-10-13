@@ -29,6 +29,12 @@ export interface TransferEffect {
   nft: boolean;
 }
 
+/** An ERC-721 approval for one item: `spender` may move that one piece. */
+export interface ItemApprovalEffect {
+  contract: Address;
+  spender: Address;
+}
+
 export interface OwnershipEffect {
   contract: Address;
   newOwner: Address;
@@ -40,6 +46,11 @@ export interface Effects {
   /** Every value movement out of or into the user's account. */
   transfers: TransferEffect[];
   ownership: OwnershipEffect[];
+  /**
+   * Single-item NFT approvals. Not an allowance and not operator access, so
+   * not in `approvals`; the spender is still checked like every grantee.
+   */
+  itemApprovals?: ItemApprovalEffect[];
   /**
    * Every account that ends up with value in this request, whoever pays it:
    * the merchant a vault pays on the user's behalf, the recipient of an
@@ -82,6 +93,7 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
   const approvals: ApprovalEffect[] = [];
   const transfers: TransferEffect[] = [];
   const ownership: OwnershipEffect[] = [];
+  const itemApprovals: ItemApprovalEffect[] = [];
   const paid = new Set<Address>();
 
   for (const f of trace.frames) {
@@ -110,6 +122,11 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
         break;
       case "Approval":
         if (ev.owner === user) pushApproval(approvals, erc20(ev.token, ev.spender, ev.value));
+        break;
+      case "ItemApproval":
+        if (ev.owner === user && ev.spender !== zeroAddress) {
+          itemApprovals.push({ contract: ev.token, spender: ev.spender });
+        }
         break;
       case "ApprovalForAll":
         if (ev.owner === user && ev.approved) {
@@ -146,6 +163,12 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
       );
       if (plain >= 0) approvals.splice(plain, 1);
     }
+    // Permit2's own allowance emits Permit2's Approval event, not the token's:
+    // read it from the call the user makes.
+    if (call?.functionName === "approve" && call.args.length === 4 && f.from === user) {
+      const [token, spender, amount] = call.args;
+      pushApproval(approvals, erc20(token, spender, amount));
+    }
   }
 
   // An operation is a call that can change something. A read does not count,
@@ -159,6 +182,7 @@ export function effectsFromTrace(trace: CallTrace, user: Address): Effects {
     approvals,
     transfers,
     ownership,
+    itemApprovals,
     paidAddresses: [...paid],
     operationCount: calls,
     source: "trace",
@@ -201,8 +225,21 @@ function applyCall(
       paid(call.args[0]);
       break;
     }
-    case "approve":
-    case "increaseAllowance": {
+    case "approve": {
+      if (call.args.length === 4) {
+        // Permit2: the allowance is on `token`, kept by the Permit2 contract.
+        const [token, spender, amount] = call.args;
+        pushApproval(out.approvals, erc20(token, spender, amount));
+        break;
+      }
+      const [spender, amount] = call.args;
+      pushApproval(out.approvals, erc20(target, spender, amount));
+      break;
+    }
+    case "increaseAllowance":
+    case "increaseApproval": {
+      // The amount added. Read from calldata alone the total is unknown; the
+      // trace's Approval log carries the total.
       const [spender, amount] = call.args;
       pushApproval(out.approvals, erc20(target, spender, amount));
       break;

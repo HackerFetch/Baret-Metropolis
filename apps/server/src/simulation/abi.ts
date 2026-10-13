@@ -9,6 +9,11 @@ export const KNOWN_FUNCTIONS = parseAbi([
   "function transferFrom(address from, address to, uint256 amount)",
   "function approve(address spender, uint256 amount)",
   "function increaseAllowance(address spender, uint256 addedValue)",
+  // Older OpenZeppelin and many deployed tokens name the same call this way.
+  "function increaseApproval(address spender, uint256 addedValue)",
+  // Permit2's on-chain allowance (AllowanceTransfer): the spender may pull
+  // `amount` of `token` through Permit2 until `expiration`.
+  "function approve(address token, address spender, uint160 amount, uint48 expiration)",
   "function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)",
   "function setApprovalForAll(address operator, bool approved)",
   "function safeTransferFrom(address from, address to, uint256 tokenId)",
@@ -81,6 +86,8 @@ export function multicallInner(call: KnownCall | null, max = 50): Hex[] {
 export type KnownEvent =
   | { name: "Transfer"; token: Address; from: Address; to: Address; value: bigint; nft: boolean }
   | { name: "Approval"; token: Address; owner: Address; spender: Address; value: bigint }
+  /** ERC-721 single-item approval: `spender` may move the one item `tokenId`. */
+  | { name: "ItemApproval"; token: Address; owner: Address; spender: Address; tokenId: bigint }
   | {
       name: "ApprovalForAll";
       token: Address;
@@ -108,7 +115,11 @@ export function decodeKnownLog(log: {
       case "Transfer":
         return { name: "Transfer", token: log.address, ...ev.args, nft };
       case "Approval":
-        if (nft) return null; // ERC-721 single-item approval: not an allowance
+        if (nft) {
+          // ERC-721 single-item approval: not an allowance, but a grant all the same.
+          const { owner, spender, value } = ev.args;
+          return { name: "ItemApproval", token: log.address, owner, spender, tokenId: value };
+        }
         return { name: "Approval", token: log.address, ...ev.args };
       case "ApprovalForAll":
         return { name: "ApprovalForAll", token: log.address, ...ev.args };

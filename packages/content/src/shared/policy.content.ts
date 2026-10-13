@@ -166,10 +166,12 @@ export const policy = {
     blockRiskyContracts: {
       group: "contracts",
       label: "Block risky contracts",
-      hint: "Blocks a request that touches a contract on the risky list in the Baret reputation registry, or that pays an unknown contract and gets nothing back.",
+      hint: "Blocks a request that touches a contract on the risky list in the Baret reputation registry, or that pays an unknown contract and gets nothing back. Also blocks an address that copies another one, and an allowance to a wallet.",
       codes: [
         "RISKY_CONTRACT_INTERACTION",
         "VALUE_KEPT_BY_UNKNOWN_CONTRACT",
+        "LOOKALIKE_ADDRESS",
+        "APPROVAL_TO_WALLET",
         "REPUTATION_DATA_UNAVAILABLE",
       ],
     },

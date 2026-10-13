@@ -4,6 +4,7 @@ import { compliance } from "./detectors/compliance.js";
 import { compute } from "./detectors/compute.js";
 import { cpi } from "./detectors/cpi.js";
 import { evmDanger } from "./detectors/evm-danger.js";
+import { lookalike } from "./detectors/lookalike.js";
 import { programs } from "./detectors/programs.js";
 import { reputation } from "./detectors/reputation.js";
 import { simulation } from "./detectors/simulation.js";
@@ -15,6 +16,7 @@ export const DETECTORS: Record<string, Detector> = {
   programs,
   "evm-danger": evmDanger,
   reputation,
+  lookalike,
   compliance,
   cpi,
   compute,

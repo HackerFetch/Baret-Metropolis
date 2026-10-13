@@ -10,6 +10,7 @@ export const FINDING_CODES = [
   "ERC20_APPROVAL_GRANTED",
   "ERC20_APPROVAL_UNLIMITED",
   "NFT_OPERATOR_GRANTED",
+  "APPROVAL_TO_WALLET",
   "PERMIT_SIGNATURE_DETECTED",
   "SIGNATURE_NOT_UNDERSTOOD",
   "SIGNATURE_UNRECOGNISED",
@@ -24,6 +25,7 @@ export const FINDING_CODES = [
   "ACCOUNT_CODE_DELEGATION",
   "OWNERSHIP_TRANSFER",
   "KNOWN_MALICIOUS_ADDRESS",
+  "LOOKALIKE_ADDRESS",
   "NANSEN_FLAGGED_FRESH_WALLET",
   "NANSEN_FLAGGED_WHALE_COUNTERPARTY",
   "NANSEN_TRUST_BELOW_MINIMUM",
@@ -91,6 +93,8 @@ export const FINDING_SPECS = {
   ERC20_APPROVAL_GRANTED: { severity: "low", rule: warning },
   ERC20_APPROVAL_UNLIMITED: { severity: "high", rule: toggle("blockUnlimitedApprovals") },
   NFT_OPERATOR_GRANTED: { severity: "high", rule: toggle("blockSetApprovalForAll") },
+  // A wallet (no code) that may spend the user's tokens: ice phishing.
+  APPROVAL_TO_WALLET: { severity: "high", rule: toggle("blockRiskyContracts") },
   PERMIT_SIGNATURE_DETECTED: { severity: "high", rule: toggle("blockPermit") },
   // Not a toggle: a signature Baret cannot read blocks under every policy.
   SIGNATURE_NOT_UNDERSTOOD: {
@@ -115,6 +119,9 @@ export const FINDING_SPECS = {
   },
   OWNERSHIP_TRANSFER: { severity: "high", rule: toggle("blockOwnershipTransfer") },
   KNOWN_MALICIOUS_ADDRESS: { severity: "critical", rule: toggle("blockKnownMalicious") },
+  // An address that copies the first and last characters of another one
+  // (address poisoning, a CREATE2 lookalike contract).
+  LOOKALIKE_ADDRESS: { severity: "critical", rule: toggle("blockRiskyContracts") },
   NANSEN_FLAGGED_FRESH_WALLET: { severity: "medium", rule: warning },
   NANSEN_FLAGGED_WHALE_COUNTERPARTY: { severity: "low", rule: warning },
   NANSEN_TRUST_BELOW_MINIMUM: {

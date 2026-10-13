@@ -45,7 +45,8 @@
  *   {cap}        a spend cap: a threshold on money an agent may pay
  *   {limit}      any other rule threshold
  *   {actual}     the observed value that was compared with {cap} or {limit}
- *   {expected}   what the other side asked for, compared with {actual}
+ *   {expected}   what the other side asked for, compared with {actual}; or,
+ *                on LOOKALIKE_ADDRESS, the address the copy imitates
  *   {country}    the country on a verified identity
  *   {tier}       the verification level on a verified identity
  *   {count}      a number of things
@@ -79,6 +80,7 @@ type Emitter =
   | "programs"
   | "evm-danger"
   | "reputation"
+  | "lookalike"
   | "compliance"
   | "cpi"
   | "compute"
@@ -146,6 +148,14 @@ export const findings = {
     body: "This lets {operator} move every item you hold from {contract}, and any you get later, until you revoke it.",
     why: "Marketplaces ask for this to list your items. Drainers ask for it too, because one signature covers the whole collection.",
     fix: "Approve only if {operator} is the marketplace you meant to use. Revoke it when you stop selling there.",
+  },
+  APPROVAL_TO_WALLET: {
+    emitter: "approvals",
+    values: ["spender", "contract"],
+    title: "A wallet gets the right to spend",
+    body: "This lets {spender} move your tokens from {contract}, and {spender} is a wallet, not an app's contract.",
+    why: "Apps take allowances through contracts. A wallet with an allowance is how ice phishing works: nothing moves now, and the thief empties the account later.",
+    fix: "Decline. No real app asks you to approve a personal wallet.",
   },
   PERMIT_SIGNATURE_DETECTED: {
     emitter: "approvals",
@@ -274,6 +284,14 @@ export const findings = {
     bodyReason: "{address} is on ScamSniffer's public blacklist.",
     why: "A listed address has been tied to theft before. Anything this request gives it may be gone for good.",
     fix: "Decline. If you are sure the listing is wrong, confirm the address with the project first.",
+  },
+  LOOKALIKE_ADDRESS: {
+    emitter: "lookalike",
+    values: ["address", "expected"],
+    title: "This address copies another one",
+    body: "{address} starts and ends like {expected}, but it is a different address.",
+    why: "Wallets show the first and last characters, so a copy looks the same at a glance. Scammers grind addresses like this to pose as an app, a token or your own account.",
+    fix: "Decline. Copy the address from the project's own docs, never from your history or a link.",
   },
   NANSEN_FLAGGED_FRESH_WALLET: {
     emitter: "reputation",

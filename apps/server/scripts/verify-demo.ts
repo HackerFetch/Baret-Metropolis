@@ -70,7 +70,8 @@ const scenarios: Scenario[] = [
     name: "NovaSwap   attack: unlimited approval to the look-alike",
     request: novaswap.attackApprove(from),
     verdict: "blocked",
-    codes: ["ERC20_APPROVAL_UNLIMITED", "KNOWN_MALICIOUS_ADDRESS"],
+    // The drainer was ground to copy the router's first and last characters.
+    codes: ["ERC20_APPROVAL_UNLIMITED", "KNOWN_MALICIOUS_ADDRESS", "LOOKALIKE_ADDRESS"],
   },
   {
     name: "PixelDrop  honest mint of 2",
@@ -162,7 +163,8 @@ const scenarios: Scenario[] = [
     request: agents.operatorApproval(from),
     with: { policyTemplate: "balanced" },
     verdict: "blocked",
-    codes: ["NFT_OPERATOR_GRANTED"],
+    // The operator is a wallet, not a marketplace contract.
+    codes: ["NFT_OPERATOR_GRANTED", "APPROVAL_TO_WALLET"],
   },
   {
     name: "Agents     send to a flagged wallet",

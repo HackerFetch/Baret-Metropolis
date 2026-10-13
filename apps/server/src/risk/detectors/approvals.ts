@@ -81,5 +81,33 @@ export const approvals: Detector = (ctx) => {
       });
     }
   }
+  out.push(...grantsToWallets(ctx));
   return out;
 };
+
+/**
+ * An allowance, operator access, permit or single-item approval granted to an
+ * address with no code: a wallet. Apps take allowances through contracts; a
+ * wallet that may spend the user's tokens is how ice phishing works, and the
+ * thief pulls the funds later, in a transaction of their own. An address
+ * whose code was not read is not judged here.
+ */
+function grantsToWallets(ctx: Parameters<Detector>[0]): FindingDraft[] {
+  const codeless = new Set(ctx.codeless);
+  const grants = [
+    ...ctx.effects.approvals.map((a) => ({ spender: a.spender, contract: a.contract })),
+    ...(ctx.effects.itemApprovals ?? []),
+  ];
+  const seen = new Set<string>();
+  const out: FindingDraft[] = [];
+  for (const g of grants) {
+    const key = `${g.contract}:${g.spender}`;
+    if (!codeless.has(g.spender) || g.spender === ctx.user || seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      code: "APPROVAL_TO_WALLET",
+      values: { spender: g.spender, contract: g.contract },
+    });
+  }
+  return out;
+}

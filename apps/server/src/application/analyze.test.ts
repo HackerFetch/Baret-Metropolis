@@ -186,6 +186,7 @@ describe("approvals", () => {
 
   it("shows an unlimited allowance as Caution under Permissive", async () => {
     const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
     rpc.frame = frame({ to: USDC, logs: [approvalLog(USDC, USER, DAPP, maxUint256)] });
     const r = await run(
       {
@@ -1619,6 +1620,155 @@ describe("collectibles in the balance changes", () => {
     const r = await run(tx({ to: NFT, data: "0x42842e0e" }), rpc);
     const pieces = r.estimatedChanges.filter((c) => c.asset.kind === "erc721");
     expect(pieces.map((p) => [p.asset.tokenId, p.delta])).toEqual([["9", "-1"]]);
+  });
+});
+
+describe("drainer techniques a wallet's own prompt lets through", () => {
+  // Copies of USDC (0x2222...2222) and of the user (0x1111...1111): the
+  // first and last four characters match, the middle does not.
+  const USDC_COPY = getAddress("0x2222aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2222");
+  const USER_COPY = getAddress("0x1111bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb1111");
+  const PERMIT2 = getAddress("0x000000000022D473030F116dDEE9F6B43aC78BA3");
+  const transferData = (to: Address, amount: bigint) =>
+    calldata({ abi: KNOWN_FUNCTIONS, functionName: "transfer", args: [to, amount] });
+
+  it("blocks a call to a contract that copies a known one", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC_COPY, "0x60");
+    rpc.frame = frame({ to: USDC_COPY, input: transferData(PEER, ONE_USDC) });
+    const r = await run(tx({ to: USDC_COPY, data: transferData(PEER, ONE_USDC) }), rpc);
+    const f = r.findings.find((x) => x.code === "LOOKALIKE_ADDRESS");
+    expect(f?.values).toEqual({ address: USDC_COPY, expected: USDC });
+    expect(f?.details).toEqual({ imitates: "known" });
+    expect(f?.blocking).toBe(true);
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("blocks a send to an address that copies the sender's own (address poisoning)", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(USER_COPY, ONE_MON);
+    const r = await run(tx({ to: USER_COPY, value: ONE_MON.toString() }), rpc);
+    const f = r.findings.find((x) => x.code === "LOOKALIKE_ADDRESS");
+    expect(f?.values).toEqual({ address: USER_COPY, expected: USER });
+    expect(f?.details).toEqual({ imitates: "self" });
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("shows a copy as Caution under Permissive", async () => {
+    const rpc = new FakeRpc();
+    rpc.frame = sendMon(USER_COPY, ONE_MON);
+    const r = await run(
+      {
+        ...tx({ to: USER_COPY, value: ONE_MON.toString() }),
+        policy: policy({ blockRiskyContracts: false }),
+      },
+      rpc,
+    );
+    expect(codes(r)).toContain("LOOKALIKE_ADDRESS");
+    expect(r.decision).toBe("caution");
+  });
+
+  it("catches a permit whose spender copies another address in the same message", async () => {
+    // The spender copies Permit2: a fake allowance manager.
+    const fake = getAddress("0x000000000022d473cccccccccccccccccccc8BA3");
+    const r = await run({
+      network: "testnet",
+      policy: policy(),
+      typedData: {
+        signer: USER,
+        domain: { name: "USD Coin", verifyingContract: USDC, chainId: 10143 },
+        types: {},
+        primaryType: "Permit",
+        message: { owner: USER, spender: fake, value: "1000000", nonce: 0, deadline: NOW + 60 },
+      },
+    });
+    const f = r.findings.find((x) => x.code === "LOOKALIKE_ADDRESS");
+    expect(f?.values).toEqual({ address: fake, expected: PERMIT2 });
+  });
+
+  it("blocks an allowance to a wallet (ice phishing), however small", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.frame = frame({
+      to: USDC,
+      input: approveData(PEER, ONE_USDC),
+      logs: [approvalLog(USDC, USER, PEER, ONE_USDC)],
+    });
+    const r = await run(tx({ to: USDC, data: approveData(PEER, ONE_USDC) }), rpc);
+    const f = r.findings.find((x) => x.code === "APPROVAL_TO_WALLET");
+    expect(f?.values).toEqual({ spender: PEER, contract: USDC });
+    expect(f?.blocking).toBe(true);
+    expect(r.decision).toBe("blocked");
+  });
+
+  it("does not report an allowance to a contract as one to a wallet", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.code.set(DAPP, "0x60");
+    rpc.frame = frame({
+      to: USDC,
+      input: approveData(DAPP, ONE_USDC),
+      logs: [approvalLog(USDC, USER, DAPP, ONE_USDC)],
+    });
+    const r = await run(tx({ to: USDC, data: approveData(DAPP, ONE_USDC) }), rpc);
+    expect(codes(r)).not.toContain("APPROVAL_TO_WALLET");
+  });
+
+  it("reports operator access and a single item granted to a wallet", async () => {
+    const rpc = new FakeRpc();
+    rpc.code.set(NFT, "0x60");
+    const itemApproval = {
+      ...approvalLog(NFT, USER, DRAINER, 0n),
+      data: "0x" as const,
+    };
+    itemApproval.topics = [...itemApproval.topics, pad("0x07", { size: 32 })];
+    rpc.frame = frame({
+      to: NFT,
+      logs: [
+        log(
+          NFT,
+          "ApprovalForAll",
+          { owner: USER, operator: PEER },
+          { types: [{ type: "bool" }], values: [true] },
+        ),
+        itemApproval,
+      ],
+    });
+    const r = await run(tx({ to: NFT, data: "0xa22cb465" }), rpc);
+    const grants = r.findings.filter((x) => x.code === "APPROVAL_TO_WALLET");
+    expect(grants.map((g) => g.values.spender).sort()).toEqual([PEER, DRAINER].sort());
+    expect(codes(r)).toContain("NFT_OPERATOR_GRANTED");
+  });
+
+  it.each([
+    ["increaseAllowance", [DAPP, maxUint256]],
+    ["increaseApproval", [DAPP, maxUint256]],
+  ])("reads %s to the maximum as an unlimited allowance", async (functionName, args) => {
+    const rpc = new FakeRpc();
+    rpc.code.set(DAPP, "0x60");
+    const data = calldata({ abi: KNOWN_FUNCTIONS, functionName, args });
+    const r = await run(tx({ to: USDC, data }), rpc);
+    expect(codes(r)).toContain("ERC20_APPROVAL_UNLIMITED");
+    expect(r.approvals[0]).toMatchObject({ contract: USDC, spender: DAPP, unlimited: true });
+  });
+
+  it("reads Permit2's on-chain allowance, with and without a trace", async () => {
+    const data = calldata({
+      abi: KNOWN_FUNCTIONS,
+      functionName: "approve",
+      args: [USDC, DAPP, 2n ** 160n - 1n, NOW + 3600],
+    });
+    for (const traced of [false, true]) {
+      const rpc = new FakeRpc();
+      rpc.code.set(DAPP, "0x60");
+      rpc.code.set(PERMIT2, "0x60");
+      if (traced) rpc.frame = frame({ to: PERMIT2, input: data });
+      const r = await run(tx({ to: PERMIT2, data }), rpc);
+      expect(codes(r)).toContain("ERC20_APPROVAL_UNLIMITED");
+      expect(r.approvals).toEqual([
+        expect.objectContaining({ contract: USDC, spender: DAPP, unlimited: true }),
+      ]);
+    }
   });
 });
 

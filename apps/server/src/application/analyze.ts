@@ -215,6 +215,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   const counterparties = uniq([
     tx?.to,
     ...effects.approvals.map((a) => a.spender),
+    ...(effects.itemApprovals ?? []).map((a) => a.spender),
     ...effects.transfers.filter((t) => t.from === user).map((t) => t.to),
     // Whoever ends up with value, whoever paid it: the merchant a vault pays
     // for the agent, the recipient of an order's consideration. A drainer is
@@ -229,7 +230,14 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   const recipients = uniq(
     effects.transfers.filter((t) => t.from === user && t.to !== user).map((t) => t.to),
   );
+  // Grantees first: whether a spender has code decides a finding of its own,
+  // so it is never the one cut off by the bound.
+  const grantees = uniq([
+    ...effects.approvals.map((a) => a.spender),
+    ...(effects.itemApprovals ?? []).map((a) => a.spender),
+  ]);
   const candidates = uniq([
+    ...grantees,
     ...(trace?.touched ?? []),
     ...effects.approvals.map((a) => a.contract),
     ...counterparties,
@@ -268,6 +276,8 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
   ]);
 
   const contracts = candidates.filter((_, i) => (codes[i] ?? "0x") !== "0x");
+  // Read and found empty: an account nobody deployed code to (a wallet).
+  const codeless = candidates.filter((_, i) => codes[i] === "0x");
 
   // A compliant asset demands identity on both sides by itself; ask about it
   // even when the user's rules do not. If the question fails, the simulation
@@ -345,6 +355,7 @@ export async function analyze(req: AnalyzeRequest, deps: AnalyzeDeps): Promise<A
     delegateCalls,
     selfdestructs,
     contracts,
+    codeless,
     counterparties,
     recipients,
     tokens,
