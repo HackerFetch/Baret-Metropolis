@@ -1,8 +1,9 @@
-import { findings, hub } from "@baret/content";
+import { analysisPanel, findings, hub } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
 import type { WindowCall } from "@baret/wallet-core/window";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
+import { ShieldCheck, ShieldX } from "lucide-react";
 import { type JSX, useCallback, useRef, useState } from "react";
 import { askBaret, type BaretAnswer, focusBaretWindow } from "./baretWindow.js";
 import { BUSY, LINK } from "./SignBlock.js";
@@ -71,16 +72,22 @@ function Result({ answer }: { answer: BaretAnswer }): JSX.Element {
   switch (answer.type) {
     case "signed":
       return (
-        <div className="grid gap-1">
-          <p className="text-sm font-medium text-[color:var(--fg)]">{copy.signed}</p>
-          <a
-            href={`${sign.explorer}/tx/${answer.hash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={LINK}
-          >
-            {fill(sign.view, { hash: truncateAddress(answer.hash) })}
-          </a>
+        <div className="flex gap-3 rounded-[var(--radius-sm)] bg-[color:var(--safe-dim)] px-4 py-3">
+          <ShieldCheck
+            aria-hidden="true"
+            className="mt-0.5 size-5 shrink-0 text-[color:var(--safe-ink)]"
+          />
+          <div className="grid gap-1">
+            <p className="text-sm font-medium text-[color:var(--fg)]">{copy.signed}</p>
+            <a
+              href={`${sign.explorer}/tx/${answer.hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={LINK}
+            >
+              {fill(sign.view, { hash: truncateAddress(answer.hash) })}
+            </a>
+          </div>
         </div>
       );
     case "refused": {
@@ -90,36 +97,44 @@ function Result({ answer }: { answer: BaretAnswer }): JSX.Element {
       // A failed simulation is what a fresh wallet with no MON gets: say so, with the faucet.
       const failed = answer.findings.some((finding) => finding.code === "SIMULATION_FAILED");
       return (
-        <div className="grid gap-2">
-          <p className={ALERT}>{copy.blocked}</p>
-          {answer.findings.length > 0 ? (
-            <>
-              <p className={T.label}>{copy.findings}</p>
-              <ul className="grid gap-1">
-                {answer.findings.map((finding) => (
-                  <li
-                    key={finding.code}
-                    className="border-l-4 border-[color:var(--blocked)] pl-3 text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]"
-                  >
-                    {titleOf(finding.code, finding.values)}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
-          {failed ? (
-            <>
-              <p className={T.small}>{copy.failedHint}</p>
-              <a
-                href={account.faucet.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={LINK}
-              >
-                {account.faucet.label}
-              </a>
-            </>
-          ) : null}
+        <div className="flex gap-3 rounded-[var(--radius-sm)] border-l-4 border-[color:var(--blocked)] bg-[color:var(--blocked-dim)] px-4 py-3">
+          <ShieldX
+            aria-hidden="true"
+            className="mt-0.5 size-5 shrink-0 text-[color:var(--blocked-ink)]"
+          />
+          <div className="grid min-w-0 gap-2">
+            <p className={ALERT}>{copy.blocked}</p>
+            {answer.findings.length > 0 ? (
+              <>
+                <p className={T.label}>{copy.findings}</p>
+                <ul className="grid list-disc gap-1 pl-5 marker:text-[color:var(--blocked)]">
+                  {answer.findings.map((finding) => (
+                    <li
+                      key={finding.code}
+                      className="text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]"
+                    >
+                      {titleOf(finding.code, finding.values)}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            {failed ? (
+              <>
+                <p className={T.small}>{copy.failedHint}</p>
+                <a
+                  href={account.faucet.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={LINK}
+                >
+                  {account.faucet.label}
+                </a>
+              </>
+            ) : null}
+            {/* A failed simulation is not an attack: the comparison would mislead there. */}
+            {failed ? null : <p className={T.small}>{analysisPanel.refusedAfter}</p>}
+          </div>
         </div>
       );
     }

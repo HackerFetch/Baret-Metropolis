@@ -1,37 +1,35 @@
-import { common, hub } from "@baret/content";
+import { common, findings, hub } from "@baret/content";
 import { Button, Sheet, SheetContent, SheetDescription, SheetTitle, Tag } from "@baret/ui";
-import {
-  ChangeList,
-  ClaimsList,
-  type ExpectedKind,
-  ExpectedVerdict,
-  FindingList,
-  LiveVerdict,
-  NoteBlock,
-  TheAsk,
-} from "@baret/web-ui/components/CheckBlocks";
-import { ImgWell } from "@baret/web-ui/components/Img";
+import { ChangeList, type ExpectedKind } from "@baret/web-ui/components/CheckBlocks";
 import { PlainWords } from "@baret/web-ui/components/PlainWords";
-import { StaggerItem } from "@baret/web-ui/components/Reveal";
 import type { DemoMode } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useLayoutEffect, useRef } from "react";
 import type { ImgAsset } from "../../shared/assets.js";
 import { shortAddress } from "./live.js";
+import { Analyzing } from "./panel/Analyzing.js";
+import { Callout } from "./panel/Callout.js";
+import { FindingCards } from "./panel/FindingCards.js";
+import { PANEL_MOTION } from "./panel/motion.js";
+import { PanelDetails } from "./panel/PanelDetails.js";
+import { expectedLabel, VerdictHero } from "./panel/VerdictHero.js";
 import type { CheckState } from "./useCheck.js";
 import { DEMO_CHECK_FROM } from "./wallet/useDemoWallet.js";
 
 /**
  * Baret's panel on top of a demo dApp. It opens when the site's main button
- * is pressed, walks through the analysis phases, then shows the result before
- * anything is signed. It always sits in data-scope="baret", so it keeps
- * Baret's palette on any dApp theme, like the real extension would.
+ * is pressed, shows the check as four stages over the request, then the
+ * result before anything is signed. It always sits in data-scope="baret", so
+ * it keeps Baret's palette on any dApp theme, like the real extension would.
  *
- * Three kinds of result, one layout:
+ * The result reads top to bottom in the order a signer needs it: the verdict
+ * and one sentence why, what changes, the findings, KIMI's plain words, what
+ * would happen if it were signed, the lesson. The call, the page's claims,
+ * the note on the expected verdict and the illustration fold into "Details".
+ *
  * - sample: the expected verdict and the prepared findings;
- * - live: Baret's verdict first, a line saying whether it matches the
- *   expected one, then the same blocks from the server's answer;
+ * - live: Baret's verdict, with a compact "Expected / Live" line under it;
  * - failed: Blocked, and a note that the check did not finish.
  *
  * A sample result offers "Check it live" (useCheck sets it): the same
@@ -72,10 +70,11 @@ export function AnalysisPanel({
   /** The version that was checked, which may differ from the one switched on now. */
   mode: DemoMode;
   copy: PanelCopy;
+  /** The scenario's illustration, folded into Details so it never pushes the verdict down. */
   image?: ImgAsset;
   /**
-   * A site's own block after "What the site asks for", for what the shared
-   * blocks cannot show (Scrybe's run of payments against the cap).
+   * A site's own block after the verdict, for what the shared blocks cannot
+   * show (Scrybe's run of payments against the cap).
    */
   extra?: ReactNode;
   /** A site's own block after the lesson (Scrybe's way to the agents page). */
@@ -97,6 +96,21 @@ export function AnalysisPanel({
     opener.current = el instanceof HTMLElement && el !== document.body ? el : null;
   }, [open]);
 
+  // A live answer leads with its own reason: the first finding's title, or
+  // what the verdict itself means when there is none. The page's prepared
+  // sentence stays with a sample; on a live answer the expectation lives
+  // only in the compact "Expected / Live" line.
+  const first = result?.findings[0];
+  const line =
+    result && result.source === "live"
+      ? first
+        ? fill(findings[first.code].title, first.values)
+        : common.verdicts[result.verdict].line
+      : copy.expectedBody;
+  // The lesson talks about the attack: it shows only when the answer does,
+  // so an honest Safe result does not carry a warning that does not apply.
+  const lessonApplies = result ? result.verdict !== "safe" || result.findings.length > 0 : false;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -111,17 +125,20 @@ export function AnalysisPanel({
         }}
         className="gap-0 overflow-y-auto p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[520px]"
       >
+        <style>{PANEL_MOTION}</style>
         <header
           ref={header}
           tabIndex={-1}
-          className="grid gap-3 border-b border-[color:var(--rule)] px-6 pt-6 pb-5 outline-none"
+          className="grid gap-2 border-b border-[color:var(--rule)] px-6 pt-5 pb-4 pr-14 outline-none"
         >
-          <div className="flex">
+          <div className="flex items-center gap-3">
             <Tag tone="brand" size="sm">
               {common.brand.wordmark}
             </Tag>
+            <SheetTitle className="font-display text-lg font-bold uppercase leading-none tracking-[0.02em] text-[color:var(--fg)]">
+              {panel.title}
+            </SheetTitle>
           </div>
-          <SheetTitle className={`${T.h3} text-[color:var(--fg)]`}>{panel.title}</SheetTitle>
           <SheetDescription className={T.small}>
             {/* A shown answer says where it came from; a wallet connected
                 after a sample check does not relabel that sample. */}
@@ -135,10 +152,11 @@ export function AnalysisPanel({
             </p>
           ) : null}
           {state.phase === "done" && state.checkLive ? (
-            <div className="flex">
+            <div className="flex pt-1">
               <Button
                 type="button"
                 variant="ghost"
+                size="sm"
                 onClick={() => {
                   header.current?.focus();
                   state.checkLive?.();
@@ -157,94 +175,73 @@ export function AnalysisPanel({
 
         {/* Addresses are one long word: let them wrap so the panel never
             outgrows a phone screen. */}
-        <div className="grid gap-5 px-6 py-6 [overflow-wrap:anywhere] [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0 [&>div:first-child>section:first-child]:border-t-0 [&>div:first-child>section:first-child]:pt-0">
-          {state.phase === "checking" ? (
-            <ol aria-label={panel.title} className="grid gap-2">
-              {panel.phases.map((line, i) => (
-                <li
-                  key={line}
-                  className={`flex items-center gap-3 ${T.small} ${i <= state.step ? "text-[color:var(--fg)]" : ""}`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`size-2 shrink-0 rounded-full ${i < state.step ? "bg-[color:var(--fg)]" : i === state.step ? "bg-[color:var(--accent)]" : "bg-[color:var(--rule-strong)]"}`}
-                  />
-                  {line}
-                </li>
-              ))}
-            </ol>
-          ) : null}
+        <div className="grid gap-6 px-6 py-6 [overflow-wrap:anywhere]">
+          {state.phase === "checking" ? <Analyzing step={state.step} call={copy.call} /> : null}
 
           {result?.source === "failed" ? (
             <>
-              <LiveVerdict verdict={result.verdict} />
-              <NoteBlock title={panel.failed.title} body={panel.failed.body} />
-              <TheAsk asks={copy.asks} call={copy.call} />
+              <VerdictHero
+                kind="failed"
+                verdict={result.verdict}
+                kicker={panel.failed.title}
+                line={panel.failed.body}
+              />
+              <PanelDetails asks={copy.asks} call={copy.call} image={image} />
             </>
           ) : null}
 
           {result && result.source !== "failed" ? (
             <>
-              {/* Verdict, findings and changes rise in like the landing's blocks. */}
-              <StaggerItem index={0} className="grid gap-5">
-                {result.source === "live" ? (
-                  <LiveVerdict verdict={result.verdict} expected={copy.expected} />
-                ) : null}
-                <ExpectedVerdict verdict={copy.expected} body={copy.expectedBody} />
-              </StaggerItem>
-              {image ? (
-                <ImgWell
-                  asset={image}
-                  ratio="16/10"
-                  fit="contain"
-                  // The sheet is the full width on phones and 520 px from 640 px.
-                  sizes="(min-width: 640px) 480px, 100vw"
-                  className="border border-[color:var(--rule)]"
+              {result.source === "live" ? (
+                <VerdictHero
+                  kind="live"
+                  verdict={result.verdict}
+                  line={line}
+                  expected={copy.expected}
                 />
-              ) : null}
-              <TheAsk asks={copy.asks} call={copy.call} />
+              ) : (
+                <VerdictHero
+                  kind="sample"
+                  verdict={result.verdict}
+                  label={expectedLabel(copy.expected)}
+                  line={line}
+                />
+              )}
               {extra}
-              <StaggerItem index={1} className="grid">
-                <FindingList items={result.findings} />
-              </StaggerItem>
+              <div
+                className="bp-rise [&>section]:border-t-0 [&>section]:pt-0"
+                style={{ animationDelay: "80ms" }}
+              >
+                <ChangeList rows={result.changes} approvals={result.approvals} />
+              </div>
+              <FindingCards items={result.findings} verdict={result.verdict} />
               {/* KIMI's plain-words reading of a live verdict; nothing when it is unavailable. */}
               {result.source === "live" && result.requestId ? (
-                <PlainWords
-                  requestId={result.requestId}
-                  verdict={result.verdict}
-                  // The wrapper exists only while the block renders, so a 503
-                  // leaves the panel's gaps exactly as before.
-                  wrap={(block) => (
-                    <StaggerItem index={2} className="grid">
-                      {block}
-                    </StaggerItem>
-                  )}
-                />
+                <PlainWords requestId={result.requestId} verdict={result.verdict} />
               ) : null}
-              <StaggerItem index={3} className="grid">
-                <ChangeList rows={result.changes} approvals={result.approvals} />
-              </StaggerItem>
-              <ClaimsList claims={copy.claims} />
               {mode === "danger" ? (
-                <NoteBlock title={copy.without.title} body={copy.without.body} />
+                <Callout tone="blocked" title={copy.without.title} body={copy.without.body} />
               ) : null}
-              <NoteBlock title={panel.lesson} body={copy.lesson.body} />
+              {lessonApplies ? (
+                <Callout tone="neutral" title={panel.lesson} body={copy.lesson.body} />
+              ) : null}
               {after}
+              <PanelDetails asks={copy.asks} call={copy.call} claims={copy.claims} image={image} />
             </>
           ) : null}
-
-          {result ? (
-            <section className="grid gap-3 border-t border-[color:var(--rule-strong)] pt-5">
-              <p className={`${T.h3} text-[color:var(--fg)]`}>{outcome.stopped.title}</p>
-              <p className={T.body}>{outcome.stopped.body}</p>
-              <div className="flex">
-                <Button type="button" variant="ghost" onClick={onTryOther}>
-                  {outcome.again.label}
-                </Button>
-              </div>
-            </section>
-          ) : null}
         </div>
+
+        {result ? (
+          <footer className="mt-auto sm:sticky sm:bottom-0 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-6 py-4 sm:flex sm:items-center sm:justify-between">
+            <div className="grid gap-0.5">
+              <p className="font-medium text-[color:var(--fg)]">{outcome.stopped.title}</p>
+              <p className={T.small}>{outcome.stopped.body}</p>
+            </div>
+            <Button type="button" variant="ghost" onClick={onTryOther} className="shrink-0">
+              {outcome.again.label}
+            </Button>
+          </footer>
+        ) : null}
       </SheetContent>
     </Sheet>
   );

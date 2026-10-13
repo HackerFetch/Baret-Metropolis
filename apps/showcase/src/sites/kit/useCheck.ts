@@ -64,7 +64,7 @@ export function offersLive(state: CheckState, input: unknown): boolean {
   return state.phase === "done" && state.result.source === "sample" && noAddress(input);
 }
 
-export const STEP_MS = 160;
+export const STEP_MS = 450;
 
 /** The phase timer ticked. Pure, exported for tests. */
 export function advance(state: CheckState, steps: number): CheckState {
