@@ -28,8 +28,14 @@ export const KNOWN_EVENTS = parseAbi([
   "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
 ]);
 
-/** Allowances at or above 2^255 are unlimited for every practical purpose. */
-export const UNLIMITED_THRESHOLD = 2n ** 255n;
+/**
+ * Allowances at or above the largest uint96 are unlimited for every practical
+ * purpose: about 79 billion units of an 18-decimal token. The bar sits there, not
+ * at 2^255, so that "max minus one" (2^255 - 1, 2^128) does not pass as a
+ * bounded grant, and so that tokens which store allowances as uint96 and report
+ * their own maximum in the Approval log are read as unlimited too.
+ */
+export const UNLIMITED_THRESHOLD = 2n ** 96n - 1n;
 
 /** EIP-1967 implementation slot: bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1). */
 export const EIP1967_IMPLEMENTATION_SLOT =

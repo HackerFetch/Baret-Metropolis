@@ -368,3 +368,14 @@
 
 **Follow-up, 2026-10-13:** Cleanverse's operator minted 20 aUSDC to the owner (`0x5c83d466046ca460272f407150f698ca0836b0cd8fcd54962c1b757b9fbe276a`), and the same pair of payments ran on the aUSDC guard `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`: 0.25 aUSDC settled to the verified merchant in `0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293` (block 70582232) and the payment to the wallet with no credential was blocked before signing. BVUSD and its guard stay as they are; BVUSD is still never called aUSDC. That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
 
+### D-049 — "Unlimited" starts at the largest uint96, not at 2^255
+
+**Date:** 2026-10-13
+
+**Context:** An outside developer wired `@baret/guard` into their own project on 2026-10-13 and sent its existing `approve(settlement, 2^255 - 1)` to the live API. The answer was Caution with `ERC20_APPROVAL_GRANTED` and `unlimited: false`: the bar for "unlimited" was `amount >= 2^255`, so an allowance one below it read as a bounded grant and `blockUnlimitedApprovals` did not fire. Any site could pass the rule by asking for the maximum minus one.
+
+**Decision:** `UNLIMITED_THRESHOLD` (`apps/server/src/simulation/abi.ts`) is `2^96 - 1`, about 79 billion units of an 18-decimal token. That covers every "nearly the maximum" value and the tokens that store allowances as uint96 and report their own maximum in the `Approval` log. It applies to `approve`, to `permit` and to typed-data permits alike, since all read the same constant.
+
+**Cost:** a bounded allowance above 79 billion whole units of an 18-decimal token now reads as unlimited. For a person signing it, that is the right reading. A check against the token's total supply would be exact and needs one more read per approval; not built.
+
+**Also reported by the same integration, not changed:** the SDK returns the verdict's `network` and expiry without refusing a stale or mismatched one; the caller has to compare them. Left for the next SDK version.
