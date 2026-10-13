@@ -94,13 +94,13 @@ Common links, used below:
 
 > Use case: Travel Rule-compliant agent payments. An AI agent pays merchants in a Cleanverse Verified Asset (aUSDC, or BVUSD, a CVA Baret issued through Cleanverse's API), and both parties of every payment must hold a valid Cleanverse Verified Identity. Identity is coupled to movement in two places. **Before signing:** Baret's compliance detector reads both parties' A-Pass credentials on Monad for every CVA transfer and blocks one where a party has none, naming that party ("this asset only moves between verified wallets"). **In the contract:** `CompliantPaymentGuard` checks that both parties hold an active credential of at least the owner's minimum tier before it moves anything, so an unverified merchant cannot be paid whatever the agent signs. It is deployed twice: for aUSDC at `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c` and for BVUSD at `0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af`.
 >
-> A payment settled through the BVUSD guard between two verified identities on 2026-10-11: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b` (block 70195328), 0.25 BVUSD (`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`) from the owner to the merchant, `Settled` with both credentials. No aUSDC has moved: the aUSDC guard holds none.
+> A payment settled through the BVUSD guard between two verified identities on 2026-10-11: `0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b` (block 70195328), 0.25 BVUSD (`0xCd829D44Dced8B47Ab0E4B08F1527cD2734E8ed2`) from the owner to the merchant, `Settled` with both credentials. On 2026-10-13 the same payment settled in aUSDC through the aUSDC guard: `0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293` (block 70582232), 0.25 aUSDC, after Cleanverse's operator minted aUSDC to the owner; the payment to a wallet with no credential was blocked before signing both times.
 >
 > Judges can run it on <https://usebaret.com/agents>: "Pay aUSDC to a verified wallet" (`0xC448042edaC1899B023cAa0E9dA5E4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
 
-**Settled 2026-10-11 (D-048):** the settlement is in BVUSD, a CVA Baret issued through Cleanverse's API, never in aUSDC. The text must not say aUSDC moved. The USDC deposited for aUSDC on 2026-10-12 was returned by Cleanverse's operator (blocks 70403112 and 70403945) and no aUSDC was minted.
+**Settled 2026-10-11 (D-048) in BVUSD, and 2026-10-13 in aUSDC.** Two assets, two guards, two transactions: `0x2dd8...aa6b` is BVUSD (a CVA Baret issued through Cleanverse's API) and `0xd93efca3...` is aUSDC. The text may say aUSDC settled, for that transaction only; BVUSD is never called aUSDC. That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
 
-**[gate]** the demo video (`docs/submission/SCRIPTS.md` 3.1). Shots 4 and 5 show the BVUSD settlement above (met); the video never shows an aUSDC settlement.
+**[gate]** the demo video (`docs/submission/SCRIPTS.md` 3.1). Shots 4 and 5 show either settlement above (met), each named by its own asset.
 
 ---
 

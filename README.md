@@ -100,7 +100,7 @@ Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | **Dynamic** | The demo agent is a Dynamic server wallet, authorised on a PaymentGuard vault and paying from it | Live; its payments are listed on `/agents` |
 | **Envio** | HyperIndex indexes every vault, payment and registry change; the wallet's Activity, `/agents` and the Qwen reviewer read it through `/v1/audit/*` | Live |
 | **Chainlink CRE** | A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain reputation registry that every check reads; `/agents` looks any address up in it | Simulated with the CRE CLI with a real write on testnet (`workflows/README.md`); not deployed to a DON |
-| **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live. A payment settled through the contract on 2026-10-11 in `BVUSD`, a Cleanverse Verified Asset Baret issued in the sandbox (`docs/CONTRACTS.md` 4.3); none in aUSDC |
+| **Cleanverse** | Before an aUSDC transfer, the check reads both parties' A-Pass credentials on chain and blocks a party without one; `CompliantPaymentGuard` enforces the same in the contract | The check is live. A payment settled through the contract on 2026-10-11 in `BVUSD`, a Cleanverse Verified Asset Baret issued in the sandbox, and on 2026-10-13 in aUSDC through the aUSDC deployment (`0xd93efca3...`, `docs/CONTRACTS.md` 4.3) |
 | **KIMI** (`kimi-k3`) | The plain-words explanation under every live verdict, and rules from a sentence on the wallet's Rules page | Live |
 | **Qwen** (`qwen3.8-max`) | The agent reviewer on `/review`: plan, four tools, veto only | Live |
 | **Alchemy** | The analysis's chain reads (balances, code, the registry, the vaults) go through Alchemy's Monad RPC, batched; the trace goes to the public Monad RPC, which serves `debug_traceCall` | Live |
@@ -112,7 +112,7 @@ Said plainly, so that nothing above is read as more than it is:
 
 - **A `personal_sign` message is not checked.** There is nothing to simulate in a plain-text message, so the wallet and extension show it as the text it signs and sign on the reader's press, with no call to Baret first.
 - **The CRE workflow runs in the simulator**, with a real write on testnet; it is not deployed to a DON.
-- **No aUSDC has moved through `CompliantPaymentGuard`.** The settlement of 2026-10-11 is in `BVUSD`, a test Cleanverse Verified Asset Baret issued itself, through a second deployment of the same contract (`0xFB70...18Af`). The USDC deposited for aUSDC on 2026-10-12 was returned by Cleanverse's operator and no aUSDC was minted.
+- **One aUSDC payment has settled through `CompliantPaymentGuard`, on testnet.** 0.25 aUSDC on 2026-10-13 (`0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293`), after Cleanverse's operator minted 20 aUSDC to the owner. The earlier settlements, of 2026-10-11 and 2026-10-12, are in `BVUSD`, a test Cleanverse Verified Asset Baret issued itself, through a second deployment of the same contract (`0xFB70...18Af`). That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
 - **Mainnet:** nothing is deployed there.
 
 The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
