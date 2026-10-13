@@ -1,6 +1,6 @@
 {
   "name": "@baret/llm",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "One OpenAI-compatible chat client for Baret's two model uses: the Qwen reviewer in agent-kit and the KIMI explanation in the server.",
   "type": "module",
   "main": "./src/index.ts",
