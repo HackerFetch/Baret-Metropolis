@@ -25,6 +25,24 @@ Built and verified live on 2026-10-11: the analysis engine (20 of 20 demo scenar
 
 Open on Ezgin's line besides the three tasks below: a tidy of `tasks/FOR_EZGIN.md` (old items never ticked), the edge middleware for G-17 (after the recording; measured hops are in `docs/SYSTEM_GAPS.md`), and Ezgin's own account steps (E1, E7, E8 in `tasks/FOR_EZGIN.md`).
 
+### 2.1 State on 2026-10-13, evening (read this before section 2's older lines)
+
+`main` at `f621ccc` (pull requests up to #119). The live API runs the D-049 fix and has 14 known contracts. Latest decision: D-049. The sites are `https://usebaret.com` and `https://wallet.usebaret.com`.
+
+Done on the first machine on 2026-10-13, do not repeat:
+
+- **Cleanverse, aUSDC.** Cleanverse's operator minted 20 aUSDC to the deploy wallet. Through the live API the Dynamic agent paid 0.25 aUSDC to the verified merchant through the aUSDC guard `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c` (`0x2052c1b9c6de8352fb7d69f9fd558e2a45552e8993371eadc00adb6b32a23942`), and the payment to the wallet with no credential was Blocked before signing. `docs/CONTRACTS.md` 4.3. aUSDC may be named for the aUSDC transactions only; BVUSD is never called aUSDC.
+- **The first outside integration.** An independent developer (`brutaldevvin`, not a hackathon participant) wired `@baret/guard` into their project Venue. Links, quote and wording rules: README "Used outside the team", `docs/submission/TEXTS.md` section 1. H9 part 2 is met.
+- **D-049.** Their approval of 2^255 - 1 was read as bounded; "unlimited" now starts at the largest uint96. Checked live.
+- **G-17** (edge middleware and the rate limit behind the sites) is closed.
+
+Open, and yours on this machine:
+
+1. **Publish the SDK again (0.1.3).** `packages/guard/README.md` gained "What the SDK leaves to you" and full links in place of repository paths; npm still shows 0.1.2's README. README only, no code change. Same steps as section 4.
+2. **Two things to write into the repository once Ezgin gives them:** the links of the published KIMI and Qwen articles (`docs/submission/TEXTS.md` sections 10 and 11, then tick H12), and the campus group's name (section 12, H2). Ezgin says all three profiles name the group; that the group is on the onboarded list is not checked.
+3. **Ezgin's own steps:** H3 (the MetaMask rehearsal), the Chainlink form once Hale returns the clip, E17 (the Chrome Web Store URL when Google publishes), and two confirmations never answered: is Hale on the platform team (E1), and did `~/.baret` reach this machine (E7)? Tick each on a yes.
+4. **Not built, from Venue's report** (`https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md`): a helper in `@baret/guard` that refuses an expired verdict or one for another chain; error bodies kept on a non-2xx answer. Documented as the caller's job for now.
+
 ## 3. What this machine needs before any of the three tasks
 
 1. The repository: `git clone https://github.com/HackerFetch/Baret-Metropolis`, then `pnpm install` (pnpm 11, Node 22.22 or newer). On a slow network: `pnpm install --fetch-timeout 300000 --network-concurrency 4`.
