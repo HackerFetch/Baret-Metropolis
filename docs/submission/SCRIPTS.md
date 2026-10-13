@@ -27,12 +27,12 @@ Every submission video, scene by scene: what is on screen, what is clicked, and 
 |---|---|
 | 1 | `usebaret.com/novaswap`, "Suspicious swap" on: "On. The card sells dUSDC, and its button asks for an unlimited allowance to a look-alike router. This is the attack version." The card: "Enable dUSDC trading", swap 20 dUSDC. |
 | 2 | Connected wallet: "Baret web wallet". Press "Sign with your wallet". The wallet window: "The wallet is locked" → "Unlock with your passkey" (cut the prompt). "Verdict: Blocked", "Blocked by your rules", "Block unlimited allowances and 2 more rules stopped this request. Nothing was signed.", findings "Unlimited allowance", "This address is on a blocklist", "This address copies another one". Scroll to "In plain words" (KIMI, about 9 s after the unlock; cut the wait). Only "Decline", with "This wallet does not sign a blocked request." Decline. NovaSwap: "The Baret wallet checked it with Baret and refused to sign. Nothing was sent." |
-| 3 | The Baret extension's sign window on the same request: "Blocked by your rules", only "Decline". NovaSwap after Decline: "You declined in Baret extension. Nothing more was sent." If the extension take is not clean: usebaret.com/install with the extension card. |
+| 3 | The Baret extension's sign window on the same request: "Blocked by your rules", only "Decline". NovaSwap after Decline: "You declined in Baret extension. Nothing more was sent." If the extension take is not clean: usebaret.com/install with the extension card. **Recorded 2026-10-14:** the install page (the extension needs its own browser profile, outside the one-session capture). |
 | 4 | Connect wallet → the wallet with no check. The line under the button: "Sends this request straight to your wallet, with no Baret check." Press the same "Sign with your wallet", confirm both prompts. The card: "The attack went through", "dUSDC in your wallet: 100 before, 0 after." |
 | 5 | The site's own "Enable dUSDC trading": Baret's panel, "Verdict: Blocked", "Expected Blocked · Live Blocked · Matches", what changes, findings. "In plain words": Language → Turkish (about 12 s to write; cut), then English. |
 | 6 | `usebaret.com/agents`, "Watch an agent ask first.", Balanced. "Pay a listed merchant" → "Check it as the agent" → "Safe. Allowed. Your agent signs and sends." "Send to a flagged address" → "Blocked", "This address is on a blocklist … or is flagged by Nansen." "Pay aUSDC to a wallet with no credential" → "Blocked", point at "No verified identity". |
 | 7 | `/agents`, "A real agent, paying from a real vault.": "This agent is a Dynamic server wallet … read live from the Envio indexer." The row "0.25 USDC", merchant 0x1365…ff49. Open it: `https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3`. |
-| 8 | Terminal in `packages/agent-kit` (commands below). Inside the cap → `"decision": "safe"` and a hash; over the cap → `"decision": "blocked"`, `"signed": false`, "The amount is over this merchant's cap per payment." |
+| 8 | Terminal in `packages/agent-kit` (commands below). Inside the cap → `"decision": "safe"` and a hash; over the cap → `"decision": "blocked"`, `"signed": false`, "The amount is over this merchant's cap per payment." **Recorded 2026-10-14 without a transaction:** `baret analyze` of the same two `pay` calls (`safe`, then `blocked` with `ExceedsPerTxCap`), then the vault's latest real in-cap payment on Monadscan, `0x36eccc744b5ceab7916f93e55146819fb137f2d6e229093e0d8b66c46cd25136` (0.10 dUSDC, agent to merchant). |
 | 9 | `usebaret.com/review`, "Injected intent" → run. Plan and tool calls stream; "Reviewed by Qwen (qwen3.8-max)", "Veto", "The payment's intent carries instructions to the reviewer…", "Nothing was signed or sent." The number of tool calls varies; say "read-only tools". |
 | 10 | `usebaret.com/partners` (the sponsor logos), or `/agents` "How it works". |
 | 11 | `/agents` quickstart: click "TypeScript" (HTTP API is selected on load); the `agent.guardedSubmit({` line. |
@@ -80,12 +80,12 @@ Baret. The check that every wallet, app and agent on Monad can call before it si
 
 **The page asks:** at most 2 minutes, "introducing the team, the problem being solved, and why you're building it"; it answers **Founder & Market Readiness (25%)** and **Traction & Path Forward (20%)**. Order: team → problem → solution → why Monad → proof (Venue) → plan.
 
-Meriç narrates and is on camera for the first and last paragraph; Ezgin and Hale are named in the third person (their photos with a caption while their names are spoken). Never say "the three of us". The middle paragraphs run over footage from the demo: the NovaSwap drain (problem), the Baret panel and the wallet window (solution), a transaction on testnet.monadscan.com (why Monad), `/agents` and the quickstart (who needs it), README "Used outside the team" or the Venue commit (proof).
+Faces on camera for the first and last paragraph: Ezgin and Meriç, each saying their own line; Hale is not on camera tonight, so her photo shows with the caption "Hale · QA and delivery" while her name is spoken. Never say "the three of us" over two faces. The middle paragraphs run over footage from the demo: the NovaSwap drain (problem), the Baret panel and the wallet window (solution), a transaction on testnet.monadscan.com (why Monad), `/agents` and the quickstart (who needs it), README "Used outside the team" or the Venue commit (proof).
 
 Facts behind the text: `@baret/guard`, `@baret/llm` and `@baret/agent-kit` are 0.1.3 on npm (2026-10-13); two points of Venue's report shipped in 0.1.3 (TEXTS.md section 1); Venue is an independent developer's project, never "another team", and Baret never stopped a live attack on Venue; the MetaMask Agent Wallet plugin is built and tested, not published; the Chrome Web Store listing is pending review and is not mentioned; Monad's finality is 800 ms (`docs/PROJECT_OVERVIEW.md`); everything stays on testnet, the plan names no mainnet step (Ezgin, 2026-10-13). If a take runs over 2:00, drop "Our SDK is on npm today." first.
 
 ```text
-We are Baret. Ezgin develops the engine and the contracts. I am Meriç. I build everything you see. Hale tests it and ships it. This is the sixth version of Baret.
+We are Baret. I am Ezgin. I build the engine and the contracts. I am Meriç. I build everything you see. Hale tests it and ships it. This is the sixth version of Baret.
 
 The problem is blind signing. People approve what they cannot read, and one wrong approval can empty a wallet. Now agents pay on their own too, and an agent key signs whatever it gets.
 
@@ -214,64 +214,58 @@ From public scam reports to checks before signing. That's Baret.
 
 ### 3.3 Optional clips (60-90 s each, one sponsor each)
 
-Each spoken text below is 136-160 words: 62-80 s at 120-130 words a minute. Only Dynamic and Envio can borrow footage from the main demo (scene 7); the others need their own takes.
+The spoken texts are the ones Meriç voiced (2026-10-14); the screen part has more scenes than paragraphs where a paragraph covers two of them. Only Dynamic and Envio can borrow footage from the main demo (scene 7); the others need their own takes.
 
 **Dynamic.** Scenes: `/agents` "A real agent, paying from a real vault" (agent `0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353`, vault `0x0A82671420114E47c672D5e8e23017DdCE850A35`) · the row "0.25 USDC" · the Monadscan transaction `0x06a81dda…4ab3` (from the Dynamic wallet to the vault, 0.25 USDC to the merchant) · the quickstart TypeScript tab.
 
 ```text
-This is a real AI agent on Monad testnet. Its wallet is a Dynamic server wallet. The key is split in two parts: one part stays with Dynamic, and the other stays on the machine where the agent runs. Neither side can sign alone.
+This agent is a Dynamic server wallet. Its key is split between Dynamic and the machine it runs on, so neither side can sign alone. The agent is the signer of a payment vault on Monad testnet.
 
-The agent does not hold the money. It is the signer of a payment vault. The vault holds the budget, and the owner sets the rules: which shops the agent can pay, and how much per payment, per hour and per day. The contract enforces those limits, not the agent.
+It can only pay shops on its list, inside limits per payment, per hour and per day. The contract enforces those limits.
 
-Here is one of its payments on the explorer. The Dynamic wallet calls the vault, and the vault pays the shop a quarter of a dollar in test USDC. The owner can remove this key at any time.
+Here is one of its payments on the explorer. The Dynamic wallet calls the vault, and the vault pays the shop a quarter of a dollar. The vault owner can remove this key at any time.
 
-And before the Dynamic wallet signs anything, it asks Baret. Safe is signed. Blocked never reaches the key. If Baret cannot answer, nothing is signed.
+Before the Dynamic wallet signs anything, Baret checks it. Safe is signed. Blocked never reaches the key.
 ```
 
 **Envio.** Scenes: `/agents` live block, "Every payment below is real, read live from the Envio indexer." · `wallet.usebaret.com/x402`, "x402 Console" → "Baret network": "Live", "Updated N s ago", "Reads again every 5 seconds.", "Latest across Baret" · "View on Monadscan" on one row · optionally `indexer/schema.graphql` on GitHub. (Not the History page: a new account has no vault, so it has nothing from the indexer.)
 
 ```text
-Baret needs a memory of what agents did. That memory is Envio HyperIndex.
+Envio HyperIndex is Baret's memory of what agents do. This list of agent payments is read live from our Envio indexer.
 
-On our agents page, this list of payments is read live from our Envio indexer. Every row is a real payment from a real vault on Monad testnet.
+The Baret wallet reads the same indexer every five seconds. Here you see every vault payment and every change to Baret's blocklist, including the entries our Chainlink workflow writes.
 
-The Baret wallet reads the same indexer. This console checks it again every five seconds. Here you see the latest activity across Baret: vault payments, and every change to Baret's blocklist, including the entries that our Chainlink workflow writes on chain.
+Each row is a real transaction on Monad. One click opens it on the explorer.
 
-Each row is a real transaction. One click opens it on the explorer.
-
-The indexer follows every vault that our factory creates, so there is no list of addresses to keep up to date. When a new user opens a vault, its payments simply appear.
-
-The Qwen reviewer uses it too. Before it approves a payment, it reads how much that shop was already paid in the last hour and the last day.
+One indexer follows every vault our factory creates. There is no address list to keep up to date.
 ```
 
 **Mera UX.** Scenes: `wallet.usebaret.com/onboarding`, "No recovery phrase. Your passkey is the key." · tap 1 "Create my wallet", passkey, "Your wallet is ready" · (funded off camera) the sidebar "Signing without a prompt until …" · tap 2 "Send", address and amount, tap 3 "Check and review" (Safe), tap 4 "Sign and send", confirmed, open on Monadscan · delete the site's data, the onboarding screen again · "Open with my passkey": the same address and balance; the send on the Monadscan address page (a plain MON send does not come back in Activity: only vault events come from the indexer). Move between pages with the sidebar; a reload locks the wallet.
 
 ```text
-This is the Baret wallet. It has no account system of its own. Mera is the whole account layer. There is no seed phrase to write down, no extension to install and no email to confirm.
+This is the Baret wallet. Mera is its whole account layer. No seed phrase, no extension, no email.
 
-One tap and one passkey, and the account is ready on Monad. The passkey stays on the device, protected by your fingerprint or your face.
+One tap and one passkey, and the account is ready on Monad.
 
-Signing works in a Mera session. The sidebar shows how long it lasts. After fifteen minutes, the wallet locks itself and says so.
+Signing works in a Mera session for fifteen minutes. Then the wallet locks itself.
 
-Now I send a payment. Send. Check and review: Baret checks it before the sign button even appears, and it is safe. Sign and send. That is four taps, from a new account to a confirmed payment.
+Now I send a payment. Send. Check and review: Baret checks it first, and it is safe. Sign and send. Four taps from a new account to a confirmed payment.
 
 Now I delete everything this site saved in the browser.
 
-I open the wallet again with the same passkey. Same account, same balance, and the payment is on Monad. Nothing was stored. The account comes back from the passkey.
+I open it again with the same passkey. Same account, same balance, and the payment is on Monad. Nothing was stored. The account comes back from the passkey.
 ```
 
 **Mera: One Passkey, Many Keys.** Scenes: Settings, "Your rules on every device" · Policies Balanced → Strict; "Save an encrypted copy", passkey, "Saved. Encrypted copy number N is on Monad."; the SealedStore `0xC094af68bE1039f70E1362C2f326542BB2DC21BB` on Monadscan with its newest write from the relayer `0x076705F1…8eAf` (no MON needed from the user) · delete the site's data, "Open with my passkey", Settings → "Bring them back here" → "Your rules and merchant names are back, from copy number N.", Policies shows Strict · Agents: an agent key created before the take (needs a funded account with a vault, about 0.2 MON), "Show the agent key", passkey: **blur the key in the edit**, show only the matching agent address. A second browser profile with the same passkey needs a syncing passkey on real devices; the scripted take uses the site-data wipe, which TEXTS section 5 allows.
 
 ```text
-One passkey in the Baret wallet makes three keys that are not linked to each other. Only one of them is the account.
+One passkey in the Baret wallet makes three keys that are not linked. Only one of them is the account.
 
-The first key is the account itself. The second key is for agents: each agent gets its own key, so an agent never learns anything about the account. The third key only encrypts. It never signs a transaction.
+I change my rules to Strict and save an encrypted copy. A second key from the same passkey encrypts it, and that key never signs. Baret's server pays to store the copy on Monad, but it cannot read it or change it.
 
-Here I change my rules to Strict and save an encrypted copy. The third key encrypts my rules on this device. Baret's server pays to store the copy on Monad, but it cannot read it or change it.
+Now I clear this browser and open the wallet with the same passkey. My rules come back, decrypted only here.
 
-Now I clear this browser and open the wallet with the same passkey. I bring my rules back. They are decrypted only here, and Strict is back.
-
-The agent key works the same way. It matches the agent on the vault, and it comes back after the wipe.
+The agent key comes from its own space too. It is a separate identity from the account, and it matches the agent on the vault.
 
 Nothing is stored. Every key is made from the passkey, each time.
 ```
@@ -279,29 +273,21 @@ Nothing is stored. Every key is made from the passkey, each time.
 **Nansen.** Scenes: `/agents` playground, Balanced, "Pay aUSDC to a verified wallet" → Safe · Strict, the same action → Blocked: "Below your trust level", "Nansen rates 0xC448…e873 as new. Your rules need established or higher." · "Show what the agent and Baret said": `NANSEN_TRUST_BELOW_MINIMUM`. No Nansen-labelled address is known and no screen prints a label, so the label shot is dropped. One or two rehearsals at most (the daily label budget).
 
 ```text
-Agents often pay wallets they have never seen before. Baret uses Nansen to judge them.
+An agent pays a wallet that Baret has never seen. On the Balanced setting, the payment goes through.
 
-Here an agent pays a wallet that Baret has never seen. The payment is small, and the wallet has a valid identity. On the Balanced setting, the payment goes through.
+Now I switch to Strict and try the same payment. Baret asks Nansen about the other side first. Nansen has no history for this wallet, so it rates it as new. That is below the trust level this user chose. Blocked, and the agent never signs.
 
-Now the same user switches to Strict. Strict asks for more trust before money moves. I run the same payment again. This time, Baret asks Nansen about the other side first. Nansen has no history for this wallet, so it rates it as new. The user's rule needs an established wallet or better. So the answer is Blocked, and the agent never signs.
-
-Baret shows the reason in plain words: below your trust level. The user can confirm the wallet another way, or lower the rule.
-
-And if Nansen does not answer at all, the check counts as failed, and the answer is Blocked. Baret fails closed.
+If Nansen does not answer, the check counts as failed, and the answer is Blocked. Baret fails closed.
 ```
 
 **Alchemy.** Scenes: `/agents` "How it works", "…reading the chain over Alchemy's Monad RPC." · a terminal running the quickstart's HTTP API call piped to `jq '.sources'`: `{"name": "alchemy", "status": "ok"}`, then nansen and reputation-registry ok. ("alchemy: ok" exists only in the API answer; no screen prints it. The wallet's "Simulated on Monad before anything is signed" is not Alchemy evidence.)
 
 ```text
-Every Baret verdict starts with reading the chain. Baret reads Monad through Alchemy.
+Every Baret verdict starts by reading Monad through Alchemy: balances before and after, contract code, the blocklist and the vault limits.
 
-Before a transaction is signed, Baret needs facts: the balances before and after, the code of the contract, the blocklist, and the limits of the vault. Alchemy's Monad RPC gives Baret these facts, fast, for every single check.
+Every answer lists the sources it used. Here is a live check from the terminal. Alchemy: ok. Nansen: ok. The reputation registry: ok.
 
-Every answer from Baret lists the sources it used, and whether each one worked. Here is a live check from the terminal, the same call any developer can make. Alchemy: ok. Nansen: ok. The reputation registry: ok.
-
-This list matters. If a source cannot answer, Baret does not guess. The check does not pass, and the answer is Blocked.
-
-So when a wallet, an app or an agent asks Baret before it signs, the answer is built on fresh data from Monad, read through Alchemy.
+If a source cannot answer, the check does not pass. Baret blocks.
 ```
 
 **Teaser** (at most 30 s, not judged; 16:9 and 9:16): cut from the demo footage. The first 2 seconds show the drain or the Blocked verdict; text layers; usebaret.com at the end.
