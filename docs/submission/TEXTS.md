@@ -142,7 +142,7 @@ Common links, used below:
 
 **The run the video shows (2026-10-13):** tx `0x5d72012bb7bed6dbbe6ade3dd40d3a4243137b2482dc1205b4cbbd5f39fb1175` (block 70574558), ten entries; the live API blocks a transfer to the first of them, `0x17504785059123e758f1cd2bfa00ab45b613f9e5`. Add this hash to the text when the video's link goes into the form, so the evidence and the video are the same run.
 
-**[gate]** the demo video: recorded by Ezgin on 2026-10-13 and sent to Hale; open until Hale has uploaded it and has the link.
+**[gate]** the demo video: recorded by Ezgin on 2026-10-13 and sent to Hale; Hale edits it; Ezgin uploads it and fills in this form himself (2026-10-13).
 
 ---
 
