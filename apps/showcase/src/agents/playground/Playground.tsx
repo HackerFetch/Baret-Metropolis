@@ -29,7 +29,7 @@ const ID = "playground";
 const { playground } = agents;
 const { picker, fields, errors } = playground;
 const SOURCE = sourceFor(LIVE);
-const STEPS = 2;
+const STEPS = 9;
 
 type Choice = ActionId | "custom";
 /** A pasted run that cannot start, and the field it points at. */
@@ -120,7 +120,7 @@ export function Playground({
         >
           <fieldset>
             <legend className={`${T.h3} text-[color:var(--fg)]`}>{picker.label}</legend>
-            <div className="mt-4 grid grid-cols-1 gap-2">
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {options.map((id) => (
                 <Segment
                   key={id}

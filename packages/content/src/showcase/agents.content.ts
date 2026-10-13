@@ -160,6 +160,7 @@ export const agents = {
     sample: "0xa8f3762b03ae73cbbdb9173d3537c632628727a4",
     explorer: "https://testnet.monadexplorer.com",
     loading: "Asking the registry...",
+    idle: "Paste an address, or try a listed one, to see what the registry knows.",
     listed: "This address is on Baret's registry: {reason}. Severity {level} of 4, {severity}.",
     /** The contract's scale (ReputationRegistry.sol, MAX_SEVERITY = 4). */
     severities: { 1: "low", 2: "medium", 3: "high", 4: "critical" },
@@ -618,8 +619,19 @@ export const agents = {
       findings: "Findings",
       noFindings: "No findings. Every check ran and found nothing to report.",
       changes: "What would change",
+      exchange: "Show what the agent and Baret said",
       /** Not rendered on /agents since 2026-10-03. */
       rawToggle: "Show the raw response",
+    },
+    /** The staged loader while a check runs. */
+    progress: {
+      title: "Checking the transaction",
+      stages: [
+        "Simulating on Monad",
+        "Reading what changes",
+        "Running the checks",
+        "Applying your rules",
+      ],
     },
     empty: {
       title: "Nothing checked yet",

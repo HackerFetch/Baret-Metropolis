@@ -120,6 +120,8 @@ export const SAMPLES: Record<ActionId, SampleAnswer> = {
   operatorApproval: {
     findings: [
       { code: "NFT_OPERATOR_GRANTED", values: { operator: DRAINER, contract: COLLECTION } },
+      // The drainer has no code: a wallet, not an app's contract.
+      { code: "APPROVAL_TO_WALLET", values: { spender: DRAINER, contract: COLLECTION } },
     ],
     changes: [],
     approvals: [],

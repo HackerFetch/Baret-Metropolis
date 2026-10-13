@@ -23,6 +23,10 @@ export const review = {
     eyebrow: "Agent reviewer",
     title: "Qwen reviews an agent's payment.",
     body: "An AI agent wants to pay from its PaymentGuard vault on Monad. Before it signs, Qwen 3.8 Max writes a plan, checks the call with four read-only tools and can veto it. Baret's verdict comes first, and the model can never approve what Baret blocked.",
+    actions: {
+      primary: { label: "Pick a payment", href: "#scenarios" },
+      secondary: { label: "Read the reviewer's code" },
+    },
   },
 
   scenarios: {
@@ -30,6 +34,10 @@ export const review = {
     intro:
       "Each card is one payment the agent was asked to make. The intent is what the agent was told. The call is what it would really sign.",
     intentLabel: "The intent",
+    /** The intent in a few words; the full text sits behind `fullIntent`. */
+    intentShort: "Pay 0.10 dUSDC from the demo vault to the merchant for invoice inv-2001.",
+    fullIntent: "Show the full intent",
+    plantedLabel: "Planted in the intent",
     callLabel: "What the call does",
     run: "Run the review",
     running: "Reviewing...",
@@ -52,6 +60,14 @@ export const review = {
   timeline: {
     title: "The review",
     idle: "Pick a payment above and run the review. Each step shows up here as it happens.",
+    /** The five stages of a review, in the order they run. */
+    stages: ["Baret checks", "Qwen plans", "Tools run", "Qwen decides", "Payment"],
+    /** The outcome card on top once the review has an answer. */
+    outcome: "The outcome",
+    /** The steps under the outcome, collapsed once the review is finished. */
+    steps: "Every step of the review",
+    /** While a stage is running, under the steps so far. */
+    waiting: "Waiting for the next step",
     live: "Live run",
     recorded: "Recorded run, 9 October 2026",
     recordedNote:

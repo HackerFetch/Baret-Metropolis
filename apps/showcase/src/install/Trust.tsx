@@ -47,6 +47,7 @@ export function Trust(): JSX.Element {
         <p className={`${T.lead} text-[color:var(--fg)]`}>{trust.audit.body}</p>
         <LinkButton
           href={trust.audit.action.href}
+          newTab
           label={trust.audit.action.label}
           icon="arrow-up-right"
         />

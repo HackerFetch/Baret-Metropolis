@@ -165,6 +165,7 @@ export function LiveAgentPayments(): JSX.Element {
         <div className="mt-4">
           <LinkButton
             href={liveAgent.reviewLink.href}
+            newTab
             label={liveAgent.reviewLink.label}
             variant="ghost"
           />

@@ -35,6 +35,7 @@ export function Component() {
             />
             <LinkButton
               href={hero.actions.secondary.href}
+              newTab
               label={hero.actions.secondary.label}
               size="lg"
               icon="arrow-up-right"

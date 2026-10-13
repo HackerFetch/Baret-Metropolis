@@ -59,6 +59,7 @@ export function InstallHero({ browser }: { browser: Browser }): JSX.Element {
     ) : (
       <LinkButton
         href={download.pending.action.href}
+        newTab
         label={download.pending.action.label}
         variant="primary"
         size="lg"

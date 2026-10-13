@@ -23,6 +23,7 @@ export function Component() {
           <>
             <LinkButton
               href={notFound.back.href}
+              newTab
               label={notFound.back.label}
               variant="primary"
               size="lg"
@@ -31,6 +32,7 @@ export function Component() {
             />
             <LinkButton
               href={routes.showcase.path}
+              newTab
               label={actions.openShowcase}
               size="lg"
               fullOnPhone

@@ -3,6 +3,7 @@ import { Tag, Verdict, type VerdictKind } from "@baret/ui";
 import { T } from "@baret/web-ui/lib/type";
 import type { JSX, ReactNode } from "react";
 import type { TimelineState, ToolStep } from "./reducer.js";
+import { Stepper } from "./Stepper.js";
 
 /**
  * The live timeline of one review: Baret's verdict, the plan, each tool call
@@ -105,7 +106,14 @@ function ToolRow({ step, index }: { step: ToolStep; index: number }): JSX.Elemen
 }
 
 export function Timeline({ state }: { state: TimelineState }): JSX.Element {
-  if (state.phase === "idle") return <p className={T.body}>{copy.idle}</p>;
+  if (state.phase === "idle") {
+    return (
+      <div className="grid gap-5 border border-dashed border-[color:var(--rule-strong)] p-6">
+        <Stepper state={state} />
+        <p className={T.body}>{copy.idle}</p>
+      </div>
+    );
+  }
   const baretSafe = state.baret?.decision === "safe";
   const decided = state.phase === "done" || state.decision !== null;
 
@@ -122,86 +130,110 @@ export function Timeline({ state }: { state: TimelineState }): JSX.Element {
         ) : null}
       </div>
       {state.source === "recorded" ? <p className={T.small}>{copy.recordedNote}</p> : null}
-      {state.intent ? <p className={`${T.body} break-words`}>{state.intent}</p> : null}
+      <Stepper state={state} />
+      <Outcome state={state} />
 
-      <ol className="grid gap-6">
-        {state.baret ? (
-          <Block title={copy.baret}>
-            <Verdict
-              kind={verdictKind(state.baret.decision)}
-              label={state.baret.decision}
-              body={baretSafe ? copy.baretSafe : copy.baretStopped}
-              announce={false}
-            >
-              {state.baret.findings.length > 0 ? (
-                <span className={T.small}>
-                  {fill(copy.findings, { count: String(state.baret.findings.length) })}:{" "}
-                  {state.baret.findings.map((f) => f.code).join(", ")}
-                </span>
-              ) : null}
-            </Verdict>
-          </Block>
-        ) : null}
+      <details
+        key={state.phase === "done" ? "done" : "open"}
+        open={state.phase !== "done"}
+        className="group border-t border-[color:var(--rule)] pt-4"
+      >
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]">
+          <span
+            aria-hidden="true"
+            className="inline-block transition-transform group-open:rotate-90"
+          >
+            &#8250;
+          </span>
+          {copy.steps}
+        </summary>
+        {state.intent ? <p className={`${T.small} mt-2 mb-6 break-words`}>{state.intent}</p> : null}
+        <ol className="grid gap-6">
+          {state.baret ? (
+            <Block title={copy.baret}>
+              <Verdict
+                kind={verdictKind(state.baret.decision)}
+                label={state.baret.decision}
+                body={baretSafe ? copy.baretSafe : copy.baretStopped}
+                announce={false}
+              >
+                {state.baret.findings.length > 0 ? (
+                  <span className={T.small}>
+                    {fill(copy.findings, { count: String(state.baret.findings.length) })}:{" "}
+                    {state.baret.findings.map((f) => f.code).join(", ")}
+                  </span>
+                ) : null}
+              </Verdict>
+            </Block>
+          ) : null}
 
-        {state.plan ? (
-          <Block title={copy.plan}>
-            <ol className="grid list-decimal gap-1.5 pl-6">
-              {state.plan.map((line) => (
-                <li key={line} className={T.body}>
-                  {line}
-                </li>
-              ))}
-            </ol>
-            {/* Which model answered, from the answer itself, so a recorded run and a live one read apart. */}
-            {state.model ? (
-              <p className={T.small}>
-                {fill(copy.model, { name: state.model.name, provider: state.model.provider })}
-              </p>
-            ) : null}
-          </Block>
-        ) : null}
-
-        {state.tools.length > 0 || (decided && baretSafe) ? (
-          <Block title={copy.tools}>
-            {state.tools.length > 0 ? (
-              <ol className="grid gap-4">
-                {state.tools.map((step, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: steps only append, a tool may run twice
-                  <ToolRow key={index} step={step} index={index} />
+          {state.plan ? (
+            <Block title={copy.plan}>
+              <ol className="grid list-decimal gap-1.5 pl-6">
+                {state.plan.map((line) => (
+                  <li key={line} className={T.body}>
+                    {line}
+                  </li>
                 ))}
               </ol>
-            ) : (
-              <p className={T.small}>{copy.noTools}</p>
-            )}
-          </Block>
-        ) : null}
-
-        {state.decision ? (
-          <Block title={copy.decision}>
-            <Verdict
-              kind={state.decision.decision === "approve" ? "safe" : "blocked"}
-              label={state.decision.decision === "approve" ? copy.approve : copy.veto}
-              body={state.decision.reason}
-              announce={false}
-            >
-              {state.decision.mismatches.length > 0 ? (
-                <div className="mt-2">
-                  <p className={T.label}>{copy.mismatches}</p>
-                  <ul className="mt-1 grid list-disc gap-1 pl-5">
-                    {state.decision.mismatches.map((m) => (
-                      <li key={m} className={`${T.small} break-words`}>
-                        {m}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              {/* Which model answered, from the answer itself, so a recorded run and a live one read apart. */}
+              {state.model ? (
+                <p className={T.small}>
+                  {fill(copy.model, { name: state.model.name, provider: state.model.provider })}
+                </p>
               ) : null}
-            </Verdict>
-          </Block>
-        ) : null}
+            </Block>
+          ) : null}
 
-        {state.phase === "done" ? <SentBlock state={state} /> : null}
-      </ol>
+          {state.tools.length > 0 || (decided && baretSafe) ? (
+            <Block title={copy.tools}>
+              {state.tools.length > 0 ? (
+                <ol className="grid gap-4">
+                  {state.tools.map((step, index) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: steps only append, a tool may run twice
+                    <ToolRow key={index} step={step} index={index} />
+                  ))}
+                </ol>
+              ) : (
+                <p className={T.small}>{copy.noTools}</p>
+              )}
+            </Block>
+          ) : null}
+
+          {state.decision ? (
+            <Block title={copy.decision}>
+              <Verdict
+                kind={state.decision.decision === "approve" ? "safe" : "blocked"}
+                label={state.decision.decision === "approve" ? copy.approve : copy.veto}
+                body={state.decision.reason}
+                announce={false}
+              >
+                {state.decision.mismatches.length > 0 ? (
+                  <div className="mt-2">
+                    <p className={T.label}>{copy.mismatches}</p>
+                    <ul className="mt-1 grid list-disc gap-1 pl-5">
+                      {state.decision.mismatches.map((m) => (
+                        <li key={m} className={`${T.small} break-words`}>
+                          {m}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </Verdict>
+            </Block>
+          ) : null}
+
+          {state.phase === "done" ? <SentBlock state={state} /> : null}
+          {state.phase === "running" ? (
+            <li aria-hidden="true" className="grid gap-2 border-t border-[color:var(--rule)] pt-5">
+              <span className={`${T.label} text-[color:var(--fg-faint)]`}>{copy.waiting}</span>
+              <span className="h-3 w-4/5 animate-pulse bg-[color:var(--rule)] motion-reduce:animate-none" />
+              <span className="h-3 w-3/5 animate-pulse bg-[color:var(--rule)] motion-reduce:animate-none" />
+            </li>
+          ) : null}
+        </ol>
+      </details>
 
       {state.phase === "error" && state.error ? (
         <p className={`${T.body} text-[color:var(--blocked-ink)]`}>
@@ -209,6 +241,68 @@ export function Timeline({ state }: { state: TimelineState }): JSX.Element {
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The answer first, once there is one: the model's decision with its reason,
+ * or Baret's stop when the model was never asked, and what happened to the
+ * payment. The steps below keep every detail.
+ */
+function Outcome({ state }: { state: TimelineState }): JSX.Element | null {
+  const stopped = state.baret !== null && state.baret.decision !== "safe";
+  if (!state.decision && !(stopped && state.phase === "done")) return null;
+  const approve = state.decision?.decision === "approve";
+  const sent = state.phase === "done" ? state.sent : null;
+  return (
+    <section className="grid gap-3 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-5 motion-safe:animate-[review-rise_320ms_ease-out] md:p-6">
+      <style>
+        {
+          "@keyframes review-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"
+        }
+      </style>
+      <h3 className={T.label}>{copy.outcome}</h3>
+      {state.decision ? (
+        <Verdict
+          kind={approve ? "safe" : "blocked"}
+          label={approve ? copy.approve : copy.veto}
+          body={state.decision.reason}
+          announce={false}
+        />
+      ) : (
+        <Verdict
+          kind={verdictKind(state.baret?.decision ?? "blocked")}
+          label={state.baret?.decision ?? "blocked"}
+          body={copy.baretStopped}
+          announce={false}
+        />
+      )}
+      {state.phase === "done" ? (
+        <p className={T.body}>
+          {sent?.hash ? (
+            <>
+              {sent.status === "confirmed"
+                ? copy.sent
+                : sent.status === "failed"
+                  ? copy.sentFailed
+                  : copy.sentTimeout}{" "}
+              <a
+                className="font-medium text-[color:var(--fg)] underline underline-offset-4"
+                href={`${EXPLORER}/tx/${sent.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {copy.viewTx}
+              </a>
+            </>
+          ) : sent ? (
+            copy.sentNotBroadcast
+          ) : (
+            copy.notSent
+          )}
+        </p>
+      ) : null}
+    </section>
   );
 }
 

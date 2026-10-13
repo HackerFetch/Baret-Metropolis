@@ -57,6 +57,7 @@ export function ClosingBand({
         size="lg"
         icon="arrow-right"
         fullOnPhone
+        newTab={!primary.href.startsWith("#")}
       />
       <LinkButton
         href={secondary.href}
@@ -64,6 +65,7 @@ export function ClosingBand({
         variant="ghostInverse"
         size="lg"
         fullOnPhone
+        newTab={!secondary.href.startsWith("#")}
       />
     </>
   );

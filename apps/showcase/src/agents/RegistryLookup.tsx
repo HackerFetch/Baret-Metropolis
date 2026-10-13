@@ -66,6 +66,16 @@ export function lineOf(state: State): string {
   }
 }
 
+/** The left edge says the answer at a glance: red for listed or unreadable, chalk otherwise. */
+const EDGE: Record<State["status"], string> = {
+  idle: "border-[color:var(--rule-strong)]",
+  loading: "border-[color:var(--rule-strong)] border-l-[color:var(--accent)]",
+  listed: "border-[color:var(--rule-strong)] border-l-[color:var(--blocked)]",
+  clear: "border-[color:var(--rule-strong)] border-l-[color:var(--fg)]",
+  unavailable: "border-[color:var(--rule-strong)] border-l-[color:var(--caution)]",
+  invalid: "border-[color:var(--rule-strong)] border-l-[color:var(--blocked)]",
+};
+
 export function RegistryLookup(): JSX.Element {
   const [address, setAddress] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
@@ -135,11 +145,30 @@ export function RegistryLookup(): JSX.Element {
           </form>
           <div
             aria-busy={state.status === "loading"}
-            className="mt-4 min-h-[2lh] border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-5"
+            className={`mt-4 border border-l-4 bg-[color:var(--surface)] p-5 transition-colors ${EDGE[state.status]} ${
+              state.status === "idle" ? "border-dashed" : ""
+            }`}
           >
-            <p role="status" data-lookup={state.status} className={`${T.body} ${tone}`}>
-              {lineOf(state)}
-            </p>
+            <div className="flex items-start gap-3">
+              {state.status === "loading" ? (
+                <span
+                  aria-hidden="true"
+                  className="mt-1 size-4 shrink-0 animate-spin rounded-full border-2 border-[color:var(--rule)] border-t-[color:var(--accent)] motion-reduce:animate-none"
+                />
+              ) : null}
+              {state.status === "idle" ? (
+                <p className={`${T.body} text-[color:var(--fg-muted)]`}>{registry.idle}</p>
+              ) : null}
+              <p role="status" data-lookup={state.status} className={`${T.body} ${tone}`}>
+                {lineOf(state)}
+              </p>
+            </div>
+            {state.status === "loading" ? (
+              <div aria-hidden="true" className="mt-4 grid gap-2">
+                <span className="h-3 w-4/5 animate-pulse bg-[color:var(--rule)] motion-reduce:animate-none" />
+                <span className="h-3 w-3/5 animate-pulse bg-[color:var(--rule)] motion-reduce:animate-none" />
+              </div>
+            ) : null}
             {state.status === "listed" ? (
               <a
                 href={`${registry.explorer}/tx/${state.txHash}`}

@@ -6,6 +6,7 @@ import type { CheckResult } from "@baret/web-ui/lib/check-types";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import type { JSX } from "react";
+import { StageProgress } from "../StageProgress.js";
 import type { PolicyName } from "./sample.js";
 import { type Outcome, outcomeOf, terminalLines } from "./terminal.js";
 
@@ -17,7 +18,7 @@ import { type Outcome, outcomeOf, terminalLines } from "./terminal.js";
  * wrap instead of scrolling, so a phone reads the whole exchange.
  */
 
-const { result: copy, empty } = agents.playground;
+const { result: copy, empty, progress } = agents.playground;
 
 const TONE: Record<Outcome, "safe" | "caution" | "blocked" | "neutral"> = {
   safe: "safe",
@@ -52,21 +53,56 @@ export function Result({
       </div>
     );
   }
-  if (state.phase === "checking") return <Terminal lines={terminalLines(null, policy)} />;
+  if (state.phase === "checking") {
+    return (
+      <div className="grid gap-4">
+        <Terminal lines={terminalLines(null, policy)} />
+        <StageProgress stages={progress.stages} title={progress.title} stepMs={420} />
+      </div>
+    );
+  }
 
   const { result } = state;
   const outcome = outcomeOf(result);
   return (
-    <div className="grid gap-6">
-      <Terminal lines={terminalLines(result, policy)} />
+    <div className="grid gap-6 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-5 motion-safe:animate-[baret-rise_320ms_ease-out] md:p-6">
+      <style>
+        {
+          "@keyframes baret-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"
+        }
+      </style>
       <div className="grid gap-3">
         <div className="flex">
           <Tag key={runKey} tone={TONE[outcome]} hang>
             {copy[outcome].label}
           </Tag>
         </div>
-        <p className={`${T.body} text-[color:var(--fg)]`}>{copy[outcome].body}</p>
+        <p className="text-lg leading-snug font-medium text-[color:var(--fg)]">
+          {copy[outcome].body}
+        </p>
       </div>
+      {result.changes.length > 0 || result.approvals.length > 0 ? (
+        <section className="grid gap-2 border-t border-[color:var(--rule)] pt-5">
+          <h3 className={T.label}>{copy.changes}</h3>
+          {result.changes.map((row) => (
+            <ChangeRow
+              key={`${row.direction}-${row.unit}`}
+              label={row.direction === "out" ? sign.changes.out : sign.changes.in}
+              value={row.value}
+              unit={row.unit}
+              direction={row.direction}
+            />
+          ))}
+          {result.approvals.map((item) => (
+            <ChangeRow
+              key={`${item.unit}-${item.spender}`}
+              label={sign.changes.allow}
+              value={item.unlimited || item.amount === null ? sign.changes.unlimited : item.amount}
+              unit={item.unit}
+            />
+          ))}
+        </section>
+      ) : null}
       {outcome === "unreachable" || outcome === "notSent" ? null : (
         <section className="grid gap-3 border-t border-[color:var(--rule)] pt-5">
           <h3 className={T.label}>{copy.findings}</h3>
@@ -97,28 +133,20 @@ export function Result({
           )}
         </section>
       )}
-      {result.changes.length > 0 || result.approvals.length > 0 ? (
-        <section className="grid gap-2 border-t border-[color:var(--rule)] pt-5">
-          <h3 className={T.label}>{copy.changes}</h3>
-          {result.changes.map((row) => (
-            <ChangeRow
-              key={`${row.direction}-${row.unit}`}
-              label={row.direction === "out" ? sign.changes.out : sign.changes.in}
-              value={row.value}
-              unit={row.unit}
-              direction={row.direction}
-            />
-          ))}
-          {result.approvals.map((item) => (
-            <ChangeRow
-              key={`${item.unit}-${item.spender}`}
-              label={sign.changes.allow}
-              value={item.unlimited || item.amount === null ? sign.changes.unlimited : item.amount}
-              unit={item.unit}
-            />
-          ))}
-        </section>
-      ) : null}
+      <details className="group border-t border-[color:var(--rule)] pt-4">
+        <summary className="cursor-pointer list-none text-sm font-medium text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]">
+          <span
+            aria-hidden="true"
+            className="mr-2 inline-block transition-transform group-open:rotate-90"
+          >
+            &#8250;
+          </span>
+          {copy.exchange}
+        </summary>
+        <div className="mt-3">
+          <Terminal lines={terminalLines(result, policy)} />
+        </div>
+      </details>
     </div>
   );
 }

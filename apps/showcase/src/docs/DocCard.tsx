@@ -58,7 +58,8 @@ export function DocCard({
         <h3 className={`${T.h3} text-[color:var(--fg)]`}>
           <a
             href={fileUrl(card.file)}
-            rel="noreferrer"
+            target="_blank"
+            rel="noopener noreferrer"
             className="after:absolute after:inset-0 focus-visible:outline-none"
           >
             {card.title}

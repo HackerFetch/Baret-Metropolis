@@ -1,7 +1,9 @@
 import { type ReviewScenarioId, review } from "@baret/content";
 import { Button } from "@baret/ui";
+import { ImgWell } from "@baret/web-ui/components/Img";
+import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Section, titleIdOf } from "@baret/web-ui/components/Section";
-import { SectionHeader, TwoToneText } from "@baret/web-ui/components/SectionHeader";
+import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
 import { GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
@@ -9,6 +11,8 @@ import { type JSX, useEffect, useReducer, useRef } from "react";
 import { IDLE, reduce, type TimelineState } from "../review/reducer.js";
 import { runReview, wakeApi } from "../review/run.js";
 import { EXPLORER, Timeline } from "../review/Timeline.js";
+import { AGENTS_ART, LCP_SIZES } from "../shared/assets.js";
+import { PageHero } from "../shared/PageHero.js";
 
 /**
  * /review. Qwen reviews an agent's payment, for the judges (M5, W1).
@@ -83,17 +87,40 @@ export function Component(): JSX.Element {
 
   return (
     <div className="overflow-x-clip">
-      <Section id="hero">
-        <div className="@container max-w-[52rem]">
-          <p className={`${T.label} mb-4`}>{hero.eyebrow}</p>
-          <h1 id={titleIdOf("hero")} className={`${T.h1Page} text-balance text-[color:var(--fg)]`}>
-            {hero.title}
-          </h1>
-          <p className={`${T.lead} mt-6 max-w-[60ch] md:mt-8`}>
-            <TwoToneText text={hero.body} />
-          </p>
-        </div>
-      </Section>
+      <PageHero
+        title={hero.title}
+        body={hero.body}
+        actions={
+          <>
+            <LinkButton
+              href={hero.actions.primary.href}
+              label={hero.actions.primary.label}
+              variant="primary"
+              size="lg"
+              icon="arrow-down"
+              fullOnPhone
+            />
+            <LinkButton
+              href={REPO_FILE}
+              newTab
+              label={hero.actions.secondary.label}
+              size="lg"
+              icon="arrow-up-right"
+              fullOnPhone
+            />
+          </>
+        }
+        picture={
+          <ImgWell
+            asset={AGENTS_ART.policy}
+            ratio="1/1"
+            dim
+            loading="priority"
+            sizes={LCP_SIZES.docs}
+            className="border border-[color:var(--rule)]"
+          />
+        }
+      />
 
       <Section id="scenarios" ground="deep" pad="compact">
         <SectionHeader
@@ -113,14 +140,34 @@ export function Component(): JSX.Element {
                 <h3 className={T.h3}>{item.title}</h3>
                 <div>
                   <p className={T.label}>{scenarios.intentLabel}</p>
-                  <p className={`${T.small} mt-1 break-words`}>
-                    {id === "injected" ? INTENT + PLANTED : INTENT}
-                  </p>
+                  <p className={`${T.small} mt-1`}>{scenarios.intentShort}</p>
                 </div>
                 <div className="flex-1">
                   <p className={T.label}>{scenarios.callLabel}</p>
-                  <p className={`${T.body} mt-1`}>{item.call}</p>
+                  <p className={`${T.body} mt-1 text-[color:var(--fg)]`}>{item.call}</p>
                 </div>
+                {id === "injected" ? (
+                  <div className="border-l-4 border-[color:var(--caution)] bg-[color:var(--caution-dim)] px-3 py-2">
+                    <p className={T.label}>{scenarios.plantedLabel}</p>
+                    <p className={`${T.small} mt-1 break-words text-[color:var(--fg)]`}>
+                      {PLANTED.trim()}
+                    </p>
+                  </div>
+                ) : null}
+                <details className="group">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]">
+                    <span
+                      aria-hidden="true"
+                      className="inline-block transition-transform group-open:rotate-90"
+                    >
+                      &#8250;
+                    </span>
+                    {scenarios.fullIntent}
+                  </summary>
+                  <p className={`${T.small} mt-1 break-words`}>
+                    {id === "injected" ? INTENT + PLANTED : INTENT}
+                  </p>
+                </details>
                 <Button
                   variant={id === "honest" ? "primary" : "ghost"}
                   onClick={() => run(id)}

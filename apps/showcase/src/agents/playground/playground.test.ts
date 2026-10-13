@@ -68,6 +68,15 @@ describe("the playground's verdicts follow the engine's rule", () => {
       "blockKnownMalicious",
     );
   });
+
+  it("reports the wallet that gets a collection, as the live engine does", () => {
+    const [operator, wallet] = SAMPLES.operatorApproval.findings;
+    expect(wallet?.code).toBe("APPROVAL_TO_WALLET");
+    expect(wallet?.values).toEqual({
+      spender: operator?.values.operator,
+      contract: operator?.values.contract,
+    });
+  });
 });
 
 describe("parseTransaction", () => {

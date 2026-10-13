@@ -1,6 +1,5 @@
 import { agents, common } from "@baret/content";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
-import { ImgWell } from "@baret/web-ui/components/Img";
 import { Reveal } from "@baret/web-ui/components/Reveal";
 import { Section, titleIdOf } from "@baret/web-ui/components/Section";
 import { SectionHeader } from "@baret/web-ui/components/SectionHeader";
@@ -8,13 +7,12 @@ import { Segment } from "@baret/web-ui/components/Segment";
 import { GRID } from "@baret/web-ui/lib/layout";
 import { T } from "@baret/web-ui/lib/type";
 import { type JSX, useId, useState } from "react";
-import { AGENTS_ART } from "../shared/assets.js";
 import { withPolicy } from "./code.js";
 import type { PolicyName } from "./playground/sample.js";
 
 /**
- * From install to the first blocked transaction. Left: the three steps on
- * hairlines and a hand picking one of three tags (pick a policy). Right: the
+ * From install to the first blocked transaction. Left: the three steps,
+ * numbered, on hairlines (the floating picture under them was cut, 2026-10-13). Right: the
  * code, one sample at a time behind a radio group (HTTP API, TypeScript,
  * any language, MCP): the line before it, the code with a copy button, the line
  * after it. The SDK and CLI samples carry the policy picked in the
@@ -50,20 +48,24 @@ export function Quickstart({ policy }: { policy: PolicyName }): JSX.Element {
       <div className={`${GRID} mt-12 gap-y-10 lg:items-start`}>
         <Reveal className="col-span-4 md:col-span-8 lg:col-span-5">
           <ol className="border-t border-[color:var(--rule)]">
-            {steps.items.map((step) => (
-              <li key={step.title} className="border-b border-[color:var(--rule)] py-5">
-                <h3 className={`${T.h3} text-[color:var(--fg)]`}>{step.title}</h3>
-                <p className={`${T.body} mt-2`}>{step.body}</p>
+            {steps.items.map((step, i) => (
+              <li
+                key={step.title}
+                className="grid grid-cols-[2.5rem_1fr] gap-x-3 border-b border-[color:var(--rule)] py-5"
+              >
+                <span
+                  aria-hidden="true"
+                  className="grid size-8 place-items-center border border-[color:var(--rule-strong)] font-mono text-sm text-[color:var(--fg)]"
+                >
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className={`${T.h3} text-[color:var(--fg)]`}>{step.title}</h3>
+                  <p className={`${T.body} mt-2`}>{step.body}</p>
+                </div>
               </li>
             ))}
           </ol>
-          <ImgWell
-            asset={AGENTS_ART.policy}
-            ratio="4/3"
-            dim
-            sizes="(min-width: 1024px) 460px, 100vw"
-            className="mt-8 hidden border border-[color:var(--rule)] md:block"
-          />
         </Reveal>
         <Reveal className="col-span-4 min-w-0 md:col-span-8 lg:col-span-7" delay={0.06}>
           <fieldset>
