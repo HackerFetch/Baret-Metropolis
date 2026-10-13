@@ -1,5 +1,6 @@
 import { common, connect } from "@baret/content";
 import { Button, truncateAddress } from "@baret/ui";
+import { Permissions, SiteBadge } from "@baret/wallet-ui/components/ConnectParts";
 import { Parts } from "@baret/wallet-ui/components/Parts";
 import { CONNECT_REQUESTS } from "@baret/wallet-ui/data/sample";
 import { useWallet } from "@baret/wallet-ui/data/store";
@@ -7,16 +8,15 @@ import type { ConnectRequest } from "@baret/wallet-ui/data/types";
 import { fillParts } from "@baret/wallet-ui/lib/parts";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { Check, X } from "lucide-react";
 import { type JSX, useId, useState } from "react";
 import { useLive } from "../live/live.js";
 import { RequestFrame, SamplePicker, SiteStatus } from "../request/RequestFrame.js";
 import { useSiteRequest } from "../request/siteRequest.js";
 
 /**
- * /connect, the window a site opens to ask for the account's address. It says
- * what the site will be able to do and, with the same weight, what it will
- * not. The site address is the one the browser reports. Two samples: a first
+ * /connect, the window a site opens to ask for the account's address: the
+ * site, one sentence (connecting moves nothing), what the site can and cannot
+ * do side by side, and the answer pinned at the foot. The site address is the one the browser reports. Two samples: a first
  * visit over a secure connection, and a site with no secure connection.
  *
  * Live, a site opened it (request/siteRequest.tsx): the same screen for the
@@ -30,39 +30,6 @@ const OPTIONS = [
 ] as const satisfies readonly { value: ConnectRequest["id"]; label: string }[];
 
 type Result = "connected" | "connectedOnce" | "connectedSite" | "declined";
-
-function Points({
-  title,
-  points,
-  can,
-}: {
-  title: string;
-  points: readonly string[];
-  can: boolean;
-}): JSX.Element {
-  const id = useId();
-  const Icon = can ? Check : X;
-  return (
-    <section aria-labelledby={id} className="grid content-start gap-3">
-      <h2 id={id} className={T.label}>
-        {title}
-      </h2>
-      <ul className="grid border-t border-[color:var(--rule)]">
-        {points.map((point) => (
-          <li
-            key={point}
-            className="flex gap-3 border-b border-[color:var(--rule)] py-3 text-base text-[color:var(--fg)]"
-          >
-            <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={1.75} />
-            <span className={can ? "" : "line-through decoration-[color:var(--fg-muted)]"}>
-              {point}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 function Request({
   request,
@@ -140,62 +107,62 @@ function Request({
       aria-labelledby={titleId}
       className="border border-[color:var(--rule-strong)] bg-[color:var(--surface)]"
     >
-      <header className="grid gap-3 px-5 pt-6 pb-5 md:px-6">
+      <header className="grid gap-4 px-5 pt-6 pb-5 md:px-6">
         <p className={T.label}>{connect.title}</p>
+        <SiteBadge origin={request.origin} secure={request.secure} />
         <h1
           id={titleId}
-          className="font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere]"
+          className="font-display text-2xl font-extrabold uppercase leading-[1.05] text-[color:var(--fg)] [overflow-wrap:anywhere] md:text-3xl"
         >
           <Parts parts={fillParts(connect.subtitle, { origin }, new Set(["origin"]))} />
         </h1>
-        <p className="text-sm">
-          <span className="font-mono text-[color:var(--fg)] [overflow-wrap:anywhere]">
-            {request.origin}
-          </span>
-          <span className="block text-[color:var(--fg-muted)]">{connect.originNote}</span>
-        </p>
+        <p className="text-base text-[color:var(--fg)]">{connect.note}</p>
+        <p className={T.small}>{connect.originNote}</p>
       </header>
 
-      <div className="grid gap-4 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
-        {!request.secure ? (
-          <div className="grid gap-1 border-l-4 border-[color:var(--fg)] pl-4">
-            <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
-              {connect.warnings.insecure.title}
-            </p>
-            <p className={T.body}>{connect.warnings.insecure.body}</p>
-          </div>
-        ) : null}
-        {site ? null : (
-          <div className="grid gap-1 border-l-4 border-[color:var(--rule-strong)] pl-4">
-            <p className="font-display text-lg font-bold uppercase text-[color:var(--fg)]">
-              {connect.warnings.firstTime.title}
-            </p>
-            <p className={T.body}>{connect.warnings.firstTime.body}</p>
-          </div>
-        )}
-        <p className="text-base text-[color:var(--fg)]">{connect.note}</p>
+      {!request.secure || !site ? (
+        <div className="grid gap-3 px-5 pb-5 md:px-6">
+          {!request.secure ? (
+            <div
+              role="note"
+              className="grid gap-1 border-l-4 border-[color:var(--blocked)] bg-[color:var(--blocked-dim)] py-3 pr-3 pl-4"
+            >
+              <p className="text-sm font-semibold text-[color:var(--fg)]">
+                {connect.warnings.insecure.title}
+              </p>
+              <p className={T.small}>{connect.warnings.insecure.body}</p>
+            </div>
+          ) : null}
+          {site ? null : (
+            <div className="grid gap-1 border-l-4 border-[color:var(--rule-strong)] bg-[color:var(--ground-deep)] py-3 pr-3 pl-4">
+              <p className="text-sm font-semibold text-[color:var(--fg)]">
+                {connect.warnings.firstTime.title}
+              </p>
+              <p className={T.small}>{connect.warnings.firstTime.body}</p>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      <div className="border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
+        <Permissions can={connect.can} cannot={connect.cannot} />
       </div>
 
-      <div className="grid gap-8 border-t border-[color:var(--rule)] px-5 py-5 sm:grid-cols-2 sm:gap-6 md:px-6">
-        <Points title={connect.can.title} points={connect.can.points} can />
-        <Points title={connect.cannot.title} points={connect.cannot.points} can={false} />
-      </div>
-
-      <div className="grid gap-2 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
-        <p className="text-sm text-[color:var(--fg)]">
-          {state.accountName}{" "}
+      <div className="grid gap-2 border-t border-[color:var(--rule)] px-5 py-4 md:px-6">
+        <p className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm text-[color:var(--fg)]">
+          <span className="font-medium">{state.accountName}</span>
           <span className="font-mono text-[color:var(--fg-muted)]">
             {truncateAddress(state.address)}
           </span>
         </p>
         {site ? null : (
           <>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-[color:var(--fg)]">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[color:var(--fg)]">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(event) => setRemember(event.currentTarget.checked)}
-                className="size-5 accent-[color:var(--fg)]"
+                className="size-5 shrink-0 accent-[color:var(--fg)]"
               />
               {connect.remember.label}
             </label>
@@ -204,11 +171,23 @@ function Request({
         )}
       </div>
 
-      <footer className="grid gap-3 border-t border-[color:var(--rule-strong)] px-5 py-5 sm:grid-cols-2 md:px-6">
-        <Button type="button" variant="ghost" size="lg" onClick={() => answer("declined")}>
+      {/* Pinned at the foot of the window, so the answer is always one press away. */}
+      <footer className="sticky bottom-0 z-10 grid grid-cols-2 gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-5 py-4 md:px-6">
+        {/* With no secure connection, the safer answer carries the weight: Decline is primary. */}
+        <Button
+          type="button"
+          variant={request.secure ? "ghost" : "primary"}
+          size="lg"
+          onClick={() => answer("declined")}
+        >
           {connect.actions.reject}
         </Button>
-        <Button type="button" variant="primary" size="lg" onClick={() => answer("connected")}>
+        <Button
+          type="button"
+          variant={request.secure ? "primary" : "ghost"}
+          size="lg"
+          onClick={() => answer("connected")}
+        >
           {connect.actions.approve}
         </Button>
       </footer>

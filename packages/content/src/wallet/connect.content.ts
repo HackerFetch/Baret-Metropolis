@@ -11,10 +11,13 @@ export const connect = {
   title: "Connection request",
   subtitle: "{origin} wants to connect",
   originNote: "The site address as your browser reports it.",
-  note: "Connecting moves nothing. It shares your address.",
+  note: "Connecting shares your address. It moves nothing.",
+  /** The short label beside the site, when the connection is secure. */
+  secure: "Secure connection",
+  insecureShort: "Not secure",
 
   can: {
-    title: "This site will be able to",
+    title: "This site can",
     points: [
       "See your wallet address",
       "See your balance and activity, which are public on Monad",
@@ -22,9 +25,9 @@ export const connect = {
     ],
   },
 
-  /** Rendered crossed out, as prominent as the list above. */
+  /** Rendered beside the list above, with the same weight. */
   cannot: {
-    title: "It will not be able to",
+    title: "It cannot",
     points: [
       "Move funds without your signature",
       "See your passkey or your keys",

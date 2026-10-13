@@ -107,7 +107,7 @@ function Points({
           >
             <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={1.75} />
             <span
-              className={`min-w-0 [overflow-wrap:anywhere] ${can ? "" : "line-through decoration-[color:var(--fg-muted)]"}`}
+              className={`min-w-0 [overflow-wrap:anywhere] ${can ? "" : "text-[color:var(--fg-muted)]"}`}
             >
               {point.text}
             </span>

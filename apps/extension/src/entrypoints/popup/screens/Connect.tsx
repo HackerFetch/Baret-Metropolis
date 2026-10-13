@@ -3,62 +3,27 @@ import { common } from "@baret/content/shared/common.content";
 import { connect } from "@baret/content/wallet/connect.content";
 import { sign } from "@baret/content/wallet/sign.content";
 import { Button, truncateAddress } from "@baret/ui";
+import { Permissions, SiteBadge } from "@baret/wallet-ui/components/ConnectParts";
 import { Parts } from "@baret/wallet-ui/components/Parts";
 import { amount } from "@baret/wallet-ui/data/format";
 import { fillParts } from "@baret/wallet-ui/lib/parts";
-import { Img } from "@baret/web-ui/components/Img";
 import { DUR } from "@baret/web-ui/lib/motion";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { counted, fill } from "@baret/web-ui/lib/util";
-import { Check, X } from "lucide-react";
 import { m } from "motion/react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
-import { POPUP_ART } from "../../../assets.js";
 import type { ConnectSample } from "../../../data/sample.js";
 import { activeAccount, useExtension } from "../../../data/store.js";
 import { RISE_PX, useCountdown } from "../parts/Requests.js";
 
 /**
- * The connect phase: a site asks to see an address. The window says what the
- * site will be able to do and, with the same weight, what it will not; the
+ * The connect phase: a site asks to see an address. The window shows the
+ * site, one sentence, what it can and cannot do with the same weight; the
  * reader picks the one account the site gets to see. The site address is the
  * one the browser reports. A site that already sees an account offers to
  * switch it or to disconnect instead.
  */
-
-function Points({
-  title,
-  points,
-  can,
-}: {
-  title: string;
-  points: readonly string[];
-  can: boolean;
-}): JSX.Element {
-  const id = useId();
-  const Icon = can ? Check : X;
-  return (
-    <section aria-labelledby={id} className="grid content-start gap-2">
-      <h2 id={id} className={T.label}>
-        {title}
-      </h2>
-      <ul className="grid border-t border-[color:var(--rule)]">
-        {points.map((point) => (
-          <li
-            key={point}
-            className="flex gap-3 border-b border-[color:var(--rule)] py-2.5 text-sm text-[color:var(--fg)]"
-          >
-            <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0" strokeWidth={2} />
-            <span className={can ? "" : "line-through decoration-[color:var(--fg-muted)]"}>
-              {point}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 function Note({
   title,
@@ -71,11 +36,9 @@ function Note({
 }): JSX.Element {
   return (
     <div
-      className={`grid gap-1 border-l-4 pl-3 ${tone === "warn" ? "border-[color:var(--blocked)]" : "border-[color:var(--rule-strong)]"}`}
+      className={`grid gap-1 border-l-4 py-2.5 pr-3 pl-3 ${tone === "warn" ? "border-[color:var(--blocked)] bg-[color:var(--blocked-dim)]" : "border-[color:var(--rule-strong)] bg-[color:var(--ground-deep)]"}`}
     >
-      <p className="font-display text-base font-bold uppercase leading-tight tracking-[0.02em] text-[color:var(--fg)]">
-        {title}
-      </p>
+      <p className="text-sm font-semibold leading-tight text-[color:var(--fg)]">{title}</p>
       <p className={T.small}>{body}</p>
     </div>
   );
@@ -151,26 +114,16 @@ export function ConnectPhase({
     <article aria-labelledby={titleId} className="flex h-full flex-col">
       {/* Relative, so the sr-only legend stays inside the scroller and the page stays 600 px. */}
       <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div
-          className="relative aspect-[3/1] overflow-hidden border-b border-[color:var(--rule)]"
-          style={{ backgroundColor: POPUP_ART.connect.ground }}
-        >
-          <Img asset={POPUP_ART.connect} loading="priority" sizes="360px" position="50% 40%" />
-        </div>
-        <header className="grid gap-3 px-5 pt-5 pb-5">
+        <header className="grid gap-3 px-5 pt-5 pb-4">
           <p className={T.label}>{connect.title}</p>
+          <SiteBadge origin={sample.origin} secure={sample.secure} size="sm" />
           <h1
             id={titleId}
-            className="font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere]"
+            className="font-display text-2xl font-extrabold uppercase leading-[1.05] text-[color:var(--fg)] [overflow-wrap:anywhere]"
           >
             <Parts parts={fillParts(connect.subtitle, { origin }, new Set(["origin"]))} />
           </h1>
-          <p className="text-sm">
-            <span className="font-mono text-[color:var(--fg)] [overflow-wrap:anywhere]">
-              {sample.origin}
-            </span>
-            <span className="block text-[color:var(--fg-muted)]">{connect.originNote}</span>
-          </p>
+          <p className="text-sm text-[color:var(--fg)]">{connect.note}</p>
         </header>
 
         <m.div
@@ -230,15 +183,16 @@ export function ConnectPhase({
               tone="plain"
             />
           ) : null}
-          <p className="text-sm text-[color:var(--fg)]">{connect.note}</p>
+          <p className={T.small}>{connect.originNote}</p>
         </m.div>
+
+        <div className="border-t border-[color:var(--rule)] px-5 py-5">
+          <Permissions can={popupConnect.can} cannot={popupConnect.cannot} dense />
+        </div>
 
         <fieldset className="grid gap-2 border-t border-[color:var(--rule)] px-5 py-5">
           <legend className="sr-only">{popupConnect.accountPicker.title}</legend>
-          <p
-            className="font-display text-lg font-bold uppercase leading-tight text-[color:var(--fg)]"
-            aria-hidden="true"
-          >
+          <p className={T.label} aria-hidden="true">
             {popupConnect.accountPicker.title}
           </p>
           <p className={T.small}>{fill(popupConnect.accountPicker.body, { origin })}</p>
@@ -266,15 +220,6 @@ export function ConnectPhase({
             ))}
           </div>
         </fieldset>
-
-        <div className="grid gap-6 border-t border-[color:var(--rule)] px-5 py-5">
-          <Points title={popupConnect.can.title} points={popupConnect.can.points} can />
-          <Points
-            title={popupConnect.cannot.title}
-            points={popupConnect.cannot.points}
-            can={false}
-          />
-        </div>
 
         <div className="grid gap-1 border-t border-[color:var(--rule)] px-5 py-4">
           <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[color:var(--fg)]">

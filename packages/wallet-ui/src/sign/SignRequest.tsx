@@ -1,20 +1,21 @@
 import { common, explain, sign } from "@baret/content";
-import { Button, ChangeRow, VerdictTag } from "@baret/ui";
+import { Button, ChangeRow } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
-import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { PlainWordsBody } from "@baret/web-ui/components/PlainWords";
 import { T } from "@baret/web-ui/lib/type";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { counted, cx, fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { siteLetter } from "../components/ConnectParts.js";
 import { Findings } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
 import type { ActivityItem, SignRequest as Request, SignSource } from "../data/types.js";
+import { Analyzing } from "./Analyzing.js";
+import { Details } from "./Details.js";
 import { HoldButton } from "./HoldButton.js";
 import {
   actionParts,
-  blockedSummary,
   fixFor,
   impactText,
   logFor,
@@ -22,13 +23,15 @@ import {
   overrideBody,
   ruleRows,
 } from "./sign.js";
+import { VerdictCard } from "./VerdictCard.js";
 
 /**
  * The sign request, the most-read screen in the product (content sign.*). In
- * order: who asks and what for, the site's claim (shown, never trusted), the
- * verdict and who checked it, what happens if you sign, what changes, the
- * findings, the rules it breaks, the raw request, the countdown, then the
- * actions. Blocked has no sign button: the only way past it, and past Can't
+ * order: who asks and what for, Baret's verdict first (tag, one-line reason,
+ * what happens if you sign), what changes, the findings, the rules it breaks,
+ * then Details collapsed (the site's claim, who checked it, the raw request),
+ * and the decision pinned at the foot with the countdown. While the answer is
+ * on its way, the staged loading state (Analyzing) stands in for the verdict. Blocked has no sign button: the only way past it, and past Can't
  * reach Baret, is the override, press and hold, written to the activity log.
  * The result replaces the whole screen.
  *
@@ -147,21 +150,6 @@ function Section({
   );
 }
 
-/** The verdict's title and one-line summary, for whichever verdict came back. */
-function verdictWords(request: Request, message = false): { title: string; summary: string } {
-  const { verdict } = sign;
-  return request.verdict === "safe"
-    ? {
-        title: verdict.safe.title,
-        summary: message ? verdict.safe.summaryMessage : verdict.safe.summary,
-      }
-    : request.verdict === "caution"
-      ? { title: verdict.caution.title, summary: verdict.caution.summary }
-      : request.verdict === "blocked"
-        ? { title: verdict.blocked.title, summary: blockedSummary(request) }
-        : { title: verdict.unreachable.title, summary: verdict.unreachable.summary };
-}
-
 /**
  * Who checked it. Live, only the sources the server reports as answered,
  * plus a could-not-be-reached line for each that did not; a skipped source
@@ -182,73 +170,6 @@ function checkedLines(request: Request): string[] {
 function checkedAlchemy(request: Request): boolean {
   const alchemy = request.sources?.find((source) => source.name === "alchemy");
   return !alchemy || alchemy.status === "ok";
-}
-
-/**
- * Compact only: the verdict in one line under the heading, so Baret's answer
- * is read before the site's claim and above the pinned footer.
- */
-function VerdictLine({
-  request,
-  checking,
-  message = false,
-}: {
-  request: Request;
-  checking: boolean;
-  /** A typed message: read, not simulated. */
-  message?: boolean;
-}): JSX.Element {
-  if (checking) {
-    // Two lines held, the height most verdicts take, so the answer arriving
-    // does not push the rest of the request down (layout shift).
-    return <p className={`${T.small} min-h-10`}>{sign.verdict.checking.title}</p>;
-  }
-  return (
-    <div className="flex items-start gap-2">
-      <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
-      <p className="text-sm text-[color:var(--fg)]">{verdictWords(request, message).summary}</p>
-    </div>
-  );
-}
-
-function Verdict({
-  request,
-  checking,
-  short = false,
-  message = false,
-}: {
-  request: Request;
-  checking: boolean;
-  /** The tag and summary already sit under the heading: the title only. */
-  short?: boolean;
-  /** A typed message: read, not simulated. */
-  message?: boolean;
-}): JSX.Element {
-  const { verdict } = sign;
-  if (checking) {
-    return (
-      <div className="grid gap-2">
-        <p className="font-display text-2xl font-extrabold uppercase text-[color:var(--fg)]">
-          {verdict.checking.title}
-        </p>
-        <p className={T.body}>{message ? verdict.checking.bodyMessage : verdict.checking.body}</p>
-      </div>
-    );
-  }
-  const words = verdictWords(request, message);
-  return (
-    <div className="grid gap-3">
-      {short ? null : (
-        <div className="flex">
-          <VerdictTag kind={request.verdict} label={common.verdicts[request.verdict].label} />
-        </div>
-      )}
-      <p className="font-display text-2xl font-extrabold uppercase leading-tight text-[color:var(--fg)]">
-        {words.title}
-      </p>
-      {short ? null : <p className={T.body}>{words.summary}</p>}
-    </div>
-  );
 }
 
 function stepWords(step: "passkey" | "signing" | "sending"): string {
@@ -678,12 +599,12 @@ export function SignRequest({
   const checking = phase.kind === "checking";
   const blocked = request.verdict === "blocked";
   // Without the override, Decline is a Blocked request's one action, full width.
-  const decisionGrid =
-    blocked && !canOverride
-      ? "grid gap-3"
-      : compact
-        ? compactGrid(request.verdict)
-        : "grid gap-3 sm:grid-cols-2";
+  // Blocked: Decline is the one wide answer; the override sits small under it.
+  const decisionGrid = blocked
+    ? "grid gap-2"
+    : compact
+      ? compactGrid(request.verdict)
+      : "grid grid-cols-2 gap-3";
   const unreachable = request.verdict === "unreachable";
   const rows = ruleRows(request);
 
@@ -717,7 +638,7 @@ export function SignRequest({
       size={decisionSize}
       disabled={checking}
       onClick={() => finish("declined")}
-      {...(compact ? { "aria-describedby": noSignId } : {})}
+      aria-describedby={noSignId}
     >
       {sign.verdict.blocked.primary}
     </Button>
@@ -727,10 +648,10 @@ export function SignRequest({
       ref={overrideTrigger}
       type="button"
       variant="ghost"
-      size={compact ? "sm" : decisionSize}
+      size="sm"
       disabled={checking}
       onClick={openOverride}
-      {...(compact ? { className: "justify-self-start" } : {})}
+      className="justify-self-start"
     >
       {sign.verdict.blocked.secondary}
     </Button>
@@ -767,7 +688,7 @@ export function SignRequest({
         </>
       ) : (
         <>
-          <header className="grid gap-3 px-5 pt-6 pb-5 md:px-6">
+          <header className="grid gap-3 px-5 pt-5 pb-4 md:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className={T.label}>{sign.header.title}</p>
               <Tag tone="network" size="sm">
@@ -778,20 +699,22 @@ export function SignRequest({
               ref={headline}
               id={titleId}
               tabIndex={-1}
-              className={`font-display text-3xl font-extrabold uppercase leading-[1.02] text-[color:var(--fg)] [overflow-wrap:anywhere] ${FOCUS_TARGET}`}
+              className={`font-display font-extrabold uppercase leading-[1.05] text-[color:var(--fg)] [overflow-wrap:anywhere] ${compact ? "text-2xl" : "text-2xl md:text-3xl"} ${FOCUS_TARGET}`}
             >
               <Parts parts={actionParts(request)} />
             </h1>
             {request.origin ? (
-              <p className="text-sm text-[color:var(--fg)]">
-                <span className="font-mono">
+              <p className="flex min-w-0 items-center gap-2 text-sm text-[color:var(--fg)]">
+                <span
+                  aria-hidden="true"
+                  className="grid size-6 shrink-0 place-items-center border border-[color:var(--rule-strong)] bg-[color:var(--ground-deep)] font-display text-xs font-extrabold"
+                >
+                  {siteLetter(request.origin)}
+                </span>
+                <span className="min-w-0 font-mono [overflow-wrap:anywhere]">
                   {fill(sign.header.fromSite, { origin: request.origin })}
                 </span>
-                <span className="block text-[color:var(--fg-muted)]">{sign.header.originNote}</span>
               </p>
-            ) : null}
-            {compact ? (
-              <VerdictLine request={request} checking={checking} message={message} />
             ) : null}
           </header>
 
@@ -801,53 +724,22 @@ export function SignRequest({
             </div>
           ) : null}
 
-          {notice ? (
-            <div className="border-t border-[color:var(--rule)] px-5 py-5 md:px-6">{notice}</div>
-          ) : null}
+          {notice ? <div className="px-5 pb-4 md:px-6">{notice}</div> : null}
 
-          {request.origin && request.claim ? (
-            <Section title={fill(sign.claim.label, { origin: request.origin })}>
-              <blockquote className="border-l-2 border-[color:var(--rule-strong)] pl-4 text-base text-[color:var(--fg)]">
-                {request.claim}
-              </blockquote>
-              <p className={T.small}>
-                <span className="font-medium text-[color:var(--fg)]">{sign.claim.tag}</span>{" "}
-                {message ? sign.claim.noteMessage : sign.claim.note}
-              </p>
-            </Section>
-          ) : null}
-
-          <div className="grid gap-3 border-t border-[color:var(--rule)] px-5 py-5 md:px-6">
-            {verdictArt && !checking ? (
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-                <Verdict request={request} checking={checking} short={compact} message={message} />
-                {verdictArt}
+          <div className={compact ? "px-4 pb-4" : "px-5 pb-5 md:px-6"}>
+            {checking ? (
+              <div className="border border-[color:var(--rule)] bg-[color:var(--ground)] px-5 py-5">
+                <Analyzing message={message} compact={compact} />
               </div>
             ) : (
-              <Verdict request={request} checking={checking} short={compact} message={message} />
+              <VerdictCard
+                request={request}
+                message={message}
+                impact={impactText(request)}
+                art={verdictArt}
+                compact={compact}
+              />
             )}
-            {!checking && !unreachable ? (
-              <div className="grid gap-1 border-t border-[color:var(--rule)] pt-3 text-sm">
-                <p>
-                  <span className="text-[color:var(--fg-muted)]">
-                    {sign.verdict.checkedBy.label}:{" "}
-                  </span>
-                  <span className="text-[color:var(--fg)]">{sign.verdict.checkedBy.value}</span>
-                </p>
-                {checkedAlchemy(request) ? (
-                  <p className={T.small}>
-                    {message ? sign.verdict.checkedBy.detailMessage : sign.verdict.checkedBy.detail}
-                  </p>
-                ) : null}
-                <ul className="grid gap-0.5">
-                  {checkedLines(request).map((line) => (
-                    <li key={line} className={T.small}>
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
           </div>
 
           {!checking && unreachable ? (
@@ -863,12 +755,6 @@ export function SignRequest({
 
           {!checking ? (
             <>
-              <Section title={sign.impact.label}>
-                <p className="text-base text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                  {impactText(request)}
-                </p>
-              </Section>
-
               <Section title={sign.changes.title}>
                 {unreachable ? (
                   <p className={T.body}>{sign.changes.unknown}</p>
@@ -901,7 +787,7 @@ export function SignRequest({
                           }
                           unit={approval.unit}
                         />
-                        <p className="font-mono text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+                        <p className="font-mono text-xs text-[color:var(--fg-muted)] [overflow-wrap:anywhere]">
                           {approval.spender}
                         </p>
                       </div>
@@ -960,10 +846,13 @@ export function SignRequest({
                   {rows.length === 0 ? (
                     <p className={T.body}>{sign.rules.none}</p>
                   ) : (
-                    <ul className="grid gap-3">
+                    <ul className="grid gap-2">
                       {rows.map((row) => (
-                        <li key={row.label} className="grid gap-1">
-                          <p className="text-base font-medium text-[color:var(--fg)]">
+                        <li
+                          key={row.label}
+                          className="grid gap-1 border border-[color:var(--rule)] bg-[color:var(--ground)] px-4 py-3"
+                        >
+                          <p className="text-sm font-semibold text-[color:var(--fg)]">
                             {row.label}
                           </p>
                           {row.detail ? <p className={T.small}>{row.detail}</p> : null}
@@ -981,54 +870,12 @@ export function SignRequest({
                 </Section>
               ) : null}
 
-              <Section title={sign.raw.title}>
-                <details className="group">
-                  <summary className="flex min-h-11 w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-medium text-[color:var(--fg)] [&::-webkit-details-marker]:hidden">
-                    <span
-                      aria-hidden="true"
-                      className="font-mono text-base text-[color:var(--fg-muted)] transition-transform duration-150 group-open:rotate-45"
-                    >
-                      +
-                    </span>
-                    {request.origin === null ? sign.raw.hintOwn : sign.raw.hint}
-                  </summary>
-                  <dl className="mt-4 grid gap-3 text-sm">
-                    <div className="grid gap-1">
-                      <dt className={T.label}>{sign.raw.decoded}</dt>
-                      <dd className="font-mono text-[color:var(--fg)]">
-                        {request.raw.decoded ?? sign.raw.notDecoded}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1">
-                      <dt className={T.label}>{sign.raw.to}</dt>
-                      <dd className="font-mono text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                        {request.raw.to}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1">
-                      <dt className={T.label}>{sign.raw.value}</dt>
-                      <dd className={`font-mono text-[color:var(--fg)] ${T.num}`}>
-                        {request.raw.value}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1">
-                      <dt className={T.label}>{sign.raw.calldata}</dt>
-                      <dd className="grid gap-1">
-                        <code className="block max-h-32 overflow-y-auto font-mono text-xs text-[color:var(--fg)] [overflow-wrap:anywhere]">
-                          {request.raw.data}
-                        </code>
-                        <span className="-ml-2 flex">
-                          <CopyButton
-                            text={request.raw.data}
-                            label={sign.raw.copy}
-                            done={sign.raw.copied}
-                          />
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
-                </details>
-              </Section>
+              <Details
+                request={request}
+                message={message}
+                checked={unreachable ? null : checkedLines(request)}
+                alchemy={checkedAlchemy(request)}
+              />
             </>
           ) : null}
 
@@ -1037,7 +884,7 @@ export function SignRequest({
             className={
               compact
                 ? "sticky bottom-0 z-10 grid gap-2.5 border-t border-[color:var(--rule-strong)] bg-[color:var(--ground)] px-5 pt-3 pb-3"
-                : "grid gap-4 border-t border-[color:var(--rule-strong)] px-5 py-5 md:px-6"
+                : "sticky bottom-0 z-10 grid gap-3 border-t border-[color:var(--rule-strong)] bg-[color:var(--surface)] px-5 py-4 md:px-6"
             }
           >
             {phase.kind === "signing" ? (
@@ -1096,7 +943,7 @@ export function SignRequest({
             ) : (
               <>
                 {blocked && canOverride ? (
-                  <p id={noSignId} className={compact ? "sr-only" : T.small}>
+                  <p id={noSignId} className="sr-only">
                     {sign.verdict.blocked.noSign}
                   </p>
                 ) : blocked ? (
@@ -1139,18 +986,11 @@ export function SignRequest({
                   ) : blocked && !canOverride ? (
                     declineBlocked
                   ) : blocked ? (
-                    compact ? (
-                      // Compact: Decline first, in the tab order as on screen.
-                      <>
-                        {declineBlocked}
-                        {overrideBlocked}
-                      </>
-                    ) : (
-                      <>
-                        {overrideBlocked}
-                        {declineBlocked}
-                      </>
-                    )
+                    // Decline first, in the tab order as on screen.
+                    <>
+                      {declineBlocked}
+                      {overrideBlocked}
+                    </>
                   ) : (
                     <>
                       <Button
@@ -1216,15 +1056,18 @@ export function SignRequest({
             ) : (
               <>
                 {timed ? (
-                  <div className="grid gap-1">
-                    <p
-                      className={`font-mono text-sm text-[color:var(--fg)] ${T.num}`}
+                  // One quiet line under the buttons, so the pinned footer stays short.
+                  <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs text-[color:var(--fg-muted)]">
+                    <span
+                      className={`font-mono text-[color:var(--fg)] ${T.num}`}
                       aria-hidden="true"
                     >
                       {countdown}
-                    </p>
-                    {live ? null : <p className={T.small}>{sign.countdown.note}</p>}
-                  </div>
+                    </span>
+                    {live ? null : (
+                      <span className="sr-only sm:not-sr-only">{sign.countdown.note}</span>
+                    )}
+                  </p>
                 ) : null}
                 {footnote}
               </>

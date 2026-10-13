@@ -4,8 +4,9 @@
  * the product. Keep it surface-neutral: no routes here, and nothing that only
  * makes sense with a passkey except the keys marked wallet-only.
  *
- * Order on screen: header, the site's claim, verdict, impact, what changes,
- * findings, rules broken, raw data, countdown, override. The offline panel
+ * Order on screen: header, verdict with its one-line reason and impact, what
+ * changes, findings, rules broken, then Details (the site's claim, who checked
+ * it, raw data) collapsed, and the decision pinned at the foot. The offline panel
  * explains a Can't reach Baret verdict. The result replaces the whole screen.
  *
  * Rules this file keeps:
@@ -75,6 +76,22 @@ export const sign = {
       body: "Simulating it on Monad and running it past your rules.",
       /** A typed message is read, not sent. */
       bodyMessage: "Reading the message and running it past your rules.",
+      /** The stages the loading state walks through while Baret's answer is on its way. */
+      steps: {
+        simulate: "Simulating on Monad",
+        changes: "Reading what changes",
+        checks: "Running the checks",
+        rules: "Applying your rules",
+      },
+      /** A typed message: read, never simulated. */
+      stepsMessage: {
+        read: "Reading the message",
+        checks: "Running the checks",
+        rules: "Applying your rules",
+      },
+      /** Read by screen readers beside each stage. */
+      stepDone: "done",
+      stepNow: "in progress",
     },
     safe: {
       title: "Nothing here breaks your rules",
@@ -221,6 +238,12 @@ export const sign = {
     floorRow: "Keeps at least {limit} in the account; this request would leave {actual}.",
     unchecked: "{rule} could not be checked, so it counts as broken.",
     edit: "Change this rule",
+  },
+
+  /** Everything behind one disclosure: the site's claim, who checked it and the raw request. */
+  details: {
+    title: "Details",
+    hint: "The site's claim, who checked it and the raw request",
   },
 
   raw: {

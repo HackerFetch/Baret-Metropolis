@@ -12,6 +12,20 @@ import { fillParts } from "../lib/parts.js";
 import { KEEP_CASE } from "../sign/sign.js";
 import { Parts } from "./Parts.js";
 
+/** The card's edge and the severity chip, by how serious the finding is. */
+const SEVERITY_EDGE = {
+  critical: "border-l-[color:var(--blocked)]",
+  high: "border-l-[color:var(--blocked)]",
+  medium: "border-l-[color:var(--caution)]",
+  low: "border-l-[color:var(--rule-strong)]",
+} as const;
+const SEVERITY_CHIP = {
+  critical: "bg-[color:var(--blocked-dim)] text-[color:var(--blocked-ink)]",
+  high: "bg-[color:var(--blocked-dim)] text-[color:var(--blocked-ink)]",
+  medium: "bg-[color:var(--caution-dim)] text-[color:var(--caution-ink)]",
+  low: "bg-[color:var(--ground-deep)] text-[color:var(--fg-muted)]",
+} as const;
+
 /** Monad's own words when a call reverts because the account cannot pay for it. */
 const BALANCE_REVERT = /balance|insufficient funds/i;
 
@@ -53,7 +67,7 @@ export function Findings({
   const group = useId();
   if (items.length === 0) return <p className={T.body}>{sign.findings.none}</p>;
   return (
-    <ul className="grid gap-5">
+    <ul className="grid gap-2.5">
       {items.map((item, i) => {
         const words = findingCopy[item.code];
         const severity = FINDING_SPECS[item.code].severity;
@@ -69,14 +83,20 @@ export function Findings({
           <li
             // biome-ignore lint/suspicious/noArrayIndexKey: an answer can repeat a code (both sides of a compliance check), and the list never reorders.
             key={`${item.code}-${i}`}
-            className="grid gap-1.5 border-l-4 border-[color:var(--rule-strong)] pl-4"
+            className={`grid gap-1.5 border border-l-4 border-[color:var(--rule)] bg-[color:var(--ground)] px-4 py-3 ${SEVERITY_EDGE[severity]}`}
           >
-            <p className={T.label}>{sign.findings.severity[severity]}</p>
-            <p className="font-display text-lg font-bold uppercase tracking-[0.02em] text-[color:var(--fg)]">
+            <p
+              className={`w-max px-1.5 py-0.5 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.08em] ${SEVERITY_CHIP[severity]}`}
+            >
+              {sign.findings.severity[severity]}
+            </p>
+            <p className="font-display text-base font-bold uppercase leading-snug tracking-[0.02em] text-[color:var(--fg)]">
               {/* An address keeps its case inside the uppercase title. */}
               <Parts parts={fillParts(words.title, titleValues, KEEP_CASE)} />
             </p>
-            <p className={`${T.body} [overflow-wrap:anywhere]`}>{fill(template, values)}</p>
+            <p className="text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+              {fill(template, values)}
+            </p>
             {notes.noMon ? (
               <p className={`${T.body} [overflow-wrap:anywhere]`}>
                 {sign.findings.noMon}{" "}

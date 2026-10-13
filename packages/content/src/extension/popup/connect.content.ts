@@ -8,7 +8,8 @@
  *
  * `can` and `cannot` replace the wallet's lists of the same shape, because
  * this account has a passphrase and a recovery phrase, not a passkey, and the
- * site sees only the account picked here. `cannot` renders crossed out.
+ * site sees only the account picked here. `cannot` sits beside `can`, with
+ * the same weight.
  */
 
 export const popupConnect = {
@@ -30,7 +31,7 @@ export const popupConnect = {
   },
 
   can: {
-    title: "This site will be able to",
+    title: "This site can",
     points: [
       "See the address of the account you pick",
       "See its balance and activity, which are public on Monad",
@@ -39,7 +40,7 @@ export const popupConnect = {
   },
 
   cannot: {
-    title: "It will not be able to",
+    title: "It cannot",
     points: [
       "Move funds without your signature",
       "See your passphrase or recovery phrase",
