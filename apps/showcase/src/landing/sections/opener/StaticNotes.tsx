@@ -18,7 +18,8 @@ const FIRST = FRAMES[0];
  * The opener's height, shared by the loop and this static screen: shorter
  * than the viewport, so the hero's headline is one scroll away.
  */
-export const OPENER_HEIGHT = "h-[clamp(420px,68svh,680px)]";
+/** One screen together with the 56 px sticky header (h-14) above it. */
+export const OPENER_HEIGHT = "h-[calc(100svh-3.5rem)] min-h-[480px]";
 
 /** Accessible name of the opener region, from its dedicated content key. */
 export const OPENER_LABEL = home.opener.regionLabel;

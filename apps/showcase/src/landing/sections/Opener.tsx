@@ -1,3 +1,4 @@
+import { home } from "@baret/content";
 import { FRAME } from "@baret/web-ui/lib/layout";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
@@ -5,20 +6,20 @@ import { IDS } from "../../shared/ids.js";
 import { FrameLayer, type FrameState } from "./opener/FrameLayer.js";
 import { FRAMES } from "./opener/frames.js";
 import { LinePlate } from "./opener/LinePlate.js";
-import { LoopControls } from "./opener/LoopControls.js";
 import { OPENER_HEIGHT, OPENER_LABEL, StaticNotes } from "./opener/StaticNotes.js";
 import { useHeroSnap } from "./opener/useHeroSnap.js";
 
 /**
- * The opener: a short graphite stage that tells the product in three lines
- * (problem, act, result) as a loop that plays by itself, like a GIF. It is
- * one normal block, never pinned and never tied to the scroll. The first
- * wheel step from the top lands on the hero ("Check it first. Then sign.",
- * useHeroSnap).
+ * The opener: one full screen under the header that tells the product in
+ * three lines (problem, act, result) as a loop that plays by itself, like a
+ * GIF, with no visible controls. It is never pinned and never tied to the
+ * scroll. The first wheel step from the top lands on the hero ("Check it
+ * first. Then sign.", useHeroSnap).
  *
- * The loop pauses while the stage is off screen or the tab is hidden, and a
- * pause button stops it for good (WCAG 2.2.2). The step dots jump to a line.
- * Under reduced motion it is one finished screen (StaticNotes).
+ * The loop pauses while the stage is off screen or the tab is hidden. A
+ * pause button stays for keyboard users (WCAG 2.2.2): it is invisible until
+ * it takes focus. Under reduced motion it is one finished screen
+ * (StaticNotes).
  */
 
 /** How long each line holds before the next one, in ms. */
@@ -115,15 +116,15 @@ function OpenerLoop(): JSX.Element {
         className={`${FRAME} absolute inset-x-0 bottom-4 z-10 flex flex-col items-start gap-2 md:bottom-8 lg:bottom-10`}
       >
         <LinePlate index={step.index} />
-        <LoopControls
-          index={step.index}
-          count={FRAMES.length}
-          playing={playing}
-          running={running}
-          duration={STEP_MS}
-          onPick={go}
-          onToggle={() => setPlaying((p) => !p)}
-        />
+        <button
+          type="button"
+          aria-label={playing ? home.opener.pause : home.opener.play}
+          aria-pressed={!playing}
+          onClick={() => setPlaying((p) => !p)}
+          className="sr-only bg-[rgb(18_18_18/0.72)] px-3 py-2 font-mono text-[12px] uppercase tracking-[0.06em] text-chalk focus-visible:not-sr-only focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
+        >
+          {playing ? home.opener.pause : home.opener.play}
+        </button>
       </div>
     </section>
   );
