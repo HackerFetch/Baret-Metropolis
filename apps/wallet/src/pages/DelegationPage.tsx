@@ -18,6 +18,7 @@ import type { Merchant, SignRequest as Request, Vault } from "@baret/wallet-ui/d
 import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { ImgWell } from "@baret/web-ui/components/Img";
+import { stopGlide } from "@baret/web-ui/lib/glide";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { createContext, type JSX, use, useEffect, useId, useRef, useState } from "react";
@@ -411,6 +412,7 @@ export function Component() {
   /** Set when the current step's transaction is in a block. */
   const sent = useRef(false);
   const section = useRef<HTMLElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const sectionTitle = useId();
   /** The control that started the change; focus goes back to it at the end. */
   const trigger = useRef<HTMLElement | null>(null);
@@ -423,13 +425,30 @@ export function Component() {
   // The agent key, shown once after its own passkey prompt; never kept anywhere.
   const [agentSecret, setAgentSecret] = useState<string | null>(null);
 
+  /**
+   * Brings the change into view and puts focus on its heading. The trigger
+   * may sit far down the page (a form that closes as the change opens), so
+   * without this the change would open off screen. A wheel glide still in
+   * flight is ended first: Lenis would otherwise write its own target over
+   * this scroll every frame and keep the page where the form was.
+   */
+  function showChange(): void {
+    const node = section.current;
+    if (!node) return;
+    stopGlide();
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    node.scrollIntoView?.({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    heading.current?.focus({ preventScroll: true });
+  }
+
   /** Builds step `index`, shows it as Checking, then with Baret's answer. */
   async function load(steps: readonly StepBuilder[], index: number, done: number): Promise<void> {
     const build = steps[index];
     if (!live || !build) return;
-    // Continue and Try again unmount the pressed button: the section, which
-    // stays, takes focus first. (On the first step it is not mounted yet.)
-    section.current?.focus({ preventScroll: true });
+    // Continue and Try again unmount the pressed button: the change, which
+    // stays, comes back into view with focus on its heading. (On the first
+    // step it is not mounted yet; the effect below shows it.)
+    showChange();
     signable.current = null;
     setFailed(null);
     setFlow({ steps, index, request: null, pending: true, sent: done, done: false });
@@ -483,11 +502,10 @@ export function Component() {
 
   // A change that opens is brought into view and focused; one that ends gives
   // focus back to the control that started it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: showChange reads refs only.
   useEffect(() => {
     if (open) {
-      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-      section.current?.scrollIntoView?.({ behavior: reduce ? "auto" : "smooth", block: "start" });
-      section.current?.focus({ preventScroll: true });
+      showChange();
       return;
     }
     if (!returnFocus.current) return;
@@ -621,21 +639,28 @@ export function Component() {
             {live && open ? (
               <section
                 ref={section}
-                tabIndex={-1}
                 aria-labelledby={sectionTitle}
-                className="grid max-w-[640px] scroll-mt-24 gap-4 focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]"
+                className="grid max-w-[640px] scroll-mt-24 gap-4"
               >
-                <h2 id={sectionTitle} className="sr-only">
-                  {delegation.flow.label}
-                </h2>
-                {flow && flow.steps.length > 1 ? (
-                  <p className={T.label}>
-                    {fill(delegation.flow.step, {
-                      current: String(flow.index + 1),
-                      total: String(flow.steps.length),
-                    })}
-                  </p>
-                ) : null}
+                {/* Visible, and where focus lands, so the reader sees what replaced the form. */}
+                <div className="grid gap-1">
+                  <h2
+                    ref={heading}
+                    id={sectionTitle}
+                    tabIndex={-1}
+                    className={`${T.h3} text-[color:var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-solid focus-visible:outline-[color:var(--focus)]`}
+                  >
+                    {delegation.flow.label}
+                  </h2>
+                  {flow && flow.steps.length > 1 ? (
+                    <p className={T.label}>
+                      {fill(delegation.flow.step, {
+                        current: String(flow.index + 1),
+                        total: String(flow.steps.length),
+                      })}
+                    </p>
+                  ) : null}
+                </div>
                 <p role="status" className={flow && !flow.request ? T.body : "sr-only"}>
                   {flow && !flow.request ? delegation.flow.preparing : ""}
                 </p>

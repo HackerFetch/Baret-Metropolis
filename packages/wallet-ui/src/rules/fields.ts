@@ -79,6 +79,48 @@ export function valueText(field: GuardPolicyField, value: GuardPolicy[GuardPolic
   return "unit" in words && words.unit ? `${value} ${words.unit}` : String(value);
 }
 
+/**
+ * ISO 3166-1 alpha-2: every officially assigned country code. The country on
+ * a Cleanverse credential is one of these, so anything else in the list could
+ * never match and would block every verified transfer.
+ */
+const COUNTRIES = new Set(
+  [
+    "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ",
+    "BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ",
+    "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ",
+    "DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR",
+    "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY",
+    "HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP",
+    "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY",
+    "MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ",
+    "NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY",
+    "QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ",
+    "TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ",
+    "VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW",
+  ]
+    .join(" ")
+    .split(" "),
+);
+
+/** A list field's typed text as entries: one per line or between commas. */
+export function listEntries(text: string): string[] {
+  return text
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+/**
+ * The entries a list field cannot take, as typed. Only the countries are
+ * checked: each must be a two-letter ISO code (either case). The other lists
+ * hold token symbols and site origins, which have no fixed shape here.
+ */
+export function badEntries(field: GuardPolicyField, entries: readonly string[]): string[] {
+  if (field !== "allowedCountries") return [];
+  return entries.filter((entry) => !COUNTRIES.has(entry.toUpperCase()));
+}
+
 /** The text an input shows for a value. */
 export function inputText(value: GuardPolicy[GuardPolicyField]): string {
   if (Array.isArray(value)) return value.join("\n");
@@ -89,7 +131,8 @@ export function inputText(value: GuardPolicy[GuardPolicyField]): string {
  * Typed text to a value for one field. Empty is off (null) for a threshold;
  * a list takes one entry per line. Returns undefined when the text can't be
  * read, so the editor keeps the last good value and the schema check names
- * the field on save.
+ * the field on save. A country list reads only as two-letter ISO codes, in
+ * capitals whatever case was typed.
  */
 export function parseInput(
   field: GuardPolicyField,
@@ -98,12 +141,11 @@ export function parseInput(
   const value = text.trim();
   const kind = kindOf(field);
   if (kind === "list") {
-    return value === ""
-      ? []
-      : value
-          .split(/[\n,]+/)
-          .map((entry) => entry.trim())
-          .filter(Boolean);
+    const entries = listEntries(value);
+    // A country list with an entry that is not a code stays unread: the
+    // editor keeps the last good list and names the entry inline.
+    if (badEntries(field, entries).length > 0) return undefined;
+    return field === "allowedCountries" ? entries.map((entry) => entry.toUpperCase()) : entries;
   }
   if (value === "") return null;
   if (kind === "number") {

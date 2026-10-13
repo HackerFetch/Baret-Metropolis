@@ -20,7 +20,9 @@ import { routes } from "./routes.js";
  * /send/ gets the Send title too. The standalone routes also flag themselves
  * in the handle (`standalone`, and `request` for the two request windows), so
  * the lock gate decides from what the router matched, not from the URL
- * string: the router matches /Sign and /%73ign to /sign as well.
+ * string: the router matches /Sign and /%73ign to /sign as well. The
+ * catch-all flags itself `notFound`: AppLayout shows the 404 to every visitor,
+ * locked or new, instead of the lock screen or a redirect to onboarding.
  */
 const standalone = Object.entries(routes).filter(
   ([, route]) => route.group === "popup" || route.group === "setup",
@@ -48,11 +50,10 @@ export const routeObjects: RouteObject[] = [
         children: inLayout.map(([key, route]) =>
           route.path === "/"
             ? { index: true, handle: { title: route.title }, lazy: route.load }
-            : {
-                path: key === "notFound" ? "*" : route.path.slice(1),
-                handle: { title: route.title },
-                lazy: route.load,
-              },
+            : key === "notFound"
+              ? // Flagged, so AppLayout shows it to a locked or new visitor too.
+                { path: "*", handle: { title: route.title, notFound: true }, lazy: route.load }
+              : { path: route.path.slice(1), handle: { title: route.title }, lazy: route.load },
         ),
       },
     ],

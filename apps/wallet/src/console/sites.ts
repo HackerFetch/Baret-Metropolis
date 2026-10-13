@@ -1,10 +1,12 @@
 import type { ActivityItem, Permission } from "@baret/wallet-ui/data/types";
+import type { SiteRecord } from "./siteBook.js";
 
 /**
  * The Sites screen's pure part: one row per site, built from the wallet's
- * own records (its activity log and its site permissions). Nothing here is
- * read from a server, so the screen never shows a site this browser did not
- * see. Tested in sites.test.ts.
+ * own records (its activity log, its site permissions and the sites the
+ * request windows noted on disk, siteBook.ts). Nothing here is read from a
+ * server, so the screen never shows a site this browser did not see. Tested
+ * in sites.test.ts.
  */
 
 /** Activity kinds where Baret or the reader stopped the request. */
@@ -57,6 +59,41 @@ export function sitesFrom(
   return [...rows.entries()]
     .map(([origin, row]) => ({ origin, ...row, connected: connected.has(origin) }))
     .sort((a, b) => (b.last ?? "").localeCompare(a.last ?? ""));
+}
+
+/**
+ * The rows from this tab's memory joined with the records on disk
+ * (siteBook.ts), which the request windows write from their own documents.
+ * One row a site. Where both saw a site, the larger count and the later time
+ * win: the two can hold the same request, and adding them would count it twice.
+ */
+export function withStored(rows: readonly SiteRow[], records: readonly SiteRecord[]): SiteRow[] {
+  const byOrigin = new Map(rows.map((row) => [row.origin, row]));
+  for (const record of records) {
+    const row = byOrigin.get(record.origin);
+    const stored: SiteRow = {
+      origin: record.origin,
+      last: record.last,
+      lastKind: record.lastKind,
+      requests: record.connects + record.signs,
+      stopped: record.stopped,
+      connected: record.connected,
+    };
+    if (!row) {
+      byOrigin.set(record.origin, stored);
+      continue;
+    }
+    const later = row.last === null || record.last > row.last;
+    byOrigin.set(record.origin, {
+      origin: record.origin,
+      last: later ? record.last : row.last,
+      lastKind: later ? record.lastKind : row.lastKind,
+      requests: Math.max(row.requests, stored.requests),
+      stopped: Math.max(row.stopped, stored.stopped),
+      connected: row.connected || record.connected,
+    });
+  }
+  return [...byOrigin.values()].sort((a, b) => (b.last ?? "").localeCompare(a.last ?? ""));
 }
 
 /** The records left once a site is forgotten: its rows and its connection go. */

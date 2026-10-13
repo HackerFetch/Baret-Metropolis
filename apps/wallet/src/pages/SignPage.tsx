@@ -8,6 +8,7 @@ import { SignRequest } from "@baret/wallet-ui/sign/SignRequest";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
+import { noteSite } from "../console/siteBook.js";
 import { fromSite } from "../console/sites.js";
 import { type LiveRequest, type LiveTyped, typedContext, useLive } from "../live/live.js";
 import { sessionTime } from "../live/session.js";
@@ -164,7 +165,10 @@ function SiteSign(): JSX.Element {
           // KIMI words a checked answer only: its id is Baret's requestId.
           {...(live && shown.verdict !== "unreachable" ? { explainId: shown.id } : {})}
           onLog={(item) => {
-            dispatch({ type: "log", item: fromSite(item, origin) });
+            const logged = fromSite(item, origin);
+            dispatch({ type: "log", item: logged });
+            // On disk too: /sites is read in another tab, after this window closes.
+            noteSite(logged);
             // Only a sent call carries a receipt hash; a contract call logs as
             // "signed", a transfer as "sent" (sign.ts logFor).
             if (item.hash && state.address) {
@@ -283,7 +287,11 @@ function SiteSignTyped(): JSX.Element {
           message
           {...(sessionNote ? { sessionNote } : {})}
           {...(live && shown.verdict !== "unreachable" ? { explainId: shown.id } : {})}
-          onLog={(item) => dispatch({ type: "log", item: fromSite(item, origin) })}
+          onLog={(item) => {
+            const logged = fromSite(item, origin);
+            dispatch({ type: "log", item: logged });
+            noteSite(logged);
+          }}
           passkey={state.settings.passkeyEverySignature}
         />
       )}

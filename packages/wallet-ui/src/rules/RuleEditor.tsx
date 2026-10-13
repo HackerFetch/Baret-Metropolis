@@ -2,9 +2,18 @@ import { policies, policy } from "@baret/content";
 import { RuleSwitch } from "@baret/web-ui/components/RuleSwitch";
 import { Segment } from "@baret/web-ui/components/Segment";
 import { T } from "@baret/web-ui/lib/type";
+import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId, useState } from "react";
 import type { GuardPolicy, GuardPolicyField } from "../data/types.js";
-import { groupsOf, inputText, kindOf, parseInput, valueText } from "./fields.js";
+import {
+  badEntries,
+  groupsOf,
+  inputText,
+  kindOf,
+  listEntries,
+  parseInput,
+  valueText,
+} from "./fields.js";
 
 /**
  * The 25 rules, in the ten groups of content shared/policy, each with its
@@ -110,8 +119,11 @@ function ListField({
 }): JSX.Element {
   const id = useId();
   const hintId = useId();
+  const errorId = useId();
   const words = policy.fields[field];
   const [text, setText] = useState(inputText(value));
+  // What was typed that the list cannot take (the countries: not an ISO code).
+  const bad = badEntries(field, listEntries(text));
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -125,7 +137,8 @@ function ListField({
         rows={3}
         value={text}
         spellCheck={false}
-        aria-describedby={hintId}
+        aria-invalid={bad.length > 0 ? true : undefined}
+        aria-describedby={bad.length > 0 ? `${errorId} ${hintId}` : hintId}
         onChange={(event) => {
           setText(event.target.value);
           const next = parseInput(field, event.target.value);
@@ -133,6 +146,14 @@ function ListField({
         }}
         className={`${INPUT} max-w-[520px] resize-y font-mono text-sm`}
       />
+      {bad.length > 0 ? (
+        <p
+          id={errorId}
+          className="text-sm font-medium text-[color:var(--blocked-ink)] [overflow-wrap:anywhere]"
+        >
+          {fill(policies.errors.countries, { codes: bad.join(", ") })}
+        </p>
+      ) : null}
       <p id={hintId} className={T.small}>
         {words.hint}
       </p>

@@ -71,10 +71,21 @@ export const walletFrame = {
       "{origin} is waiting for your answer. Open your wallet with your passkey to read the request, or decline it now.",
     decline: "Decline the request",
     declined: "Request declined. Nothing was signed or shared.",
-    /** In a request window on a device with no passkey for this wallet yet. */
+    /**
+     * In a request window on a device with no passkey for this wallet yet:
+     * nothing exists to unlock, so the screen leads with creating one.
+     */
     create: "Create my wallet",
-    createNote:
-      "No Baret wallet on this device yet? Create one with a passkey, then read the request.",
+    fresh: {
+      title: "Create your Baret wallet to answer this site",
+      /** Before the site's request is in, or with no site. */
+      body: "There is no Baret wallet on this device yet. Create one with a passkey, then read the request.",
+      /** Once a site's request is in: {origin} is that site. */
+      bodyFrom:
+        "{origin} is waiting for your answer. There is no Baret wallet on this device yet. Create one with a passkey to read the request, or decline it now.",
+      /** The second action: a passkey made on another device or before a cleared browser. */
+      existing: "I already have one: open with my passkey",
+    },
     /** Live: the 15 minute session ran out, so the wallet locked itself. */
     expired: {
       title: "Your session ended",
@@ -117,8 +128,8 @@ export const walletFrame = {
     faucet: "https://faucet.monad.xyz",
     showcase: "https://usebaret.com/showcase",
     source: "https://github.com/HackerFetch/Baret-Metropolis",
-    /** The Monad testnet explorer, for a transaction hash in the history. */
-    explorer: "https://testnet.monadexplorer.com",
+    /** The Monad testnet explorer: {explorer}/tx/{hash} and {explorer}/address/{address}. */
+    explorer: "https://testnet.monadscan.com",
     limits:
       "https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/WALLET.md#7-out-of-scope-for-v1-scope-guard",
   },

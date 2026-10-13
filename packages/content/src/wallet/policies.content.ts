@@ -120,6 +120,12 @@ export const policies = {
       body: "Your previous rules still apply. Try again.",
       action: { label: "Try again" },
     },
+    /**
+     * Inline, under "Countries you send to": {codes} is what was typed that
+     * is not a two-letter ISO code. The list keeps its last good value.
+     */
+    countries:
+      "Not a country code: {codes}. Use two-letter codes, separated by commas, such as DE, FR.",
     /** JSON that does not parse: the switch to the form waits until it does. */
     json: "Baret can't read this JSON, so the form can't show it. Fix it here first. Your rules did not change.",
     import: {

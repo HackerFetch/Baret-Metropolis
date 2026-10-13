@@ -9,6 +9,7 @@ import { fillParts } from "@baret/wallet-ui/lib/parts";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId, useState } from "react";
+import { noteSite } from "../console/siteBook.js";
 import { useLive } from "../live/live.js";
 import { RequestFrame, SamplePicker, SiteStatus } from "../request/RequestFrame.js";
 import { useSiteRequest } from "../request/siteRequest.js";
@@ -70,6 +71,9 @@ function Request({
       // Only "Don't ask again" keeps the site as a permission; otherwise it is logged and asks next time.
       if (remember && !site) dispatch({ type: "connect", origin, item });
       else dispatch({ type: "log", item });
+      // A site's own window closes after the answer, and /sites is read in
+      // another tab: the connect is noted on disk (console/siteBook.ts).
+      if (site) noteSite(item);
       setResult(site ? "connectedSite" : remember ? "connected" : "connectedOnce");
       return;
     }

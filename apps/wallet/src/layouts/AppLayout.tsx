@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
-import { Navigate, NavLink, Outlet, useLocation } from "react-router";
+import { Navigate, NavLink, Outlet, useLocation, useMatches } from "react-router";
 import { SampleNotice } from "../components/SampleNotice.js";
 import { SessionLine } from "../components/SessionLine.js";
 import { useLive } from "../live/live.js";
@@ -161,10 +161,39 @@ function Account({ session = true }: { readonly session?: boolean }): JSX.Elemen
   );
 }
 
+/** True when the router matched the catch-all (routeTree.tsx flags it `notFound`). */
+export function isNotFound(matches: readonly { handle?: unknown }[]): boolean {
+  return matches.some((match) => (match.handle as { notFound?: boolean } | undefined)?.notFound);
+}
+
+/**
+ * The 404 for a visitor the wallet has not let in yet (locked, or with no
+ * passkey in this browser): the mark and the page, with no sidebar, since
+ * every screen in it sits behind the lock. Its link goes to the start, which
+ * sends a new visitor on to setup and a returning one to the lock screen.
+ */
+function Outside(): JSX.Element {
+  return (
+    <div className="min-h-dvh">
+      <header className="border-b border-[color:var(--rule)] bg-[color:var(--ground-deep)]">
+        <div className="mx-auto flex h-16 w-full max-w-[1120px] items-center px-4 md:px-8 lg:px-12">
+          <Brand />
+        </div>
+      </header>
+      <main id="main" tabIndex={-1} className="min-w-0 outline-none">
+        <div className="mx-auto w-full max-w-[1120px] px-4 pt-6 pb-16 md:px-8 md:pt-8 lg:px-12 lg:pt-10 lg:pb-24">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export function Component() {
   const { state, dispatch } = useWallet();
   const live = useLive();
   const { pathname } = useLocation();
+  const lost = isNotFound(useMatches());
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -185,6 +214,8 @@ export function Component() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // An unknown path is a 404 for everyone: never the lock screen, never setup.
+  if (lost && state.locked) return <Outside />;
   // Live with no passkey ever used in this browser: setup, which also offers
   // "I already have a passkey" for a cleared browser or a new device.
   if (live && state.locked && !live.known) return <Navigate to={routes.onboarding.path} replace />;

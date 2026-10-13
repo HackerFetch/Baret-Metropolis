@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import { fromTemplate } from "../data/rules.js";
 import { ACTIVITY, POLICY } from "../data/sample.js";
 import {
+  badEntries,
   FIELDS,
   fromJson,
   groupsOf,
   inputText,
   kindOf,
+  listEntries,
   parseInput,
   preview,
   valueText,
@@ -41,6 +43,20 @@ describe("the rule editor's fields", () => {
     expect(parseInput("maxDailyCap", "12,5")).toBeUndefined();
     expect(parseInput("allowedCountries", "DE\nFR, TR\n")).toEqual(["DE", "FR", "TR"]);
     expect(inputText(["DE", "FR"])).toBe("DE\nFR");
+  });
+
+  it("takes only two-letter ISO codes as countries, in capitals", () => {
+    expect(parseInput("allowedCountries", "de, fr")).toEqual(["DE", "FR"]);
+    expect(parseInput("allowedCountries", "")).toEqual([]);
+    expect(parseInput("allowedCountries", "Germany")).toBeUndefined();
+    expect(parseInput("allowedCountries", "DE, XX")).toBeUndefined();
+    expect(badEntries("allowedCountries", listEntries("DE, Germany\nzz, tr"))).toEqual([
+      "Germany",
+      "zz",
+    ]);
+    // The other lists hold symbols and origins, which have no fixed shape.
+    expect(badEntries("allowedAssets", ["USDC", "anything"])).toEqual([]);
+    expect(parseInput("allowedAssets", "usdc")).toEqual(["usdc"]);
   });
 
   it("writes values in the content's words", () => {

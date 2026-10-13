@@ -8,15 +8,19 @@ import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { T } from "@baret/web-ui/lib/type";
 import { counted, fill } from "@baret/web-ui/lib/util";
 import { Globe } from "lucide-react";
-import { type JSX, useMemo, useState } from "react";
-import { forget, type SiteRow, sitesFrom } from "../console/sites.js";
+import { type JSX, useEffect, useMemo, useState } from "react";
+import { forgetStored, readSites, SITES_KEY, type SiteRecord } from "../console/siteBook.js";
+import { forget, type SiteRow, sitesFrom, withStored } from "../console/sites.js";
+import { useLive } from "../live/live.js";
 
 /**
  * /sites: every site that connected to this wallet or sent it a request,
- * built from the wallet's own records (console/sites.ts). One row a site: its
- * address, its connection, the latest request and how many were stopped.
- * Forget clears the site's records from this browser; nothing on Monad
- * changes, and the note says so.
+ * built from the wallet's own records (console/sites.ts). Live, that includes
+ * what the request windows noted on disk (console/siteBook.ts), since a site
+ * asks in a window of its own; a window answering while this screen is open
+ * shows up at once. One row a site: its address, its connection, the latest
+ * request and how many were stopped. Forget clears the site's records from
+ * this browser, on disk too; nothing on Monad changes, and the note says so.
  */
 
 const copy = walletSites;
@@ -79,15 +83,30 @@ function SiteItem({ row, onForget }: { row: SiteRow; onForget: () => void }): JS
 
 export function Component(): JSX.Element {
   const { state, dispatch } = useWallet();
+  const live = useLive() !== null;
+  // The sample keeps to its own records: the disk holds the live wallet's sites.
+  const [stored, setStored] = useState<SiteRecord[]>(() => (live ? readSites() : []));
+  useEffect(() => {
+    if (!live) return;
+    // Another document (a request window) wrote the list: read it again.
+    const onStorage = (event: StorageEvent): void => {
+      if (event.key === null || event.key === SITES_KEY) setStored(readSites());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [live]);
   const rows = useMemo(
-    () => sitesFrom(state.activity, state.permissions),
-    [state.activity, state.permissions],
+    () => withStored(sitesFrom(state.activity, state.permissions), stored),
+    [state.activity, state.permissions, stored],
   );
   const [forgotten, setForgotten] = useState<string | null>(null);
 
   function forgetSite(origin: string): void {
-    // Memory only: the wallet's own log is not kept on disk, so this is the whole record.
     dispatch({ type: "patch", patch: forget(origin, state.activity, state.permissions) });
+    if (live) {
+      forgetStored(origin);
+      setStored(readSites());
+    }
     setForgotten(origin);
   }
 

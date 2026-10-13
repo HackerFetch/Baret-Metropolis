@@ -32,8 +32,10 @@ export interface LockedProps {
   /** Live: tells the site the request was declined. The screen says so either way. */
   readonly onDecline?: () => void;
   /**
-   * Live, with no passkey known on this device: creating the wallet becomes
-   * the main action, and unlocking (a passkey from another device) the second.
+   * Live, with no passkey known on this device: nothing exists to unlock, so
+   * the screen leads with creating the wallet (its title and the main
+   * action), and opening an existing one (a passkey from another device) is
+   * the second. The locked wording stays for a device that has an account.
    */
   readonly onCreate?: () => void;
 }
@@ -50,6 +52,7 @@ export function Locked({
   onCreate,
 }: LockedProps): JSX.Element {
   const { locked } = walletFrame;
+  const fresh = onCreate !== undefined;
   const [declined, setDeclined] = useState(false);
   const answer = useRef<HTMLParagraphElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -70,7 +73,7 @@ export function Locked({
       {/* Polite, so a screen reader hears that the session ended on its own. */}
       <div aria-live="polite" className="grid gap-6">
         <h1 ref={heading} tabIndex={-1} className={`${T.h2} text-[color:var(--fg)] outline-none`}>
-          {expiredAt ? locked.expired.title : locked.title}
+          {expiredAt ? locked.expired.title : fresh ? locked.fresh.title : locked.title}
         </h1>
       </div>
       {expiredAt ? (
@@ -83,16 +86,21 @@ export function Locked({
       {request ? (
         declined ? null : (
           <p className={`${T.body} [overflow-wrap:anywhere]`}>
-            {origin ? fill(locked.requestFrom, { origin }) : locked.request}
+            {fresh
+              ? origin
+                ? fill(locked.fresh.bodyFrom, { origin })
+                : locked.fresh.body
+              : origin
+                ? fill(locked.requestFrom, { origin })
+                : locked.request}
           </p>
         )
       ) : expiredAt ? null : (
-        <p className={T.body}>{locked.body}</p>
+        <p className={T.body}>{fresh ? locked.fresh.body : locked.body}</p>
       )}
       {problem ? (
         <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
       ) : null}
-      {declined || !onCreate ? null : <p className={T.body}>{locked.createNote}</p>}
       {declined ? null : (
         <div className="flex flex-wrap gap-3">
           {onCreate ? (
@@ -102,12 +110,12 @@ export function Locked({
           ) : null}
           <Button
             type="button"
-            variant={onCreate ? "ghost" : "primary"}
+            variant={fresh ? "ghost" : "primary"}
             size="lg"
             disabled={busy}
             onClick={onUnlock}
           >
-            {locked.action}
+            {fresh ? locked.fresh.existing : locked.action}
           </Button>
           {request ? (
             <Button

@@ -12,3 +12,18 @@
     background-color: transparent;
   }
 }
+
+/* The paper grain (tokens.css, body::before) is fixed to the viewport, so a
+   capture of the whole page showed it over the first screen only, with a flat
+   band below. Here it spans the whole page instead: the body is its box, and
+   at least one screen tall so a short page is covered too. */
+@layer base {
+  body {
+    position: relative;
+    min-height: 100dvh;
+  }
+
+  body::before {
+    position: absolute;
+  }
+}
