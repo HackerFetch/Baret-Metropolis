@@ -291,8 +291,8 @@ export const novaswap = {
       pending: "Getting test dUSDC...",
       done: "100 test dUSDC received.",
     },
-    /** The attack, pressed with no dUSDC in the wallet. */
-    empty: "This wallet holds no dUSDC yet. Get 100 test dUSDC first.",
+    /** The attack with no dUSDC in the wallet: the sign button is disabled and says this. */
+    empty: "This wallet holds no dUSDC. Get 100 test dUSDC above first.",
     outcome: {
       safe: "The router paid the dUSDC into your wallet.",
       danger:

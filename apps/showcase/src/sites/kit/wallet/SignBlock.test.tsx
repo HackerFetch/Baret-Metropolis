@@ -1,6 +1,6 @@
 import { hub } from "@baret/content";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { SignBlock } from "./SignBlock.js";
 import { IDLE } from "./useSendFlow.js";
 
@@ -49,5 +49,31 @@ describe("SignBlock", () => {
     );
     expect(screen.getByText(hub.frame.sign.through)).toBeTruthy();
     expect(screen.getByText("Taken.")).toBeTruthy();
+  });
+
+  /** Live test 2026-10-14 (P2): with no dUSDC, a press did nothing and said nothing. */
+  it("disables the button with its reason as the description when the run cannot start", () => {
+    const onSign = vi.fn();
+    render(<SignBlock {...props} walletName="MetaMask" blocked="No dUSDC yet." onSign={onSign} />);
+    const button = screen.getByRole("button", { name: hub.frame.sign.action });
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    const reason = document.getElementById(button.getAttribute("aria-describedby") ?? "");
+    expect(reason?.textContent).toBe("No dUSDC yet.");
+    fireEvent.click(button);
+    expect(onSign).not.toHaveBeenCalled();
+  });
+
+  it("names the faucet when the account cannot pay the amount and its fee", () => {
+    const flow = {
+      ...IDLE,
+      phase: "stopped" as const,
+      error: "funds" as const,
+      steps: [{ status: "failed" as const, hash: null }],
+    };
+    render(<SignBlock {...props} flow={flow} walletName="MetaMask" />);
+    expect(screen.getByText(hub.frame.sign.errors.funds)).toBeTruthy();
+    const link = screen.getByRole("link", { name: hub.frame.wallet.account.faucet.label });
+    expect(link.getAttribute("href")).toBe("https://faucet.monad.xyz");
+    expect(link.getAttribute("target")).toBe("_blank");
   });
 });

@@ -17,6 +17,7 @@ import type { FlowState } from "../kit/wallet/useSendFlow.js";
 
 const copy = novaswap.sign.faucet;
 const sign = hub.frame.sign;
+const faucetLink = hub.frame.wallet.account.faucet;
 
 export function Faucet({
   flow,
@@ -66,6 +67,12 @@ export function Faucet({
         <p role="alert" className="text-sm font-medium text-[color:var(--blocked)]">
           {fill(sign.errors[flow.error ?? "failed"], { wallet: walletName })}
         </p>
+      ) : null}
+      {/* The call still pays a fee in MON: an account with none gets the faucet. */}
+      {flow.phase === "stopped" && flow.error === "funds" ? (
+        <a href={faucetLink.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+          {faucetLink.label}
+        </a>
       ) : null}
       {hash ? (
         <a

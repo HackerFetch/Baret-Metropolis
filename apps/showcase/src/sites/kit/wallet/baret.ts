@@ -98,7 +98,9 @@ export class SendRefused extends Error {
  * engine's own refusal keeps its kind, 4001 is the visitor saying no in the
  * wallet, -32002 a request the wallet already has open. viem names a chain
  * mismatch and a short balance; some wallets only say "insufficient funds"
- * in the message. Anything else is a plain failure, never a success.
+ * in the message, and Monad testnet's gas estimate answers "insufficient
+ * balance" (-32000) when the account cannot pay the value and the fee.
+ * Anything else is a plain failure, never a success.
  */
 export function sendErrorOf(error: unknown): SendError {
   let current: unknown = error;
@@ -117,7 +119,9 @@ export function sendErrorOf(error: unknown): SendError {
     if (link.name === "ChainMismatchError") return "network";
     if (link.name === "InsufficientFundsError") return "funds";
     const texts = [link.message, link.shortMessage, link.details];
-    if (texts.some((t) => typeof t === "string" && /insufficient funds/i.test(t))) return "funds";
+    if (texts.some((t) => typeof t === "string" && /insufficient (?:funds|balance)/i.test(t))) {
+      return "funds";
+    }
     current = link.cause;
   }
   return "failed";

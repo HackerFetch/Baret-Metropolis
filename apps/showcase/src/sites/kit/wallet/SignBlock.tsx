@@ -48,6 +48,7 @@ export function SignBlock({
   walletName,
   need,
   note = null,
+  blocked = null,
   switching,
   onConnect,
   onSwitch,
@@ -68,8 +69,14 @@ export function SignBlock({
   walletName: string;
   /** Why the last press did not start, with the action that fixes it. */
   need: "wallet" | "network" | null;
-  /** A site's own reason the run cannot start (NovaSwap: no dUSDC yet). */
+  /** A site's own reason the last press did not start, read out once. */
   note?: string | null;
+  /**
+   * A reason the site already knows the run cannot start (NovaSwap: the
+   * wallet holds no dUSDC). The button is then disabled and this sentence,
+   * shown under it, is its description, so a press never does nothing silently.
+   */
+  blocked?: string | null;
   switching: "idle" | "busy" | "failed";
   onConnect: () => void;
   onSwitch: () => void;
@@ -92,10 +99,11 @@ export function SignBlock({
   onSign: () => void;
 }): JSX.Element {
   const titleId = useId();
+  const blockedId = useId();
   const wallet = { wallet: walletName };
   const { steps, phase, error, before, after } = flow;
   const total = String(steps.length);
-  const locked = phase === "running" || busy;
+  const locked = phase === "running" || busy || blocked !== null;
 
   // The balance line only when both reads came back: a missing read is not a zero.
   const balance =
@@ -135,12 +143,18 @@ export function SignBlock({
         size="lg"
         className={`w-full ${BUSY}`}
         aria-disabled={locked || undefined}
+        aria-describedby={blocked !== null ? blockedId : undefined}
         onClick={() => {
           if (!locked) onSign();
         }}
       >
         {copy.action}
       </Button>
+      {blocked !== null ? (
+        <p id={blockedId} className="text-sm font-medium text-[color:var(--fg)]">
+          {blocked}
+        </p>
+      ) : null}
       <p className={T.small}>{viaBaret ? copy.noteBaret : checks ? copy.noteChecked : copy.note}</p>
 
       {need === "wallet" ? (

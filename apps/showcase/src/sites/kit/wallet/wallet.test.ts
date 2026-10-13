@@ -246,6 +246,14 @@ describe("wallet helpers", () => {
     expect(sendErrorOf({ name: "ChainMismatchError" })).toBe("network");
     expect(sendErrorOf({ name: "InsufficientFundsError" })).toBe("funds");
     expect(sendErrorOf(new Error("insufficient funds for gas * price + value"))).toBe("funds");
+    // Monad testnet's gas estimate, wrapped by viem: the reason sits in a cause.
+    expect(
+      sendErrorOf({
+        name: "EstimateGasExecutionError",
+        shortMessage: "Execution reverted for an unknown reason.",
+        cause: { code: -32000, message: "insufficient balance" },
+      }),
+    ).toBe("funds");
     expect(sendErrorOf(new Error("x"))).toBe("failed");
   });
 

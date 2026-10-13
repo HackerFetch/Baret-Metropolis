@@ -84,11 +84,13 @@ export const hub = {
     title: "Four steps, one sign request",
     /** Accessible name of the step picker. */
     legend: "Pick a step",
+    /** Above the picked step's title, beside its large drawing. */
+    counter: "Step {n} of {total}",
     items: [
       {
         short: "Connect",
         title: "Connect a wallet",
-        body: "Baret or any wallet in the picker. The sites run on Monad testnet, where tokens have no value.",
+        body: "The Baret web wallet or any wallet in the picker. The sites run on Monad testnet, where tokens have no value.",
       },
       {
         short: "Pick a version",
@@ -176,7 +178,8 @@ export const hub = {
       body: "Baret checks each request on this page from the address you connect. Nothing is signed unless you sign it in your wallet.",
       looking: "Looking for wallets in this browser...",
       baret: {
-        name: "Baret",
+        /** One name everywhere: the picker, the account chip and "Confirm in {wallet}". */
+        name: "Baret web wallet",
         /** The Baret wallet (https://wallet.usebaret.com), opened in its own window. */
         window: "Your Baret wallet, in its own window. Your passkey stays on the wallet's site.",
         connecting: "Answer in the Baret wallet window...",
@@ -373,7 +376,8 @@ export const hub = {
         rejected: "You declined in {wallet}. Nothing more was sent.",
         pending: "{wallet} already has a request open. Finish it there, then try again.",
         network: "Your wallet is on another network. Switch it to Monad testnet, then try again.",
-        funds: "Your wallet does not hold enough test MON for this amount and the network fee.",
+        funds:
+          "This account does not hold enough MON for this amount and its fee. Lower the amount or get test MON.",
         account: "The connected account changed. Press the button again.",
         reverted: "Monad testnet ran the transaction and it failed. Nothing more was sent.",
         timeout: "Monad testnet has not confirmed it yet. Follow it on the explorer.",

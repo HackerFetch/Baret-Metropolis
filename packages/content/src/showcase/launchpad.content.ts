@@ -85,7 +85,8 @@ export const launchpad = {
       cta: "Contribute",
       note: "LNTL is sent to you in the same transaction.",
       receive: "You receive",
-      start: "0.5",
+      /** Under most faucet grants, so a judge's fresh account can contribute it. */
+      start: "0.02",
       errors: {
         empty: "Enter an amount of MON.",
         tooLow: "The minimum is 0.01 MON.",

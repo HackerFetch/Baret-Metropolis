@@ -15,15 +15,17 @@ import { useSiteView } from "../kit/site/useSiteView.js";
 import { useCheck } from "../kit/useCheck.js";
 import { BaretCheck, useBaretCheck } from "../kit/wallet/BaretCheck.js";
 import { isBaretExtension, walletLabel } from "../kit/wallet/baret.js";
+import { baretSender, windowCallOf } from "../kit/wallet/baretSend.js";
+import { askBaret } from "../kit/wallet/baretWindow.js";
 import { SignBlock } from "../kit/wallet/SignBlock.js";
-import { addressOf, requestPicker, switchToMonad } from "../kit/wallet/store.js";
+import { addressOf, requestPicker, type SendCall, switchToMonad } from "../kit/wallet/store.js";
 import {
   exceeds,
   formatMon,
   MONAD_TESTNET_ID,
   useDemoWallet,
 } from "../kit/wallet/useDemoWallet.js";
-import { useSendFlow } from "../kit/wallet/useSendFlow.js";
+import { type Sender, useSendFlow } from "../kit/wallet/useSendFlow.js";
 import { useTokenBalance } from "../kit/wallet/useTokenBalance.js";
 import { Faucet } from "./Faucet.js";
 import { DocsPage, PoolsPage, StatsPage } from "./Pages.js";
@@ -52,8 +54,8 @@ import { buildRequest, contractOf, faucetCall, SOURCE, signCalls } from "./sourc
 
 const { site, analysis } = novaswap;
 
-/** The amount each version starts with: under half the sample MON, and a dUSDC sale. */
-const START: Record<DemoMode, string> = { safe: "2.5", danger: "20" };
+/** The amount each version starts with: MON under most faucet grants, so a fresh account can swap it, and a dUSDC sale. */
+const START: Record<DemoMode, string> = { safe: "0.02", danger: "20" };
 
 /** Why the last sign or faucet press did not start: no wallet, another network, or no dUSDC to sell. */
 type Need = "wallet" | "network" | "empty";
@@ -72,15 +74,29 @@ export function NovaSwapSite(): JSX.Element {
   const sign = useSendFlow();
   const faucet = useSendFlow();
   const baret = useBaretCheck();
-  const address = addressOf(wallet);
+  const injected = addressOf(wallet);
+  // An injected wallet wins; else the Baret web wallet connected through its
+  // window, which is always on Monad testnet and checks each call with Baret
+  // before it signs (baretSend.ts), the way useSiteSign routes the other sites.
+  const viaBaret = injected === null && wallet.baret !== null;
+  const address = injected ?? (viaBaret ? (wallet.baret?.address ?? null) : null);
   const usdc = useTokenBalance(NOVASWAP.usdc, address);
   const walletName =
-    wallet.connection.status === "connected" ? walletLabel(wallet.connection.wallet) : "";
-  // The Baret extension checks a request with Baret itself (D-040): the sign
-  // block then never says the request skips the check.
+    wallet.connection.status === "connected"
+      ? walletLabel(wallet.connection.wallet)
+      : viaBaret
+        ? hub.frame.wallet.baret.name
+        : "";
+  // The Baret extension checks a request with Baret itself (D-040), and so
+  // does the Baret web wallet: the sign block then never says it skips the check.
   const walletChecks =
-    wallet.connection.status === "connected" && isBaretExtension(wallet.connection.wallet.id);
-  const chainId = wallet.connection.status === "connected" ? wallet.connection.chainId : null;
+    viaBaret ||
+    (wallet.connection.status === "connected" && isBaretExtension(wallet.connection.wallet.id));
+  const chainId = viaBaret
+    ? MONAD_TESTNET_ID
+    : wallet.connection.status === "connected"
+      ? wallet.connection.chainId
+      : null;
   const [need, setNeed] = useState<Need | null>(null);
   // The version and amount the last run started with: its labels and
   // outcome read these, not the inputs the visitor may have changed since.
@@ -181,7 +197,9 @@ export function NovaSwapSite(): JSX.Element {
     const owner = ready();
     if (owner === null || !amountOk()) return;
     const units = toUnits(amount, NOVASWAP.usdcDecimals);
-    if (mode === "danger") {
+    // Through the Baret web wallet the attack's first call is refused before
+    // any balance matters, so only an unchecked wallet needs dUSDC first.
+    if (mode === "danger" && !viaBaret) {
       // The attack sells dUSDC: with none, or none read yet, there is nothing to show.
       if (usdc.value === null || usdc.value === 0n) {
         setNeed("empty");
@@ -199,7 +217,19 @@ export function NovaSwapSite(): JSX.Element {
     setRan({ mode, amount });
     faucet.reset();
     const calls = signCalls(mode, toWei(amount) ?? 0n, units ?? 0n, owner);
-    void sign.run(calls, { token: NOVASWAP.usdc, owner }).then(() => usdc.refresh());
+    void sign
+      .run(calls, { token: NOVASWAP.usdc, owner }, senderFor(calls))
+      .then(() => usdc.refresh());
+  }
+
+  /**
+   * The Baret web wallet's window for every step when it is the wallet in
+   * use, else the injected wallet. The window has to open inside the click,
+   * so the first ask starts here, before anything is awaited.
+   */
+  function senderFor(calls: readonly SendCall[]): Sender | undefined {
+    const first = calls[0];
+    return viaBaret && first ? baretSender(askBaret("sign", windowCallOf(first))) : undefined;
   }
 
   /**
@@ -225,7 +255,8 @@ export function NovaSwapSite(): JSX.Element {
     setNeed(null);
     const owner = ready();
     if (owner === null) return;
-    void faucet.run([faucetCall(owner)]).then(() => usdc.refresh());
+    const calls = [faucetCall(owner)];
+    void faucet.run(calls, undefined, senderFor(calls)).then(() => usdc.refresh());
   }
 
   function tryOther(): void {
@@ -236,6 +267,15 @@ export function NovaSwapSite(): JSX.Element {
 
   const copy = analysis.modes[checked];
   const signMode = ran?.mode ?? mode;
+  // The attack sells dUSDC: a wallet read as holding none cannot run it, so
+  // the button is disabled and says why, instead of a press doing nothing.
+  const noUsdc =
+    mode === "danger" &&
+    !viaBaret &&
+    address !== null &&
+    chainId === MONAD_TESTNET_ID &&
+    usdc.value === 0n &&
+    sign.state.phase !== "running";
   const { outcome } = novaswap.sign;
   // The attack signed here with no check, both balances read: Baret's panel
   // for the same request shows what it cost, in place of "If this were signed".
@@ -320,7 +360,8 @@ export function NovaSwapSite(): JSX.Element {
                       )}
                       walletName={walletName}
                       need={need === "empty" ? null : need}
-                      note={need === "empty" ? novaswap.sign.empty : null}
+                      note={need === "empty" && !noUsdc ? novaswap.sign.empty : null}
+                      blocked={noUsdc ? novaswap.sign.empty : null}
                       switching={wallet.switching}
                       onConnect={requestPicker}
                       onSwitch={() => void switchToMonad()}
@@ -333,6 +374,7 @@ export function NovaSwapSite(): JSX.Element {
                       stoppedNote={signMode === "danger" ? outcome.open : null}
                       busy={faucet.state.phase === "running"}
                       checks={walletChecks}
+                      viaBaret={viaBaret}
                       attack={mode === "danger"}
                       ranAttack={signMode === "danger"}
                       onSign={onSign}
