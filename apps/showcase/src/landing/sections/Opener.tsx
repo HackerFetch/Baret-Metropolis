@@ -1,21 +1,28 @@
-import { FRAME, HEADER_OFFSET } from "@baret/web-ui/lib/layout";
+import { FRAME } from "@baret/web-ui/lib/layout";
 import { useReduce } from "@baret/web-ui/lib/useReduce";
-import { useMotionValueEvent, useScroll } from "motion/react";
-import { type JSX, useEffect, useRef, useState } from "react";
+import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import { IDS } from "../../shared/ids.js";
 import { FrameLayer, type FrameState } from "./opener/FrameLayer.js";
 import { FRAMES } from "./opener/frames.js";
 import { LinePlate } from "./opener/LinePlate.js";
-import { OPENER_LABEL, SkipLink, StaticNotes } from "./opener/StaticNotes.js";
+import { LoopControls } from "./opener/LoopControls.js";
+import { OPENER_HEIGHT, OPENER_LABEL, StaticNotes } from "./opener/StaticNotes.js";
+import { useHeroSnap } from "./opener/useHeroSnap.js";
 
 /**
- * The opener: a pinned graphite stage that tells the product in three lines
- * (problem, act, result), one per scroll step of about 22svh. Frames and lines swap on the
- * step and tween on time; nothing is scrubbed and scroll is never taken over.
+ * The opener: a short graphite stage that tells the product in three lines
+ * (problem, act, result) as a loop that plays by itself, like a GIF. It is
+ * one normal block, never pinned and never tied to the scroll. The first
+ * wheel step from the top lands on the hero ("Check it first. Then sign.",
+ * useHeroSnap).
+ *
+ * The loop pauses while the stage is off screen or the tab is hidden, and a
+ * pause button stops it for good (WCAG 2.2.2). The step dots jump to a line.
  * Under reduced motion it is one finished screen (StaticNotes).
  */
 
-const LAST = FRAMES.length - 1;
+/** How long each line holds before the next one, in ms. */
+export const STEP_MS = 3600;
 
 interface Step {
   readonly index: number;
@@ -28,28 +35,50 @@ function stateOf(i: number, step: Step): FrameState {
   return "idle";
 }
 
-function OpenerStage(): JSX.Element {
-  const track = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: track, offset: ["start start", "end end"] });
-  const [step, setStep] = useState<Step>({ index: 0, prev: 0 });
-  // Pictures mount one step ahead of the reader and never unmount. Frame 1
-  // waits for the window load event (which waits for the LCP, frame 0) and
-  // then for idle time, so the LCP never shares bandwidth at first paint.
-  const [reach, setReach] = useState(0);
+/** True while the element is at least partly on screen and the tab is visible. */
+function useOnScreen(ref: RefObject<HTMLElement | null>): boolean {
+  const [seen, setSeen] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    let inView = true;
+    const update = (): void => setSeen(inView && document.visibilityState === "visible");
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry?.isIntersecting ?? true;
+      update();
+    });
+    io.observe(el);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, [ref]);
+  return seen;
+}
 
-  const sync = (v: number): void => {
-    const next = Math.min(LAST, Math.max(0, Math.floor(v * FRAMES.length)));
+function OpenerLoop(): JSX.Element {
+  const stage = useRef<HTMLElement>(null);
+  const [step, setStep] = useState<Step>({ index: 0, prev: 0 });
+  const [playing, setPlaying] = useState(true);
+  // Pictures mount one step ahead and never unmount. Frame 1 waits for the
+  // window load event (which waits for the LCP, frame 0) and idle time.
+  const [reach, setReach] = useState(0);
+  const onScreen = useOnScreen(stage);
+  useHeroSnap();
+  const running = playing && onScreen;
+
+  const go = (next: number): void => {
     setStep((s) => (s.index === next ? s : { index: next, prev: s.index }));
     setReach((r) => Math.max(r, next + 1));
   };
 
-  useMotionValueEvent(p, "change", sync);
-
-  // A reload mid-page lands on the right step without waiting for a scroll.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mount only; `p` is stable.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `go` only sets state.
   useEffect(() => {
-    sync(p.get());
-  }, []);
+    if (!running) return;
+    const t = window.setTimeout(() => go((step.index + 1) % FRAMES.length), STEP_MS);
+    return () => window.clearTimeout(t);
+  }, [running, step.index]);
 
   useEffect(() => {
     const hasIdle = typeof window.requestIdleCallback === "function";
@@ -71,31 +100,30 @@ function OpenerStage(): JSX.Element {
 
   return (
     <section
+      ref={stage}
       id={IDS.opener}
       aria-label={OPENER_LABEL}
       data-band="dark"
-      className="relative bg-graphite"
+      className={`relative overflow-hidden bg-graphite ${OPENER_HEIGHT}`}
     >
-      {/* One stage (HEADER_OFFSET: viewport less the 56px header) plus three 22svh steps. */}
-      <div ref={track} className="relative h-[calc(100svh-56px+66svh)]">
-        <div className={`sticky ${HEADER_OFFSET} overflow-hidden`}>
-          <div aria-hidden="true">
-            {FRAMES.map((f, i) => (
-              <FrameLayer
-                key={f.asset.src}
-                frame={f}
-                state={stateOf(i, step)}
-                mounted={i <= reach}
-              />
-            ))}
-          </div>
-          <div className={`${FRAME} absolute inset-x-0 top-4 z-10 flex justify-end md:top-6`}>
-            <SkipLink />
-          </div>
-          <div className={`${FRAME} absolute inset-x-0 bottom-4 z-10 md:bottom-8 lg:bottom-12`}>
-            <LinePlate index={step.index} />
-          </div>
-        </div>
+      <div aria-hidden="true">
+        {FRAMES.map((f, i) => (
+          <FrameLayer key={f.asset.src} frame={f} state={stateOf(i, step)} mounted={i <= reach} />
+        ))}
+      </div>
+      <div
+        className={`${FRAME} absolute inset-x-0 bottom-4 z-10 flex flex-col items-start gap-2 md:bottom-8 lg:bottom-10`}
+      >
+        <LinePlate index={step.index} />
+        <LoopControls
+          index={step.index}
+          count={FRAMES.length}
+          playing={playing}
+          running={running}
+          duration={STEP_MS}
+          onPick={go}
+          onToggle={() => setPlaying((p) => !p)}
+        />
       </div>
     </section>
   );
@@ -103,5 +131,5 @@ function OpenerStage(): JSX.Element {
 
 export function OpenerSection(): JSX.Element {
   const reduce = useReduce();
-  return reduce ? <StaticNotes /> : <OpenerStage />;
+  return reduce ? <StaticNotes /> : <OpenerLoop />;
 }

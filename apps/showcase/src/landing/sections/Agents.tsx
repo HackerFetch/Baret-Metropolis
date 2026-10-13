@@ -52,7 +52,12 @@ export function AgentsSection(): JSX.Element {
             </Reveal>
           </div>
           <Reveal className="order-3 col-span-4 md:col-span-8 lg:mt-10">
-            <LinkButton href={agents.action.href} label={agents.action.label} variant="ghost" />
+            <LinkButton
+              href={agents.action.href}
+              label={agents.action.label}
+              variant="ghost"
+              newTab
+            />
             <p className={`${T.small} mt-5 max-w-[60ch]`}>{agents.note}</p>
           </Reveal>
         </div>

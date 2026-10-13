@@ -38,16 +38,21 @@ export const home = {
     imageAlt: "The Baret logo: an orange helmet beside the BARET wordmark on a light grid",
   },
 
-  /** The scroll-driven opener, one line per frame, written against the
-   *  three frames: the button, the inspector's desk, the three tags. Each
-   *  line is one full sentence. The page works without the opener. */
+  /** The opener: a short loop that plays by itself, one line per frame,
+   *  written against the three frames: the button, the inspector's desk,
+   *  the three tags. Each line is one full sentence. Scrolling is never
+   *  held: the first scroll reaches the hero. The page works without it. */
   opener: {
     lines: [
       "Your wallet shows you a long address and a Confirm button.",
       "Baret reads the transaction before you press it.",
       "Then it hangs one tag on it: Safe, Caution or Blocked.",
     ],
-    skip: "Skip the intro",
+    /** The loop's pause control (WCAG 2.2.2: moving content can be stopped). */
+    pause: "Pause the intro",
+    play: "Play the intro",
+    /** Accessible name of the step dots under the lines. `{n}` is 1 to 3. */
+    step: "Show line {n}",
     /** Accessible name of the opener region (F8). */
     regionLabel: "Intro",
   },
@@ -87,12 +92,9 @@ export const home = {
    *  nine modules appear. Add nothing here that no detector emits. */
   marquee: {
     label: "Checks Baret runs before you sign",
-    /** Summary of the closed <details> under the strip (H4). The number must
-     *  match `items.length`; a test in apps/showcase guards it. */
-    allChecks: "See 17 of the 44 checks",
-    /** Accessible name of the static list inside that disclosure. The
-     *  detectors emit more codes than this list, so it never claims "all". */
-    allChecksList: "17 of the 44 checks Baret runs before you sign",
+    /** Accessible name of the screen-reader list behind the moving rows.
+     *  The detectors emit more codes than this list, so it never claims "all". */
+    listLabel: "Some of the checks Baret runs before you sign",
     items: [
       "A transaction that would fail", // simulation: SIMULATION_FAILED
       "A simulation with gaps", // simulation: LOW_CONFIDENCE_INCOMPLETE_DATA
@@ -120,6 +122,28 @@ export const home = {
     eyebrow: "How it works",
     title: "Reads it. Caps it. Watches it.",
     body: "Three layers around one signature: before you sign, while a permission stays open, and after it is used. Each layer works on its own.",
+    /** Accessible name of the three tabs that switch the layer. */
+    tabsLabel: "The three layers",
+    /** The live sketch in each layer's stage, as short mono lines. Sample
+     *  data, never a live check. */
+    sketch: {
+      reads: {
+        tx: "approve(spender, unlimited)",
+        steps: ["Simulate", "Read changes", "Run checks"],
+        verdict: "Blocked",
+      },
+      caps: {
+        label: "Daily cap",
+        used: "18 of 20 USDC",
+        next: "Next payment: 4 USDC",
+        verdict: "Blocked at the cap",
+      },
+      watches: {
+        label: "Allowance used",
+        detail: "USDC spender moved 40 USDC",
+        alert: "Alert sent",
+      },
+    },
     items: [
       {
         // Rendered in the landing bento tile (since 2026-10-01).

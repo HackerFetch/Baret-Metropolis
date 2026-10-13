@@ -68,7 +68,7 @@ const HERO_VIEWPORT = { once: true, margin: "0px 0px -35% 0px" } as const;
  *
  * The H1 reveals word by word once its top passes 65 % of the viewport
  * (HERO_VIEWPORT; web-ui TextReveal in controlled mode, one sentence per
- * line). Not on mount: the hero sits under the 166svh sticky opener, so a
+ * line). Not on mount: the hero sits under the opener loop, so a
  * mount-time reveal would play unseen. The body and actions never wait for
  * an animation: they are plain text from the first paint. The body's first
  * sentence is set in chalk, the rest at 80 %. The hero photo is lazy: the
@@ -122,6 +122,7 @@ export function HeroSection(): JSX.Element {
                 size="lg"
                 icon="arrow-right"
                 fullOnPhone
+                newTab
               />
               <SecondaryAction action={actions.secondary} />
             </div>

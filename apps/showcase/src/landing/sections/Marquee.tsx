@@ -4,7 +4,6 @@ import { useReduce } from "@baret/web-ui/lib/useReduce";
 import type { JSX } from "react";
 import { SectionFrame } from "../../shared/SectionFrame.js";
 import { SectionHeader } from "../../shared/SectionHeader.js";
-import { AllChecks } from "./marquee/AllChecks.js";
 import { MarqueeItem, Rows } from "./marquee/Row.js";
 
 const STATIC_TEXT = "font-display text-base font-bold uppercase tracking-[0.04em] md:text-lg";
@@ -26,13 +25,13 @@ function StaticList({ items }: { items: readonly string[] }): JSX.Element {
 
 /**
  * The checks under the hero: one heading, then the checks in rows that move
- * only while the reader scrolls, and a closed "See the 17 checks" disclosure
- * that shows every check as static text. Reduced motion: a static list
- * (already complete, so no disclosure).
+ * only while the reader scrolls. The rows are aria-hidden, so a visually
+ * hidden list carries the same checks for screen readers and find-in-page.
+ * Reduced motion: a static list.
  */
 export function MarqueeSection(): JSX.Element {
   const reduce = useReduce();
-  const { label, items, allChecks, allChecksList } = home.marquee;
+  const { label, items, listLabel } = home.marquee;
   return (
     <SectionFrame
       sectionKey="marquee"
@@ -49,7 +48,13 @@ export function MarqueeSection(): JSX.Element {
       ) : (
         <>
           <Rows items={items} />
-          <AllChecks summary={allChecks} listLabel={allChecksList} items={items} />
+          {/* WebKit drops list semantics under list-none, so the role is restated. */}
+          {/* biome-ignore lint/a11y/noRedundantRoles: WebKit drops list semantics under list-none */}
+          <ul role="list" aria-label={listLabel} className="sr-only">
+            {items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </>
       )}
     </SectionFrame>

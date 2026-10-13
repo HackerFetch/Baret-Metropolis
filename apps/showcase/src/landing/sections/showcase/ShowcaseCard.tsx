@@ -3,7 +3,7 @@ import { Tag } from "@baret/ui/primitives/Tag";
 import { Img } from "@baret/web-ui/components/Img";
 import { VERDICT_TONE } from "@baret/web-ui/lib/tone";
 import { T } from "@baret/web-ui/lib/type";
-import { ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { routeKeyFor, warm } from "../../../routes.js";
@@ -13,27 +13,13 @@ import { CARD_MEDIA, WELL_GROUND } from "./cardMedia.js";
 export type ShowcaseCardData = (typeof home.showcase.cards)[number];
 
 /**
- * One site, one anchor. The product name's link stretches over the whole
- * item with an `::after`, so the item is the link and its accessible name
- * is the product name; the verdict and hook stay readable to screen
- * readers. The focus ring is drawn on the item (a ring on the anchor would
- * only circle the name).
- *
- * The tap cue is always visible, never hover-only: below 768 px a 16 px
- * arrow at the row's right edge; from 768 px a bottom line, "Open the
- * site" and the arrow, which nudges 4 px on hover and focus (with the
- * illustration's slow push, the only motion). Both are aria-hidden: the link
- * already names the site.
- *
- * One component, two shapes: below 1024 px a row (two columns from 768 px;
- * square well, text to the right, both top-aligned so the well never floats
- * below the name); from 1024 px a card (well on top, a 1 px border). The
- * text column is a size container: the verdict tag sits on its own line
- * under the name until that column is 22rem wide, then beside it.
- *
- * Press: the item takes --ground-deep for the length of the press, so a tap
- * on a phone answers before the route loads. Intent (pointer enter or focus)
- * warms the site's chunk once, and the navigation is a view transition.
+ * One site, one anchor, one card at every width: the illustration on top at
+ * one 16:9 crop, then the name with its verdict, the hook and the open cue.
+ * The product name's link stretches over the whole card with an `::after`,
+ * so the card is the link and its accessible name is the product name.
+ * The site opens in a new tab, so the landing stays where the reader left it.
+ * The focus ring is drawn on the card (a ring on the anchor would only
+ * circle the name). Hover pushes the illustration 2.5 % and nudges the arrow.
  */
 const FOCUS =
   "has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-[3px] has-[a:focus-visible]:outline-solid has-[a:focus-visible]:outline-[color:var(--accent)]";
@@ -41,7 +27,7 @@ const FOCUS =
 const STRETCH = "after:absolute after:inset-0 focus-visible:outline-none";
 
 const NUDGE =
-  "size-4 shrink-0 transition-transform duration-150 ease-out group-hover/card:translate-x-1 group-has-[a:focus-visible]/card:translate-x-1 motion-reduce:transition-none";
+  "size-4 shrink-0 transition-transform duration-150 ease-out group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 group-has-[a:focus-visible]/card:translate-x-0.5 group-has-[a:focus-visible]/card:-translate-y-0.5 motion-reduce:transition-none";
 
 /**
  * The page's only image hover: a slow 2.5% push on the card's illustration,
@@ -51,15 +37,15 @@ const NUDGE =
 const SLOW_ZOOM =
   "transition-transform duration-[600ms] ease-out-soft group-hover/card:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover/card:scale-100";
 
-/** The md+ cue: "Open the site" and the arrow, pinned to the bottom. */
+/** The cue: "Open the site" and an up-right arrow (it opens a new tab), pinned to the bottom. */
 function OpenCue(): JSX.Element {
   return (
     <span
       aria-hidden="true"
-      className="mt-auto hidden items-center gap-2 pt-4 font-sans font-semibold text-[14px] text-[color:var(--fg-muted)] leading-5 transition-colors duration-150 ease-out group-hover/card:text-[color:var(--fg)] group-has-[a:focus-visible]/card:text-[color:var(--fg)] md:flex"
+      className="mt-auto flex items-center gap-2 pt-4 font-sans font-semibold text-[14px] text-[color:var(--fg-muted)] leading-5 transition-colors duration-150 ease-out group-hover/card:text-[color:var(--fg)] group-has-[a:focus-visible]/card:text-[color:var(--fg)]"
     >
       {home.showcase.labels.open}
-      <ArrowRight className={NUDGE} strokeWidth={1.5} />
+      <ArrowUpRight className={NUDGE} strokeWidth={1.5} />
     </span>
   );
 }
@@ -69,7 +55,7 @@ function MediaWell({ href }: { href: string }): JSX.Element {
   const m = CARD_MEDIA[href];
   return (
     <div
-      className={`relative size-[72px] shrink-0 overflow-hidden min-[380px]:size-[88px] lg:aspect-[9/4] lg:size-auto lg:w-full lg:border-b lg:border-[color:var(--rule)] ${DARK_PRINT}`}
+      className={`relative aspect-[16/9] w-full shrink-0 overflow-hidden border-b border-[color:var(--rule)] ${DARK_PRINT}`}
       style={{ backgroundColor: WELL_GROUND }}
     >
       {m ? (
@@ -78,6 +64,7 @@ function MediaWell({ href }: { href: string }): JSX.Element {
             asset={m.asset}
             fit="cover"
             position={m.position}
+            sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, calc(100vw - 32px)"
             className="absolute inset-0 size-full"
           />
         </div>
@@ -98,7 +85,7 @@ function Verdict({ card }: { card: ShowcaseCardData }): JSX.Element {
   );
 }
 
-/** Starts loading the site's route chunk on intent, once (routes.warm). */
+/** Starts loading the site's route chunk on intent, once (routes.warm); the new tab then hits the HTTP cache. */
 function warmCard(href: string): void {
   const key = routeKeyFor(href);
   if (key) warm(key);
@@ -108,15 +95,16 @@ function warmCard(href: string): void {
 export function ShowcaseCard({ card }: { card: ShowcaseCardData }): JSX.Element {
   return (
     <article
-      className={`group/card relative flex h-full items-start gap-4 py-4 transition-[background-color,border-color] duration-150 ease-out active:bg-[color:var(--ground-deep)] lg:flex-col lg:items-stretch lg:gap-0 lg:border lg:border-[color:var(--rule)] lg:bg-[color:var(--surface)] lg:py-0 lg:hover:border-[color:var(--fg)] lg:active:bg-[color:var(--ground-deep)] lg:has-[a:focus-visible]:border-[color:var(--fg)] ${FOCUS}`}
+      className={`group/card relative flex h-full flex-col border border-[color:var(--rule)] bg-[color:var(--surface)] transition-[background-color,border-color] duration-150 ease-out hover:border-[color:var(--fg)] active:bg-[color:var(--ground-deep)] has-[a:focus-visible]:border-[color:var(--fg)] ${FOCUS}`}
     >
       <MediaWell href={card.href} />
-      <div className="@container/text flex min-w-0 flex-1 flex-col self-stretch lg:px-5 lg:py-4">
+      <div className="@container/text flex min-w-0 flex-1 flex-col px-5 py-4">
         <div className="flex flex-col items-start gap-1 @[22rem]/text:flex-row @[22rem]/text:items-center @[22rem]/text:justify-between @[22rem]/text:gap-4">
           <h3 className={`${T.h3} text-[color:var(--fg)]`}>
             <Link
               to={card.href}
-              viewTransition
+              target="_blank"
+              rel="noopener noreferrer"
               className={STRETCH}
               onPointerEnter={() => warmCard(card.href)}
               onFocus={() => warmCard(card.href)}
@@ -126,14 +114,9 @@ export function ShowcaseCard({ card }: { card: ShowcaseCardData }): JSX.Element 
           </h3>
           <Verdict card={card} />
         </div>
-        <p className={`${T.body} mt-2 lg:mt-1.5`}>{card.hook}</p>
+        <p className={`${T.body} mt-1.5`}>{card.hook}</p>
         <OpenCue />
       </div>
-      <ArrowRight
-        aria-hidden="true"
-        className="ml-auto size-4 shrink-0 self-center text-[color:var(--fg-muted)] md:hidden"
-        strokeWidth={1.5}
-      />
     </article>
   );
 }

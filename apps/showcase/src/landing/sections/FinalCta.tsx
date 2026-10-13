@@ -34,7 +34,8 @@ function TrustLine(): JSX.Element {
           {"href" in fact ? (
             <a
               href={fact.href}
-              rel="noreferrer"
+              target="_blank"
+              rel="noopener noreferrer"
               className="underline decoration-chalk/40 underline-offset-4 transition-colors duration-150 hover:text-chalk hover:decoration-chalk"
             >
               {fact.label}
@@ -73,6 +74,7 @@ export function FinalCtaSection(): JSX.Element {
             size="lg"
             icon="arrow-right"
             fullOnPhone
+            newTab
           />
           <SecondaryAction action={cta.actions.secondary} />
         </div>

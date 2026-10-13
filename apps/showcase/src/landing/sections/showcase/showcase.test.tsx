@@ -28,6 +28,8 @@ describe.each(SHAPES)("showcase %s", (_shape, render) => {
       expect(anchors[0]?.getAttribute("href")).toBe(card.href);
       expect(anchors[0]?.textContent).toBe(card.name);
       expect(anchors[0]?.hasAttribute("aria-label")).toBe(false);
+      expect(anchors[0]?.getAttribute("target")).toBe("_blank");
+      expect(anchors[0]?.getAttribute("rel")).toContain("noopener");
     }
   });
 

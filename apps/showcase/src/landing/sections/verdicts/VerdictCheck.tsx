@@ -119,7 +119,7 @@ export function VerdictCheck({ sample, ruleOn, onSample, onRule }: VerdictCheckP
           </div>
         </div>
         <div className="-mt-2 flex flex-col items-start gap-2 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-2 lg:mt-3 lg:self-start">
-          <Link to={current.href} viewTransition className={LINK}>
+          <Link to={current.href} target="_blank" rel="noopener noreferrer" className={LINK}>
             {current.tryLabel}
           </Link>
           <p className={T.small}>{hero.previewLabel}</p>

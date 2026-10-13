@@ -4,10 +4,8 @@ import { describe, expect, it } from "vitest";
 /** Guards the sample data behind the landing widgets (H1-H4) so a copy edit
  *  cannot silently break a number, a link or a finding template. */
 describe("landing demo content", () => {
-  it("states the real number of checks in the marquee disclosure", () => {
-    const count = String(home.marquee.items.length);
-    expect(home.marquee.allChecks).toContain(count);
-    expect(home.marquee.allChecksList).toContain(count);
+  it("never claims the marquee lists every check", () => {
+    expect(home.marquee.listLabel).not.toMatch(/\ball\b/i);
   });
 
   it("links every verdict sample to a real showcase site", () => {
