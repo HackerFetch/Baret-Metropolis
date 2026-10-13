@@ -28,7 +28,15 @@ Common links, used below:
 
 **Live link field:** <https://usebaret.com>, with: "No login needed. Start at /novaswap: turn on 'Suspicious swap' and press 'Enable dUSDC trading'. Full instructions, including the wallet and the extension: README, 'Access instructions for judges'."
 
-**[gate]** the two videos recorded and uploaded (H13); the traction sentence of the pitch only if H9 (2) has evidence.
+**Traction (for the description or the pitch; H9 part 2 met on 2026-10-13):**
+
+> During the hackathon the developer of Venue, an order book for Cleanverse Verified Assets on Monad testnet, integrated `@baret/guard` into Venue's signing path from the npm package and its README alone (https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803). Their own approval transaction exposed a threshold fault in Baret's unlimited-allowance rule; it was fixed the same day and they confirmed the same transaction is now Blocked. Their report: https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md.
+>
+> "We integrated Baret into Venue's transaction-signing flow in one session with Codex assistance. Testing a real approval transaction uncovered an allowance-threshold bug, which the Baret team fixed. We then verified that the same transaction was correctly blocked." — brutaldevvin, Venue
+
+Say "the developer of Venue" or "brutaldevvin", not "a Metropolis team": whether Venue is entered in Metropolis is not confirmed. Their checks were verdicts on real calls, nothing was signed or sent: never say Baret stopped a live attack on Venue.
+
+**[gate]** the two videos recorded and uploaded (H13).
 
 ---
 
