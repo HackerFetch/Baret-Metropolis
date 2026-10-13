@@ -363,7 +363,7 @@ export const hub = {
         failed: "Failed",
       },
       /** The block explorer a transaction hash opens in. */
-      explorer: "https://testnet.monadexplorer.com",
+      explorer: "https://testnet.monadscan.com",
       view: "View {hash} on the explorer",
       balance: "{token} in your wallet: {before} before, {after} after.",
       /** Why a press did not start: shown under the button with the action that fixes it. */

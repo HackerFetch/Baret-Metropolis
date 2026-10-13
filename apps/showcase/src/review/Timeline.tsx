@@ -11,7 +11,7 @@ import { Stepper } from "./Stepper.js";
  * page owns the one polite live region; nothing here announces itself.
  */
 
-export const EXPLORER = "https://testnet.monadexplorer.com";
+export const EXPLORER = "https://testnet.monadscan.com";
 
 const copy = review.timeline;
 

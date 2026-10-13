@@ -63,7 +63,7 @@ describe("RegistryLookup", () => {
       expect.anything(),
     );
     const link = screen.getByRole("link", { name: registry.view });
-    expect(link.getAttribute("href")).toBe(`https://testnet.monadexplorer.com/tx/${HASH}`);
+    expect(link.getAttribute("href")).toBe(`https://testnet.monadscan.com/tx/${HASH}`);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });

@@ -119,7 +119,7 @@ export const agents = {
     agent: "0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353",
     vault: "0x0A82671420114E47c672D5e8e23017DdCE850A35",
     labels: { agent: "Agent", vault: "Vault", merchant: "Merchant" },
-    explorer: "https://testnet.monadexplorer.com",
+    explorer: "https://testnet.monadscan.com",
     view: "View {hash} on the explorer",
     loading: "Reading the agent's payments...",
     /** Announced once the list is in. */
@@ -158,7 +158,7 @@ export const agents = {
     tryListed: "Try a listed address",
     /** On the registry since the workflow's first run (live answer, 2026-10-11). */
     sample: "0xa8f3762b03ae73cbbdb9173d3537c632628727a4",
-    explorer: "https://testnet.monadexplorer.com",
+    explorer: "https://testnet.monadscan.com",
     loading: "Asking the registry...",
     idle: "Paste an address, or try a listed one, to see what the registry knows.",
     listed: "This address is on Baret's registry: {reason}. Severity {level} of 4, {severity}.",
