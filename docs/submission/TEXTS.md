@@ -158,9 +158,9 @@ Say "the developer of Venue" or "brutaldevvin", never "a Metropolis team" or "an
 
 **The form asks:** the published article's link.
 
-**Text:** the published article's link (published per Ezgin on 2026-10-13; **paste the link here**). Source: `docs/articles/kimi.md`.
+**Text:** https://medium.com/@halesezin/the-model-that-is-not-allowed-to-decide-kimi-inside-a-transaction-firewall-on-monad-49e5c89db960 (published on Medium by Hale, 2026-10-13). Source: `docs/articles/kimi.md`.
 
-**[gate]** published by Hale; Meriç's fact check (`tasks/FOR_MERIC.md`). KIMI is live (H16).
+**[gate]** none open: published by Hale on 2026-10-13, KIMI is live (H16).
 
 ---
 
@@ -168,9 +168,9 @@ Say "the developer of Venue" or "brutaldevvin", never "a Metropolis team" or "an
 
 **The form asks:** the published article's link. The main submission must be in Track 4.
 
-**Text:** the published article's link (published per Ezgin on 2026-10-13; **paste the link here**). Source: `docs/articles/qwen.md`.
+**Text:** https://medium.com/@halesezin/an-agent-that-has-to-show-its-reading-before-it-can-approve-qwen-3-8-ce3a237bbfe7 (published on Medium by Hale, 2026-10-13). Source: `docs/articles/qwen.md`.
 
-**[gate]** published by Hale; Meriç's fact check. Qwen is live (H16) and M11 is verified.
+**[gate]** none open: published by Hale on 2026-10-13, Qwen is live (H16) and M11 is verified.
 
 ---
 
@@ -178,6 +178,6 @@ Say "the developer of Venue" or "brutaldevvin", never "a Metropolis team" or "an
 
 **The form asks:** nothing beyond the profiles. "Team must indicate their campus group when completing their profile on the hackathon portal", and the group must be on the onboarded list.
 
-**Text:** none. The answer to "Which community does your team represent?" is **[H2: the group's name]**.
+**Text:** none. The answer to "Which community does your team represent?" is **42 İstanbul Blockchain Community** (from Ezgin, 2026-10-13).
 
-**[gate]** H2: all three profiles name the group (done, Ezgin 2026-10-13); left: the group's name written here and the onboarded list checked.
+**[gate]** H2: all three profiles name the group (done, Ezgin 2026-10-13); the group's name is written above; left: check on the platform that the group is on the onboarded list.

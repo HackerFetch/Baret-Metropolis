@@ -1,7 +1,7 @@
 ---
 title: "The model that is not allowed to decide: KIMI inside a transaction firewall on Monad"
 tags: monad, ai, security, web3
-status: draft for H12, publish on dev.to / Medium / Mirror and put the link in the KIMI form
+status: published 2026-10-13 at https://medium.com/@halesezin/the-model-that-is-not-allowed-to-decide-kimi-inside-a-transaction-firewall-on-monad-49e5c89db960
 ---
 
 # The model that is not allowed to decide: KIMI inside a transaction firewall on Monad

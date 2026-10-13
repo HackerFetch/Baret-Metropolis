@@ -1,7 +1,7 @@
 ---
 title: "An agent that has to show its reading before it can approve: Qwen 3.8 Max reviewing payments on Monad"
 tags: monad, ai, agents, web3
-status: draft for H12, publish on dev.to / Medium / Mirror and put the link in the Qwen form
+status: published 2026-10-13 at https://medium.com/@halesezin/an-agent-that-has-to-show-its-reading-before-it-can-approve-qwen-3-8-ce3a237bbfe7
 ---
 
 # An agent that has to show its reading before it can approve: Qwen 3.8 Max reviewing payments on Monad
