@@ -131,6 +131,38 @@ describe("simulation", () => {
 });
 
 describe("approvals", () => {
+  it.each([
+    ["2^255 - 1", 2n ** 255n - 1n],
+    ["2^128", 2n ** 128n],
+    ["the largest uint96", 2n ** 96n - 1n],
+  ])("reads an allowance of %s as unlimited", async (_name, amount) => {
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.frame = frame({
+      to: USDC,
+      input: approveData(DAPP, amount),
+      logs: [approvalLog(USDC, USER, DAPP, amount)],
+    });
+    const r = await run(tx({ to: USDC, data: approveData(DAPP, amount) }), rpc);
+    expect(r.decision).toBe("blocked");
+    expect(r.findings.map((f) => f.code)).toContain("ERC20_APPROVAL_UNLIMITED");
+    expect(r.approvals[0]).toMatchObject({ unlimited: true });
+  });
+
+  it("keeps a large bounded allowance bounded", async () => {
+    const amount = 1_000_000_000n * ONE_USDC;
+    const rpc = new FakeRpc();
+    rpc.code.set(USDC, "0x60");
+    rpc.frame = frame({
+      to: USDC,
+      input: approveData(DAPP, amount),
+      logs: [approvalLog(USDC, USER, DAPP, amount)],
+    });
+    const r = await run(tx({ to: USDC, data: approveData(DAPP, amount) }), rpc);
+    expect(r.findings.map((f) => f.code)).not.toContain("ERC20_APPROVAL_UNLIMITED");
+    expect(r.approvals[0]).toMatchObject({ unlimited: false });
+  });
+
   it("blocks an unlimited allowance under Balanced and suggests the amount needed", async () => {
     const rpc = new FakeRpc();
     rpc.code.set(USDC, "0x60");
