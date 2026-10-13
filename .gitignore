@@ -49,3 +49,7 @@ assets-raw/
 
 # MetaMask plugin tarball staging
 packages/metamask-plugin/pack/
+
+# Local video recordings (demo takes and exports), never committed
+/*.mov
+/*.mp4
