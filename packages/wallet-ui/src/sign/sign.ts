@@ -55,7 +55,24 @@ export function actionParts(request: SignRequest): Part[] {
   return fillParts(sign.actions[request.action], shortValues(request), KEEP_CASE);
 }
 
-export function impactText(request: SignRequest): string {
+/** Baret's trial run of the request failed on Monad, so it has no list of changes. */
+export function simulationFailed(request: SignRequest): boolean {
+  return request.findings.some((finding) => finding.code === "SIMULATION_FAILED");
+}
+
+/**
+ * What happens if you sign, in one sentence. A request whose trial run failed
+ * says why instead of pointing at a list of changes that is not there: with
+ * `noMon` (the account holds no MON) the real reason, otherwise the failed
+ * run. A site's call under Can't reach Baret says no check ran.
+ */
+export function impactText(request: SignRequest, noMon = false): string {
+  if (request.verdict === "unreachable") {
+    return request.impact === "contractCall"
+      ? fill(sign.impact.contractCallUnchecked, values(request))
+      : fill(sign.impact[request.impact], values(request));
+  }
+  if (simulationFailed(request)) return noMon ? sign.findings.noMon : sign.impact.failed;
   return fill(sign.impact[request.impact], values(request));
 }
 

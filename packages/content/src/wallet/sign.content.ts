@@ -186,6 +186,15 @@ export const sign = {
     vaultWithdraw: "{amount} {asset} comes back from your vault to your account.",
     /** A site's call: Baret simulated it, so what moves is in "What changes". */
     contractCall: "This runs a call on {contract}. What changes is listed below.",
+    /** A site's call under Can't reach Baret: no check ran, so there is no list below. */
+    contractCallUnchecked:
+      "This runs a call on {contract}. No check ran, so what it changes is unknown.",
+    /**
+     * The trial run reverted, so there is no list of changes to point at: the
+     * line says why instead. An account with no MON gets findings.noMon and
+     * the faucet link here, the real reason.
+     */
+    failed: "It would most likely fail, because the trial run on Monad failed.",
     /** A typed message: what it allows is in the findings and in What changes. */
     message:
       "This is a signature, not a transaction. Whoever holds it can use it for what the message says, without asking again.",
@@ -223,7 +232,10 @@ export const sign = {
     batched: "Inside a batched call",
     /** A failed simulation: what Monad answered, word for word, when it said why. */
     revertReason: "Monad's answer: {reason}",
-    /** The account has no MON: the real reason a fresh account's request fails. */
+    /**
+     * The account has no MON: the real reason a fresh account's request fails.
+     * Shown in the verdict card, above the fold, and again on the finding.
+     */
     noMon: "This account holds 0 MON, so the transaction would fail. Get test MON from the faucet.",
     faucet: "Open the faucet",
     severity: { low: "Low", medium: "Medium", high: "High", critical: "Critical" },

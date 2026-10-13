@@ -1,4 +1,4 @@
-import { common, sign } from "@baret/content";
+import { common, sign, walletFrame } from "@baret/content";
 import { VerdictTag } from "@baret/ui";
 import type { JSX, ReactNode } from "react";
 import type { SignRequest as Request } from "../data/types.js";
@@ -6,7 +6,9 @@ import { blockedSummary } from "./sign.js";
 
 /**
  * Baret's answer, first and biggest: the verdict tag, its title, the one
- * sentence that says why, and what happens if you sign. Tinted with the
+ * sentence that says why, and what happens if you sign (when the trial run
+ * failed, why it would fail, with the faucet for an account with no MON, so
+ * the real reason sits above the fold). Tinted with the
  * verdict's colour; Can't reach Baret wears Blocked's, because it counts as
  * Blocked. The surface's own art (the extension's tag) sits beside it.
  */
@@ -42,13 +44,16 @@ export function VerdictCard({
   impact,
   art,
   compact = false,
+  faucet = false,
 }: {
   request: Request;
   message?: boolean;
-  /** One sentence: what actually moves if you sign. */
+  /** One sentence: what actually moves if you sign, or why it would fail. */
   impact: string;
   art?: ReactNode;
   compact?: boolean;
+  /** The account holds no MON: the faucet link follows the impact line, above the fold. */
+  faucet?: boolean;
 }): JSX.Element {
   const words = verdictWords(request, message);
   return (
@@ -78,7 +83,22 @@ export function VerdictCard({
         <p className="text-xs font-medium uppercase tracking-[0.08em] text-[color:var(--fg-muted)]">
           {sign.impact.label}
         </p>
-        <p className="text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">{impact}</p>
+        <p className="text-sm text-[color:var(--fg)] [overflow-wrap:anywhere]">
+          {impact}
+          {faucet ? (
+            <>
+              {" "}
+              <a
+                href={walletFrame.links.faucet}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[color:var(--fg)] underline underline-offset-4"
+              >
+                {sign.findings.faucet}
+              </a>
+            </>
+          ) : null}
+        </p>
       </div>
     </div>
   );

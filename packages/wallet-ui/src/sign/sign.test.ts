@@ -12,6 +12,7 @@ import {
   logFor,
   overrideBody,
   ruleRows,
+  simulationFailed,
 } from "./sign.js";
 
 function sample(id: SignRequest["id"]): SignRequest {
@@ -36,6 +37,49 @@ describe("the request's words", () => {
     expect(impactText(sample("unreachable"))).toBe(
       "Baret could not tell what moves. Treat that as a reason to stop.",
     );
+  });
+
+  describe("when the trial run failed", () => {
+    const contract = "0x4a7c000000000000000000000000000000009e21";
+    const call: SignRequest = {
+      ...sample("blocked"),
+      action: "contractCall",
+      impact: "contractCall",
+      values: { contract },
+      changes: [],
+      approvals: [],
+      findings: [{ code: "SIMULATION_FAILED", values: {} }],
+      rules: [{ rule: "requireSuccessfulSimulation" }],
+    };
+
+    it("knows a failed trial run by its finding", () => {
+      expect(simulationFailed(call)).toBe(true);
+      expect(simulationFailed(sample("blocked"))).toBe(false);
+    });
+
+    it("says why instead of pointing at a list that is not there", () => {
+      expect(impactText(call)).toBe(sign.impact.failed);
+      expect(impactText(call)).not.toMatch(/listed below/);
+      // A transfer that would fail does not claim the amount leaves either.
+      expect(impactText({ ...sample("safe"), findings: call.findings })).toBe(sign.impact.failed);
+    });
+
+    it("names the empty balance, the faucet's line, when the account holds no MON", () => {
+      expect(impactText(call, true)).toBe(sign.findings.noMon);
+    });
+
+    it("keeps the list line once the trial run passed", () => {
+      expect(impactText({ ...call, findings: [] }, true)).toBe(
+        `This runs a call on ${contract}. What changes is listed below.`,
+      );
+    });
+
+    it("says no check ran on a site's call under Can't reach Baret", () => {
+      const down: SignRequest = { ...call, verdict: "unreachable", findings: [], rules: [] };
+      expect(impactText(down, true)).toBe(
+        `This runs a call on ${contract}. No check ran, so what it changes is unknown.`,
+      );
+    });
   });
 
   it("sums up a block by its first rule and counts the rest", () => {

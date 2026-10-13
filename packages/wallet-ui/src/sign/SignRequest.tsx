@@ -7,7 +7,7 @@ import { useReduce } from "@baret/web-ui/lib/useReduce";
 import { counted, cx, fill } from "@baret/web-ui/lib/util";
 import { type JSX, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { siteLetter } from "../components/ConnectParts.js";
-import { Findings } from "../components/Findings.js";
+import { Findings, simulationNotes } from "../components/Findings.js";
 import { Parts } from "../components/Parts.js";
 import { amount } from "../data/format.js";
 import type { ActivityItem, SignRequest as Request, SignSource } from "../data/types.js";
@@ -22,13 +22,15 @@ import {
   type Outcome,
   overrideBody,
   ruleRows,
+  simulationFailed,
 } from "./sign.js";
 import { VerdictCard } from "./VerdictCard.js";
 
 /**
  * The sign request, the most-read screen in the product (content sign.*). In
  * order: who asks and what for, Baret's verdict first (tag, one-line reason,
- * what happens if you sign), what changes, the findings, the rules it breaks,
+ * what happens if you sign, or why it would fail when the trial run failed),
+ * what changes, the findings, the rules it breaks,
  * then Details collapsed (the site's claim, who checked it, the raw request),
  * and the decision pinned at the foot with the countdown. While the answer is
  * on its way, the staged loading state (Analyzing) stands in for the verdict. Blocked has no sign button: the only way past it, and past Can't
@@ -321,7 +323,9 @@ export function SignRequest({
   /**
    * Live: the account's MON balance as a decimal string, so a failed
    * simulation on an account with no MON can say the real reason and point
-   * at the faucet. Left out (or null, unread), nothing is claimed.
+   * at the faucet, in the verdict card and on the finding. Left out (or
+   * null, unread), nothing is claimed unless Monad's own answer names the
+   * balance.
    */
   monBalance?: string | null;
 }): JSX.Element {
@@ -607,6 +611,10 @@ export function SignRequest({
       : "grid grid-cols-2 gap-3";
   const unreachable = request.verdict === "unreachable";
   const rows = ruleRows(request);
+  // A failed trial run on an account with no MON: the verdict card names the
+  // real reason and the faucet, so it shows above the fold.
+  const noMon =
+    !unreachable && request.findings.some((item) => simulationNotes(item, monBalance).noMon);
 
   const overridePanel = (
     <div className="grid gap-4">
@@ -735,7 +743,8 @@ export function SignRequest({
               <VerdictCard
                 request={request}
                 message={message}
-                impact={impactText(request)}
+                impact={impactText(request, noMon)}
+                faucet={noMon}
                 art={verdictArt}
                 compact={compact}
               />
@@ -762,9 +771,7 @@ export function SignRequest({
                   <div className="grid gap-2">
                     {request.changes.length === 0 && request.approvals.length === 0 ? (
                       <p className={T.body}>
-                        {request.findings.some((f) => f.code === "SIMULATION_FAILED")
-                          ? sign.changes.failed
-                          : sign.changes.none}
+                        {simulationFailed(request) ? sign.changes.failed : sign.changes.none}
                       </p>
                     ) : null}
                     {request.changes.map((change) => (

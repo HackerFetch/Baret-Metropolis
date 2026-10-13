@@ -583,9 +583,13 @@ describe("SignRequest, what the live answer says about itself", () => {
       rules: [{ rule: "requireSuccessfulSimulation" }],
     };
     render(<SignRequest request={request} pending={false} monBalance="0" onLog={vi.fn()} />);
-    expect(screen.getByText(sign.findings.noMon, { exact: false })).toBeTruthy();
-    const faucet = screen.getByRole("link", { name: sign.findings.faucet });
-    expect(faucet.getAttribute("href")).toBe("https://faucet.monad.xyz");
+    // Once in the verdict card, once on the finding.
+    expect(screen.getAllByText(sign.findings.noMon, { exact: false })).toHaveLength(2);
+    const faucets = screen.getAllByRole("link", { name: sign.findings.faucet });
+    expect(faucets).toHaveLength(2);
+    for (const faucet of faucets) {
+      expect(faucet.getAttribute("href")).toBe("https://faucet.monad.xyz");
+    }
     expect(screen.getByText(/Monad's answer: The total cost/)).toBeTruthy();
     // The fix line no longer talks about a site: this is the wallet's own send.
     expect(document.body.textContent).not.toMatch(/on the site/);
@@ -616,5 +620,99 @@ describe("SignRequest, what the live answer says about itself", () => {
     );
     expect(kept).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/done with this site/);
+  });
+});
+
+describe("SignRequest, the verdict card when the trial run failed", () => {
+  const CONTRACT = "0x4a7c000000000000000000000000000000009e21";
+
+  /** NovaSwap's honest swap from a fresh account: the trial run reverted. */
+  function failedCall(reason?: string): Request {
+    return {
+      ...sample("blocked"),
+      action: "contractCall",
+      impact: "contractCall",
+      values: { contract: CONTRACT },
+      changes: [],
+      approvals: [],
+      fee: null,
+      findings: [
+        {
+          code: "SIMULATION_FAILED",
+          values: {},
+          ...(reason ? { details: { revertReason: reason } } : {}),
+        },
+      ],
+      rules: [{ rule: "requireSuccessfulSimulation" }],
+      suggestions: [],
+    };
+  }
+
+  /** The "What changes" heading, the first section under the verdict card. */
+  function changesHeading(): HTMLElement {
+    return screen.getByRole("heading", { name: sign.changes.title });
+  }
+
+  function precedes(a: Node, b: Node): boolean {
+    return Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+
+  it("names the empty balance and the faucet above What changes, never a list below", () => {
+    render(<SignRequest request={failedCall()} pending={false} monBalance="0" onLog={vi.fn()} />);
+    const text = document.body.textContent ?? "";
+    expect(text).not.toMatch(/What changes is listed below/);
+    // The card's line comes first in the page, then the finding repeats it.
+    const [top] = screen.getAllByText(sign.findings.noMon, { exact: false });
+    const [faucet] = screen.getAllByRole("link", { name: sign.findings.faucet });
+    if (!top || !faucet) throw new Error("no faucet line");
+    expect(precedes(top, changesHeading())).toBe(true);
+    expect(precedes(faucet, changesHeading())).toBe(true);
+    expect(faucet.getAttribute("href")).toBe("https://faucet.monad.xyz");
+    // What changes still says why it is empty.
+    expect(screen.getByText(sign.changes.failed)).toBeTruthy();
+  });
+
+  it("finds the empty balance from Monad's answer when the balance was not read", () => {
+    render(
+      <SignRequest
+        request={failedCall("insufficient funds for gas * price + value")}
+        pending={false}
+        monBalance={null}
+        onLog={vi.fn()}
+      />,
+    );
+    const [faucet] = screen.getAllByRole("link", { name: sign.findings.faucet });
+    if (!faucet) throw new Error("no faucet link");
+    expect(precedes(faucet, changesHeading())).toBe(true);
+  });
+
+  it("says the trial run failed when the account holds MON, with no faucet", () => {
+    render(<SignRequest request={failedCall()} pending={false} monBalance="1.5" onLog={vi.fn()} />);
+    const line = screen.getByText(sign.impact.failed);
+    expect(precedes(line, changesHeading())).toBe(true);
+    expect(document.body.textContent).not.toMatch(/What changes is listed below/);
+    expect(screen.queryByRole("link", { name: sign.findings.faucet })).toBeNull();
+  });
+
+  it("keeps the list line on a call whose trial run passed", () => {
+    const request: Request = { ...failedCall(), verdict: "safe", findings: [], rules: [] };
+    render(<SignRequest request={request} pending={false} monBalance="0" onLog={vi.fn()} />);
+    expect(screen.getByText(fill(sign.impact.contractCall, { contract: CONTRACT }))).toBeTruthy();
+    expect(screen.queryByRole("link", { name: sign.findings.faucet })).toBeNull();
+  });
+
+  it("says no check ran on a site's call under Can't reach Baret", () => {
+    const request: Request = {
+      ...failedCall(),
+      verdict: "unreachable",
+      findings: [],
+      rules: [],
+    };
+    render(<SignRequest request={request} pending={false} monBalance="0" onLog={vi.fn()} />);
+    expect(
+      screen.getByText(fill(sign.impact.contractCallUnchecked, { contract: CONTRACT })),
+    ).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/What changes is listed below/);
+    expect(screen.queryByRole("link", { name: sign.findings.faucet })).toBeNull();
   });
 });
