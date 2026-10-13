@@ -12,6 +12,12 @@
  * so the browser's Back moves one step instead of leaving setup. A Back
  * button under the indicator does the same on the steps where going back
  * loses nothing: the passphrase, funds, the account check and rules.
+ *
+ * Setup can come back after a browser restart, with the wallet locked. The
+ * steps that need it open (the backup, funds, the account check) then ask
+ * for the passphrase first, on the same screen as the rest of the options
+ * page. "Finish setup" goes back to the backup while it was never confirmed
+ * (onboarding/resume.ts).
  */
 
 import { common, extOnboarding } from "@baret/content";
@@ -19,7 +25,7 @@ import { Button } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { Brand } from "@baret/wallet-ui/components/Brand";
 import { ArrowLeft } from "lucide-react";
-import { type JSX, useRef } from "react";
+import { type JSX, lazy, Suspense, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useGate } from "../../../data/gate.js";
 import { useExtension } from "../../../data/store.js";
@@ -35,18 +41,12 @@ import { Key } from "./onboarding/Key.js";
 import { Passphrase } from "./onboarding/Passphrase.js";
 import { Restore } from "./onboarding/Restore.js";
 import { Rules } from "./onboarding/Rules.js";
+import { needsUnlock, resumeAt, type Screen } from "./onboarding/resume.js";
 import { Welcome } from "./onboarding/Welcome.js";
 
-type Screen =
-  | "welcome"
-  | "restore"
-  | "passphrase"
-  | "key"
-  | "backup"
-  | "fund"
-  | "account"
-  | "rules"
-  | "done";
+const Locked = lazy(() =>
+  import("../../popup/screens/Locked.js").then((module) => ({ default: module.Locked })),
+);
 
 /** Where each screen sits on the eight-step indicator. Restore stands in for the welcome. */
 const STEP: Record<Screen, number> = {
@@ -89,7 +89,7 @@ export function Component(): JSX.Element {
   // Live: the keystore makes the wallet at the passphrase step. A phrase the
   // reader typed to restore waits here until then, in memory only.
   const gate = useGate();
-  const { dispatch } = useExtension();
+  const { state: wallet, dispatch } = useExtension();
   const typedPhrase = useRef<string | null>(null);
   const saved = readState(location.state);
   const screen = saved?.step ?? firstScreen();
@@ -108,9 +108,15 @@ export function Component(): JSX.Element {
     window.scrollTo({ top: 0 });
   };
 
+  // A step that needs the open wallet asks for the passphrase first.
+  const locked = needsUnlock(screen, gate);
+
   // A restored account came through the passphrase straight to funds: its
   // way back would set the passphrase again, so funds offers none there.
-  const showBack = moved && BACKABLE.includes(screen) && !(screen === "fund" && restored);
+  const showBack =
+    moved && !locked && BACKABLE.includes(screen) && !(screen === "fund" && restored);
+
+  const resume = resumeAt(wallet.settings.backedUp);
 
   return (
     <div className="min-h-dvh">
@@ -135,10 +141,29 @@ export function Component(): JSX.Element {
             </Button>
           </div>
         ) : null}
+        {locked && gate ? (
+          <div className="grid place-items-center">
+            <div className="h-[600px] w-full max-w-[400px] overflow-hidden border border-[color:var(--rule-strong)] bg-[color:var(--ground)]">
+              <Suspense fallback={null}>
+                <Locked
+                  reason={gate.lockReason}
+                  values={{ count: String(wallet.settings.lockMinutes), origin: "" }}
+                  onOpen={() => gate.opened()}
+                  onReset={() => gate.wipe(true)}
+                />
+              </Suspense>
+            </div>
+          </div>
+        ) : null}
         <MovedContext value={moved}>
           {screen === "welcome" && gate?.exists ? (
-            // A wallet is already made: setup resumes past the key, or the wallet opens.
-            <Exists onOpen={() => navigate("/")} onFinish={() => go("fund", true)} />
+            // A wallet is already made: setup resumes at the backup while it
+            // was never confirmed, past it otherwise, or the wallet opens.
+            <Exists
+              backupLeft={resume.step === "backup"}
+              onOpen={() => navigate("/")}
+              onFinish={() => go(resume.step, resume.restored)}
+            />
           ) : null}
           {screen === "welcome" && !gate?.exists ? (
             <Welcome onStart={() => go("passphrase")} onRestore={() => go("restore")} />
@@ -176,9 +201,11 @@ export function Component(): JSX.Element {
             />
           ) : null}
           {screen === "key" ? <Key onNext={() => go("backup")} /> : null}
-          {screen === "backup" ? <Backup onNext={() => go("fund")} /> : null}
-          {screen === "fund" ? <Funds restored={restored} onNext={() => go("account")} /> : null}
-          {screen === "account" ? <Account onNext={() => go("rules")} /> : null}
+          {screen === "backup" && !locked ? <Backup onNext={() => go("fund")} /> : null}
+          {screen === "fund" && !locked ? (
+            <Funds restored={restored} onNext={() => go("account")} />
+          ) : null}
+          {screen === "account" && !locked ? <Account onNext={() => go("rules")} /> : null}
           {screen === "rules" ? <Rules onNext={() => go("done")} /> : null}
           {screen === "done" ? <Done /> : null}
         </MovedContext>

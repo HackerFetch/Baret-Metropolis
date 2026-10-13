@@ -3,7 +3,7 @@
  * faucet in a new tab, and that press starts watching the address. About
  * two seconds later the sample transfer "arrives" (a stand-in wait; no
  * request is made) and Continue opens. Until then Continue stays shut, and
- * the note under it says why.
+ * the note under it says why; the note goes once the minimum is met.
  */
 
 import { extFrame, extOnboarding } from "@baret/content";
@@ -104,15 +104,18 @@ export function Funds({
             variant={arrived ? "primary" : "ghost"}
             size="lg"
             disabled={!arrived}
-            aria-describedby={minimumId}
+            aria-describedby={arrived ? undefined : minimumId}
             onClick={onNext}
           >
             {fund.next.label}
           </Button>
         </div>
-        <p id={minimumId} className={T.small}>
-          {fund.minimum}
-        </p>
+        {/* The minimum is said only while the balance is under it. */}
+        {arrived ? null : (
+          <p id={minimumId} className={T.small}>
+            {fund.minimum}
+          </p>
+        )}
       </div>
     </StepFrame>
   );

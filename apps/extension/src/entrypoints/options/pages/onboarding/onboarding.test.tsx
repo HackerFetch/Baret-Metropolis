@@ -1,15 +1,25 @@
 /**
  * The setup, walked end to end the way a reader would: the new-account path
- * through all eight steps, and the restore path that skips the key and the
- * backup. Each step's heading takes the focus when it arrives. Clicks on
+ * through all eight steps, the restore path that skips the key and the
+ * backup, and a setup opened again after a browser restart, with the wallet
+ * locked. Each step's heading takes the focus when it arrives. Clicks on
  * outside links are stopped before the test document follows them.
  */
 
 import { common, extOnboarding } from "@baret/content";
+import { locked } from "@baret/content/extension/popup/locked.content";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { type JSX, useEffect, useMemo, useState } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ExtensionProvider } from "../../../../data/store.js";
+import { type Gate, GateContext } from "../../../../data/gate.js";
+import {
+  ExtensionProvider,
+  type ExtState,
+  initialState,
+  type LiveSource,
+  useExtension,
+} from "../../../../data/store.js";
 import { Component } from "../OnboardingPage.js";
 import { SAMPLE_PHRASE } from "./words.js";
 
@@ -99,10 +109,13 @@ describe("setup, a new account", () => {
     expect(heading().textContent).toContain(fund.title);
     const onward = screen.getByRole("button", { name: fund.next.label });
     expect((onward as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(fund.minimum)).toBeTruthy();
     fireEvent.click(screen.getByRole("link", { name: fund.action.label }));
     expect(screen.getByText(fund.waiting)).toBeTruthy();
     act(() => vi.advanceTimersByTime(2000));
     expect(screen.getByText("40.00 MON arrived.")).toBeTruthy();
+    // Funded: the minimum is met, so the note about it goes.
+    expect(screen.queryByText(fund.minimum)).toBeNull();
     fireEvent.click(onward);
 
     expect(heading().textContent).toContain(smartWallet.title);
@@ -162,5 +175,125 @@ describe("setup, a restored account", () => {
 
     setPassphrase();
     expect(heading().textContent).toContain(fund.title);
+  });
+});
+
+/** The passphrase of the stand-in keystore below. */
+const SECRET = "a sentence only I would write";
+const ADDRESS = "0x1111111111111111111111111111111111111111";
+
+/**
+ * A live wallet made before a browser restart: the keystore is locked, the
+ * stored balance is zero (the page reads it from Monad only while the wallet
+ * is open) and the address holds 0.5 MON. `backedUp` is what setup recorded.
+ */
+function lockedWallet(backedUp: boolean): LiveSource {
+  const empty = initialState({ scenario: "empty" });
+  const initial: ExtState = {
+    ...empty,
+    scenario: "live",
+    accounts: [{ id: "main", name: "Account 1", address: ADDRESS, balance: "0" }],
+    active: "main",
+    settings: { ...empty.settings, backedUp },
+  };
+  return {
+    initial,
+    save: () => {},
+    subscribe: () => () => {},
+    unlock: async (passphrase) => passphrase === SECRET,
+    reach: async () => true,
+    derive: async () => null,
+    revoke: async () => ({ closed: [], stopped: [] }),
+  };
+}
+
+/** The live page's gate, in small: locked until the passphrase opens it, then the balance is read. */
+function Gated({ children }: { children: JSX.Element }): JSX.Element {
+  const { dispatch } = useExtension();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    dispatch({
+      type: "patch",
+      patch: { accounts: [{ id: "main", name: "Account 1", address: ADDRESS, balance: "0.5" }] },
+    });
+  }, [open, dispatch]);
+  const gate = useMemo<Gate>(
+    () => ({
+      exists: true,
+      locked: !open,
+      lockReason: "restart",
+      lock: () => setOpen(false),
+      opened: () => setOpen(true),
+      wipe: () => {},
+      create: async () => ({ error: "A wallet already exists." }),
+      phrase: async () => (open ? [...SAMPLE_PHRASE] : null),
+      reveal: async () => null,
+      rekey: async () => false,
+      checkAccount: async () => true,
+    }),
+    [open],
+  );
+  return <GateContext value={gate}>{children}</GateContext>;
+}
+
+function resume(backedUp: boolean): void {
+  const router = createMemoryRouter([{ path: "*", element: <Component /> }], {
+    initialEntries: ["/onboarding"],
+  });
+  render(
+    <ExtensionProvider start={{ scenario: "live" }} live={lockedWallet(backedUp)}>
+      <Gated>
+        <RouterProvider router={router} />
+      </Gated>
+    </ExtensionProvider>,
+  );
+}
+
+async function openWallet(): Promise<void> {
+  expect(await screen.findByRole("heading", { level: 1, name: locked.title })).toBeTruthy();
+  expect(screen.getByText(locked.reason.restart)).toBeTruthy();
+  fireEvent.change(screen.getByLabelText(locked.field.label), { target: { value: SECRET } });
+  press(locked.action.label);
+}
+
+describe("setup, opened again after a browser restart", () => {
+  it("asks for the passphrase before funds, then reads the balance and opens Continue", async () => {
+    resume(true);
+    expect(heading().textContent).toContain(extOnboarding.exists.title);
+    expect(document.body.textContent).toContain(extOnboarding.exists.body);
+    press(extOnboarding.exists.actions.finish);
+
+    await openWallet();
+    expect(await screen.findByRole("heading", { level: 1, name: fund.title })).toBeTruthy();
+    expect(await screen.findByText("This account already holds 0.50 MON.")).toBeTruthy();
+    expect(screen.getByText("0.50 MON")).toBeTruthy();
+    const onward = screen.getByRole("button", { name: fund.next.label });
+    expect((onward as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByText(fund.minimum)).toBeNull();
+  });
+
+  it("goes back to the backup it never confirmed and shows the words again", async () => {
+    resume(false);
+    expect(heading().textContent).toContain(extOnboarding.exists.title);
+    expect(document.body.textContent).toContain(extOnboarding.exists.backupBody);
+    press(extOnboarding.exists.actions.finish);
+
+    await openWallet();
+    expect(await screen.findByRole("heading", { level: 1, name: backup.title })).toBeTruthy();
+    press(backup.reveal.label);
+    expect(await screen.findByText(SAMPLE_PHRASE[0])).toBeTruthy();
+  });
+
+  it("keeps the step shut on a wrong passphrase", async () => {
+    resume(true);
+    press(extOnboarding.exists.actions.finish);
+    expect(await screen.findByRole("heading", { level: 1, name: locked.title })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(locked.field.label), {
+      target: { value: "not the passphrase" },
+    });
+    press(locked.action.label);
+    expect(await screen.findByText(locked.errors.wrong.title)).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1, name: fund.title })).toBeNull();
   });
 });

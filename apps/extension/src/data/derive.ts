@@ -3,6 +3,7 @@ import type { popupHome } from "@baret/content/extension/popup/home.content";
 import { common } from "@baret/content/shared/common.content";
 import { amount as grouped, toUnits } from "@baret/wallet-ui/data/format";
 import { changedFields } from "@baret/wallet-ui/data/rules";
+import { isLivePage } from "../lib/live.js";
 import { SAMPLE_NOW } from "./sample.js";
 import type { ExtState } from "./store.js";
 import type { Activity, Alert, PaymentPermission, Permission, Site } from "./types.js";
@@ -13,9 +14,13 @@ import type { Activity, Alert, PaymentPermission, Permission, Site } from "./typ
  * exposure and the label of the rules. Pure, tested in data.test.ts.
  */
 
-/** The present the screens read times against: the sample's own, until the wallet is live. */
+/**
+ * The present the screens read times against: the real clock on a live
+ * extension page, the sample's own fixed present everywhere else (tests,
+ * design states, ?sample= links), so the sample keeps reading "4 min ago".
+ */
 export function now(): string {
-  return SAMPLE_NOW;
+  return isLivePage() ? new Date().toISOString() : SAMPLE_NOW;
 }
 
 const MINUTE = 60_000;

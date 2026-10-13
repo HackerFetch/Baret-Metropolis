@@ -30,6 +30,9 @@ export const extOnboarding = {
   exists: {
     title: "Your wallet is already set up",
     body: "A wallet exists in this browser. Open it, or finish the setup steps that are left: funds, the account check and your rules.",
+    /** The same, when the recovery phrase was never confirmed: setup picks up at the backup. */
+    backupBody:
+      "A wallet exists in this browser, but its recovery phrase is not backed up yet. Finish setup to write it down, then add funds and pick your rules.",
     error:
       "A wallet already exists in this browser. Open it from the toolbar, or finish setup from the welcome.",
     actions: { open: "Open the overview", finish: "Finish setup" },
@@ -146,6 +149,7 @@ export const extOnboarding = {
     arrived: "{amount} arrived.",
     /** A restored account that was funded before: nothing arrived, it was there. */
     holds: "This account already holds {amount}.",
+    /** Shown under Continue until the balance reaches the minimum. */
     minimum: "You need at least 0.1 MON to continue.",
     next: { label: "Continue" },
     errors: {
