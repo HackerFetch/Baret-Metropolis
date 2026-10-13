@@ -78,9 +78,9 @@ An x402 payment goes the same way: `typedData` (the EIP-3009 `TransferWithAuthor
 
 ## What comes back
 
-`decision` is one of `safe`, `caution` or `blocked`. `findings` names every detector that fired, with the values its sentence needs (`packages/guard/src/findings.ts` has the full list, `docs/ARCHITECTURE.md` §6 the detectors behind them). `firedRules` names which of your policy's fields decided it. `estimatedChanges` and `approvals` are only the changes to `userWallet` (the sender, unless you set it) — never the whole trace. `confidence` is `low` when the simulated call reverted or a source a rule needed did not answer (a `…_UNAVAILABLE` finding), and `medium` when there was nothing to simulate (a signature request) or the call could not be traced; your policy still decides, Baret never hides the gap.
+`decision` is one of `safe`, `caution` or `blocked`. `findings` names every detector that fired, with the values its sentence needs ([`findings.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/src/findings.ts) has the full list, [`docs/ARCHITECTURE.md`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/ARCHITECTURE.md) §6 the detectors behind them). `firedRules` names which of your policy's fields decided it. `estimatedChanges` and `approvals` are only the changes to `userWallet` (the sender, unless you set it) — never the whole trace. `confidence` is `low` when the simulated call reverted or a source a rule needed did not answer (a `…_UNAVAILABLE` finding), and `medium` when there was nothing to simulate (a signature request) or the call could not be traced; your policy still decides, Baret never hides the gap.
 
-`policy` takes the full rule set (`GuardPolicy`, `packages/guard/src/policy.ts`); `policyTemplate` takes `"strict"`, `"balanced"` or `"permissive"` and the server fills in the rest, including the network's own USDC as the one allowed payment asset. Send one or the other, never both; with neither, the server applies Balanced.
+`policy` takes the full rule set (`GuardPolicy`, [`policy.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/src/policy.ts)); `policyTemplate` takes `"strict"`, `"balanced"` or `"permissive"` and the server fills in the rest, including the network's own USDC as the one allowed payment asset. Send one or the other, never both; with neither, the server applies Balanced.
 
 ## Fail-closed
 
@@ -104,9 +104,20 @@ async function clearedToSign(request: AnalyzeRequest): Promise<boolean> {
 
 `isSafe(verdict)` (Safe: sign without asking anyone) and `isSignable(verdict)` (anything but Blocked: a person may sign after reading the findings) are the two one-line checks most callers need instead of reading `decision` by hand.
 
+## What the SDK leaves to you
+
+Reported by the first outside integration (Venue, 2026-10-13); each is the caller's job today.
+
+- **Caution is not consent.** `isSignable` is true for Caution. Show the findings and get a confirmation for that exact transaction before signing; do not sign a Caution unattended.
+- **Check the verdict is fresh and for your chain.** The response carries `expiresAt` and `meta.chainId`; the SDK validates their shape and does not compare them. Refuse a verdict that has expired or names another chain, and ask again if a person took longer than that to confirm.
+- **Hosted networks.** The types accept `testnet` (10143) and `mainnet` (143). The hosted API at `baret-monad-api.onrender.com` is set up for testnet only.
+- **Who is protected.** `estimatedChanges` and `approvals` describe `userWallet` (the sender by default). When the sender is an agent settling for other parties, their balances are not checked separately.
+- **"Unlimited" allowance.** An `approve` or permit at or above the largest uint96 (2^96 - 1) is reported `unlimited: true`, so the maximum minus one does not pass as a bounded grant.
+- **Errors.** A non-2xx answer, a body that breaks the contract and a timeout all throw `GuardUnreachableError`: a non-2xx answer carries only its status (the body is dropped), the other two carry the detail in `cause`; a request that breaks the schema throws `ZodError` before anything is sent. Treat every one of them as "do not sign".
+
 ## More
 
-- The full request and response shapes: `packages/guard/src/analyze.ts` (`analyzeRequestSchema`, `analyzeResponseSchema`).
+- The full request and response shapes: [`packages/guard/src/analyze.ts`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/src/analyze.ts) (`analyzeRequestSchema`, `analyzeResponseSchema`).
 - Two more contracts in the same package, both answered by a language model on the server (`503` when none is configured): `/v1/explain` (`src/explain.ts`) puts a verdict into plain words in `en`, `tr` or `zh`. Send `{ requestId, language }` with the verdict's `meta.requestId`; the older `{ verdict, language }` still works, and the server reads only its `meta.requestId`. The `decision` in the answer is copied from the server's own cached verdict, never from the model or the request. `/v1/policy/draft` (`src/policy-draft.ts`) turns a sentence into proposed rule changes: each one checked against the policy schema, the ones that loosen a rule marked, none applied.
-- Every detector and finding code: `docs/ARCHITECTURE.md` §5 to §7.
+- Every detector and finding code: [`docs/ARCHITECTURE.md`](https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/ARCHITECTURE.md) §5 to §7.
 - Agent payments and a spending-limited vault instead of a raw key: [`@baret/agent-kit`](../agent-kit/README.md).

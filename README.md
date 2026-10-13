@@ -81,6 +81,14 @@ For an agent, `@baret/agent-kit` wraps the signer: `guardedSubmit` signs a Safe 
 - Quickstarts, with every snippet run against the live API: [`packages/guard/README.md`](packages/guard/README.md), [`packages/agent-kit/README.md`](packages/agent-kit/README.md)
 - Every endpoint, message and contract: [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
 
+## Used outside the team
+
+On 2026-10-13 the developer of [Venue](https://github.com/brutaldevvin/venue), an order book for Cleanverse Verified Assets on Monad testnet, wired `@baret/guard` 0.1.2 into Venue's signing path from the npm package and its README alone: [the commit](https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803), [their report with nine points of feedback](https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md). Every account that signs is wrapped: Blocked or no answer refuses the signature, Caution asks for a confirmation bound to that transaction. No transaction was signed or sent in their checks; these are verdicts on real calls.
+
+Their own `approve(settlement, 2^255 - 1)` came back Caution with `unlimited: false`. That was a fault in Baret: "unlimited" began at 2^255. It was fixed the same day (D-049, the bar is now the largest uint96) and they ran the same request again: Blocked, `ERC20_APPROVAL_UNLIMITED`.
+
+> "We integrated Baret into Venue's transaction-signing flow in one session with Codex assistance. Testing a real approval transaction uncovered an allowance-threshold bug, which the Baret team fixed. We then verified that the same transaction was correctly blocked." — brutaldevvin, Venue
+
 ## What happens inside one check
 
 1. **Simulate.** The call is traced on Monad (`debug_traceCall`). The trace gives every balance change, allowance and contract the transaction touches, for every account involved, not only the signer.

@@ -372,7 +372,7 @@
 
 **Date:** 2026-10-13
 
-**Context:** An outside developer wired `@baret/guard` into their own project on 2026-10-13 and sent its existing `approve(settlement, 2^255 - 1)` to the live API. The answer was Caution with `ERC20_APPROVAL_GRANTED` and `unlimited: false`: the bar for "unlimited" was `amount >= 2^255`, so an allowance one below it read as a bounded grant and `blockUnlimitedApprovals` did not fire. Any site could pass the rule by asking for the maximum minus one.
+**Context:** The developer of Venue ([commit](https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803), [report](https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md)) wired `@baret/guard` into their own project on 2026-10-13 and sent its existing `approve(settlement, 2^255 - 1)` to the live API. The answer was Caution with `ERC20_APPROVAL_GRANTED` and `unlimited: false`: the bar for "unlimited" was `amount >= 2^255`, so an allowance one below it read as a bounded grant and `blockUnlimitedApprovals` did not fire. Any site could pass the rule by asking for the maximum minus one.
 
 **Decision:** `UNLIMITED_THRESHOLD` (`apps/server/src/simulation/abi.ts`) is `2^96 - 1`, about 79 billion units of an 18-decimal token. That covers every "nearly the maximum" value and the tokens that store allowances as uint96 and report their own maximum in the `Approval` log. It applies to `approve`, to `permit` and to typed-data permits alike, since all read the same constant.
 
