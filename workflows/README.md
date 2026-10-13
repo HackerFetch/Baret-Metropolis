@@ -80,4 +80,12 @@ The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xa1b9799281003
 
 The transaction ([explorer](https://testnet.monadexplorer.com/tx/0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09), block 70195240) went through the mock forwarder to the receiver and wrote ten entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0x57862f4c20fd3450bf63381235b1d36095daf364`, and `safe` for the same transfer to a wallet that is not on the feed; `GET /v1/audit/reputation/0x57862f4c20fd3450bf63381235b1d36095daf364` names this transaction. The receiver was back on the production forwarder with the workflow-owner check on when the script ended (read from the chain).
 
+## The run in the video (2026-10-13, Monad testnet)
+
+`./workflows/simulate.sh --broadcast`, CRE CLI v1.38.0, Bun 1.4.3, on Windows from Git Bash, screen recorded by Ezgin for the Chainlink submission (`docs/submission/SCRIPTS.md` 3.2).
+
+The transaction ([explorer](https://testnet.monadexplorer.com/tx/0x5d72012bb7bed6dbbe6ade3dd40d3a4243137b2482dc1205b4cbbd5f39fb1175), block 70574558) went through the mock forwarder to the receiver and wrote ten `ReputationFlagged` entries to the registry. Afterwards the live API answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` (`reasonCode: SCAMSNIFFER_BLACKLIST`) for a transfer to the first of them, `0x17504785059123e758f1cd2bfa00ab45b613f9e5`, and `safe` for the same transfer to `0x1365566191bAA9872A64AcDce963751d5343ff49`, which is not on the feed. The receiver was back on the production forwarder with the workflow-owner check on when the script ended (read from the chain). An earlier run of the same morning wrote ten more: `0x7953f3b76827e0c0cabfd35ee59b0386b0e7533032f11063fc712191ac308ea0` (block 70565887).
+
+A run inside the same ten minutes as the last one looks at the same window of the feed (`rotationSeconds: 600`), finds nothing the registry does not know and sends no transaction.
+
 Deployment to a DON is still not done: `cre whoami` on this account shows "Deploy Access: Not enabled" on 2026-10-11. Access was requested that day with `cre account access`. Chainlink answered on 2026-10-12: local simulation is open to everyone, and deploying to testnet or mainnet goes through a mutual NDA and commercial terms. Decided by Ezgin the same day: the hackathon entry is the simulation, and deployment is taken up after the event.
