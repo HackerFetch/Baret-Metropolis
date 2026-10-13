@@ -106,14 +106,14 @@ async function clearedToSign(request: AnalyzeRequest): Promise<boolean> {
 
 ## What the SDK leaves to you
 
-Reported by the first outside integration (Venue, 2026-10-13); each is the caller's job today.
+Reported by the first outside integration (Venue, 2026-10-13). Each is the caller's job; since 0.1.3 the SDK helps with two of them, the freshness check and the error's body.
 
 - **Caution is not consent.** `isSignable` is true for Caution. Show the findings and get a confirmation for that exact transaction before signing; do not sign a Caution unattended.
-- **Check the verdict is fresh and for your chain.** The response carries `expiresAt` and `meta.chainId`; the SDK validates their shape and does not compare them. Refuse a verdict that has expired or names another chain, and ask again if a person took longer than that to confirm.
+- **Check the verdict is fresh and for your chain.** The response carries `expiresAt` and `meta.chainId`, and `evaluate` does not compare them for you. Since 0.1.3 `verdictRefusal(verdict, { chainId: 10143 })` does: it answers `"expired"`, `"wrong_chain"` or `null` (an `expiresAt` that is not a date reads as expired). Call it right before signing, refuse on anything but `null`, and ask Baret again if a person took longer than that to confirm.
 - **Hosted networks.** The types accept `testnet` (10143) and `mainnet` (143). The hosted API at `baret-monad-api.onrender.com` is set up for testnet only.
 - **Who is protected.** `estimatedChanges` and `approvals` describe `userWallet` (the sender by default). When the sender is an agent settling for other parties, their balances are not checked separately.
 - **"Unlimited" allowance.** An `approve` or permit at or above the largest uint96 (2^96 - 1) is reported `unlimited: true`, so the maximum minus one does not pass as a bounded grant.
-- **Errors.** A non-2xx answer, a body that breaks the contract and a timeout all throw `GuardUnreachableError`: a non-2xx answer carries only its status (the body is dropped), the other two carry the detail in `cause`; a request that breaks the schema throws `ZodError` before anything is sent. Treat every one of them as "do not sign".
+- **Errors.** A non-2xx answer, a body that breaks the contract and a timeout all throw `GuardUnreachableError`: a non-2xx answer carries its `status` and, since 0.1.3, what the server said in `body` (Baret's own errors are `{ error, message }`; text when it is not JSON, `null` when empty), the other two carry the detail in `cause`; a request that breaks the schema throws `ZodError` before anything is sent. Treat every one of them as "do not sign".
 
 ## More
 

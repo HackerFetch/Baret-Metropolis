@@ -88,8 +88,9 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 
 | Export | What it does |
 |---|---|
-| `new TransactionGuard({ baseUrl, apiKey?, timeoutMs? })`, `.evaluate(request)` | Calls `/v1/analyze`. Throws `GuardUnreachableError` when there is no verdict: the caller must treat that as blocked |
+| `new TransactionGuard({ baseUrl, apiKey?, timeoutMs? })`, `.evaluate(request)` | Calls `/v1/analyze`. Throws `GuardUnreachableError` when there is no verdict: the caller must treat that as blocked. On a non-2xx answer it carries `status` and the answer's `body` |
 | `isSafe(verdict)`, `isSignable(verdict)` | Whether to sign without asking, and whether signing is allowed at all |
+| `verdictRefusal(verdict, { chainId, now? })` | Whether a verdict can still be signed on: `"expired"`, `"wrong_chain"` or `null`. `evaluate` does not call it; the caller does, right before signing |
 | `createPolicy(template, { allowedAssets })` | The 25 rules from `strict`, `balanced` or `permissive`, with the network's payment assets filled in |
 | `analyzeRequestSchema`, `analyzeResponseSchema`, `guardPolicySchema`, `explainRequestSchema`, `policyDraftRequestSchema` | The wire shapes, as Zod schemas |
 | `MONAD_NETWORKS` | Chain ids: testnet 10143, mainnet 143 |
@@ -125,7 +126,7 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 
 `baret check` (the verdict for a call) and `baret send` (send only if Baret clears it), as commands of the `mm` CLI. Built, not entered for the bounty.
 
-`@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm since 2026-10-11 (0.1.2 since 2026-10-12, `npm install @baret/agent-kit`). Inside this repository they resolve to their sources.
+`@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm since 2026-10-11 (0.1.2 since 2026-10-12, `npm install @baret/agent-kit`; 0.1.3 is raised in the repository and not published yet). Inside this repository they resolve to their sources.
 
 ## 4. The analysis server: HTTP API
 

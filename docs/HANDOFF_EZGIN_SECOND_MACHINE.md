@@ -38,10 +38,12 @@ Done on the first machine on 2026-10-13, do not repeat:
 
 Open, and yours on this machine:
 
-1. **Publish the SDK again (0.1.3).** `packages/guard/README.md` gained "What the SDK leaves to you" and full links in place of repository paths; npm still shows 0.1.2's README. README only, no code change. Same steps as section 4.
+1. **Publish the SDK again (0.1.3).** `packages/guard/README.md` gained "What the SDK leaves to you" and full links in place of repository paths; npm still shows 0.1.2's README. Same steps as section 4.
+   - 2026-10-13, second machine: the versions are raised to 0.1.3 on branch `sdk-0.1.3`, which also carries item 4's code, so 0.1.3 is no longer README only. Left: Ezgin merges, runs `npm login` and the three `npm publish` commands (`docs/DEPLOYMENT.md`), then a clean install is checked against the live API.
 2. **Two things to write into the repository once Ezgin gives them:** the links of the published KIMI and Qwen articles (`docs/submission/TEXTS.md` sections 10 and 11, then tick H12), and the campus group's name (section 12, H2). Ezgin says all three profiles name the group; that the group is on the onboarded list is not checked.
 3. **Ezgin's own steps:** H3 (the MetaMask rehearsal), the Chainlink form once Hale returns the clip, E17 (the Chrome Web Store URL when Google publishes), and two confirmations never answered: is Hale on the platform team (E1), and did `~/.baret` reach this machine (E7)? Tick each on a yes.
 4. **Not built, from Venue's report** (`https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md`): a helper in `@baret/guard` that refuses an expired verdict or one for another chain; error bodies kept on a non-2xx answer. Documented as the caller's job for now.
+   - 2026-10-13, second machine: built on branch `sdk-0.1.3`. `verdictRefusal(verdict, { chainId })` answers `"expired"`, `"wrong_chain"` or `null`, and `GuardUnreachableError.body` keeps what a non-2xx answer said (`packages/guard/src/guard.ts`, tests in `guard.test.ts`). `evaluate` and `AgentWallet` do not call the helper themselves. Not built from the same report: structured error codes and retry hints, a viem example, a multi-party example.
 
 ## 3. What this machine needs before any of the three tasks
 

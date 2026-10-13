@@ -139,6 +139,8 @@ Checked on 2026-10-11: the three tarballs from `pnpm pack`, installed in an empt
 
 0.1.2 (versions raised 2026-10-12, published by Ezgin from the tarballs of this commit) carries the tester run's changes: guard's schema knows `CALL_TO_ADDRESS_WITHOUT_CODE` and ERC-721 rows in `estimatedChanges`, agent-kit installs without `tsx` and with Dynamic as an optional peer (about 75 MB installed), and `baret --help` exists. All three go out together, because agent-kit pins the other two at its own version. Checked before the publish from the three tarballs in an empty folder: the README call answered `blocked` with `KNOWN_MALICIOUS_ADDRESS` from the live API, `npx baret --help` exited 0 and a wrong command exited 2. After the publish, the same evening: `npm install @baret/agent-kit` in an empty folder took 0.1.2 of all three from the registry (75 MB), and the same call and `npx baret --help` ran.
 
+0.1.3 (versions raised 2026-10-13, **not published yet**: Ezgin publishes it) answers the first outside integration's report (Venue): `@baret/guard` gains `verdictRefusal(verdict, { chainId })`, which refuses a verdict that has expired or names another chain, and `GuardUnreachableError.body`, what the server said on a non-2xx answer; its README gains "What the SDK leaves to you" and full links where 0.1.2's pointed at repository paths. `@baret/llm` and `@baret/agent-kit` carry no change of their own and go out with it, because agent-kit pins the other two at its own version.
+
 To publish the next version (needs a login of the npm account that owns the `baret` organisation). Raise `version` in the three `package.json` files first: a published version number cannot be used again.
 
 1. `npm login`
