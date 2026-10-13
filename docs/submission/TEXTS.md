@@ -18,6 +18,12 @@ Common links, used below:
 
 **The form asks:** the project logo (`docs/submission/baret-mark-1024.png` for a square box; `baret-logo-1024.png` is the wordmark), the public repository, a technical demo video (max 3 min), a pitch video (max 2 min), a live link with access instructions.
 
+**One-line description (the form allows 200 characters; this is 185):**
+
+```text
+Baret stops wallets and AI agents on Monad from signing what they cannot read: it simulates each transaction before the signature and answers Safe, Caution or Blocked, with the reasons.
+```
+
 **Short description (1,409 characters; for a short field, or as the summary):**
 
 ```text
@@ -83,10 +89,10 @@ It is an open layer, not a product to be locked into. The policy is the signer's
 It is built for agents as well as people. The same check serves a browser wallet, a dapp's own confirm screen and an agent's signer, and for agents the vault's on-chain caps hold even if every off-chain check is bypassed.
 ```
 
-*Who the first users are and how we reach them* (6,148 characters). It answers the two heaviest criteria, Founder & Market Readiness (25%) and Traction & Path Forward (20%):
+*Who the first users are and how we reach them* (6,136 characters). It answers the two heaviest criteria, Founder & Market Readiness (25%) and Traction & Path Forward (20%):
 
 ```text
-WHO ADOPTS BARET FIRST
+OUR FIRST USERS
 
 Baret is for any product on Monad whose flow ends in a signature. Four groups, in the order we expect them:
 
@@ -115,7 +121,7 @@ EVIDENCE SO FAR
 - A public API that answers without a key, and quickstarts where every snippet was run against the live API: https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/README.md and https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/agent-kit/README.md.
 - A working quickstart page for agent builders with HTTP, TypeScript, CLI and MCP samples: https://usebaret.com/agents.
 
-HOW WE REACH THEM, AFTER THE JUDGING
+GO-TO-MARKET: HOW WE REACH THEM
 
 The plan is concrete because most of it is already built and waiting on a step outside our hands.
 
@@ -130,10 +136,12 @@ The plan is concrete because most of it is already built and waiting on a step o
 What we measure is simple: the number of projects that call the check in their signing path, and the number of findings their real transactions teach us, as Venue's did.
 ```
 
-*Steps to try the product* (5,435 characters; only the judges see it):
+*Steps to try the product* (6,479 characters; only the judges see it):
 
 ```text
 No account and no login are needed. Everything runs on Monad testnet (chain id 10143). The demo sites and the reviewer work with no wallet at all.
+
+NOTHING HAS TO BE INSTALLED. To sign with a wallet you do not need the extension or its zip: the Baret web wallet opens from the demo site in its own window, and you create an account there with a passkey (or open the one you already have) and carry on in the same flow. That is part 3. The extension, part 4, is optional.
 
 BEFORE YOU START
 
@@ -155,16 +163,20 @@ The five other demo sites (OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe
 - The registry lookup on the same page answers for any address. Try the addresses at the end of this text.
 - Open https://usebaret.com/review. Three payments an agent was asked to make: Qwen 3.8 Max plans, calls four read-only tools and can veto. The honest one is sent on testnet and its transaction is shown.
 
-3. THE PASSKEY WALLET
+3. THE BARET WEB WALLET (nothing to install)
 
-- Open https://wallet.usebaret.com and press "Create my wallet". It is one passkey prompt, with no seed phrase and no email.
-- The wallet needs a passkey provider that supports the WebAuthn PRF extension, for example Chrome with Google Password Manager or Safari with iCloud Keychain. If the provider lacks PRF, the wallet says so on that screen.
-- Every signed transaction pays a small fee in testnet MON, free from the Monad faucet: https://faucet.monad.xyz. The demo sites' own "Get 100 test dUSDC" button gives the demo token.
-- On https://usebaret.com/novaswap choose "Connect wallet" and pick the Baret wallet (it opens in its own window), turn on the attack and press "Sign with your wallet": the wallet's window shows Blocked and has no sign button.
+- Open https://usebaret.com/novaswap and press "Connect wallet". In "Connect a wallet" choose "Baret web wallet". The wallet (https://wallet.usebaret.com) opens in its own window; if the browser stops the window, allow pop-ups for the site and press again.
+- In that window press "Create my wallet". It is one passkey prompt, with no seed phrase, no email and nothing to download. If you made a wallet before, press "I already have one: open with my passkey" instead. Approve the connection and you are back on the site, connected.
+- The wallet needs a passkey provider that supports the WebAuthn PRF extension, such as iCloud Keychain or Google Password Manager. If the provider lacks PRF, the wallet says so on that screen.
+- Every signed transaction pays a small fee in testnet MON, free from the Monad faucet: https://faucet.monad.xyz. Send some to the address the wallet shows. The demo site's own "Get 100 test dUSDC" button gives the demo token.
+- Turn on "Suspicious swap" and press "Sign with your wallet": the wallet's window shows Blocked, with the reasons, and has no sign button. Turn the attack off and press again: Safe, and it can be signed.
+- You can also open https://wallet.usebaret.com directly, to see the wallet's own screens: Home, Activity, the agents' vault and the Rules.
 - The stateless test: clear the site's storage for wallet.usebaret.com (or open a fresh browser profile with the same passkey provider) and press "Open with my passkey". The same account comes back from the passkey. Under Settings, "Bring them back here" restores the rules from their encrypted copy on Monad.
-- A passkey belongs to the domain it was made on, so use wallet.usebaret.com and not another address of the same site.
+- A passkey belongs to the domain it was made on, so the wallet is always wallet.usebaret.com.
 
-4. THE BROWSER EXTENSION WALLET
+4. THE BROWSER EXTENSION WALLET (optional)
+
+You can skip this part: everything above works without it. The extension is a second wallet on the same check, for those who want to see it in the browser's own window.
 
 - The extension is submitted to the Chrome Web Store and in review, so for now it installs from a zip. Open https://usebaret.com/install and download the zip.
 - Unzip it, open chrome://extensions, turn on Developer mode and choose "Load unpacked", then pick the unzipped folder.
