@@ -98,7 +98,7 @@ Common links, used below:
 >
 > Judges can run it on <https://usebaret.com/agents>: "Pay aUSDC to a verified wallet" (`0xC448042edaC1899B023cAa0E9dA5E4a8833de873`, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (`0x1365566191bAA9872A64AcDce963751d5343ff49`) is Blocked.
 
-**Settled 2026-10-11 (D-048) in BVUSD, and 2026-10-13 in aUSDC.** Two assets, two guards, two transactions: `0x2dd8...aa6b` is BVUSD (a CVA Baret issued through Cleanverse's API) and `0xd93efca3...` is aUSDC. The text may say aUSDC settled, for that transaction only; BVUSD is never called aUSDC. That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
+**Settled 2026-10-11 (D-048) in BVUSD, and 2026-10-13 in aUSDC.** Two assets, two guards, two transactions: `0x2dd8...aa6b` is BVUSD (a CVA Baret issued through Cleanverse's API) and `0xd93efca3...` is aUSDC. The text may say aUSDC settled, for that transaction only; BVUSD is never called aUSDC. That run went through a local Baret server; later the same day, with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on Render's `MONAD_TESTNET_KNOWN_CONTRACTS` (14 addresses), the same pair ran through the live API: settled `0x2052c1b9c6de8352fb7d69f9fd558e2a45552e8993371eadc00adb6b32a23942` (block 70738086, ref `ausdc-live-1`), and the payment to the wallet with no credential Blocked before signing.
 
 **[gate]** the demo video (`docs/submission/SCRIPTS.md` 3.1). Shots 4 and 5 show either settlement above (met), each named by its own asset.
 
