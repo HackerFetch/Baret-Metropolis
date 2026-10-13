@@ -220,7 +220,7 @@ Still no aUSDC: the route Cleanverse's admin described was followed on 2026-10-1
 | `baret pay --vault 0x6E867b840f11cC1d9c6e16d1f76D737199bc907c --merchant 0xC448042edaC1899B023cAa0E9dA5E4a8833de873 --amount 250000 --ref ausdc-1` (verified, tier 5) | Baret: Safe. Signed by the Dynamic agent and settled: [`0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293`](https://testnet.monadexplorer.com/tx/0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293), block 70582232. 0.25 aUSDC from the owner to the merchant, `Settled` with both credentials |
 | The same to `0x1365566191bAA9872A64AcDce963751d5343ff49` (no credential), `--ref ausdc-2` | Baret: Blocked before signing, `COMPLIANCE_NO_CREDENTIAL` (`NoCredential`, refused by the guard), `SIMULATION_FAILED` with `revertError: NotVerified`. Nothing signed |
 
-That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
+That run went through a local Baret server; later the same day, with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on Render's `MONAD_TESTNET_KNOWN_CONTRACTS` (14 addresses), the same pair ran through the live API: settled `0x2052c1b9c6de8352fb7d69f9fd558e2a45552e8993371eadc00adb6b32a23942` (block 70738086, ref `ausdc-live-1`), and the payment to the wallet with no credential Blocked before signing.
 
 ---
 

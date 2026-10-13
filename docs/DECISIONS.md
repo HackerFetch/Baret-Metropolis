@@ -366,7 +366,7 @@
 
 **Not claimed (on 2026-10-11; see the follow-up below):** no aUSDC has moved through a Baret contract. BVUSD is a test asset Baret issued in Cleanverse's sandbox; it is compliant because Cleanverse's policy gates it, not because anything backs it. The two runs went through a local Baret server that knows the two new addresses; the live API answers Caution for the honest one until both are on `MONAD_TESTNET_KNOWN_CONTRACTS` on Render and this branch is deployed.
 
-**Follow-up, 2026-10-13:** Cleanverse's operator minted 20 aUSDC to the owner (`0x5c83d466046ca460272f407150f698ca0836b0cd8fcd54962c1b757b9fbe276a`), and the same pair of payments ran on the aUSDC guard `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`: 0.25 aUSDC settled to the verified merchant in `0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293` (block 70582232) and the payment to the wallet with no credential was blocked before signing. BVUSD and its guard stay as they are; BVUSD is still never called aUSDC. That run went through a local Baret server with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on `MONAD_TESTNET_KNOWN_CONTRACTS`; the live API reads the honest payment Caution (`UNKNOWN_CONTRACT_EXPOSURE` for the token) until that address is on Render's list.
+**Follow-up, 2026-10-13:** Cleanverse's operator minted 20 aUSDC to the owner (`0x5c83d466046ca460272f407150f698ca0836b0cd8fcd54962c1b757b9fbe276a`), and the same pair of payments ran on the aUSDC guard `0x6E867b840f11cC1d9c6e16d1f76D737199bc907c`: 0.25 aUSDC settled to the verified merchant in `0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293` (block 70582232) and the payment to the wallet with no credential was blocked before signing. BVUSD and its guard stay as they are; BVUSD is still never called aUSDC. That run went through a local Baret server; later the same day, with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on Render's `MONAD_TESTNET_KNOWN_CONTRACTS` (14 addresses), the same pair ran through the live API: settled `0x2052c1b9c6de8352fb7d69f9fd558e2a45552e8993371eadc00adb6b32a23942` (block 70738086, ref `ausdc-live-1`), and the payment to the wallet with no credential Blocked before signing.
 
 ### D-049 — "Unlimited" starts at the largest uint96, not at 2^255
 
@@ -379,3 +379,5 @@
 **Cost:** a bounded allowance above 79 billion whole units of an 18-decimal token now reads as unlimited. For a person signing it, that is the right reading. A check against the token's total supply would be exact and needs one more read per approval; not built.
 
 **Also reported by the same integration, not changed:** the SDK returns the verdict's `network` and expiry without refusing a stale or mismatched one; the caller has to compare them. Left for the next SDK version.
+
+**Checked live, 2026-10-13 (API `1b2b968`):** `approve(spender, 2^255 - 1)` on testnet USDC under Balanced answers `blocked` with `ERC20_APPROVAL_UNLIMITED` and `unlimited: true`.
