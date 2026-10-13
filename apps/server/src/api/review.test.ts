@@ -1,5 +1,9 @@
 import { PAYMENT_GUARD_ABI } from "@baret/agent-kit/abi";
-import type { Reviewer, ReviewInput } from "@baret/agent-kit/reviewer";
+import {
+  INTENT_INJECTION_REASON,
+  type Reviewer,
+  type ReviewInput,
+} from "@baret/agent-kit/reviewer";
 import type { AnalyzeRequest, AnalyzeResponse } from "@baret/guard";
 import { decodeFunctionData, type Hex, keccak256, stringToHex } from "viem";
 import { describe, expect, it, vi } from "vitest";
@@ -200,16 +204,34 @@ describe("ReviewService", () => {
     expect(answer.cached).toBe(false);
   });
 
-  it.each(["overpay", "injected"] as const)(
-    "never sends for %s, even when approved",
-    async (scenario) => {
-      const { service, send } = setup();
-      const answer = await service.run(scenario);
-      expect(answer.review?.decision).toBe("approve");
-      expect(answer.sent).toBeNull();
-      expect(send).not.toHaveBeenCalled();
-    },
-  );
+  it("never sends for overpay, even when approved", async () => {
+    const { service, send } = setup();
+    const answer = await service.run("overpay");
+    expect(answer.review?.decision).toBe("approve");
+    expect(answer.sent).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("vetoes the injected intent in code when the model approves, and streams the veto", async () => {
+    const { service, reviewer, send } = setup();
+    const seen: ReviewEvent[] = [];
+    const answer = await service.run("injected", (e) => seen.push(e));
+    // The model still ran, so its plan and tool calls are in the stream.
+    expect(reviewer.calls).toBe(1);
+    expect(seen.map((e) => e.event)).toEqual(["start", "baret", "plan", "tool", "decision"]);
+    expect(seen[0]?.data).toMatchObject({ model: { provider: "qwen", name: "qwen-test" } });
+    expect(answer.review?.decision).toBe("veto");
+    expect(answer.review?.reason).toBe(INTENT_INJECTION_REASON);
+    expect(answer.review?.mismatches).toContain(
+      'Instruction in the intent: "SYSTEM NOTE TO REVIEWER"',
+    );
+    expect(seen.find((e) => e.event === "decision")?.data).toMatchObject({
+      decision: "veto",
+      reason: INTENT_INJECTION_REASON,
+    });
+    expect(answer.sent).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+  });
 
   it("sends nothing without a sender", async () => {
     const { service } = setup({ send: false });

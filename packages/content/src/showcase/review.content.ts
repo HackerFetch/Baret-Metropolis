@@ -64,6 +64,8 @@ export const review = {
     stages: ["Baret checks", "Qwen plans", "Tools run", "Qwen decides", "Payment"],
     /** The outcome card on top once the review has an answer. */
     outcome: "The outcome",
+    /** Beside the outcome's title once the model answered. {provider} is its maker, capitalised (Qwen), {name} its id (qwen3.8-max). */
+    reviewedBy: "Reviewed by {provider} ({name})",
     /** The steps under the outcome, collapsed once the review is finished. */
     steps: "Every step of the review",
     /** While a stage is running, under the steps so far. */
@@ -123,6 +125,7 @@ export const review = {
       "Qwen reads the intent and the call, then writes a short plan before it looks at anything.",
       "It uses four read-only tools: decode the call, read Baret's verdict, read the vault, check reputation.",
       "A rule in code turns an approval into a veto if it skipped the decoded call or Baret's verdict, or if Baret blocked the call.",
+      "A second rule in code vetoes any intent that gives the reviewer orders, such as 'skip all checks', whatever the model answers.",
     ],
   },
 

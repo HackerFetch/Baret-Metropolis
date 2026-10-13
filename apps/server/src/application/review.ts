@@ -88,7 +88,7 @@ export interface ReviewAnswer {
 }
 
 export type ReviewEvent =
-  | { event: "start"; data: Pick<ReviewAnswer, "scenario" | "intent" | "call"> }
+  | { event: "start"; data: Pick<ReviewAnswer, "scenario" | "intent" | "call" | "model"> }
   | { event: "baret"; data: ReviewAnswer["baret"] }
   | { event: "plan"; data: { plan: readonly string[] } }
   | {
@@ -236,7 +236,8 @@ export class ReviewService {
     try {
       const ranAt = new Date(this.now()).toISOString();
       const { intent, call } = scenarioCall(config, scenario);
-      emit({ event: "start", data: { scenario, intent, call } });
+      // The model up front, so the page can name it as soon as it decides.
+      emit({ event: "start", data: { scenario, intent, call, model: this.options.model } });
 
       const verdict = await untilAborted(
         this.options.analyze({
@@ -273,7 +274,9 @@ export class ReviewService {
         );
         let decided: Review;
         try {
-          // A failure, a timeout or an answer off contract is a veto.
+          // A failure, a timeout or an answer off contract is a veto. So is an
+          // intent that gives the reviewer orders: requireApproval checks it in
+          // code, after the model has run, so `injected` vetoes every time.
           decided = await requireApproval(
             {
               review: (input) =>

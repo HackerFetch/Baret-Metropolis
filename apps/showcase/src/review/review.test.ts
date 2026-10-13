@@ -4,7 +4,7 @@ import { progressLine } from "../pages/ReviewPage.js";
 import { IDLE, reduce, type TimelineAction, type TimelineState } from "./reducer.js";
 import { fallbackFor, RECORDED, REVIEW_URL, runReview } from "./run.js";
 import { readSse, SseParser } from "./sse.js";
-import { shortArguments, toolSummary } from "./Timeline.js";
+import { reviewedBy, shortArguments, toolSummary } from "./Timeline.js";
 
 function streamOf(chunks: readonly string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -341,5 +341,41 @@ describe("tool lines", () => {
     );
     const step = RECORDED.honest.review?.transcript?.steps?.[0];
     expect(step && toolSummary(step)).toBe("pay: amount 100000 to 0x1365...ff49");
+  });
+});
+
+describe("the model in the outcome's header", () => {
+  it("reads 'Reviewed by Qwen (qwen3.8-max)', and nothing until a model is named", () => {
+    expect(reviewedBy({ provider: "qwen", name: "qwen3.8-max" })).toBe(
+      "Reviewed by Qwen (qwen3.8-max)",
+    );
+    expect(copy.timeline.reviewedBy).toBe("Reviewed by {provider} ({name})");
+    expect(reviewedBy(null)).toBeNull();
+    expect(reviewedBy({ provider: "", name: "qwen3.8-max" })).toBeNull();
+  });
+
+  it("knows the model from `start`, before the decision, and keeps it through `done`", () => {
+    const started = replay([
+      { type: "begin", scenario: "injected" },
+      {
+        type: "event",
+        event: "start",
+        data: { intent: "x", call: {}, model: { provider: "qwen", name: "qwen3.8-max" } },
+      },
+    ]);
+    expect(started.model).toEqual({ provider: "qwen", name: "qwen3.8-max" });
+    const oldServer = replay([
+      { type: "begin", scenario: "injected" },
+      { type: "event", event: "start", data: { intent: "x" } },
+    ]);
+    expect(oldServer.model).toBeNull();
+  });
+
+  it("names the model of every recorded run", () => {
+    for (const run of Object.values(RECORDED)) {
+      expect(reviewedBy(reduce(IDLE, { type: "recorded", answer: run }).model)).toBe(
+        "Reviewed by Qwen (qwen3.8-max)",
+      );
+    }
   });
 });

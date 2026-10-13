@@ -19,6 +19,16 @@ function fill(text: string, values: Record<string, string>): string {
   return text.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match);
 }
 
+/**
+ * "Reviewed by Qwen (qwen3.8-max)": the model the answer names, for the
+ * outcome's header. Null until the answer names one.
+ */
+export function reviewedBy(model: TimelineState["model"]): string | null {
+  if (!model?.provider || !model.name) return null;
+  const provider = `${model.provider.charAt(0).toUpperCase()}${model.provider.slice(1)}`;
+  return fill(copy.reviewedBy, { provider, name: model.name });
+}
+
 function verdictKind(decision: string): VerdictKind {
   if (decision === "safe" || decision === "caution" || decision === "blocked") return decision;
   return "blocked";
@@ -254,6 +264,8 @@ function Outcome({ state }: { state: TimelineState }): JSX.Element | null {
   if (!state.decision && !(stopped && state.phase === "done")) return null;
   const approve = state.decision?.decision === "approve";
   const sent = state.phase === "done" ? state.sent : null;
+  // Only when the model was asked: a call Baret stopped never reached it.
+  const byline = state.decision ? reviewedBy(state.model) : null;
   return (
     <section className="grid gap-3 border border-[color:var(--rule-strong)] bg-[color:var(--surface)] p-5 motion-safe:animate-[review-rise_320ms_ease-out] md:p-6">
       <style>
@@ -261,7 +273,10 @@ function Outcome({ state }: { state: TimelineState }): JSX.Element | null {
           "@keyframes review-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"
         }
       </style>
-      <h3 className={T.label}>{copy.outcome}</h3>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3 className={T.label}>{copy.outcome}</h3>
+        {byline ? <p className={`${T.small} break-words`}>{byline}</p> : null}
+      </div>
       {state.decision ? (
         <Verdict
           kind={approve ? "safe" : "blocked"}

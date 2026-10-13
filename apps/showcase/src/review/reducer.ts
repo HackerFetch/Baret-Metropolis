@@ -211,6 +211,8 @@ export function reduce(state: TimelineState, action: TimelineAction): TimelineSt
             ...state,
             intent: typeof data.intent === "string" ? data.intent : state.intent,
             call: isRecord(data.call) ? (data.call as unknown as ReviewCall) : state.call,
+            // Sent up front since 2026-10-14; `done` names it again.
+            model: modelOf(data.model) ?? state.model,
           };
         case "baret":
           return {
