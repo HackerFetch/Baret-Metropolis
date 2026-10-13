@@ -108,6 +108,6 @@ Needs the CRE CLI (`cre login`), Bun ≥ 1.2.21, `cast`, and `workflows/.env` (E
 
 | Reviewer | What to check | State |
 |---|---|---|
-| Ezgin (E8) | The adopters and the post-event plan in the pitch; the CRE and Cleanverse clips; nothing claimed that is not live | pitch rewritten by Ezgin 2026-10-13 (the problem, who needs it, the plan, the closing line; no mainnet step); every hash, address and live claim of `TEXTS.md` checked on chain and on the live API the same day; the CRE and Cleanverse clips still to watch once recorded |
+| Ezgin (E8) | The adopters and the post-event plan in the pitch; the CRE and Cleanverse clips; nothing claimed that is not live | pitch rewritten by Ezgin 2026-10-13 (the problem, who needs it, the plan, the closing line; no mainnet step); every hash, address and live claim of `TEXTS.md` checked on chain and on the live API the same day; the CRE clip recorded by Ezgin the same day (`workflows/README.md`, "The run in the video"); the Cleanverse clip still to watch once recorded |
 | Meriç | The on-screen words match the sites; the KIMI and Qwen shots | done 2026-10-10: every on-screen string is in the live copy; five notes under H11 in `tasks/FOR_HALE.md` |
 | Hale (H3) | The **[H3]** lines, after the MetaMask rehearsal | open |

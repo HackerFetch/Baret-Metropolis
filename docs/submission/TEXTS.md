@@ -140,7 +140,9 @@ Common links, used below:
 >
 > Simulated with the CRE CLI with a real write on Monad testnet: ten addresses flagged in tx `0xa1b9799281003c7a6d9113007540f31735033d6fba125fa20619395b16e359e8`. Afterwards the live API blocks a transfer to the first of them (`0xa8f3762b03ae73cbbdb9173d3537c632628727a4`, `KNOWN_MALICIOUS_ADDRESS`, reason `SCAMSNIFFER_BLACKLIST`, still Blocked on 2026-10-10) and passes the same transfer to an address not on the feed.
 
-**[gate]** the demo video (`docs/submission/SCRIPTS.md` 3.2; needs Ezgin's `workflows/.env` and `cre login`).
+**The run the video shows (2026-10-13):** tx `0x5d72012bb7bed6dbbe6ade3dd40d3a4243137b2482dc1205b4cbbd5f39fb1175` (block 70574558), ten entries; the live API blocks a transfer to the first of them, `0x17504785059123e758f1cd2bfa00ab45b613f9e5`. Add this hash to the text when the video's link goes into the form, so the evidence and the video are the same run.
+
+**[gate]** the demo video: recorded by Ezgin on 2026-10-13 and sent to Hale; open until Hale has uploaded it and has the link.
 
 ---
 
