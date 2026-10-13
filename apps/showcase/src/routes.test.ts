@@ -29,6 +29,7 @@ describe("registry", () => {
       "Showcase",
       "Agents",
       "Docs",
+      "Partners",
       "Install",
     ]);
   });

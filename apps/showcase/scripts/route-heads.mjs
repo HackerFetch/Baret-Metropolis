@@ -20,7 +20,14 @@
  */
 import { appendFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { partners } from "../../../packages/content/src/showcase/partners.content.ts";
 import { headFor, replaceHead, stripHeadMarks } from "./head.mjs";
+
+/**
+ * Descriptions of routes that head.mjs does not pass in `descriptions`
+ * (the partners page came after it), so their unfurl is their own.
+ */
+const OWN_DESCRIPTIONS = { partners: partners.meta.description };
 
 /** `{ key, path, title, group }` for each registry entry with a literal path and title. */
 function registryRoutes(source) {
@@ -135,7 +142,7 @@ export async function writeRouteHeads({
     await writeFile(join(dir, "index.html"), stripHeadMarks(replaceHead(shell, head)));
   };
   for (const route of routes) {
-    const own = descriptions?.[route.key] ?? description;
+    const own = descriptions?.[route.key] ?? OWN_DESCRIPTIONS[route.key] ?? description;
     const preload = chunkPreloads(manifest, route.module, route.key);
     await write(route, headFor({ ...route, description: own, site, preload }));
   }

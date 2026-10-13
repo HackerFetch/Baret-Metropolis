@@ -43,6 +43,13 @@ export const routes = defineRoutes({
     group: "marketing",
     load: () => import("./pages/DocsPage.js"),
   },
+  partners: {
+    path: "/partners",
+    title: "Baret partners",
+    label: "Partners",
+    group: "marketing",
+    load: () => import("./partners/PartnersPage.js"),
+  },
   install: {
     path: "/install",
     title: "Install Baret",

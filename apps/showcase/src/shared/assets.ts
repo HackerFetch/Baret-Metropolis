@@ -13,6 +13,7 @@
 import { avif, type ImgAsset, widths } from "@baret/web-ui/lib/img";
 
 export type { ImgAsset } from "@baret/web-ui/lib/img";
+export { PARTNER_LOGOS } from "../partners/logos.js";
 
 /**
  * The `sizes` each route's LCP picture renders with. scripts/head.mjs writes

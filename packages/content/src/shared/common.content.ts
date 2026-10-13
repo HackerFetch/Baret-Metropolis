@@ -244,9 +244,18 @@ export const common = {
       { label: "Showcase", href: "/showcase" },
       { label: "Agents", href: "/agents" },
       { label: "Docs", href: "/docs" },
+      { label: "Partners", href: "/partners" },
       { label: "Install", href: "/install" },
     ],
     cta: { label: "Install the extension", href: "/install" },
+    /** The header's one primary action: the web wallet, on its own domain. */
+    wallet: { label: "Open wallet", short: "Wallet", href: "https://wallet.usebaret.com" },
+    /** The logo always leads to the live site's front page. */
+    home: { label: "Baret home", href: "https://usebaret.com" },
+    /** The phone menu button and its sheet. */
+    menu: { open: "Open the menu", close: "Close the menu", label: "Menu" },
+    /** Read after a link that opens a new tab, for screen readers. */
+    newTab: "(opens in a new tab)",
   },
 
   /**
@@ -275,6 +284,7 @@ export const common = {
       {
         title: "Project",
         links: [
+          { label: "Partners", href: "/partners" },
           { label: "How it works", href: "/docs" },
           { label: "Source", href: "https://github.com/HackerFetch/Baret-Metropolis" },
         ],

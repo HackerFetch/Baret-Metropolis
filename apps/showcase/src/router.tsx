@@ -29,6 +29,10 @@ const HEAD: Partial<Record<keyof typeof routes, () => Promise<Head>>> = {
     import("../../../packages/content/src/showcase/docs.content.js").then(({ docs }) => ({
       description: docs.meta.description,
     })),
+  partners: () =>
+    import("../../../packages/content/src/showcase/partners.content.js").then(({ partners }) => ({
+      description: partners.meta.description,
+    })),
   install: () =>
     import("../../../packages/content/src/showcase/install.content.js").then(({ install }) => ({
       description: install.meta.description,

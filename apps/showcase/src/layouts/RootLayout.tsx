@@ -1,22 +1,20 @@
 import { common, home, hub } from "@baret/content";
-import { navRoutes } from "@baret/routes";
-import { Mark } from "@baret/ui";
 import { Tag } from "@baret/ui/primitives/Tag";
 import { LandingMotion } from "@baret/web-ui/components/LandingMotion";
-import { LinkButton } from "@baret/web-ui/components/LinkButton";
 import { Signature } from "@baret/web-ui/components/Signature";
-import { useMotionValueEvent, useScroll } from "motion/react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   Link,
-  NavLink,
   ScrollRestoration,
   useLocation,
   useMatches,
   useOutlet,
   useRouteError,
 } from "react-router";
-import { DEMO_PATHS, routes, warm } from "../routes.js";
+import { DEMO_PATHS, routes } from "../routes.js";
+import { ROW } from "./nav.js";
+import { SiteFooter } from "./SiteFooter.js";
+import { SiteHeader } from "./SiteHeader.js";
 
 /**
  * The marketing chrome: a sticky header and a three-column footer.
@@ -40,18 +38,6 @@ import { DEMO_PATHS, routes, warm } from "../routes.js";
  * the two never fight. A hash in the URL scrolls to its target, which lands
  * under the 56 px header through the scroll-padding in tokens.css.
  */
-
-/** The header text links. Showcase is the header action instead (IMPROVE D2). */
-const NAV = navRoutes(routes, "marketing").filter((route) => route.key !== "showcase");
-
-/**
- * Every marketing page sits on the landing's frame (FRAME in @baret/web-ui
- * lib/layout), so the header and the footer share its width and gutters.
- */
-const ROW = "max-w-[1276px] px-4 md:px-8 lg:px-12";
-
-/** Just under the 56 px header: the line whose band decides the header tone. */
-const PROBE_Y = 57;
 
 /**
  * React Router keys the first entry of every document "default", so a fresh
@@ -135,14 +121,6 @@ function usePageHead() {
     own: meta.description,
     description: meta.description ?? head.description,
   };
-}
-
-/** True when a [data-band="dark"] element covers the line just under the header. */
-function darkBandUnderHeader(): boolean {
-  return Array.from(document.querySelectorAll<HTMLElement>('[data-band="dark"]')).some((el) => {
-    const r = el.getBoundingClientRect();
-    return r.top <= PROBE_Y && r.bottom > PROBE_Y;
-  });
 }
 
 export function Component() {
@@ -230,7 +208,7 @@ function Chrome() {
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         {outlet}
       </main>
-      {outlet ? <SiteFooter row={ROW} /> : null}
+      {outlet ? <SiteFooter /> : null}
     </div>
   );
 }
@@ -290,218 +268,6 @@ export function headFor(raw: string): {
     noindex: demo || !match || match.group === "utility",
     demo,
   };
-}
-
-/**
- * The header is always an opaque plate (BRAND Mark and Imagery: no glass, no mark on
- * a bare photo). It takes the colour of the band beneath it: graphite over a
- * [data-band="dark"] surface, the theme ground everywhere else.
- */
-function SiteHeader({ pathname }: { pathname: string }) {
-  const { dark, settled } = useDarkBand(pathname);
-  const row = ROW;
-  const tone = dark
-    ? "border-chalk/12 bg-graphite text-chalk"
-    : "border-[color:var(--rule)] bg-[color:var(--ground)] text-[color:var(--fg)]";
-
-  return (
-    <header
-      data-band={dark ? "dark" : "light"}
-      className={`sticky top-0 z-30 h-14 border-b ${settled ? "transition-colors duration-150 ease-out" : ""} ${tone}`}
-    >
-      <div
-        // The row has a fixed content width (wordmark, three links, the action),
-        // so it steps down with the viewport: link padding tightens below 420
-        // and 390, a 4 px gap from 360 keeps the links apart, and under 375 the
-        // wordmark goes visually hidden (the mark stays in a 44 px hit area,
-        // the link keeps its name). The action's right edge then always
-        // lands on the 16 px gutter, with no horizontal scroll from 320 up.
-        className={`mx-auto flex h-full w-full items-center justify-between gap-2 min-[420px]:gap-3 md:gap-4 ${row} max-[359px]:px-3`}
-      >
-        <Link
-          to={routes.home.path}
-          viewTransition
-          className="flex min-h-11 min-w-11 shrink-0 items-center gap-2"
-        >
-          {/* Decorative: the wordmark (sr-only on narrow phones) names the link once. */}
-          <Mark decorative size={22} slit={dark ? "var(--color-graphite)" : "var(--ground)"} />
-          <span className="font-stencil text-lg uppercase tracking-[0.04em] max-[374px]:sr-only md:text-xl">
-            {common.brand.wordmark}
-          </span>
-        </Link>
-
-        <nav
-          aria-label={common.nav.label}
-          className="flex min-w-0 items-center min-[360px]:gap-1 md:gap-0"
-        >
-          {NAV.map((route) => (
-            <NavLink
-              key={route.key}
-              to={route.path}
-              data-nav-item=""
-              viewTransition
-              onPointerEnter={() => warm(route.key)}
-              onFocus={() => warm(route.key)}
-              className={({ isActive }) => navClass(isActive, dark)}
-            >
-              {route.label}
-            </NavLink>
-          ))}
-          <HeaderAction dark={dark} current={pathname === routes.showcase.path} />
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-/**
- * The one persistent action, top right (IMPROVE D2): the Showcase link as a
- * small outline button. It follows the header tone but is never orange, so
- * the hero and closing buttons stay the only orange in their viewport. The
- * long label from 768 px, the short one on phones; the hidden copy is
- * display:none, so it is out of the tab order and the accessibility tree.
- * On /showcase itself it is the current page, so it becomes a nav item with
- * the active border and aria-current instead of a call to action.
- */
-function HeaderAction({ dark, current }: { dark: boolean; current: boolean }) {
-  const variant = dark ? "ghostInverse" : "ghost";
-  const href = routes.showcase.path;
-  if (current) {
-    return (
-      <NavLink
-        to={href}
-        data-nav-item=""
-        viewTransition
-        className={`${navClass(true, dark)} min-[360px]:ml-1 md:ml-3`}
-      >
-        {routes.showcase.label}
-      </NavLink>
-    );
-  }
-  return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: warms the chunk on intent; the link inside is the control
-    <span
-      className="inline-flex min-[360px]:ml-1 md:ml-3"
-      onPointerEnter={() => warm("showcase")}
-      onFocus={() => warm("showcase")}
-    >
-      <span className="hidden md:inline-flex">
-        <LinkButton href={href} label={common.actions.openShowcase} variant={variant} size="sm" />
-      </span>
-      <span className="inline-flex md:hidden">
-        <LinkButton href={href} label={routes.showcase.label} variant={variant} size="sm" />
-      </span>
-    </span>
-  );
-}
-
-/**
- * 12 px and chalk/72 idle on ink (B7). Only colours transition, never the
- * outline, so the focus ring appears at once (F5). data-nav-item is the
- * forced-colors hook in tokens.css (F4).
- */
-function navClass(active: boolean, dark: boolean): string {
-  const base =
-    "inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 px-1 font-mono min-[390px]:px-1.5 min-[420px]:px-2 text-[12px] uppercase tracking-[0.04em] transition-[color,border-color,background-color] duration-150 hover:border-[color:var(--accent)] focus-visible:outline-offset-0 md:px-3 md:tracking-[0.06em]";
-  if (active) {
-    return `${base} ${dark ? "border-chalk text-chalk" : "border-[color:var(--fg)] text-[color:var(--fg)]"}`;
-  }
-  return `${base} border-transparent ${dark ? "text-chalk/72 hover:text-chalk" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"}`;
-}
-
-/**
- * Probes on scroll, on resize and whenever the page tree changes (the landing
- * chunk mounts lazily after the header). No DOM access during render.
- */
-function useDarkBand(pathname: string): { dark: boolean; settled: boolean } {
-  const { scrollY } = useScroll();
-  // The landing always opens on the dark opener, so seed from the route and
-  // the first paint is already graphite instead of flashing the ground plate.
-  const [dark, setDark] = useState(pathname === routes.home.path);
-  // The colour transition only runs once the first probe has settled the tone.
-  const [settled, setSettled] = useState(false);
-
-  useMotionValueEvent(scrollY, "change", () => {
-    const next = darkBandUnderHeader();
-    setDark((d) => (d === next ? d : next));
-  });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-probe on every route change
-  useEffect(() => {
-    const probe = () => {
-      const next = darkBandUnderHeader();
-      setDark((d) => (d === next ? d : next));
-    };
-    probe();
-    setSettled(true);
-    window.addEventListener("resize", probe);
-    const main = document.querySelector("main");
-    const observer = new MutationObserver(probe);
-    if (main) observer.observe(main, { childList: true, subtree: true });
-    return () => {
-      window.removeEventListener("resize", probe);
-      observer.disconnect();
-    };
-  }, [pathname]);
-
-  return { dark, settled };
-}
-
-function SiteFooter({ row }: { row: string }) {
-  return (
-    <footer className="border-t border-[color:var(--rule-strong)]">
-      <div
-        className={`mx-auto grid w-full grid-cols-3 gap-x-4 gap-y-6 py-8 sm:grid-cols-[1.4fr_1fr_1fr_1fr] sm:gap-8 sm:py-10 ${row}`}
-      >
-        <div className="col-span-3 sm:col-span-1">
-          <div className="mb-3 flex items-center gap-2.5">
-            <Mark decorative size={24} slit="var(--ground)" />
-            <span className="font-stencil text-lg uppercase tracking-[0.04em]">
-              {common.brand.wordmark}
-            </span>
-          </div>
-          <p className="font-display text-display-m uppercase">{common.footer.tagline}</p>
-          <p className="mt-2 max-w-[38ch] text-sm text-[color:var(--fg-muted)]">
-            {common.footer.note}
-          </p>
-        </div>
-
-        {common.footer.groups.map((group) => (
-          <nav key={group.title} aria-label={group.title} className="min-w-0">
-            <h2 className="mb-2.5 truncate border-b border-[color:var(--rule)] pb-2 font-mono text-label uppercase text-[color:var(--fg-muted)]">
-              {group.title}
-            </h2>
-            <ul className="grid">
-              {group.links.map((link) => (
-                <li key={link.href}>
-                  <FooterLink href={link.href} label={link.label} />
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
-      </div>
-    </footer>
-  );
-}
-
-/** Footer hrefs come from the copy, so some of them leave the site. */
-function FooterLink({ href, label }: { href: string; label: string }) {
-  const className =
-    "inline-flex min-h-11 min-w-11 items-center text-sm text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]";
-
-  if (href.startsWith("http")) {
-    return (
-      <a href={href} className={className} rel="noreferrer">
-        {label}
-      </a>
-    );
-  }
-  return (
-    <Link to={href} viewTransition className={className}>
-      {label}
-    </Link>
-  );
 }
 
 /**
