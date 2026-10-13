@@ -10,13 +10,20 @@ describe("wallet registry", () => {
   it("lists seven screens in the sidebar", () => {
     expect(navRoutes(routes, "app").map((route) => route.label)).toEqual([
       "Home",
-      "Send",
-      "Receive",
       "Activity",
-      "Rules",
+      "Sites",
+      "Policies",
       "Agents",
+      "x402 Console",
       "Settings",
     ]);
+  });
+
+  it("keeps Send and Receive reachable as Home's actions", () => {
+    expect(routes.send.path).toBe("/send");
+    expect(routes.receive.path).toBe("/receive");
+    expect(routes.send.hidden).toBe(true);
+    expect(routes.receive.hidden).toBe(true);
   });
 
   /**

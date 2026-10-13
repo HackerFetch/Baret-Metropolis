@@ -8,7 +8,7 @@ const { labels } = walletFrame.nav;
  * Every screen the standalone wallet serves.
  *
  * Three groups, and the group decides where a screen renders:
- *   app      inside the sidebar layout, and listed in the sidebar
+ *   app      inside the sidebar layout, and listed in the sidebar unless hidden
  *   popup    opened in its own window by a dApp, so no sidebar and no nav
  *   setup    full screen, one step at a time, no way out until it is done
  *
@@ -22,11 +22,13 @@ export const routes = defineRoutes({
     group: "app",
     load: () => import("./pages/HomePage.js"),
   },
+  // Send and Receive are Home's two main actions, so they leave the sidebar.
   send: {
     path: "/send",
     title: titles.send,
     label: labels.send,
     group: "app",
+    hidden: true,
     load: () => import("./pages/SendPage.js"),
   },
   receive: {
@@ -34,6 +36,7 @@ export const routes = defineRoutes({
     title: titles.receive,
     label: labels.receive,
     group: "app",
+    hidden: true,
     load: () => import("./pages/ReceivePage.js"),
   },
   history: {
@@ -42,6 +45,13 @@ export const routes = defineRoutes({
     label: labels.history,
     group: "app",
     load: () => import("./pages/HistoryPage.js"),
+  },
+  sites: {
+    path: "/sites",
+    title: titles.sites,
+    label: labels.sites,
+    group: "app",
+    load: () => import("./pages/SitesPage.js"),
   },
   policies: {
     path: "/policies",
@@ -56,6 +66,13 @@ export const routes = defineRoutes({
     label: labels.delegation,
     group: "app",
     load: () => import("./pages/DelegationPage.js"),
+  },
+  x402: {
+    path: "/x402",
+    title: titles.x402,
+    label: labels.x402,
+    group: "app",
+    load: () => import("./pages/X402Page.js"),
   },
   settings: {
     path: "/settings",

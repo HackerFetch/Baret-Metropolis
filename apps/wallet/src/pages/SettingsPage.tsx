@@ -57,7 +57,13 @@ function SettingRow({
         ) : (
           <p className="text-base font-medium text-[color:var(--fg)]">
             {href ? (
-              <a href={href} rel="noreferrer" className={LINK}>
+              <a
+                href={href}
+                // It leaves the wallet: a new tab keeps this session open.
+                target="_blank"
+                rel="noopener noreferrer"
+                className={LINK}
+              >
                 {label}
               </a>
             ) : (

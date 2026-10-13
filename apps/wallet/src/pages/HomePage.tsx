@@ -14,14 +14,13 @@ import { useCountUp } from "@baret/web-ui/lib/useCountUp";
 import { counted, fill } from "@baret/web-ui/lib/util";
 import { type JSX, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { WALLET_ART } from "../assets.js";
 import { useHistoryRead, useLive } from "../live/live.js";
 import { useWatch } from "../live/useWatch.js";
 import { routes } from "../routes.js";
 
 /**
- * Home: the account, its balance, the three ways out (send, receive, the
- * agent), then what it holds, what happened lately, what can still spend
+ * Home: the account and its balance first, in one card with the two main
+ * actions, Send and Receive (the agent is in the sidebar), then what it holds, what happened lately, what can still spend
  * from it, and what needs a look. One banner, the most urgent of three.
  *
  * Testnet tokens have no price, so the USD estimate says so instead of
@@ -196,6 +195,9 @@ export function Component() {
   const balancesLoading = live !== null && state.status.balances === "loading";
   const analyzerLoading = live !== null && state.status.analyzer === "loading";
   const activityLoading = live !== null && state.status.activity === "loading";
+  const analyzerDown = !analyzerReady && !analyzerLoading;
+  // The faucet link shows once: the setup panel carries it, else the no-funds banner.
+  const noFundsBanner = !analyzerDown && noFunds && !showSetup;
   // Live: the vault's history from the indexer joins the wallet's own log.
   useHistoryRead();
   const { polling } = useWatch(live, showSetup || noFunds);
@@ -220,17 +222,7 @@ export function Component() {
   }
 
   return (
-    <Screen
-      title={state.accountName}
-      picture={WALLET_ART.home}
-      actions={
-        <>
-          <LinkButton href={routes.send.path} label={actions.send} variant="primary" />
-          <LinkButton href={routes.receive.path} label={actions.receive} />
-          <LinkButton href={routes.delegation.path} label={actions.agents} />
-        </>
-      }
-    >
+    <Screen title={state.accountName}>
       <div className="grid gap-12">
         {showSetup ? (
           <Setup
@@ -246,15 +238,16 @@ export function Component() {
         ) : null}
 
         {/* One banner, the most urgent: Baret unreachable, then no MON for a fee. */}
-        {!analyzerReady && !analyzerLoading ? (
+        {analyzerDown ? (
           <Problem body={banners.analyzerDown} />
-        ) : noFunds ? (
+        ) : noFundsBanner ? (
+          // The setup panel already carries the faucet; the banner stands in once it is hidden.
           <Problem
             body={banners.noFunds}
             action={
               <div className="grid gap-2">
                 <FaucetLink />
-                {polling && !showSetup ? (
+                {polling ? (
                   <p role="status" className={T.small}>
                     {setup.watching}
                   </p>
@@ -264,17 +257,42 @@ export function Component() {
           />
         ) : null}
 
-        <div className="grid gap-6 md:grid-cols-12 md:items-end md:gap-8">
-          <div className="md:col-span-7">
+        {/* The balance first, with the two things a wallet is for beside it. */}
+        <section
+          aria-label={balance.label}
+          className="relative grid gap-6 overflow-hidden border border-[color:var(--rule)] bg-[color:var(--ground-deep)] p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:gap-8 md:p-8"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-1 bg-[color:var(--accent)]"
+          />
+          <div className="grid gap-4">
             <Balance loaded={balancesReady} loading={balancesLoading} mon={mon} />
+            <p className="flex flex-wrap items-center gap-3">
+              <Tag tone="network" size="sm">
+                {common.networks.testnet.label}
+              </Tag>
+              <span className={T.small}>{banners.testnet}</span>
+            </p>
           </div>
-          <p className="flex flex-wrap items-center gap-3 md:col-span-5">
-            <Tag tone="network" size="sm">
-              {common.networks.testnet.label}
-            </Tag>
-            <span className={T.small}>{banners.testnet}</span>
-          </p>
-        </div>
+          <div className="grid grid-cols-2 gap-3 md:w-52 md:grid-cols-1 md:[&>a]:w-full md:[&>a>span]:w-full">
+            <LinkButton
+              href={routes.send.path}
+              label={actions.send}
+              variant="primary"
+              size="lg"
+              icon="arrow-up-right"
+              fullOnPhone
+            />
+            <LinkButton
+              href={routes.receive.path}
+              label={actions.receive}
+              size="lg"
+              icon="arrow-down"
+              fullOnPhone
+            />
+          </div>
+        </section>
 
         <Block title={assets.title}>
           {balancesLoading ? (
@@ -282,7 +300,11 @@ export function Component() {
           ) : !balancesReady ? (
             <Problem body={balance.error} />
           ) : state.assets.length === 0 ? (
-            <Empty title={assets.empty.title} body={assets.empty.body} action={<FaucetLink />} />
+            <Empty
+              title={assets.empty.title}
+              body={assets.empty.body}
+              action={showSetup || noFundsBanner ? undefined : <FaucetLink />}
+            />
           ) : (
             <table className="w-full border-collapse">
               <caption className="sr-only">{assets.title}</caption>

@@ -6,7 +6,19 @@ import { Brand } from "@baret/wallet-ui/components/Brand";
 import { useWallet } from "@baret/wallet-ui/data/store";
 import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { T } from "@baret/web-ui/lib/type";
-import { Menu, X } from "lucide-react";
+import {
+  Activity,
+  Bot,
+  Globe,
+  House,
+  Lock,
+  type LucideIcon,
+  Menu,
+  Radio,
+  Settings,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { type JSX, useEffect, useId, useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { SampleNotice } from "../components/SampleNotice.js";
@@ -17,20 +29,40 @@ import { Locked } from "./Locked.js";
 
 const NAV = navRoutes(routes, "app");
 
+/** One icon per sidebar screen, so the list scans at a glance. */
+const ICONS: Record<string, LucideIcon> = {
+  home: House,
+  history: Activity,
+  sites: Globe,
+  policies: ShieldCheck,
+  delegation: Bot,
+  x402: Radio,
+  settings: Settings,
+};
+
+/** The sidebar in three groups: the wallet, the agents, then settings on its own. */
+const GROUPS: ReadonlyArray<{ label: string | null; keys: readonly string[] }> = [
+  { label: walletFrame.nav.groups.wallet, keys: ["home", "history", "sites", "policies"] },
+  { label: walletFrame.nav.groups.agents, keys: ["delegation", "x402"] },
+  { label: null, keys: ["settings"] },
+];
+
 /**
- * The frame of every app screen. From 1024 px a sidebar: the mark and the
- * network, the screens, then the account line and the lock at the foot. Below
- * it, a top bar with a menu that opens in place (a native disclosure button,
- * closed again by any navigation or Escape, and scrolling inside the viewport
- * when it is taller than the screen). On the sample, the sample notice sits
- * above every screen, since nothing there is sent. On live, the session line
- * sits above the lock (and under the phone header), so the end of prompt-free
+ * The frame of every app screen. From 1024 px a sidebar: the mark (Brand, a
+ * link to the Baret site), the network, the screens in groups
+ * with an icon each, then the account and the lock at the foot. Below it, a
+ * top bar with a menu that opens in place (a native disclosure button, closed
+ * again by any navigation or Escape, and scrolling inside the viewport when
+ * it is taller than the screen). On the sample, the sample notice sits above
+ * every screen, since nothing there is sent. On live, the session line sits
+ * above the lock (and under the phone header), so the end of prompt-free
  * signing shows on every screen. A skip link is the first stop, past the
  * sidebar to the screen itself.
  *
- * The active screen is marked in ink, not orange: orange is kept for each
- * screen's own main action. In forced colours the rule is drawn in Highlight
- * and the inactive rules disappear, so the current screen still shows. The
+ * Moving between the wallet's own screens stays in this tab: a new tab is a
+ * new document, which would ask for the passkey again. The active screen is
+ * marked in ink, not orange: orange is kept for each screen's own main
+ * action. In forced colours the current screen is drawn in Highlight. The
  * popup and setup routes render outside this.
  */
 
@@ -38,24 +70,56 @@ const NAV = navRoutes(routes, "app");
 const RISE =
   "transition-[opacity,translate] duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] starting:translate-y-2 starting:opacity-0 motion-reduce:transition-none";
 
+const FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+
 function Nav(): JSX.Element {
+  const byKey = new Map(NAV.map((route) => [route.key as string, route]));
   return (
-    <nav aria-label={walletFrame.nav.label}>
-      <ul className="grid">
-        {NAV.map((route) => (
-          <li key={route.key}>
-            <NavLink
-              to={route.path}
-              end={route.path === "/"}
-              className={({ isActive }) =>
-                `-ml-px flex min-h-11 items-center border-l-2 pl-4 font-display text-lg font-bold uppercase tracking-[0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] ${isActive ? "border-[color:var(--fg)] text-[color:var(--fg)] forced-colors:border-[Highlight]" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] forced-colors:border-[Canvas]"}`
-              }
-            >
-              {route.label}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+    <nav aria-label={walletFrame.nav.label} className="grid gap-6">
+      {GROUPS.map((group) => {
+        const items = group.keys.flatMap((key) => {
+          const route = byKey.get(key);
+          return route ? [route] : [];
+        });
+        return (
+          <div
+            key={group.label ?? "rest"}
+            className={`grid gap-1 ${group.label ? "" : "border-t border-[color:var(--rule)] pt-4"}`}
+          >
+            {group.label ? <p className={`${T.label} px-3 pb-1`}>{group.label}</p> : null}
+            <ul className="grid gap-0.5">
+              {items.map((route) => {
+                const Icon = ICONS[route.key] ?? House;
+                return (
+                  <li key={route.key}>
+                    <NavLink
+                      to={route.path}
+                      end={route.path === "/"}
+                      className={({ isActive }) =>
+                        `flex min-h-11 items-center gap-3 border-l-2 px-3 text-[0.9375rem] font-medium transition-colors ${FOCUS} ${isActive ? "border-[color:var(--fg)] bg-[color:var(--ground)] text-[color:var(--fg)] forced-colors:border-[Highlight]" : "border-transparent text-[color:var(--fg-muted)] hover:bg-[color:var(--ground)] hover:text-[color:var(--fg)] forced-colors:border-[Canvas]"}`
+                      }
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        className="size-[18px] shrink-0"
+                        strokeWidth={1.75}
+                      />
+                      <span>{route.label}</span>
+                      {route.key === "x402" ? (
+                        <span
+                          aria-hidden="true"
+                          className="ml-auto size-2 rounded-full bg-[color:var(--safe)] motion-safe:animate-pulse"
+                        />
+                      ) : null}
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
     </nav>
   );
 }
@@ -68,10 +132,10 @@ function Account({ session = true }: { readonly session?: boolean }): JSX.Elemen
   const { state, dispatch } = useWallet();
   const live = useLive();
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-1">
+    <div className="grid gap-3">
+      <div className="grid min-w-0 gap-1 border border-[color:var(--rule)] bg-[color:var(--ground)] p-3">
         <p className={T.label}>{walletFrame.account.label}</p>
-        <p className="text-sm font-medium text-[color:var(--fg)]">{state.accountName}</p>
+        <p className="truncate text-sm font-medium text-[color:var(--fg)]">{state.accountName}</p>
         <code className="font-mono text-sm text-[color:var(--fg-muted)]" title={state.address}>
           {truncateAddress(state.address)}
         </code>
@@ -90,6 +154,7 @@ function Account({ session = true }: { readonly session?: boolean }): JSX.Elemen
         size="sm"
         onClick={() => (live ? live.lock() : dispatch({ type: "lock" }))}
       >
+        <Lock aria-hidden="true" className="size-4" />
         {walletFrame.lock.label}
       </Button>
     </div>
@@ -135,7 +200,7 @@ export function Component() {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       <a
         href="#main"
         className="sr-only z-50 bg-[color:var(--ground-deep)] font-display text-base font-bold uppercase tracking-[0.04em] text-[color:var(--fg)] focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:inline-flex focus:min-h-11 focus:items-center focus:px-4 focus:py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]"
@@ -143,8 +208,8 @@ export function Component() {
         {walletFrame.skip}
       </a>
       <aside className="hidden border-r border-[color:var(--rule)] bg-[color:var(--ground-deep)] lg:block">
-        <div className="sticky top-0 flex h-dvh flex-col gap-10 overflow-y-auto p-8">
-          <div className="grid gap-4">
+        <div className="sticky top-0 flex h-dvh flex-col gap-8 overflow-y-auto px-5 py-6">
+          <div className="grid gap-3 px-1">
             <Brand />
             <div className="flex">
               <Tag tone="network" size="sm">

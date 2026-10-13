@@ -2,3 +2,13 @@
 @source "../../../packages/ui/src";
 @source "../../../packages/web-ui/src";
 @source "../../../packages/wallet-ui/src";
+
+/* The x402 Console: a row that arrived since the last read glows once. */
+@keyframes feed-in {
+  from {
+    background-color: var(--safe-dim);
+  }
+  to {
+    background-color: transparent;
+  }
+}

@@ -19,6 +19,8 @@ export const walletFrame = {
       history: "Activity · Baret Wallet",
       policies: "Your rules · Baret Wallet",
       delegation: "Agent delegation · Baret Wallet",
+      sites: "Sites · Baret Wallet",
+      x402: "x402 Console · Baret Wallet",
       settings: "Settings · Baret Wallet",
       onboarding: "Set up your wallet · Baret Wallet",
       connect: "Connection request · Baret Wallet",
@@ -31,16 +33,23 @@ export const walletFrame = {
     label: "Wallet",
     open: "Open the menu",
     close: "Close the menu",
-    /** The sidebar labels, one per app screen. */
+    /**
+     * The sidebar labels, one per app screen. Send and Receive are Home's own
+     * actions now, so they keep a label but leave the sidebar.
+     */
     labels: {
       home: "Home",
       send: "Send",
       receive: "Receive",
       history: "Activity",
-      policies: "Rules",
+      sites: "Sites",
+      policies: "Policies",
       delegation: "Agents",
+      x402: "x402 Console",
       settings: "Settings",
     },
+    /** The two groups of the sidebar. */
+    groups: { wallet: "Wallet", agents: "Agents" },
   },
   /** The first stop on every app screen, past the sidebar to the screen. */
   skip: "Skip to content",

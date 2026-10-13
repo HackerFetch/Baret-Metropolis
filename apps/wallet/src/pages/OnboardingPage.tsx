@@ -107,7 +107,7 @@ export function Component() {
         <SampleNotice />
         {wasReset ? <p className={`${T.body} text-[color:var(--fg)]`}>{onboarding.reset}</p> : null}
 
-        <section className="grid gap-10 md:grid-cols-12 md:items-start md:gap-8">
+        <section className="grid gap-10 md:grid-cols-12 md:items-stretch md:gap-10">
           <div className="@container grid content-start gap-6 md:col-span-7">
             <TextReveal
               as="h1"
@@ -167,12 +167,15 @@ export function Component() {
             <p className={T.small}>{welcome.existingNote}</p>
             <p className={T.small}>{welcome.footnote}</p>
           </div>
+          {/* The picture spans the text column's full height, top and bottom aligned
+              with it, so it reads as half of the hero rather than a floating card. */}
           <ImgWell
             asset={WALLET_ART.welcome}
             ratio="4/3"
             dim
-            sizes="(min-width: 768px) 420px, 100vw"
-            className="border border-[color:var(--rule)] md:col-span-5"
+            position="94% 50%"
+            sizes="(min-width: 1024px) 460px, (min-width: 768px) 40vw, 100vw"
+            className="border border-[color:var(--rule)] md:col-span-5 md:aspect-auto md:h-full md:min-h-[520px]"
           />
         </section>
       </main>

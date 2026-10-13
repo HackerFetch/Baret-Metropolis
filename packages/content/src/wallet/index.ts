@@ -20,3 +20,7 @@ export type { SettingsContent } from "./settings.content.js";
 export { settings } from "./settings.content.js";
 export type { SignContent } from "./sign.content.js";
 export { sign } from "./sign.content.js";
+export type { WalletSitesContent } from "./sites.content.js";
+export { walletSites } from "./sites.content.js";
+export type { WalletX402Content } from "./x402.content.js";
+export { walletX402 } from "./x402.content.js";

@@ -11,7 +11,8 @@ import type { JSX, ReactNode } from "react";
  * The frame every wallet screen shares, in the landing's grammar: the
  * screen's stencil title (`T.h1Page`, sized by its column), one lead with its
  * first sentence in --fg, the screen's actions, and from 768 px the screen's
- * picture beside them. Then the screen's own blocks, on hairlines.
+ * picture beside them, as tall as that title block (a screen with only a
+ * title shows no picture). Then the screen's own blocks, on hairlines.
  *
  * Motion is the landing's, kept quiet: the title's word reveal, then the
  * actions and the picture rise once, a stagger step apart (CSS Reveal, off
@@ -35,10 +36,14 @@ export function Screen({
   actions?: ReactNode;
   children?: ReactNode;
 }): JSX.Element {
+  // A title alone is too short to stand beside a picture: the picture goes.
+  const shown = body || actions ? picture : undefined;
   return (
     <div className="grid gap-10 md:gap-14">
-      <header className="grid gap-8 md:grid-cols-12 md:items-end md:gap-8">
-        <div className={`@container grid gap-5 ${picture ? "md:col-span-7" : "md:col-span-10"}`}>
+      <header className="grid gap-8 md:grid-cols-12 md:items-stretch md:gap-8">
+        <div
+          className={`@container grid content-center gap-5 ${shown ? "md:col-span-7" : "md:col-span-10"}`}
+        >
           <TextReveal
             as="h1"
             text={title}
@@ -56,15 +61,15 @@ export function Screen({
             </Reveal>
           ) : null}
         </div>
-        {picture ? (
+        {shown ? (
           <Reveal delay={staggerDelay(1)} className="hidden md:col-span-5 md:block">
             <ImgWell
-              asset={picture}
+              asset={shown}
               ratio="4/3"
               dim
               {...(picturePosition ? { position: picturePosition } : {})}
               sizes="(min-width: 1024px) 380px, 40vw"
-              className="border border-[color:var(--rule)]"
+              className="border border-[color:var(--rule)] md:aspect-auto md:h-full md:min-h-[240px]"
             />
           </Reveal>
         ) : null}
