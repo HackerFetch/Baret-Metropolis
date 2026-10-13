@@ -4,6 +4,7 @@ import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
 import { type JSX, useId } from "react";
 import { displayAmount } from "../live.js";
+import { TwoPaths } from "../site/TwoPaths.js";
 import type { FlowState, StepStatus } from "./useSendFlow.js";
 
 /**
@@ -56,6 +57,8 @@ export function SignBlock({
   busy = false,
   checks = false,
   viaBaret = false,
+  attack = false,
+  ranAttack = false,
   onSign,
 }: {
   flow: FlowState;
@@ -82,6 +85,10 @@ export function SignBlock({
   checks?: boolean;
   /** True when the request goes to the Baret wallet's own window (no injected wallet, Baret connected). */
   viaBaret?: boolean;
+  /** True while the site's attack version is switched on: the two paths show above the button. */
+  attack?: boolean;
+  /** True when the run shown is the attack version: its result reads as a warning. */
+  ranAttack?: boolean;
   onSign: () => void;
 }): JSX.Element {
   const titleId = useId();
@@ -121,7 +128,7 @@ export function SignBlock({
 
   return (
     <div className="grid gap-3">
-      <p className={T.small}>{copy.checked}</p>
+      {attack ? <TwoPaths /> : <p className={T.small}>{copy.checked}</p>}
       <Button
         type="button"
         variant="ghost"
@@ -235,7 +242,14 @@ export function SignBlock({
           ) : null}
 
           {phase === "done" ? (
-            <>
+            <div
+              className={`grid gap-2 border-l-2 py-1 pl-3 ${ranAttack ? "border-[color:var(--blocked)]" : "border-[color:var(--safe)]"}`}
+            >
+              <p
+                className={`text-sm font-semibold ${ranAttack ? "text-[color:var(--blocked)]" : "text-[color:var(--fg)]"}`}
+              >
+                {ranAttack ? copy.through : copy.done}
+              </p>
               {balance ? (
                 <p className="text-sm font-medium tabular-nums text-[color:var(--fg)]">{balance}</p>
               ) : null}
@@ -244,7 +258,7 @@ export function SignBlock({
                   {line}
                 </p>
               ))}
-            </>
+            </div>
           ) : null}
         </section>
       ) : null}

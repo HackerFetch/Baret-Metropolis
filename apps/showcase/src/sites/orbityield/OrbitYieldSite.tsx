@@ -146,7 +146,7 @@ export function OrbitYieldSite(): JSX.Element {
                   }}
                   error={error}
                   onStake={stake}
-                  sign={sign.block(signRun)}
+                  sign={sign.block(signRun, mode)}
                   live={live}
                   liveBalance={balance === null ? null : formatMon(balance)}
                   walletConnected={walletConnected}

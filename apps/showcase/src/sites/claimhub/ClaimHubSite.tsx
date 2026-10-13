@@ -123,11 +123,14 @@ export function ClaimHubSite(): JSX.Element {
                   onCheck={checkEligibility}
                   onClaim={() => runCheck(mode)}
                   // HUB is read in both versions: in the attack it is the balance that does not move.
-                  sign={sign.block((owner) => ({
+                  sign={sign.block(
+                    (owner) => ({
+                      mode,
+                      calls: signCalls(mode, owner),
+                      token: HUB,
+                    }),
                     mode,
-                    calls: signCalls(mode, owner),
-                    token: HUB,
-                  }))}
+                  )}
                   hint={connectedWallet ? site.panel.hintConnected : site.panel.hint}
                 />
               }

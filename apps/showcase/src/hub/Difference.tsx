@@ -12,8 +12,8 @@ import { HUB_ART } from "../shared/assets.js";
 /**
  * Same request, with and without a check: a real table with one row per
  * aspect, the plain wallet's answer muted and Baret's in --fg, then the way
- * to NovaSwap, where both paths run (M2). Two blank tags on black sit beside
- * it from 1024 px (two paths, one request). On phones the table keeps its
+ * to NovaSwap, where both paths run (M2). Two blank tags on black stand beside
+ * it from 1024 px, a tall frame that holds the table's height (two paths, one request). On phones the table keeps its
  * three columns at a smaller size, so nothing scrolls sideways at 320 px.
  */
 
@@ -32,10 +32,10 @@ export function Difference(): JSX.Element {
         layout="split"
       />
       <div className={`${GRID} mt-12 gap-y-8 lg:items-start`}>
-        <Reveal className="col-span-4 hidden lg:block lg:col-span-4">
+        <Reveal className="col-span-4 hidden lg:sticky lg:top-24 lg:block lg:col-span-4">
           <ImgWell
             asset={HUB_ART.difference}
-            ratio="3/2"
+            ratio="4/5"
             sizes="(min-width: 1024px) 380px, 100vw"
             className="border border-[color:var(--rule)]"
           />
@@ -81,6 +81,7 @@ export function Difference(): JSX.Element {
               size="lg"
               icon="arrow-right"
               fullOnPhone
+              newTab
             />
           </div>
         </Reveal>

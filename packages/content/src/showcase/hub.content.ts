@@ -74,6 +74,8 @@ export const hub = {
       capped: "Blocked at the cap",
     },
     open: "Open the site",
+    /** Read after the site's name: every card opens the site in a new tab. */
+    newTab: "(opens in a new tab)",
   },
 
   steps: {
@@ -389,6 +391,27 @@ export const hub = {
         "Sends this request to your Baret wallet, in its own window. Baret checks it before you can sign. These are real transactions on Monad testnet, with test tokens that have no value.",
       /** Read out when a step changes: "Step 1 of 2, Confirmed". */
       announce: "Step {n} of {total}, {status}",
+      /**
+       * Above the buttons on the attack version: what each path does with the
+       * same request. Kept modest about other wallets: MetaMask's own
+       * security alerts may warn in general terms, and the visitor can still
+       * approve. It does not run Baret's checks on this request.
+       */
+      paths: {
+        title: "Same request, two paths",
+        baret: {
+          label: "With Baret",
+          body: "The Baret extension or web wallet checks it first. It declines before anything is signed and says why.",
+        },
+        plain: {
+          label: "Without a pre-sign check, such as MetaMask",
+          body: "Its own prompt opens. It may warn in general terms, such as about an unlimited spending cap. It cannot tell you what Baret found, and if you approve, the attack goes through.",
+        },
+      },
+      /** Heading of the result once the attack was signed with no check. */
+      through: "The attack went through",
+      /** Heading of the result once the honest request was signed. */
+      done: "Done",
     },
 
     /**

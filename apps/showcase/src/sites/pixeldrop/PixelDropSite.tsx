@@ -150,7 +150,7 @@ export function PixelDropSite(): JSX.Element {
                   }}
                   error={error}
                   onMint={mint}
-                  sign={sign.block(signRun)}
+                  sign={sign.block(signRun, mode)}
                 />
               }
             />

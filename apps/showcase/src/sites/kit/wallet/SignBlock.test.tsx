@@ -28,4 +28,26 @@ describe("SignBlock", () => {
     expect(screen.getByText(hub.frame.sign.noteChecked)).toBeTruthy();
     expect(screen.queryByText(hub.frame.sign.note)).toBeNull();
   });
+
+  it("shows both paths before a press on the attack version only", () => {
+    const { unmount } = render(<SignBlock {...props} walletName="MetaMask" attack />);
+    expect(screen.getByText(hub.frame.sign.paths.baret.body)).toBeTruthy();
+    expect(screen.getByText(hub.frame.sign.paths.plain.body)).toBeTruthy();
+    unmount();
+    render(<SignBlock {...props} walletName="MetaMask" />);
+    expect(screen.queryByText(hub.frame.sign.paths.plain.body)).toBeNull();
+  });
+
+  it("heads a finished attack run as one that went through", () => {
+    const flow = {
+      ...IDLE,
+      phase: "done" as const,
+      steps: [{ status: "done" as const, hash: null }],
+    };
+    render(
+      <SignBlock {...props} flow={flow} walletName="MetaMask" outcome={["Taken."]} ranAttack />,
+    );
+    expect(screen.getByText(hub.frame.sign.through)).toBeTruthy();
+    expect(screen.getByText("Taken.")).toBeTruthy();
+  });
 });

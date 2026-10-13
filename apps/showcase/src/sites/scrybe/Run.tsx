@@ -59,7 +59,7 @@ export function AgentsBridge(): JSX.Element {
     <PanelBlock title={cta.title}>
       <p className={T.body}>{cta.body}</p>
       <div className="flex">
-        <LinkButton href={cta.action.href} label={cta.action.label} icon="arrow-right" />
+        <LinkButton href={cta.action.href} label={cta.action.label} icon="arrow-right" newTab />
       </div>
     </PanelBlock>
   );

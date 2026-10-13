@@ -81,6 +81,7 @@ export function HubHero(): JSX.Element {
             href={hero.actions.secondary.href}
             label={hero.actions.secondary.label}
             size="lg"
+            newTab
             fullOnPhone
           />
         </>

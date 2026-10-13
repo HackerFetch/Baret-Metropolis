@@ -3,7 +3,7 @@ import { Tag } from "@baret/ui/primitives/Tag";
 import { Img } from "@baret/web-ui/components/Img";
 import { VERDICT_TONE } from "@baret/web-ui/lib/tone";
 import { T } from "@baret/web-ui/lib/type";
-import { ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { JSX } from "react";
 import { Link } from "react-router";
 import { CARD_MEDIA, WELL_GROUND } from "../landing/sections/showcase/cardMedia.js";
@@ -16,6 +16,8 @@ import type { Scenario } from "../sites/scenarios.js";
  * site's name; the verdict, the summary and the three "Watch for" lines stay
  * readable to screen readers. The focus ring is drawn on the card. Same
  * picture as the landing's card for the site, so a site keeps one face.
+ *
+ * Every card opens its site in a new tab (the hub stays open behind it).
  *
  * Hover: the border turns --fg and the picture pushes 2.5 % over 600 ms (the
  * card is a real link). Pressing tints the card before the route loads; intent
@@ -30,7 +32,7 @@ const STRETCH = "after:absolute after:inset-0 focus-visible:outline-none";
 const PUSH =
   "transition-transform duration-[600ms] ease-out-soft group-hover/card:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover/card:scale-100";
 const NUDGE =
-  "size-4 shrink-0 transition-transform duration-150 ease-out group-hover/card:translate-x-1 group-has-[a:focus-visible]/card:translate-x-1 motion-reduce:transition-none";
+  "size-4 shrink-0 transition-transform duration-150 ease-out group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 group-has-[a:focus-visible]/card:translate-x-0.5 group-has-[a:focus-visible]/card:-translate-y-0.5 motion-reduce:transition-none";
 
 /** The site's path, from its slug (the registry is the only place a path is written). */
 function pathOf(scenario: Scenario): string {
@@ -69,12 +71,14 @@ export function ScenarioCard({ scenario }: { scenario: Scenario }): JSX.Element 
           <h3 className={`${T.h3} text-[color:var(--fg)]`}>
             <Link
               to={href}
-              viewTransition
+              target="_blank"
+              rel="noopener noreferrer"
               className={STRETCH}
               onPointerEnter={intent}
               onFocus={intent}
             >
               {scenario.name}
+              <span className="sr-only"> {cardLabels.newTab}</span>
             </Link>
           </h3>
           <span>
@@ -101,7 +105,7 @@ export function ScenarioCard({ scenario }: { scenario: Scenario }): JSX.Element 
           className="mt-auto flex items-center gap-2 pt-5 text-sm font-semibold text-[color:var(--fg-muted)] transition-colors duration-150 group-hover/card:text-[color:var(--fg)] group-has-[a:focus-visible]/card:text-[color:var(--fg)]"
         >
           {cardLabels.open}
-          <ArrowRight className={NUDGE} strokeWidth={1.5} />
+          <ArrowUpRight className={NUDGE} strokeWidth={1.5} />
         </span>
       </div>
     </article>

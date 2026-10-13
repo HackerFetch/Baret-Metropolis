@@ -333,6 +333,8 @@ export function NovaSwapSite(): JSX.Element {
                       stoppedNote={signMode === "danger" ? outcome.open : null}
                       busy={faucet.state.phase === "running"}
                       checks={walletChecks}
+                      attack={mode === "danger"}
+                      ranAttack={signMode === "danger"}
                       onSign={onSign}
                     />
                   }

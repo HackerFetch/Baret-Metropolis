@@ -53,8 +53,9 @@ export function balanceOf(mode: DemoMode): number {
 
 /**
  * The sample result for one version. Honest: Safe, MON out and dUSDC in.
- * Attack: the "enable trading" approval, Blocked by the unlimited allowance
- * and by the reported spender; nothing moves yet, the allowance is the harm.
+ * Attack: the "enable trading" approval, Blocked by the unlimited allowance,
+ * by the reported spender and by the spender copying the router's address;
+ * nothing moves yet, the allowance is the harm.
  */
 export function sampleCheck(mode: DemoMode, amount: number): CheckResult {
   if (mode === "safe") {
@@ -80,6 +81,12 @@ export function sampleCheck(mode: DemoMode, amount: number): CheckResult {
         values: { spender: NOVASWAP.lookalike, asset: "dUSDC", amount: "" },
       },
       { code: "KNOWN_MALICIOUS_ADDRESS", values: { address: NOVASWAP.lookalike } },
+      // The drainer starts and ends like the real router; the lookalike
+      // detector runs after reputation, so its finding comes last.
+      {
+        code: "LOOKALIKE_ADDRESS",
+        values: { address: NOVASWAP.lookalike, expected: NOVASWAP.router },
+      },
     ],
     changes: [],
     approvals: [{ unit: "dUSDC", spender: NOVASWAP.lookalike, unlimited: true, amount: null }],

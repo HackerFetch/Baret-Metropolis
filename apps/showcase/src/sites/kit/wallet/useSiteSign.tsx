@@ -39,7 +39,7 @@ export function useSiteSign(copy: SiteSign): {
   /** The connected wallet's address, null with none. */
   address: Address | null;
   /** The block, to hand to the site's card. `build` is asked for the run when the button is pressed; null when the inputs are refused. */
-  block: (build: (owner: Address) => SignRun | null) => JSX.Element;
+  block: (build: (owner: Address) => SignRun | null, current?: "safe" | "danger") => JSX.Element;
 } {
   const { wallet } = useDemoWallet();
   const flow = useSendFlow();
@@ -67,7 +67,10 @@ export function useSiteSign(copy: SiteSign): {
     setRan(null);
   }, [address, reset]);
 
-  function block(build: (owner: Address) => SignRun | null): JSX.Element {
+  function block(
+    build: (owner: Address) => SignRun | null,
+    current: "safe" | "danger" = "safe",
+  ): JSX.Element {
     const mode = ran?.mode ?? "safe";
     return (
       <SignBlock
@@ -84,6 +87,8 @@ export function useSiteSign(copy: SiteSign): {
         outcome={[copy.outcome[mode]]}
         checks={viaBaret || (connection !== null && isBaretExtension(connection.wallet.id))}
         viaBaret={viaBaret}
+        attack={current === "danger"}
+        ranAttack={ran?.mode === "danger"}
         onSign={() => {
           if (address === null) {
             setNeed("wallet");

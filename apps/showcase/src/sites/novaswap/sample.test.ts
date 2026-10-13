@@ -49,13 +49,18 @@ describe("NovaSwap sample", () => {
     ]);
   });
 
-  it("blocks the attack twice, as Baret does live: unlimited allowance and a listed spender", () => {
+  it("blocks the attack as Baret does live: unlimited allowance, listed spender, router lookalike", () => {
     const result = sampleCheck("danger", 20);
     expect(result.verdict).toBe("blocked");
     expect(result.findings.map((f) => f.code)).toEqual([
       "ERC20_APPROVAL_UNLIMITED",
       "KNOWN_MALICIOUS_ADDRESS",
+      "LOOKALIKE_ADDRESS",
     ]);
+    expect(result.findings[2]?.values).toEqual({
+      address: NOVASWAP.lookalike,
+      expected: NOVASWAP.router,
+    });
     expect(result.changes).toEqual([]);
     expect(result.approvals).toEqual([
       { unit: "dUSDC", spender: NOVASWAP.lookalike, unlimited: true, amount: null },

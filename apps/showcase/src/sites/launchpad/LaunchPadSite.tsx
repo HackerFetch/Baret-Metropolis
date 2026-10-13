@@ -142,7 +142,7 @@ export function LaunchPadSite(): JSX.Element {
                   }}
                   error={error}
                   onContribute={contribute}
-                  sign={sign.block(signRun)}
+                  sign={sign.block(signRun, mode)}
                 />
               }
             />
