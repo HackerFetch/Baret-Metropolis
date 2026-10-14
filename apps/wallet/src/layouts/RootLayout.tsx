@@ -85,6 +85,7 @@ function Gate({ request }: { request: boolean }): JSX.Element {
     const asks = live === null || waiting !== null;
     return (
       <Locked
+        centered
         request={asks}
         onUnlock={() => (live ? void live.unlock() : dispatch({ type: "unlock" }))}
         busy={live?.busy ?? false}

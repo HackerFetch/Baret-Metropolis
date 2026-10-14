@@ -38,6 +38,12 @@ export interface LockedProps {
    * the second. The locked wording stays for a device that has an account.
    */
   readonly onCreate?: () => void;
+  /**
+   * A request window (/sign, /connect) shows the lock on its own, at whatever
+   * width the window has, so the screen is centred as one block. Set only
+   * there: the wallet's own lock screen keeps its left-aligned column.
+   */
+  readonly centered?: boolean;
 }
 
 /** What a locked wallet shows instead of the app or a pending request. */
@@ -50,6 +56,7 @@ export function Locked({
   origin = null,
   onDecline,
   onCreate,
+  centered = false,
 }: LockedProps): JSX.Element {
   const { locked } = walletFrame;
   const fresh = onCreate !== undefined;
@@ -66,7 +73,9 @@ export function Locked({
     if (declined) answer.current?.focus();
   }, [declined]);
   return (
-    <main className="mx-auto grid min-h-dvh max-w-[560px] content-center gap-6 px-4 py-16 md:px-8">
+    <main
+      className={`mx-auto grid min-h-dvh max-w-[560px] content-center gap-6 px-4 py-16 md:px-8${centered ? " justify-items-center text-center" : ""}`}
+    >
       <div className="flex size-24 items-center justify-center border border-[color:var(--rule-strong)] bg-[color:var(--surface)]">
         <Mark size={56} slit="var(--surface)" />
       </div>
@@ -99,10 +108,17 @@ export function Locked({
         <p className={T.body}>{fresh ? locked.fresh.body : locked.body}</p>
       )}
       {problem ? (
-        <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
+        centered ? (
+          // The alert keeps its left edge and full width inside a centred screen.
+          <div className="w-full text-left">
+            <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
+          </div>
+        ) : (
+          <Problem title={locked.errors[problem].title} body={locked.errors[problem].body} />
+        )
       ) : null}
       {declined ? null : (
-        <div className="flex flex-wrap gap-3">
+        <div className={`flex flex-wrap gap-3${centered ? " justify-center" : ""}`}>
           {onCreate ? (
             <Button type="button" variant="primary" size="lg" disabled={busy} onClick={onCreate}>
               {locked.create}
@@ -144,7 +160,7 @@ export function Locked({
           type="button"
           variant="ghost"
           size="lg"
-          className="justify-self-start"
+          className={centered ? "justify-self-center" : "justify-self-start"}
           onClick={() => window.close()}
         >
           {walletFrame.request.close}

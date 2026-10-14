@@ -54,3 +54,19 @@ describe("the request window on a device with no wallet", () => {
     expect(screen.queryByRole("button", { name: locked.create })).toBeNull();
   });
 });
+
+describe("the lock screen's layout", () => {
+  it("is centred in a request window and stays a left-aligned column in the wallet itself", () => {
+    const { container, unmount } = render(
+      <Locked onUnlock={vi.fn()} request origin={ORIGIN} onDecline={vi.fn()} centered />,
+    );
+    const windowLock = container.querySelector("main")?.className ?? "";
+    expect(windowLock).toContain("justify-items-center");
+    expect(windowLock).toContain("text-center");
+    unmount();
+    const own =
+      render(<Locked onUnlock={vi.fn()} />).container.querySelector("main")?.className ?? "";
+    expect(own).not.toContain("justify-items-center");
+    expect(own).not.toContain("text-center");
+  });
+});
