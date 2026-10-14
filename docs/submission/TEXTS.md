@@ -20,7 +20,8 @@ Rule for every entry: a prize whose feature is not working on the live URL at th
 | Mera: One Passkey, Many Keys (1:02) | https://youtu.be/ZOlcxt3v2rE |
 | Nansen (0:51) | https://youtu.be/YUZ3QInMWCw |
 | Teaser, 16:9 (0:18) | https://youtu.be/zU7qnfGqp9Y |
-| Alchemy, teaser 9:16 | not uploaded yet: the channel hit YouTube's daily upload limit for unverified channels |
+| Alchemy | https://youtu.be/7f7X48z9zpg |
+| Teaser, 9:16 | https://youtube.com/shorts/ZZVVkB2dBFA |
 
 Common links, used below:
 
@@ -394,7 +395,7 @@ A new vault shows up within seconds: one opened on 2026-10-10 had its agent, cap
 
 **The form asks:** how the project integrates Alchemy; an optional demo video (max 2 min).
 
-**Video:** not uploaded: the channel hit YouTube's daily upload limit; the field is optional and left empty.
+**Video:** https://youtu.be/7f7X48z9zpg (uploaded on 2026-10-14 and entered on the form).
 
 **Text:**
 

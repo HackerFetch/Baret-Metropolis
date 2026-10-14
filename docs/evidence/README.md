@@ -177,7 +177,7 @@ Video: <https://youtu.be/iri7VLhC_no>
 
 ## 10. Best Projects using Alchemy
 
-No video (not uploaded: YouTube's daily upload limit). Text only.
+Video: <https://youtu.be/7f7X48z9zpg>.
 
 | Claim | Proof |
 |---|---|
