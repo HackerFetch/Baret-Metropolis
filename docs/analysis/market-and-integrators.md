@@ -11,9 +11,9 @@ Everything runs on **Monad testnet (chain id 10143)**. Nothing is on mainnet: [`
 | Surface | What it is | Start from |
 |---|---|---|
 | **HTTP API** | `POST https://baret-monad-api.onrender.com/v1/analyze`, no key. Takes a transaction or typed data, a network and a policy template or rules; answers `safe`, `caution` or `blocked` with findings | [`docs/API_REFERENCE.md`](../API_REFERENCE.md), the curl sample in [`README.md`](../../README.md) |
-| **`@baret/guard`** (npm, 0.1.3) | TypeScript SDK: `TransactionGuard.evaluate`; no answer is treated as blocked; 0.1.3 adds a helper that says when a verdict is expired or for the wrong chain | [`packages/guard/README.md`](../../packages/guard/README.md) |
-| **`@baret/agent-kit`** (npm, 0.1.3) | The guarded agent signer: `guardedSubmit` signs a Safe transaction and refuses a Blocked one; `payX402` for HTTP 402 payments; PaymentGuard vault payments; the Qwen reviewer; the `baret` CLI | [`packages/agent-kit/README.md`](../../packages/agent-kit/README.md) |
-| **`@baret/llm`** (npm, 0.1.3) | The KIMI and Qwen clients the explain and review routes use | `packages/llm` |
+| **`@baret/guard`** (npm, 0.1.4) | TypeScript SDK: `TransactionGuard.evaluate`; no answer is treated as blocked; 0.1.3 adds a helper that says when a verdict is expired or for the wrong chain | [`packages/guard/README.md`](../../packages/guard/README.md) |
+| **`@baret/agent-kit`** (npm, 0.1.4) | The guarded agent signer: `guardedSubmit` signs a Safe transaction and refuses a Blocked one; `payX402` for HTTP 402 payments; PaymentGuard vault payments; the Qwen reviewer; the `baret` CLI | [`packages/agent-kit/README.md`](../../packages/agent-kit/README.md) |
+| **`@baret/llm`** (npm, 0.1.4) | The KIMI and Qwen clients the explain and review routes use | `packages/llm` |
 | **MCP** | `POST https://baret-monad-api.onrender.com/mcp`: Baret's checks as read-only MCP tools; an error result says to treat it as blocked ([D-045](../DECISIONS.md)) | [`docs/API_REFERENCE.md`](../API_REFERENCE.md) `POST /mcp`; samples on <https://usebaret.com/agents> |
 | **PaymentGuard vault** | On-chain vault with per-merchant caps per payment, hour and day, pause and revoke; a factory opens new vaults | [`docs/CONTRACTS.md`](../CONTRACTS.md) |
 | **Reputation registry** | A public contract on Monad any caller can read (`0x7491Cb218A7b184ac50F9c2bfbd54C2a67Bfa411`) | [`docs/CONTRACTS.md`](../CONTRACTS.md), [`workflows/README.md`](../../workflows/README.md) |
@@ -59,7 +59,7 @@ Where a Cleanverse Verified Asset moves, both parties must hold an A-Pass. Baret
 ## 3. Evidence of use
 
 - **Venue.** On 2026-10-13 an independent developer, the author of [Venue](https://github.com/brutaldevvin/venue), an order book for Cleanverse Verified Assets on Monad testnet, wired `@baret/guard` 0.1.2 into Venue's signing path from the npm package and its README alone: [the commit](https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803), [their report with nine points of feedback](https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md). Their real `approve(settlement, 2^255 - 1)` exposed a fault in Baret's unlimited-allowance bar; it was fixed the same day ([D-049](../DECISIONS.md)) and the same request then came back Blocked. No transaction was signed or sent in their checks.
-- **npm.** `@baret/guard`, `@baret/agent-kit` and `@baret/llm` at 0.1.3 (published 2026-10-13); 0.1.3 was cut from Venue's feedback.
+- **npm.** `@baret/guard`, `@baret/agent-kit` and `@baret/llm` at 0.1.4 (published 2026-10-14); 0.1.3 (2026-10-13) was cut from Venue's feedback, and 0.1.4 reads the engine's two new finding codes.
 - **The live API** answers without a key; `verify:demo` sends twenty scenarios and agreed on 20 of 20 against it ([`README.md`](../../README.md)).
 
 What is not evidence yet: no production wallet ships Baret, and Venue is the only outside integrator so far.
