@@ -2,16 +2,16 @@
 
 Monad Metropolis submissions closed on 2026-10-14 at 06:59 GMT+3. Judging runs from 14 to 27 October and winners are announced on 3 November. For these two weeks the live demo is the product: a judge who meets a sleeping API, an empty demo vault or a wallet that no longer opens sees a broken Baret, whatever was built. This page says what must not change, what to watch and how to check each thing. Every command here is read-only.
 
-## 1. The submission tag
+## 1. What was submitted
 
-The submitted commit carries the tag **`metropolis-submission`**. Find what was submitted:
+There is no release tag. The submission links the repository, so what was submitted is `main` as it stood at the deadline (2026-10-14, 06:59 GMT+3). Find that commit:
 
 ```bash
-git fetch --tags
-git show --no-patch metropolis-submission
+git fetch origin
+git log -1 --before='2026-10-14 06:59 +0300' origin/main
 ```
 
-After the tag, `main` is frozen: only a fix for something a judge can see broken (a P0 or P1, see [`../QA_AND_DELIVERY.md`](../QA_AND_DELIVERY.md) §6) goes in, through a pull request whose checks pass. Every such fix is listed with its reason in the pull request. New features wait until after 27 October.
+After the deadline, `main` is frozen: only a fix for something a judge can see broken (a P0 or P1, see [`../QA_AND_DELIVERY.md`](../QA_AND_DELIVERY.md) §6) goes in, through a pull request whose checks pass. Every such fix is listed with its reason in the pull request. New features wait until after 27 October.
 
 ## 2. What must not change
 
@@ -19,7 +19,7 @@ After the tag, `main` is frozen: only a fix for something a judge can see broken
 |---|---|---|
 | The wallet's domain `wallet.usebaret.com` and the Vercel project `baret-wallet` | The passkey's relying-party id is the page's host (`window.location.hostname` in `apps/wallet/src/live/live.tsx`). A different host is a different wallet: every account a judge made would stop opening. `baret-wallet.vercel.app` is an alias with its own passkeys | Vercel dashboard, Cloudflare DNS |
 | The showcase domain `usebaret.com` and the project `baret-metropolis` | Every link in the submission, the videos and the README points there | Vercel dashboard |
-| `main` after the `metropolis-submission` tag | What judges read must match what they run | GitHub branch protection |
+| `main` after the deadline | What judges read must match what they run | GitHub branch protection |
 | The indexer endpoint `https://indexer.dev.hyperindex.xyz/b3bc40c/v1/graphql` | A new indexer deployment gets a new endpoint, and the API's `ENVIO_ENDPOINT` would point at the old one | Envio dashboard, Render env |
 | Nansen mode `labels` (`NANSEN_MODE`, `NANSEN_LABELS_DAILY_LIMIT`) | Verdicts must not change under a judge mid-review; `/health/ready` shows the mode | Render env |
 | The API's URL `https://baret-monad-api.onrender.com` | The SDK README, the extension zips and both sites call it | Render dashboard |
@@ -92,5 +92,5 @@ KIMI writes the plain words under every verdict (`/v1/explain`) and the rule dra
 ## 4. When something breaks
 
 1. Check `/health/ready` and the Render dashboard first; most failures are a sleeping or redeploying API.
-2. A fix to code goes through a pull request into `main` with its checks passing ([`release.md`](release.md)); the tag `metropolis-submission` stays where it is.
+2. A fix to code goes through a pull request into `main` with its checks passing ([`release.md`](release.md)); the pull request says what broke and why the fix is needed.
 3. Record what broke, when and what was done in [`../QA_LOG.md`](../QA_LOG.md).
