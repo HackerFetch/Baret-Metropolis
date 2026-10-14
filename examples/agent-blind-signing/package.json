@@ -1,0 +1,13 @@
+{
+  "name": "baret-example-agent-blind-signing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Two agents, the same twenty requests on Monad testnet: one signs blind, one asks Baret first.",
+  "type": "module",
+  "scripts": {
+    "start": "node run.mjs"
+  },
+  "dependencies": {
+    "@baret/guard": "0.1.4"
+  }
+}

@@ -87,6 +87,7 @@ if (verdict.decision === "blocked") throw new Error("Baret blocked it"); // no a
 
 For an agent, `@baret/agent-kit` wraps the signer: `guardedSubmit` signs a Safe transaction and refuses a Blocked one, and the `baret` CLI does the same from a terminal.
 
+- Blind signing by agents, measured: two agents get the same twenty requests, one signs blind and one asks Baret first. Runs from npm with no key: [`examples/agent-blind-signing`](examples/agent-blind-signing)
 - Quickstarts, with every snippet run against the live API: [`packages/guard/README.md`](packages/guard/README.md), [`packages/agent-kit/README.md`](packages/agent-kit/README.md)
 - Every endpoint, message and contract: [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
 

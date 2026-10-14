@@ -1,6 +1,6 @@
 {
   "name": "@baret/guard",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "TransactionGuard SDK: the GuardPolicy schema, the policy templates and the /v1/analyze contract. No chain library inside.",
   "license": "MIT",
   "repository": {
