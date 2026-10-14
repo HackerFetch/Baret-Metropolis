@@ -180,7 +180,7 @@ The per-minute limits are per visitor since #63, and that visitor is the first a
 
 ### G-18 · Contracts are unaudited testnet deployments
 
-Tested with `forge test` (85 tests) and verified on Sourcify; no audit. In `docs/CONTRACTS.md` two lines are unticked: the fuzz of the cap arithmetic as its own item, and the Tenderly traces for the video. Nothing is on mainnet and nothing is planned there.
+Tested with `forge test` (85 tests) and source verified on Monad's Sourcify; no audit. In `docs/CONTRACTS.md` two lines are unticked: the fuzz of the cap arithmetic as its own item, and the Tenderly traces for the video. Nothing is on mainnet and nothing is planned there.
 
 ### G-19 · The indexer does not cover two contracts
 

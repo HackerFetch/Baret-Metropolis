@@ -189,7 +189,7 @@ These were the open items before the board was written. Each ends with a line sa
   - 2026-10-09: Cut down to the fresh-profile and second-device checks of H10.
 - [ ] **One real user test** — ROADMAP Week 5. Somebody who has never seen Baret, the showcase, no explanation. Write where they stopped and what they said into `docs/QA_AND_DELIVERY.md`, and turn each stop into a task for the owner. Left by: Ezgin · Date: 2026-10-06
   - 2026-10-09: Replaced by H9 (2): one other team trying the API is the test that the track scores.
-- [ ] **Claim the sponsor perks** — Tenderly, QuickNode, Zerion in `docs/RESOURCES.md` §1 (links in `Resources.txt`). Claim, or mark "not needed" with the reason, and update the table. Keys go to Ezgin privately, never into the repo. Left by: Ezgin · Date: 2026-10-06
+- [ ] **Claim the sponsor perks** — Tenderly, QuickNode, Zerion in `docs/RESOURCES.md` §1 (links in `docs/research/hackathon-resources.txt`). Claim, or mark "not needed" with the reason, and update the table. Keys go to Ezgin privately, never into the repo. Left by: Ezgin · Date: 2026-10-06
   - 2026-10-09: Not planned: mark them not claimed, not needed in `docs/RESOURCES.md` §1 (H14).
 - [ ] **Re-test every fixed bug** — For each 🐛 the owner marked `[x]`: re-test on the live URL, add `Verified by Hale, <date>, commit <sha>` under it or reopen it. Then a second full walkthrough of the demo path. Left by: Ezgin · Date: 2026-10-06
   - 2026-10-09: Now part of H15.

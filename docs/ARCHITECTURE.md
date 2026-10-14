@@ -266,7 +266,7 @@ Implemented: `/health`, `/health/ready`, `/v1/analyze`, `/v1/audit/*` (see §8.8
 
 ### 8.3 `apps/extension` — Chrome MV3
 - EIP-1193 / EIP-6963 provider.
-- `background`: account state machine, IndexedDB (keystore, history, allowances, site permissions), chain monitor (WebSocket — not polling, per the Alchemy recommendation in notes.txt).
+- `background`: account state machine, IndexedDB (keystore, history, allowances, site permissions), chain monitor (WebSocket — not polling, per the Alchemy recommendation in docs/research/workshop-notes-kickoff-envio-alchemy-zerion.txt).
 - `inpage`: `window.ethereum` provider (EIP-1193/EIP-6963). There is no automatic x402 fetch interceptor; x402 settlement goes through a site's own "Pay with your wallet" button (D-046), same as any other transaction.
 - Every signature request goes through the guard; a risky transaction is blocked in the wallet, not in the dApp.
 
