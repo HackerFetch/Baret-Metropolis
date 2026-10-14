@@ -8,7 +8,19 @@ import { CopyButton } from "@baret/web-ui/components/CopyButton";
 import { Signature } from "@baret/web-ui/components/Signature";
 import { T } from "@baret/web-ui/lib/type";
 import { fill } from "@baret/web-ui/lib/util";
-import { Menu, X } from "lucide-react";
+import {
+  Activity,
+  Globe,
+  House,
+  KeyRound,
+  Lock,
+  type LucideIcon,
+  Menu,
+  Radio,
+  Settings,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { type JSX, lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { NavLink, Outlet, ScrollRestoration, useLocation } from "react-router";
 import { useGate } from "../../data/gate.js";
@@ -24,36 +36,85 @@ const Locked = lazy(() =>
 
 const NAV = navRoutes(routes, "main");
 
+/** One icon per sidebar page, so the list scans at a glance. */
+const ICONS: Record<string, LucideIcon> = {
+  home: House,
+  activity: Activity,
+  sites: Globe,
+  policies: ShieldCheck,
+  allowances: KeyRound,
+  x402: Radio,
+  settings: Settings,
+};
+
+/** The sidebar in three groups: the wallet, what can spend from it, then settings on its own. */
+export const GROUPS: ReadonlyArray<{ label: string | null; keys: readonly string[] }> = [
+  { label: extFrame.nav.groups.wallet, keys: ["home", "activity", "sites", "policies"] },
+  { label: extFrame.nav.groups.spending, keys: ["allowances", "x402"] },
+  { label: null, keys: ["settings"] },
+];
+
 /**
- * The frame of every options page (docs/WALLET.md 2.5), in the wallet's
- * grammar. From 1024 px a sidebar: the mark and the network, the seven
- * pages, then the account line with copy and lock at the foot. Below it, a
- * top bar whose menu opens in place and closes on any navigation or on
- * Escape. After a move to another page, its h1 takes the focus and the page
- * name is read politely, as setup does. The sample
- * notice sits above every page. The active page is marked in ink, so orange
- * stays each page's own main action. Locking hides the pages until the
- * passphrase opens them again.
+ * The frame of every options page (docs/WALLET.md 2.5), the same frame as
+ * the web wallet's (apps/wallet AppLayout). From 1024 px a sidebar: the mark
+ * and the network, the seven pages in groups with an icon each, then the
+ * account and the lock at the foot. Below it, a top bar whose menu opens in
+ * place (scrolling inside the viewport when it is taller than the screen)
+ * and closes on any navigation or on Escape. After a move to another page,
+ * its h1 takes the focus and the page name is read politely, as setup does.
+ * The sample notice sits above every page. The active page is marked in ink,
+ * so orange stays each page's own main action. Locking hides the pages until
+ * the passphrase opens them again.
  */
 
+/** The menu's quiet rise: 240 ms, the BRAND ease, off under reduced motion. */
+const RISE =
+  "transition-[opacity,translate] duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] starting:translate-y-2 starting:opacity-0 motion-reduce:transition-none";
+
+const FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)]";
+
 function Nav(): JSX.Element {
+  const byKey = new Map(NAV.map((route) => [route.key as string, route]));
   return (
-    <nav aria-label={extFrame.nav.label}>
-      <ul className="grid">
-        {NAV.map((route) => (
-          <li key={route.key}>
-            <NavLink
-              to={route.path}
-              end={route.path === "/"}
-              className={({ isActive }) =>
-                `-ml-px flex min-h-11 items-center border-l-2 pl-4 font-display text-lg font-bold uppercase tracking-[0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-[color:var(--accent)] ${isActive ? "border-[color:var(--fg)] text-[color:var(--fg)] forced-colors:border-[Highlight] forced-colors:underline forced-colors:underline-offset-4" : "border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] forced-colors:border-[Canvas]"}`
-              }
-            >
-              {route.label}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+    <nav aria-label={extFrame.nav.label} className="grid gap-6">
+      {GROUPS.map((group) => {
+        const items = group.keys.flatMap((key) => {
+          const route = byKey.get(key);
+          return route ? [route] : [];
+        });
+        return (
+          <div
+            key={group.label ?? "rest"}
+            className={`grid gap-1 ${group.label ? "" : "border-t border-[color:var(--rule)] pt-4"}`}
+          >
+            {group.label ? <p className={`${T.label} px-3 pb-1`}>{group.label}</p> : null}
+            <ul className="grid gap-0.5">
+              {items.map((route) => {
+                const Icon = ICONS[route.key] ?? House;
+                return (
+                  <li key={route.key}>
+                    <NavLink
+                      to={route.path}
+                      end={route.path === "/"}
+                      className={({ isActive }) =>
+                        `flex min-h-11 items-center gap-3 border-l-2 px-3 text-[0.9375rem] font-medium transition-colors ${FOCUS} ${isActive ? "border-[color:var(--fg)] bg-[color:var(--ground)] text-[color:var(--fg)] forced-colors:border-[Highlight]" : "border-transparent text-[color:var(--fg-muted)] hover:bg-[color:var(--ground)] hover:text-[color:var(--fg)] forced-colors:border-[Canvas]"}`
+                      }
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        className="size-[18px] shrink-0"
+                        strokeWidth={1.75}
+                      />
+                      <span>{route.label}</span>
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
     </nav>
   );
 }
@@ -62,10 +123,10 @@ function Account({ onLock }: { onLock: () => void }): JSX.Element {
   const { state } = useExtension();
   const account = activeAccount(state);
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-1">
+    <div className="grid gap-3">
+      <div className="grid min-w-0 gap-1 border border-[color:var(--rule)] bg-[color:var(--ground)] p-3">
         <p className={T.label}>{extFrame.account.label}</p>
-        <p className="text-sm font-medium text-[color:var(--fg)]">{account?.name}</p>
+        <p className="truncate text-sm font-medium text-[color:var(--fg)]">{account?.name}</p>
         <code className="font-mono text-sm text-[color:var(--fg-muted)]" title={account?.address}>
           {account ? truncateAddress(account.address) : ""}
         </code>
@@ -79,7 +140,8 @@ function Account({ onLock }: { onLock: () => void }): JSX.Element {
           </div>
         ) : null}
       </div>
-      <Button type="button" variant="ghost" size="md" onClick={onLock}>
+      <Button type="button" variant="ghost" size="sm" onClick={onLock}>
+        <Lock aria-hidden="true" className="size-4" />
         {extFrame.lock.label}
       </Button>
     </div>
@@ -189,7 +251,7 @@ export function Component() {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       {/* React 19 hoists a <title> rendered anywhere into the head. */}
       <title>{title}</title>
       <ScrollRestoration />
@@ -199,8 +261,8 @@ export function Component() {
       </p>
 
       <aside className="hidden border-r border-[color:var(--rule)] bg-[color:var(--ground-deep)] lg:block">
-        <div className="sticky top-0 flex h-dvh flex-col gap-10 overflow-y-auto p-7">
-          <div className="grid gap-4">
+        <div className="sticky top-0 flex h-dvh flex-col gap-8 overflow-y-auto px-5 py-6">
+          <div className="grid gap-3 px-1">
             <Brand />
             <div className="flex">
               <Tag tone="network" size="sm">
@@ -237,7 +299,8 @@ export function Component() {
         <div
           id={menuId}
           hidden={!open}
-          className="border-t border-[color:var(--rule)] px-4 py-6 md:px-8"
+          data-lenis-prevent
+          className={`max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-[color:var(--rule)] px-4 py-6 md:px-8 ${RISE}`}
         >
           <div className="grid gap-8">
             <div className="flex">

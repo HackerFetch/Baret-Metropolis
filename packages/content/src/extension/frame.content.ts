@@ -71,6 +71,8 @@ export const extFrame = {
     label: "Baret settings",
     open: "Open the menu",
     close: "Close the menu",
+    /** The two groups of the options sidebar; Settings stands on its own under them. */
+    groups: { wallet: "Wallet", spending: "Spending" },
   },
   account: { label: "Account", copy: "Copy the address", copied: "Copied" },
   lock: { label: "Lock now" },
