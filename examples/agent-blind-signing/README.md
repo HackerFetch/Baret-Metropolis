@@ -19,7 +19,7 @@ Node 20 or later. It talks to `https://baret-monad-api.onrender.com` (the API sl
 
 ## Result
 
-Run on 2026-10-14 against the live API at commit `72ea27b`, with `@baret/guard` 0.1.4. The full output is in [`results.txt`](results.txt).
+Run on 2026-10-14 against the live API at commit `0e221b9`, with `@baret/guard` 0.1.4 installed from npm in a clean folder. The full output is in [`results.txt`](results.txt).
 
 | | Requests | Blind agent would sign | Guarded agent would sign |
 |---|---|---|---|
