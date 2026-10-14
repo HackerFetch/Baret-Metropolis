@@ -137,7 +137,7 @@ const verdict = await guard.evaluate({ network: "testnet", transaction, policyTe
 if (verdict.decision === "blocked") throw new Error("Baret blocked it"); // no answer also means blocked
 ```
 
-For an agent, `@baret/agent-kit` wraps the signer: `AgentWallet.guardedSubmit` signs a Safe transaction and refuses a Blocked one, and the `baret` CLI does the same from a terminal. `@baret/llm` is the KIMI and Qwen client. All three packages are on npm at 0.1.3.
+For an agent, `@baret/agent-kit` wraps the signer: `AgentWallet.guardedSubmit` signs a Safe transaction and refuses a Blocked one, and the `baret` CLI does the same from a terminal. `@baret/llm` is the KIMI and Qwen client. All three packages are on npm at 0.1.4 (2026-10-14).
 
 - Blind signing by agents, measured: two agents get the same twenty requests, one signs blind and one asks Baret first. Runs from npm with no key: [`examples/agent-blind-signing`](examples/agent-blind-signing)
 - Quickstarts, with every snippet run against the live API: [`packages/guard/README.md`](packages/guard/README.md), [`packages/agent-kit/README.md`](packages/agent-kit/README.md)

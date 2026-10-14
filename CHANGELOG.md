@@ -6,15 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
-### 0.1.4, raised in the repository on 2026-10-14, not on npm yet
+Planned from the rest of Venue's report ([`docs/submission/TEXTS.md`](docs/submission/TEXTS.md)): structured error codes with retry hints, a viem example and a multi-party example. Not built yet.
+
+## [0.1.4] - 2026-10-14
+
+Published by Ezgin from the tarballs of `main` at `71e162a`.
+
+### Added
 
 - `@baret/guard`: the response schema knows `LOOKALIKE_ADDRESS` and `APPROVAL_TO_WALLET`, the two findings the engine gained on 2026-10-13 (`4452457`) after 0.1.3 went out. On 0.1.3 an answer that carries either code throws `GuardUnreachableError` ("unexpected body"): the caller refuses, which is safe, but the reason is lost.
+
+### Changed
+
 - `@baret/agent-kit`: carries the reviewer's changes of 2026-10-14.
-- Seen through [`examples/agent-blind-signing`](examples/agent-blind-signing): the NovaSwap attack and the agents' collection handover come back as no answer on 0.1.3 and as Blocked with their findings on a packed 0.1.4. Publishing steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-### Planned
+### Checked
 
-From the rest of Venue's report ([`docs/submission/TEXTS.md`](docs/submission/TEXTS.md)): structured error codes with retry hints, a viem example and a multi-party example. Not built yet.
+[`examples/agent-blind-signing`](examples/agent-blind-signing), installed from the registry in a clean folder, printed 12 harmful, 0 signed and 8 of 8 honest against the live API at `0e221b9`, with the NovaSwap attack Blocked by name (`LOOKALIKE_ADDRESS`). On 0.1.3 the same attack came back as no answer. Publishing steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## [0.1.3] - 2026-10-13
 
@@ -76,6 +84,7 @@ First publish, from `main` at `d35094a`, by the npm account that owns the `baret
 - `@baret/agent-kit`: a guarded agent wallet for PaymentGuard vaults, a Dynamic signer and the `baret` CLI.
 - Built JavaScript with type declarations in `dist/`; `prepack` runs the build so a tarball cannot ship without it.
 
+[0.1.4]: https://www.npmjs.com/package/@baret/guard/v/0.1.4
 [0.1.3]: https://www.npmjs.com/package/@baret/guard/v/0.1.3
 [0.1.2]: https://www.npmjs.com/package/@baret/guard/v/0.1.2
 [0.1.1]: https://www.npmjs.com/package/@baret/guard/v/0.1.1
