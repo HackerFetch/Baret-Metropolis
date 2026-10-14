@@ -182,7 +182,6 @@ Said plainly, so that nothing above is read as more than it is:
 - **The CRE workflow runs in the simulator**, with real writes on testnet; it is not deployed to a DON.
 - **Cleanverse settlements are few and on testnet.** One aUSDC payment settled through `CompliantPaymentGuard` with a local Baret server (0.25 aUSDC, 2026-10-13, after Cleanverse's operator minted 20 aUSDC to the owner), and the same pair ran through the live API the same day (block 70738086, ref `ausdc-live-1`), with the payment to the wallet with no credential Blocked before signing. The earlier settlements, of 2026-10-11 and 2026-10-12, are in `BVUSD`, Baret's own test asset issued through Cleanverse's API, through a second deployment of the same contract.
 - **The extension is not in the Chrome Web Store**; it is installed from a zip.
-- **The Alchemy sponsor clip and the 9:16 teaser are not uploaded** (YouTube's daily upload limit).
 - **Mainnet:** nothing is deployed there.
 
 The full list, with owners: [`docs/SYSTEM_GAPS.md`](docs/SYSTEM_GAPS.md).
@@ -238,7 +237,7 @@ Deployment (Vercel, Render, CI): [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Rel
 ## More
 
 - Pitch deck: [`docs/submission/baret-pitch-deck.pdf`](docs/submission/baret-pitch-deck.pdf) · One-pager: [`docs/submission/baret-one-pager.pdf`](docs/submission/baret-one-pager.pdf)
-- All videos: technical demo <https://youtu.be/JdwdpctajxM> · pitch <https://youtu.be/fjZsmcU3QpQ> · Cleanverse <https://youtu.be/UGJStgCq9SM> · Chainlink CRE <https://youtu.be/uZMceqK3GEQ> · Dynamic <https://youtu.be/KLRH9O5LeJE> · Envio <https://youtu.be/iri7VLhC_no> · Mera UX <https://youtu.be/pgcgWSwDV98> · Mera: One Passkey, Many Keys <https://youtu.be/ZOlcxt3v2rE> · Nansen <https://youtu.be/YUZ3QInMWCw> · teaser <https://youtu.be/zU7qnfGqp9Y>. All recorded on the live product on Monad testnet, with English subtitles.
+- All videos: technical demo <https://youtu.be/JdwdpctajxM> · pitch <https://youtu.be/fjZsmcU3QpQ> · Cleanverse <https://youtu.be/UGJStgCq9SM> · Chainlink CRE <https://youtu.be/uZMceqK3GEQ> · Dynamic <https://youtu.be/KLRH9O5LeJE> · Envio <https://youtu.be/iri7VLhC_no> · Mera UX <https://youtu.be/pgcgWSwDV98> · Mera: One Passkey, Many Keys <https://youtu.be/ZOlcxt3v2rE> · Nansen <https://youtu.be/YUZ3QInMWCw> · Alchemy <https://youtu.be/7f7X48z9zpg> · teaser <https://youtu.be/zU7qnfGqp9Y> (vertical: <https://youtube.com/shorts/ZZVVkB2dBFA>). All recorded on the live product on Monad testnet, with English subtitles.
 - Documentation index: [`docs/README.md`](docs/README.md) · Evidence: [`docs/evidence/README.md`](docs/evidence/README.md)
 - [`SECURITY.md`](SECURITY.md) · [`CHANGELOG.md`](CHANGELOG.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Status and plan: [`docs/ROADMAP.md`](docs/ROADMAP.md) · Decisions and their reasons: [`docs/DECISIONS.md`](docs/DECISIONS.md) · Product: [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) · Mainnet readiness: [`docs/next-steps/mainnet-readiness.md`](docs/next-steps/mainnet-readiness.md)

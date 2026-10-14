@@ -39,7 +39,7 @@ only because the forms ask for one.
 | Mera UX video | <https://youtu.be/pgcgWSwDV98> |
 | Mera: One Passkey, Many Keys video | <https://youtu.be/ZOlcxt3v2rE> |
 | Nansen video | <https://youtu.be/YUZ3QInMWCw> |
-| Alchemy | No video (not uploaded: YouTube's daily upload limit); text only |
+| Alchemy | https://youtu.be/7f7X48z9zpg |
 | KIMI article (required) | <https://medium.com/@halesezin/the-model-that-is-not-allowed-to-decide-kimi-inside-a-transaction-firewall-on-monad-49e5c89db960> |
 | Qwen article (required) | <https://medium.com/@halesezin/an-agent-that-has-to-show-its-reading-before-it-can-approve-qwen-3-8-ce3a237bbfe7> |
 | Evidence index | <https://github.com/HackerFetch/Baret-Metropolis/blob/main/docs/evidence/README.md> |
