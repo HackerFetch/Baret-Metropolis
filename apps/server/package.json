@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "verify:demo": "tsx scripts/verify-demo.ts",
+    "export:scenarios": "tsx scripts/export-scenarios.ts",
     "verify:wallet": "tsx scripts/verify-wallet.ts",
     "verify:sealed": "tsx scripts/verify-sealed.ts",
     "verify:x402": "tsx scripts/verify-x402.ts"

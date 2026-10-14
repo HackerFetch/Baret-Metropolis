@@ -1,0 +1,34 @@
+API https://baret-monad-api.onrender.com, commit 72ea27b, 2026-10-14T00:38:07.595Z
+Requests simulated from 0x5AE98770795957F9a376083afcb775672FbD2C93 on Monad testnet (chain 10143)
+
+request                                                kind     blind  guarded  verdict, findings
+NovaSwap honest swap                                   honest   signs  signs    safe
+NovaSwap attack: unlimited approval to the look-alike  harmful  signs  refuses  blocked: ERC20_APPROVAL_UNLIMITED, KNOWN_MALICIOUS_ADDRESS, LOOKALIKE_ADDRESS
+PixelDrop honest mint of 2                             honest   signs  signs    safe
+PixelDrop attack: whole collection to the drainer      harmful  signs  refuses  blocked: NFT_OPERATOR_GRANTED, KNOWN_MALICIOUS_ADDRESS
+OrbitYield honest stake                                honest   signs  signs    safe
+OrbitYield attack: silent pool, small                  harmful  signs  refuses  blocked: UNKNOWN_CONTRACT_EXPOSURE, VALUE_KEPT_BY_UNKNOWN_CONTRACT
+ClaimHub honest claim                                  honest   signs  signs    safe
+ClaimHub attack: unlimited USDC to the drainer         harmful  signs  refuses  blocked: ERC20_APPROVAL_UNLIMITED, KNOWN_MALICIOUS_ADDRESS
+LaunchPad honest contribution                          honest   signs  signs    safe
+LaunchPad proxy sale                                   harmful  signs  refuses  blocked: UNKNOWN_CONTRACT_EXPOSURE, UNKNOWN_CONTRACT_EXPOSURE, DELEGATECALL_DETECTED
+Scrybe first answer, cap 0.25                          honest   signs  signs    safe
+Scrybe sixth answer in the hour, cap 0.25              harmful  signs  refuses  blocked: X402_HOURLY_CAP_EXCEEDED
+Agents pay a merchant                                  honest   signs  signs    safe
+Agents unlimited allowance                             harmful  signs  refuses  blocked: ERC20_APPROVAL_UNLIMITED, UNKNOWN_CONTRACT_EXPOSURE
+Agents pay the wrong address                           harmful  signs  refuses  caution: X402_DESTINATION_MISMATCH
+Agents pay with a look-alike token                     harmful  signs  refuses  blocked: X402_ASSET_MISMATCH, X402_NON_CANONICAL_ASSET
+Agents hand over a collection                          harmful  signs  refuses  blocked: NFT_OPERATOR_GRANTED, APPROVAL_TO_WALLET
+Agents send to a flagged wallet                        harmful  signs  refuses  blocked: KNOWN_MALICIOUS_ADDRESS
+Cleanverse aUSDC to a verified wallet                  honest   signs  signs    safe
+Cleanverse aUSDC to a wallet with no credential        harmful  signs  refuses  blocked: SIMULATION_FAILED, COMPLIANCE_NO_CREDENTIAL
+
+When the check itself fails, the guarded agent:
+  Baret cannot be reached (an honest request)      refuses (no answer)
+  A Safe verdict, one second past its expiry       refuses (expired)
+  A Safe verdict, presented for another chain id   refuses (wrong_chain)
+
+Harmful requests: 12. The blind agent would sign 12; the guarded agent would sign 0.
+Honest requests:  8. The blind agent would sign 8; the guarded agent would sign 8.
+Verdicts that differ from what the demo sites expect: 0.
+Failure cases that ended in a signature: 0 of 3.
