@@ -1,0 +1,683 @@
+{
+  "simulatedFrom": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+  "scenarios": [
+    {
+      "name": "NovaSwap honest swap",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xEB9EA352613D8545d70a586C112C30D23D5C1888",
+          "value": "500000000000000000",
+          "data": "0x89ec70ae0000000000000000000000000000000000000000000000000000000000186a00"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "NovaSwap attack: unlimited approval to the look-alike",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["ERC20_APPROVAL_UNLIMITED", "KNOWN_MALICIOUS_ADDRESS", "LOOKALIKE_ADDRESS"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x5BB6fF1FCbE31ED8FBce6805852Ce279475522fc",
+          "value": "0",
+          "data": "0x095ea7b3000000000000000000000000eb9ebb97bcd146ff1a4424490cbe8e19b7983888ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "PixelDrop honest mint of 2",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xC3fAFF337A197d7BFa49bB3210C0C057dd188688",
+          "value": "20000000000000000",
+          "data": "0xa0712d680000000000000000000000000000000000000000000000000000000000000002"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "PixelDrop attack: whole collection to the drainer",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["NFT_OPERATOR_GRANTED", "KNOWN_MALICIOUS_ADDRESS"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xC3fAFF337A197d7BFa49bB3210C0C057dd188688",
+          "value": "0",
+          "data": "0xa22cb4650000000000000000000000008d42f14012426f6a844bf0f5e6ab7889f8cd79eb0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "OrbitYield honest stake",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x9dD3Bc0e343Bdc4AB2BCD4c96D01bc8500725f38",
+          "value": "1000000000000000000",
+          "data": "0x3a4b66f1"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "OrbitYield attack: silent pool, small",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["UNKNOWN_CONTRACT_EXPOSURE", "VALUE_KEPT_BY_UNKNOWN_CONTRACT"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xb4cCbB7A8a0Ff5564115856C008eD9a46d306fa8",
+          "value": "100000000000000000",
+          "data": "0x3a4b66f1"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "ClaimHub honest claim",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x7cb4a1B209dF1beDEc7843d1bf20E5723BA6Cc2b",
+          "value": "0",
+          "data": "0x4e71d92d"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "ClaimHub attack: unlimited USDC to the drainer",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["ERC20_APPROVAL_UNLIMITED", "KNOWN_MALICIOUS_ADDRESS"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "value": "0",
+          "data": "0x095ea7b30000000000000000000000008d42f14012426f6a844bf0f5e6ab7889f8cd79ebffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "LaunchPad honest contribution",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x7Dc38ed77388b1dacB4653b1681dC7FBF6Dc2aac",
+          "value": "200000000000000000",
+          "data": "0xd7bb99ba"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "LaunchPad proxy sale",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["UNKNOWN_CONTRACT_EXPOSURE", "UNKNOWN_CONTRACT_EXPOSURE", "DELEGATECALL_DETECTED"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x9A217845d5C5b684EBD6BF7973Da8f69dE453439",
+          "value": "200000000000000000",
+          "data": "0xd7bb99ba"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93"
+      }
+    },
+    {
+      "name": "Scrybe first answer, cap 0.25",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "typedData": {
+          "signer": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 10143,
+            "verifyingContract": "0x534b2f3A21130d7a60830c2Df862319e593943A3"
+          },
+          "types": {
+            "TransferWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "TransferWithAuthorization",
+          "message": {
+            "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+            "to": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+            "value": "50000",
+            "validAfter": "0",
+            "validBefore": "1791938424",
+            "nonce": "0x000000000000000000000000000000000000000000000000000001a137d14500"
+          }
+        },
+        "payment": {
+          "origin": "https://usebaret.com",
+          "payTo": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          "asset": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "amount": "50000",
+          "memo": "scrybe-answer",
+          "spendHistory": []
+        },
+        "policy": {
+          "requireSuccessfulSimulation": true,
+          "blockRiskyContracts": true,
+          "blockUnknownContractExposure": false,
+          "blockUnlimitedApprovals": true,
+          "blockSetApprovalForAll": true,
+          "blockPermit": true,
+          "blockSelfdestruct": true,
+          "blockDelegatecall": true,
+          "blockOwnershipTransfer": true,
+          "maxLossPercent": 50,
+          "minPostUsdcBalance": null,
+          "minPostNativeBalance": "0.1",
+          "blockKnownMalicious": true,
+          "minNansenTrustLevel": "new",
+          "requireComplianceCheck": false,
+          "allowedCountries": [],
+          "minComplianceTier": null,
+          "maxGas": 10000000,
+          "requireMemo": false,
+          "maxPerTxCap": "5",
+          "maxHourlyCap": "0.25",
+          "maxDailyCap": "100",
+          "allowedAssets": ["0x534b2f3A21130d7a60830c2Df862319e593943A3"],
+          "allowedMerchantOrigins": [],
+          "allowWarnings": true
+        }
+      }
+    },
+    {
+      "name": "Scrybe sixth answer in the hour, cap 0.25",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["X402_HOURLY_CAP_EXCEEDED"]
+      },
+      "request": {
+        "network": "testnet",
+        "typedData": {
+          "signer": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 10143,
+            "verifyingContract": "0x534b2f3A21130d7a60830c2Df862319e593943A3"
+          },
+          "types": {
+            "TransferWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "TransferWithAuthorization",
+          "message": {
+            "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+            "to": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+            "value": "50000",
+            "validAfter": "0",
+            "validBefore": "1791938424",
+            "nonce": "0x000000000000000000000000000000000000000000000000000001a137d14505"
+          }
+        },
+        "payment": {
+          "origin": "https://usebaret.com",
+          "payTo": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          "asset": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "amount": "50000",
+          "memo": "scrybe-answer",
+          "spendHistory": [
+            {
+              "amount": "50000",
+              "timestamp": 1791937724
+            },
+            {
+              "amount": "50000",
+              "timestamp": 1791937744
+            },
+            {
+              "amount": "50000",
+              "timestamp": 1791937764
+            },
+            {
+              "amount": "50000",
+              "timestamp": 1791937784
+            },
+            {
+              "amount": "50000",
+              "timestamp": 1791937804
+            }
+          ]
+        },
+        "policy": {
+          "requireSuccessfulSimulation": true,
+          "blockRiskyContracts": true,
+          "blockUnknownContractExposure": false,
+          "blockUnlimitedApprovals": true,
+          "blockSetApprovalForAll": true,
+          "blockPermit": true,
+          "blockSelfdestruct": true,
+          "blockDelegatecall": true,
+          "blockOwnershipTransfer": true,
+          "maxLossPercent": 50,
+          "minPostUsdcBalance": null,
+          "minPostNativeBalance": "0.1",
+          "blockKnownMalicious": true,
+          "minNansenTrustLevel": "new",
+          "requireComplianceCheck": false,
+          "allowedCountries": [],
+          "minComplianceTier": null,
+          "maxGas": 10000000,
+          "requireMemo": false,
+          "maxPerTxCap": "5",
+          "maxHourlyCap": "0.25",
+          "maxDailyCap": "100",
+          "allowedAssets": ["0x534b2f3A21130d7a60830c2Df862319e593943A3"],
+          "allowedMerchantOrigins": [],
+          "allowWarnings": true
+        }
+      }
+    },
+    {
+      "name": "Agents pay a merchant",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "typedData": {
+          "signer": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 10143,
+            "verifyingContract": "0x534b2f3A21130d7a60830c2Df862319e593943A3"
+          },
+          "types": {
+            "TransferWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "TransferWithAuthorization",
+          "message": {
+            "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+            "to": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+            "value": "250000",
+            "validAfter": "0",
+            "validBefore": "1791938424",
+            "nonce": "0x000000000000000000000000000000000000000000000000000001a137d14500"
+          }
+        },
+        "payment": {
+          "origin": "https://usebaret.com",
+          "payTo": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          "asset": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "amount": "250000",
+          "memo": "scrybe-answer",
+          "spendHistory": []
+        },
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Agents unlimited allowance",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["ERC20_APPROVAL_UNLIMITED", "UNKNOWN_CONTRACT_EXPOSURE"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "value": "0",
+          "data": "0x095ea7b3000000000000000000000000b4ccbb7a8a0ff5564115856c008ed9a46d306fa8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Agents pay the wrong address",
+      "kind": "harmful",
+      "expected": {
+        "decision": "caution",
+        "codes": ["X402_DESTINATION_MISMATCH"]
+      },
+      "request": {
+        "network": "testnet",
+        "typedData": {
+          "signer": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 10143,
+            "verifyingContract": "0x534b2f3A21130d7a60830c2Df862319e593943A3"
+          },
+          "types": {
+            "TransferWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "TransferWithAuthorization",
+          "message": {
+            "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+            "to": "0x447be657388C5e488cEBC84924d611C3cC32E0f4",
+            "value": "250000",
+            "validAfter": "0",
+            "validBefore": "1791938424",
+            "nonce": "0x000000000000000000000000000000000000000000000000000001a137d14500"
+          }
+        },
+        "payment": {
+          "origin": "https://usebaret.com",
+          "payTo": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          "asset": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "amount": "250000",
+          "memo": "scrybe-answer",
+          "spendHistory": []
+        },
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Agents pay with a look-alike token",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["X402_ASSET_MISMATCH", "X402_NON_CANONICAL_ASSET"]
+      },
+      "request": {
+        "network": "testnet",
+        "typedData": {
+          "signer": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 10143,
+            "verifyingContract": "0x1486794fc4958686115c9797d21aAcE497326826"
+          },
+          "types": {
+            "TransferWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "TransferWithAuthorization",
+          "message": {
+            "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+            "to": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+            "value": "250000",
+            "validAfter": "0",
+            "validBefore": "1791938424",
+            "nonce": "0x000000000000000000000000000000000000000000000000000001a137d14500"
+          }
+        },
+        "payment": {
+          "origin": "https://usebaret.com",
+          "payTo": "0x1365566191bAA9872A64AcDce963751d5343ff49",
+          "asset": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+          "amount": "250000",
+          "memo": "scrybe-answer",
+          "spendHistory": []
+        },
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Agents hand over a collection",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["NFT_OPERATOR_GRANTED", "APPROVAL_TO_WALLET"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xC3fAFF337A197d7BFa49bB3210C0C057dd188688",
+          "value": "0",
+          "data": "0xa22cb4650000000000000000000000001365566191baa9872a64acdce963751d5343ff490000000000000000000000000000000000000000000000000000000000000001"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Agents send to a flagged wallet",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["KNOWN_MALICIOUS_ADDRESS"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+          "to": "0xac9517a70c88480c9fA7E9a280DA485F7f552C29",
+          "value": "100000000000000000",
+          "data": "0x"
+        },
+        "userWallet": "0x5AE98770795957F9a376083afcb775672FbD2C93",
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Cleanverse aUSDC to a verified wallet",
+      "kind": "honest",
+      "expected": {
+        "decision": "safe",
+        "codes": []
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x888895E314BF33CEeBCF5320279061aed3a5E2bd",
+          "to": "0xaC0893567D43C3E7e6e35a72803df05416C1f20D",
+          "value": "0",
+          "data": "0xa9059cbb000000000000000000000000c448042edac1899b023caa0e9da5e4a8833de87300000000000000000000000000000000000000000000000000000000000f4240"
+        },
+        "userWallet": "0x888895E314BF33CEeBCF5320279061aed3a5E2bd",
+        "policyTemplate": "balanced"
+      }
+    },
+    {
+      "name": "Cleanverse aUSDC to a wallet with no credential",
+      "kind": "harmful",
+      "expected": {
+        "decision": "blocked",
+        "codes": ["SIMULATION_FAILED", "COMPLIANCE_NO_CREDENTIAL"]
+      },
+      "request": {
+        "network": "testnet",
+        "transaction": {
+          "from": "0x888895E314BF33CEeBCF5320279061aed3a5E2bd",
+          "to": "0xaC0893567D43C3E7e6e35a72803df05416C1f20D",
+          "value": "0",
+          "data": "0xa9059cbb0000000000000000000000005ae98770795957f9a376083afcb775672fbd2c9300000000000000000000000000000000000000000000000000000000000f4240"
+        },
+        "userWallet": "0x888895E314BF33CEeBCF5320279061aed3a5E2bd",
+        "policyTemplate": "balanced"
+      }
+    }
+  ]
+}

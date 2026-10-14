@@ -126,7 +126,7 @@ A site that is not connected gets error 4100 for a signing method. Events: `acco
 
 `baret check` (the verdict for a call) and `baret send` (send only if Baret clears it), as commands of the `mm` CLI. Built, not entered for the bounty.
 
-`@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm since 2026-10-11 (0.1.3 since 2026-10-13, `npm install @baret/agent-kit`). Inside this repository they resolve to their sources.
+`@baret/guard`, `@baret/llm` and `@baret/agent-kit` are on npm since 2026-10-11 (0.1.3 since 2026-10-13, `npm install @baret/agent-kit`; 0.1.4 is raised in the repository and waits on its publish, see `docs/DEPLOYMENT.md`). Inside this repository they resolve to their sources.
 
 ## 4. The analysis server: HTTP API
 
