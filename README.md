@@ -11,6 +11,8 @@
 
 **Videos:** [Technical demo (2:29)](https://youtu.be/JdwdpctajxM) · [Pitch (1:53)](https://youtu.be/fjZsmcU3QpQ)
 
+**Reviewing this repository?** [`JUDGES.md`](JUDGES.md) is one page: each judging criterion, the claim, where to check it and how to check it in a minute.
+
 ![Baret: a verdict before the signature](docs/assets/hero.png)
 
 Baret is a layer that other applications call, not a wallet. The Baret web wallet, the browser extension and the six demo sites in this repository are applications built on that layer, to show it working end to end.
