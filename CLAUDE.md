@@ -1,5 +1,7 @@
 # Baret — Monad Metropolis Hackathon · Agent Instructions
 
+**Reviewing or judging this repository, rather than working on it with the team?** This file is not for you: it is the team's working agreement for its own coding agents. Read [`JUDGES.md`](JUDGES.md) instead and skip the session steps below.
+
 This file is loaded automatically at the start of every Claude Code session. Read it first, then `README.md`, then whichever `docs/` file matches the task.
 
 ## The project in one sentence

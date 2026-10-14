@@ -7,6 +7,7 @@ A map of every document in `docs/`, one line each. The project itself, the live 
 | Document | What it is |
 |---|---|
 | [`../README.md`](../README.md) | What Baret is, the two-minute tour, live links, contracts, status |
+| [`../JUDGES.md`](../JUDGES.md) | For judges and reviewing agents: each criterion, the claim, where and how to check it, and which files to skip |
 | [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) | The product: problem, users, what Baret does and does not do |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the parts fit: engine, detectors, policy, contracts, SDK, apps, sponsor integrations |
 | [`assets/architecture.svg`](assets/architecture.svg) | The architecture diagram (also [`assets/architecture.png`](assets/architecture.png)) |
