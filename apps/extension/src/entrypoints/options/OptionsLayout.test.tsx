@@ -6,11 +6,13 @@
 
 import { extFrame } from "@baret/content/extension/frame.content";
 import { locked } from "@baret/content/extension/popup/locked.content";
+import { navRoutes } from "@baret/routes";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ExtensionProvider } from "../../data/store.js";
-import { Component, resetHref } from "./OptionsLayout.js";
+import { Component, GROUPS, resetHref } from "./OptionsLayout.js";
+import { routes } from "./routes.js";
 
 afterEach(() => {
   cleanup();
@@ -28,6 +30,14 @@ describe("resetHref", () => {
     expect(resetHref("/options.html", false)).toBe(
       "/options.html?sample=empty&offline=1&restore=1#/onboarding",
     );
+  });
+});
+
+describe("sidebar", () => {
+  it("lists every page of the options frame once", () => {
+    const pages = navRoutes(routes, "main").map((route) => route.key as string);
+    const grouped = GROUPS.flatMap((group) => group.keys);
+    expect([...grouped].sort()).toEqual([...pages].sort());
   });
 });
 

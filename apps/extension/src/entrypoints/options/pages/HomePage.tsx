@@ -107,7 +107,12 @@ export function Component() {
   return (
     <Screen title={optionsHome.title} body={optionsHome.lead} picture={OPTIONS_ART.overview}>
       <div className="grid gap-14">
-        <div className="grid gap-8 md:grid-cols-12 md:items-end md:gap-8">
+        {/* The balance first, in the web wallet's card, with Baret's status beside it. */}
+        <div className="relative grid gap-8 overflow-hidden border border-[color:var(--rule)] bg-[color:var(--ground-deep)] p-5 md:grid-cols-12 md:items-end md:gap-8 md:p-8">
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-1 bg-[color:var(--accent)]"
+          />
           <div className="grid gap-2 md:col-span-7">
             <p className={T.label}>{balance.label}</p>
             {total === undefined ? (
