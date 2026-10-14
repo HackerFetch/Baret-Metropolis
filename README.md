@@ -17,6 +17,15 @@ Built for Monad Metropolis, track **Trust, Identity & AI Infrastructure**, by Ez
 
 The five other demo sites, OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe, each have an honest version and an attack: <https://usebaret.com/showcase>.
 
+## Videos
+
+- **Technical demo (2:29):** <https://youtu.be/JdwdpctajxM>
+- **Pitch (1:53):** <https://youtu.be/fjZsmcU3QpQ>
+- **Sponsor clips:** Cleanverse <https://youtu.be/UGJStgCq9SM> · Chainlink CRE <https://youtu.be/uZMceqK3GEQ> · Dynamic <https://youtu.be/KLRH9O5LeJE> · Envio <https://youtu.be/iri7VLhC_no> · Mera UX <https://youtu.be/pgcgWSwDV98> · Mera: One Passkey, Many Keys <https://youtu.be/ZOlcxt3v2rE> · Nansen <https://youtu.be/YUZ3QInMWCw>
+- **Teaser (0:18):** <https://youtu.be/zU7qnfGqp9Y>
+
+All recorded on the live product on Monad testnet, with English subtitles.
+
 ## The live product
 
 | What | Where | What to do there |

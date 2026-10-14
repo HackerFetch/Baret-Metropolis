@@ -6,6 +6,22 @@ Ready to paste into the platform's form fields. Each entry has three parts: what
 
 Rule for every entry: a prize whose feature is not working on the live URL at the freeze is not entered, and the reason goes into `docs/BOUNTIES_AND_TRACKS.md`. A **[gate]** line names what must be true first; an entry with an open gate on Monday is not submitted.
 
+**The videos (uploaded 2026-10-14 to the Baret Wallet channel, unlisted, English subtitles):**
+
+| Video | Link |
+|---|---|
+| Technical demo (2:29) | https://youtu.be/JdwdpctajxM |
+| Pitch (1:53) | https://youtu.be/fjZsmcU3QpQ |
+| Cleanverse (2:10) | https://youtu.be/UGJStgCq9SM |
+| Chainlink CRE (1:17) | https://youtu.be/uZMceqK3GEQ |
+| Dynamic (0:50) | https://youtu.be/KLRH9O5LeJE |
+| Envio (0:39) | https://youtu.be/iri7VLhC_no |
+| Mera UX (0:58) | https://youtu.be/pgcgWSwDV98 |
+| Mera: One Passkey, Many Keys (1:02) | https://youtu.be/ZOlcxt3v2rE |
+| Nansen (0:51) | https://youtu.be/YUZ3QInMWCw |
+| Teaser, 16:9 (0:18) | https://youtu.be/zU7qnfGqp9Y |
+| Alchemy, teaser 9:16 | not uploaded yet: the channel hit YouTube's daily upload limit for unverified channels |
+
 Common links, used below:
 
 - Repository: <https://github.com/HackerFetch/Baret-Metropolis>
@@ -17,6 +33,8 @@ Common links, used below:
 ## 1. Main track: Trust, Identity & AI Infrastructure
 
 **The form asks:** the project logo (`docs/submission/baret-mark-1024.png` for a square box; `baret-logo-1024.png` is the wordmark), the public repository, a technical demo video (max 3 min), a pitch video (max 2 min), a live link with access instructions.
+
+**Videos:** technical demo https://youtu.be/JdwdpctajxM · pitch https://youtu.be/fjZsmcU3QpQ
 
 **One-line description (the form allows 200 characters; this is 185):**
 
@@ -223,6 +241,8 @@ Say "the developer of Venue" or "brutaldevvin", never "a Metropolis team" or "an
 
 **The form asks:** how the project integrates the Nansen API, MCP or CLI; an optional demo video (max 2 min).
 
+**Video:** https://youtu.be/YUZ3QInMWCw
+
 **Text:**
 
 ```text
@@ -243,6 +263,8 @@ Live proof, checked on 2026-10-11: a transfer to an address Nansen has no record
 
 **The form asks:** how the project integrates the Dynamic SDK; an optional demo video (max 2 min).
 
+**Video:** https://youtu.be/KLRH9O5LeJE
+
 **Text:**
 
 ```text
@@ -261,6 +283,8 @@ Judges can see it on https://usebaret.com/agents, under "A real agent, paying fr
 
 **The form asks:** how the project integrates Mera as the entire account layer; an optional demo video (max 2 min) focused on the UX.
 
+**Video:** https://youtu.be/pgcgWSwDV98
+
 **Text:**
 
 ```text
@@ -278,6 +302,8 @@ Measured on a fork, not yet on a phone: four taps from the landing page to a con
 ## 5. Mera: One Passkey, Many Keys
 
 **The form asks:** how the project uses Mera in non-account work; an optional demo video (max 2 min).
+
+**Video:** https://youtu.be/ZOlcxt3v2rE
 
 **Text:**
 
@@ -302,6 +328,8 @@ How far it is tested: save, wipe the site's storage, restore with the same passk
 ## 6. Best Integration of Cleanverse Verified Identity & Assets
 
 **The form asks:** the compliance use case, described; a demo video (max 5 min) showing CVI credentials verified before any CVA transfer or settlement.
+
+**Video:** https://youtu.be/UGJStgCq9SM
 
 **Text:**
 
@@ -332,6 +360,8 @@ Judges can run the check on https://usebaret.com/agents: "Pay aUSDC to a verifie
 ## 7. Best Use of Envio
 
 **The form asks:** how the project uses Envio; an optional demo video (max 2 min).
+
+**Video:** https://youtu.be/iri7VLhC_no
 
 **Text:**
 
@@ -372,6 +402,8 @@ The trace itself (debug_traceCall, the simulation that records every internal ca
 ## 9. Best workflow with CRE (Chainlink)
 
 **The form asks:** how the project uses CRE as an orchestration layer; a demo video (max 2 min) of a successful simulation or a live deployment.
+
+**Video:** https://youtu.be/uZMceqK3GEQ
 
 **Text:**
 
