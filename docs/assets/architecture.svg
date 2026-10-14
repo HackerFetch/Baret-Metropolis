@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="'Inter','Helvetica Neue',Helvetica,Arial,sans-serif">
+  <title>Baret architecture: every transaction is checked before it is signed</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#121316"/>
+    </marker>
+    <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#FF4F00"/>
+    </marker>
+    <style>
+      .h { font-size: 15px; font-weight: 800; letter-spacing: 0.12em; fill: #121316; }
+      .t { font-size: 22px; font-weight: 700; fill: #121316; }
+      .s { font-size: 16px; fill: #3A3B40; }
+      .m { font-family: 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 14px; fill: #5A5B60; }
+      .card { fill: #F8F8F5; stroke: #121316; stroke-width: 1.5; }
+      .frame { fill: none; stroke: #121316; stroke-width: 1.5; stroke-dasharray: 6 6; }
+      .line { stroke: #121316; stroke-width: 2; fill: none; }
+      .lab { font-size: 14px; font-weight: 700; letter-spacing: 0.08em; fill: #121316; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#E6E6E1"/>
+
+  <!-- Title -->
+  <g transform="translate(56,40) scale(0.8)">
+    <path fill="#FF4F00" fill-rule="evenodd" d="M13 38C13 22.5 21 14 32 14s19 8.5 19 24ZM21 27v4h22v-4Z"/>
+    <path fill="#FF4F00" d="M6 41h52l3 3.5-3 4.5H6l-3-4.5Z"/>
+  </g>
+  <text x="118" y="84" font-size="40" font-weight="800" fill="#121316" letter-spacing="0.02em">BARET · ARCHITECTURE</text>
+  <text x="120" y="118" font-size="20" fill="#3A3B40">Check it first. Then sign. Every transaction is simulated and judged before a wallet, dapp or agent signs it.</text>
+
+  <!-- ============ Column 1: callers ============ -->
+  <text x="60" y="160" class="h">1 · CALLERS</text>
+  <g>
+    <rect x="60" y="180" width="340" height="96" class="card"/>
+    <text x="80" y="214" class="t">Baret web wallet</text>
+    <text x="80" y="240" class="s">passkeys (Mera), no recovery phrase</text>
+    <text x="80" y="262" class="m">wallet.usebaret.com</text>
+
+    <rect x="60" y="292" width="340" height="96" class="card"/>
+    <text x="80" y="326" class="t">Browser extension</text>
+    <text x="80" y="352" class="s">a wallet that checks before it signs</text>
+    <text x="80" y="374" class="m">apps/extension</text>
+
+    <rect x="60" y="404" width="340" height="96" class="card"/>
+    <text x="80" y="438" class="t">Any dapp</text>
+    <text x="80" y="464" class="s">calls the API through the SDK</text>
+    <text x="80" y="486" class="m">@baret/guard</text>
+
+    <rect x="60" y="516" width="340" height="96" class="card"/>
+    <text x="80" y="550" class="t">AI agents</text>
+    <text x="80" y="576" class="s">guarded signer, pays from a vault</text>
+    <text x="80" y="598" class="m">@baret/agent-kit</text>
+
+    <rect x="60" y="628" width="340" height="96" class="card"/>
+    <text x="80" y="662" class="t">MetaMask Agent Wallet</text>
+    <text x="80" y="688" class="s">Baret as a firewall plugin</text>
+    <text x="80" y="710" class="m">packages/metamask-plugin</text>
+  </g>
+  <!-- bus into the API -->
+  <path d="M400 228 H430 M400 340 H430 M400 452 H430 M400 564 H430 M400 676 H430 M430 228 V676" class="line"/>
+  <path d="M430 452 H468" class="line" marker-end="url(#arr)"/>
+  <text x="404" y="436" class="lab" font-size="12">TX</text>
+
+  <!-- ============ Column 2: Baret API ============ -->
+  <text x="470" y="160" class="h">2 · BARET API  <tspan class="m" letter-spacing="0">apps/server · baret-monad-api.onrender.com</tspan></text>
+  <rect x="470" y="180" width="600" height="580" fill="#121316"/>
+  <rect x="470" y="180" width="6" height="580" fill="#FF4F00"/>
+
+  <g>
+    <rect x="500" y="204" width="540" height="104" fill="#1F2024"/>
+    <text x="524" y="240" font-size="22" font-weight="700" fill="#EDEDE8">Simulate on Monad</text>
+    <text x="524" y="268" font-size="16" fill="#B9B9B3">Alchemy RPC + debug trace: balance changes, approvals,</text>
+    <text x="524" y="290" font-size="16" fill="#B9B9B3">calls, reverts. No result = Blocked (fail-closed).</text>
+
+    <path d="M770 308 V328" stroke="#EDEDE8" stroke-width="2" marker-end="url(#arrO)"/>
+
+    <rect x="500" y="332" width="540" height="104" fill="#1F2024"/>
+    <text x="524" y="368" font-size="22" font-weight="700" fill="#EDEDE8">Risk detectors</text>
+    <text x="524" y="396" font-size="16" fill="#B9B9B3">risky approvals, look-alike addresses, flagged</text>
+    <text x="524" y="418" font-size="16" fill="#B9B9B3">addresses, compliance, unknown contracts, x402</text>
+
+    <path d="M770 436 V456" stroke="#EDEDE8" stroke-width="2" marker-end="url(#arrO)"/>
+
+    <rect x="500" y="460" width="540" height="104" fill="#1F2024"/>
+    <text x="524" y="496" font-size="22" font-weight="700" fill="#EDEDE8">Policy engine</text>
+    <text x="524" y="524" font-size="16" fill="#B9B9B3">the user's own rules (GuardPolicy, JSON data)</text>
+    <text x="524" y="546" font-size="16" fill="#B9B9B3">turn findings into one verdict with reasons</text>
+
+    <rect x="500" y="592" width="262" height="144" fill="#1F2024"/>
+    <text x="520" y="626" font-size="20" font-weight="700" fill="#EDEDE8">KIMI explain</text>
+    <text x="520" y="654" font-size="15" fill="#B9B9B3">the verdict in plain</text>
+    <text x="520" y="675" font-size="15" fill="#B9B9B3">language; never changes it</text>
+    <text x="520" y="716" font-family="Menlo, monospace" font-size="13" fill="#8A8A85">/v1/explain</text>
+
+    <rect x="778" y="592" width="262" height="144" fill="#1F2024"/>
+    <text x="798" y="626" font-size="20" font-weight="700" fill="#EDEDE8">Qwen review</text>
+    <text x="798" y="654" font-size="15" fill="#B9B9B3">agent payments: sees only</text>
+    <text x="798" y="675" font-size="15" fill="#B9B9B3">Safe calls, can only veto</text>
+    <text x="798" y="716" font-family="Menlo, monospace" font-size="13" fill="#8A8A85">/v1/review</text>
+  </g>
+
+  <!-- ============ Column 3: sources ============ -->
+  <text x="1140" y="250" class="h">3 · SOURCES THE ENGINE READS</text>
+  <g>
+    <rect x="1140" y="266" width="330" height="164" class="card"/>
+    <text x="1160" y="300" class="t">ReputationRegistry</text>
+    <text x="1160" y="326" class="s">on-chain threat flags, filled by</text>
+    <text x="1160" y="348" class="s">the Chainlink CRE workflow</text>
+    <text x="1160" y="370" class="s">from the ScamSniffer feed</text>
+    <text x="1160" y="408" class="m">workflows/ → OracleReceiver</text>
+
+    <rect x="1140" y="446" width="330" height="94" class="card"/>
+    <text x="1160" y="480" class="t">Nansen</text>
+    <text x="1160" y="506" class="s">address labels</text>
+
+    <rect x="1140" y="556" width="330" height="94" class="card"/>
+    <text x="1160" y="590" class="t">Cleanverse</text>
+    <text x="1160" y="616" class="s">identity credentials (no personal data)</text>
+
+    <rect x="1140" y="666" width="330" height="94" class="card"/>
+    <text x="1160" y="700" class="t">Envio indexer</text>
+    <text x="1160" y="726" class="s">vault and registry events</text>
+  </g>
+  <path d="M1140 348 H1074" class="line" marker-end="url(#arr)"/>
+  <path d="M1140 493 H1074" class="line" marker-end="url(#arr)"/>
+  <path d="M1140 603 H1074" class="line" marker-end="url(#arr)"/>
+  <path d="M1140 713 H1074" class="line" marker-end="url(#arr)"/>
+  <text x="1080" y="338" class="lab" font-size="12">READ</text>
+
+  <!-- ============ Column 4: verdict ============ -->
+  <path d="M1070 208 H1536" stroke="#FF4F00" stroke-width="3" fill="none" marker-end="url(#arrO)"/>
+  <text x="1140" y="196" class="lab" fill="#FF4F00">VERDICT + REASONS, BACK TO THE CALLER</text>
+  <text x="1560" y="160" class="h">4 · VERDICT</text>
+  <rect x="1540" y="180" width="320" height="340" class="frame"/>
+  <g>
+    <path d="M1560 210 H1830 L1840 220 V280 H1560 Z" fill="#F3EFE4"/>
+    <rect x="1560" y="210" width="6" height="70" fill="#0F8A5F"/>
+    <text x="1584" y="253" font-size="28" font-weight="800" letter-spacing="0.06em" fill="#0F8A5F">SAFE</text>
+
+    <path d="M1560 300 H1830 L1840 310 V370 H1560 Z" fill="#F3EFE4"/>
+    <rect x="1560" y="300" width="6" height="70" fill="#C27400"/>
+    <text x="1584" y="343" font-size="28" font-weight="800" letter-spacing="0.06em" fill="#C27400">CAUTION</text>
+
+    <path d="M1560 390 H1830 L1840 400 V460 H1560 Z" fill="#F3EFE4"/>
+    <rect x="1560" y="390" width="6" height="70" fill="#D3210A"/>
+    <text x="1584" y="433" font-size="28" font-weight="800" letter-spacing="0.06em" fill="#D3210A">BLOCKED</text>
+    <text x="1560" y="498" class="s">each with the reasons that led to it</text>
+  </g>
+  <path d="M1700 520 V572" class="line" marker-end="url(#arr)"/>
+  <rect x="1540" y="576" width="320" height="184" fill="#FF4F00"/>
+  <text x="1564" y="618" font-size="26" font-weight="800" fill="#121316" letter-spacing="0.04em">SIGN OR REFUSE</text>
+  <text x="1564" y="652" font-size="16" fill="#121316">The caller signs only after</text>
+  <text x="1564" y="674" font-size="16" fill="#121316">the check. Missing data means</text>
+  <text x="1564" y="696" font-size="16" fill="#121316">Blocked. An agent's vault</text>
+  <text x="1564" y="718" font-size="16" fill="#121316">also enforces its spending</text>
+  <text x="1564" y="740" font-size="16" fill="#121316">caps on chain.</text>
+
+  <!-- ============ Bottom band: contracts on Monad ============ -->
+  <text x="60" y="820" class="h">5 · CONTRACTS ON MONAD</text>
+  <rect x="322" y="802" width="300" height="26" fill="#836EF9"/>
+  <text x="338" y="821" font-size="14" font-weight="700" fill="#FFFFFF" letter-spacing="0.06em">MONAD TESTNET · CHAIN ID 10143</text>
+  <text x="642" y="821" class="s">source verified on Monad's Sourcify · explorer testnet.monadscan.com</text>
+  <g>
+    <rect x="60" y="844" width="438" height="176" class="card"/>
+    <rect x="60" y="844" width="438" height="4" fill="#836EF9"/>
+    <text x="80" y="882" class="t">PaymentGuard vaults</text>
+    <text x="80" y="908" class="s">an agent pays only allowed merchants,</text>
+    <text x="80" y="930" class="s">under per-payment / hour / day caps</text>
+    <text x="80" y="964" class="t" font-size="19">+ PaymentGuardFactory</text>
+    <text x="80" y="990" class="s">one vault per owner, isVault(address)</text>
+
+    <rect x="514" y="844" width="438" height="176" class="card"/>
+    <rect x="514" y="844" width="438" height="4" fill="#836EF9"/>
+    <text x="534" y="882" class="t">CompliantPaymentGuard</text>
+    <text x="534" y="908" class="s">agent payments settled only between</text>
+    <text x="534" y="930" class="s">parties holding Cleanverse credentials</text>
+    <text x="534" y="964" class="m">aUSDC and BVUSD deployments</text>
+
+    <rect x="968" y="844" width="438" height="176" class="card"/>
+    <rect x="968" y="844" width="438" height="4" fill="#836EF9"/>
+    <text x="988" y="882" class="t">ReputationRegistry</text>
+    <text x="988" y="908" class="s">threat flags the API reads</text>
+    <text x="988" y="964" class="t" font-size="19">+ ReputationOracleReceiver</text>
+    <text x="988" y="990" class="s">writes the CRE workflow's reports</text>
+
+    <rect x="1422" y="844" width="438" height="176" class="card"/>
+    <rect x="1422" y="844" width="438" height="4" fill="#836EF9"/>
+    <text x="1442" y="882" class="t">SealedStore</text>
+    <text x="1442" y="908" class="s">wallet settings sealed with a passkey</text>
+    <text x="1442" y="930" class="s">(Mera); the chain stores only ciphertext</text>
+  </g>
+  <text x="60" y="1056" class="m">github.com/HackerFetch/Baret-Metropolis · docs/ARCHITECTURE.md · docs/CONTRACTS.md</text>
+</svg>
