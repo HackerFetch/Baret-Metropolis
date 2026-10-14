@@ -92,7 +92,7 @@ Everything is live on Monad testnet (chain id 10143) and open to anyone with a b
 - Used outside the team: during the hackathon an independent developer, the author of Venue, an order book for Cleanverse Verified Assets on Monad testnet, wired @baret/guard into Venue's signing path from the npm package and its README alone. Their own approval transaction exposed a threshold fault in our unlimited-allowance rule. We fixed it the same day and they confirmed the same transaction is now Blocked. Commit: https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803. Their report: https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md.
 - Live product: https://usebaret.com (six demo sites, each with an honest version and an attack, the agents playground and the Qwen reviewer), the passkey wallet at https://wallet.usebaret.com, and the API (its health page: https://baret-monad-api.onrender.com/health).
 - Published SDK: @baret/guard, @baret/agent-kit and @baret/llm, version 0.1.3, on npm (https://www.npmjs.com/package/@baret/guard). Two of the points in Venue's report shipped in 0.1.3.
-- Tests: 1,343 automated tests in 125 files, 85 Foundry tests on the contracts including fuzz and invariant tests, and a script that sends all twenty demo scenarios to the live API and agrees on 20 of 20.
+- Tests: 1,507 automated tests in 135 files, 85 Foundry tests on the contracts including fuzz and invariant tests, and a script that sends all twenty demo scenarios to the live API and agrees on 20 of 20.
 - Videos: a technical demo (2:29) at https://youtu.be/JdwdpctajxM and a pitch (1:53) at https://youtu.be/fjZsmcU3QpQ, and short videos for the sponsor integrations.
 - On chain: the contracts are source verified on Monad's Sourcify, and the on-chain claims in the repository carry their transactions. For example, an agent payment from a Dynamic wallet through a vault: https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3.
 - Repository: https://github.com/HackerFetch/Baret-Metropolis.
@@ -125,7 +125,7 @@ Baret is for any product on Monad whose flow ends in a signature. Four groups, i
 
 WHY THEY CHOOSE BARET OVER BUILDING THEIR OWN
 
-Building this in-house means building five things, not one: a transaction simulation and a parser for its trace; a set of detectors that is kept up to date as attacks change; a threat-data pipeline (an on-chain reputation registry fed by a Chainlink CRE workflow from ScamSniffer's blacklist, Nansen labels, Cleanverse credentials); a policy engine with rules the end user can change; and the tests that make any of it trustworthy (1,343 automated tests today, plus 85 Foundry tests on the contracts). None of it is the team's product. With Baret it is one HTTP call with no key, or four lines with the SDK.
+Building this in-house means building five things, not one: a transaction simulation and a parser for its trace; a set of detectors that is kept up to date as attacks change; a threat-data pipeline (an on-chain reputation registry fed by a Chainlink CRE workflow from ScamSniffer's blacklist, Nansen labels, Cleanverse credentials); a policy engine with rules the end user can change; and the tests that make any of it trustworthy (1,507 automated tests today, plus 85 Foundry tests on the contracts). None of it is the team's product. With Baret it is one HTTP call with no key, or four lines with the SDK.
 
 Three further reasons came out of the first integration:
 
