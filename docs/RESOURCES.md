@@ -1,6 +1,6 @@
 # Baret — Resource Map
 
-> Which sponsor tool/document lives where, how it is used, and what its claim status is. Source: `Resources.txt` (hackathon.monad.xyz/resources, snapshot of 2026-09-13). Before starting an integration, check the relevant row in this file and the env variables in `ARCHITECTURE.md` §9.
+> Which sponsor tool/document lives where, how it is used, and what its claim status is. Source: `docs/research/hackathon-resources.txt` (hackathon.monad.xyz/resources, snapshot of 2026-09-13). Before starting an integration, check the relevant row in this file and the env variables in `ARCHITECTURE.md` §9.
 
 Last updated: 2026-09-13
 
@@ -8,7 +8,7 @@ Last updated: 2026-09-13
 
 ## 1. Sponsor Perks — Claim Tracking
 
-| Perk | Value | Claim link (in Resources.txt) | Purpose in Baret | Claim status |
+| Perk | Value | Claim link (in docs/research/hackathon-resources.txt) | Purpose in Baret | Claim status |
 |---|---|---|---|---|
 | Tenderly Pro | ~$7,200 | Notion: Tenderly Access for Metropolis | PaymentGuard.sol debug/simulate, revert trace inspection, multi-step scenario rehearsal on a virtual testnet (recording before the demo) | ➖ Not claimed, not needed (2026-10-10): the build finished without it |
 | Quicknode Build Plan | ~$147 | Notion: Quicknode Credits for Metropolis Hackers | Backup RPC to Alchemy + webhooks (chain event monitoring) | ➖ Not claimed, not needed (2026-10-10): the build finished without it |
@@ -32,7 +32,7 @@ Last updated: 2026-09-13
 | [Deploy a smart contract](https://docs.monad.xyz/guides/deploy-smart-contract/index) | PaymentGuard deploy with Foundry — Week 1 |
 | [Indexers guide](https://docs.monad.xyz/guides/indexers/index) | Before the Envio setup |
 
-Enable **Monad gas pricing** in Foundry for local tests (MIP-8 note — see `notes (4).txt`): make storage layout decisions accordingly (group per-user fields in a single struct).
+Enable **Monad gas pricing** in Foundry for local tests (MIP-8 note — see `docs/research/workshop-notes-chainlink-cre-gtm-mip8.txt`): make storage layout decisions accordingly (group per-user fields in a single struct).
 
 ---
 
@@ -45,11 +45,11 @@ Enable **Monad gas pricing** in Foundry for local tests (MIP-8 note — see `not
 | Alchemy MCP Server / Agent Skills | [Docs](https://www.alchemy.com/docs/alchemy-mcp-server) | Live chain data for the AI agent (me) during development | Tier S #8 |
 | Envio HyperIndex | [Monad testnet quickstart](https://docs.envio.dev/docs/HyperIndex/monad-testnet) | `indexer/` — PaymentGuard + ReputationRegistry events | Tier S #7 |
 | Envio HyperSync/HyperRPC | [Overview](https://docs.envio.dev/docs/HyperSync/overview) | Backfill (the indexer pulls historical events quickly on first setup) | Tier S #7 |
-| Nansen API / CLI / MCP | [Similar to the Zerion CLI, Resources.txt §MCP] | `reputation.ts` — segment-based labeling | Tier S #2 |
-| Dynamic SDK + CLI | Resources.txt (Dynamic section, detail link on the platform) | `agent-kit` — autonomous/server wallet, delegation | Tier S #3 |
+| Nansen API / CLI / MCP | [Similar to the Zerion CLI, docs/research/hackathon-resources.txt §MCP] | `reputation.ts` — segment-based labeling | Tier S #2 |
+| Dynamic SDK + CLI | docs/research/hackathon-resources.txt (Dynamic section, detail link on the platform) | `agent-kit` — autonomous/server wallet, delegation | Tier S #3 |
 | Mera guide | [docs.monad.xyz/guides/mera](https://docs.monad.xyz/guides/mera) | `apps/wallet` — passkey account layer + PRF sub-key | Tier S #4, #5 |
-| Cleanverse API | To be obtained from the platform (the sponsor name is in Bounties.txt, API details are not in Resources.txt — will be requested via the sponsor channel in Week 1) | `compliance.ts` | Tier S #6 |
-| Chainlink CRE | Resources.txt (CRE section) + `notes (4).txt` (weather demo pattern) | `workflows/reputation-oracle` | Tier A #10 |
+| Cleanverse API | To be obtained from the platform (the sponsor name is in docs/research/hackathon-tracks-and-bounties.txt, API details are not in docs/research/hackathon-resources.txt — will be requested via the sponsor channel in Week 1) | `compliance.ts` | Tier S #6 |
+| Chainlink CRE | docs/research/hackathon-resources.txt (CRE section) + `docs/research/workshop-notes-chainlink-cre-gtm-mip8.txt` (weather demo pattern) | `workflows/reputation-oracle` | Tier A #10 |
 | QuickNode Streams/Webhooks | [Streams](https://www.quicknode.com/docs/streams), [Webhooks](https://www.quicknode.com/docs/webhooks/getting-started) | Backup/complementary chain event monitoring | Tier S #8 (backup for Alchemy) |
 | Tenderly Simulator/Debugger/Virtual TestNet/Alerts | [tenderly.co](https://tenderly.co/) | Contract development + demo rehearsal environment | Perk, not a bounty directly but improves quality |
 | Zerion CLI/API | [developers.zerion.io](https://developers.zerion.io/) | Optional — backup data source for wallet activity | Perk, optional |
@@ -61,7 +61,7 @@ Enable **Monad gas pricing** in Foundry for local tests (MIP-8 note — see `not
 
 ## 4. Idea-Based References (to consult while writing code)
 
-This section lists the entries from the "Idea-specific resources" part of `Resources.txt` that apply directly to Baret:
+This section lists the entries from the "Idea-specific resources" part of `docs/research/hackathon-resources.txt` that apply directly to Baret:
 
 - [Monad for Developers](https://docs.monad.xyz/introduction/monad-for-developers) in the **Execution-Aware Trading Interfaces** section — the 400ms block / 800ms finality performance envelope and the "no pending state" UI design principle will be applied to the extension popup.
 - **Embedded Trading in Non-Trading Apps** → [Monad Embedded Wallets docs](https://docs.monad.xyz/tooling-and-infra/wallet-infra/embedded-wallets) — reference for how the fake dApps in the showcase set up their own embedded wallets (Baret protects them from the outside).
@@ -86,4 +86,4 @@ The full technical list is in `ARCHITECTURE.md` §9. This table only tracks **wh
 | `TENDERLY_ACCESS_KEY` | Tenderly (perk) | Claim via the Notion link | ⬜ |
 | `QUICKNODE_ENDPOINT` | QuickNode (perk) | Claim via the Notion link | ⬜ |
 
-**Security note (Uttam/Alchemy, `notes-2.txt`):** No key will ever be written into code or prompt text; `.env` + `.gitignore`. Agent secrets (`agent-kit`) are never written to a file, only read from env/config.
+**Security note (Uttam/Alchemy, `docs/research/workshop-notes-kickoff-envio-alchemy-zerion.txt`):** No key will ever be written into code or prompt text; `.env` + `.gitignore`. Agent secrets (`agent-kit`) are never written to a file, only read from env/config.

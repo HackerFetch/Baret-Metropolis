@@ -8,7 +8,7 @@ Last updated: 2026-10-11 · Status: **checked and settled.** Baret checks an x40
 
 ## 1. What is x402 (short)
 
-When an API is accessed without payment, it returns `402 Payment Required` + `PaymentRequirements` (to whom, how much, which asset, which network). The client (usually an AI agent) uses this information to pay and re-sends the request. In the default behavior the agent pays automatically **without showing this information to anyone** — this blind-signing problem is exactly what Baret solves (see `PROJECT_OVERVIEW.md` §2, `notes-2.txt`: "No one's going out there and pasting private keys around anymore").
+When an API is accessed without payment, it returns `402 Payment Required` + `PaymentRequirements` (to whom, how much, which asset, which network). The client (usually an AI agent) uses this information to pay and re-sends the request. In the default behavior the agent pays automatically **without showing this information to anyone** — this blind-signing problem is exactly what Baret solves (see `PROJECT_OVERVIEW.md` §2, `docs/research/workshop-notes-kickoff-envio-alchemy-zerion.txt`: "No one's going out there and pasting private keys around anymore").
 
 ## 2. Roles
 
@@ -92,7 +92,7 @@ These fields are **conceptually the same model** as `setMerchantCap` in `Payment
 - [x] A real settlement on Monad testnet (D-046, 2026-10-11): `pnpm --filter @baret/server verify:x402` against the live API — the 402 terms, Baret's verdict before signing, the 200 answer, the on-chain transaction, both balances moving, and the same authorisation replayed answering 402 again. 8 of 8 (Hale, 2026-10-11, API commit `5b92f54`, tx `0x207612b6021852a76b63569dc4b9504c1a9036debf2fb8e9581e46d0d7dc2d61`, block 70138038).
 
 The first four boxes are ticked from `verify:demo` against the live API (Hale, 2026-10-10, API commit `a34e520`, `--from 0x5AE98770795957F9a376083afcb775672FbD2C93`, 20 of 20): Scrybe "first answer, cap 0.25" safe and "sixth answer in the hour" blocked; Agents "pay a merchant" safe, "pay with a look-alike token" blocked, "pay the wrong address" caution (`X402_DESTINATION_MISMATCH`). Those five check Baret's **verdict** only, on purpose (`verify:demo`'s scenarios are not meant to spend real funds each run); the fifth box above is where an x402 payment is shown actually settling.
-- [ ] These four scenarios are shown in the demo video (notes-2.txt: visualizes the "adversarial layer... personal CFO agent" narrative).
+- [ ] These four scenarios are shown in the demo video (docs/research/workshop-notes-nansen-dynamic-aurora.txt: visualizes the "adversarial layer... personal CFO agent" narrative).
 - [ ] Scrybe's own "Pay with your wallet" button (E15, E13) checked live in a browser, from a connected wallet and from the Baret wallet. Left for H10.
 
 ## 6. Open Decisions

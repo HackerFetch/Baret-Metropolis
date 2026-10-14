@@ -360,7 +360,7 @@ The content script monitors `fetch`/`XMLHttpRequest`. When a 402 + `PaymentRequi
 
 ### 4.4 Drift alert
 
-The background monitor watches Monad RPC (WebSocket subscribe, not polling — per the Alchemy recommendation in `notes-2.txt`) for the authority + smart-wallet addresses, and if it sees an outgoing tx we did not initiate: push notification → enters the ALERT state → popup badge +1 → the user clicks the banner → full event view: Inspect (open in explorer), Pause sub-key, Revoke sub-key, Mark as known (allowlist).
+The background monitor watches Monad RPC (WebSocket subscribe, not polling — per the Alchemy recommendation in `docs/research/workshop-notes-kickoff-envio-alchemy-zerion.txt`) for the authority + smart-wallet addresses, and if it sees an outgoing tx we did not initiate: push notification → enters the ALERT state → popup badge +1 → the user clicks the banner → full event view: Inspect (open in explorer), Pause sub-key, Revoke sub-key, Mark as known (allowlist).
 
 ### 4.5 Revoking a sub-key / agent signer
 

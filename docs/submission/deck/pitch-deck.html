@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Baret Pitch Deck</title>
+<link rel="stylesheet" href="deck.css">
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  .slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; padding: 96px 120px 120px; page-break-after: always; break-after: page; background: var(--concrete); }
+  .slide.dark { background: var(--graphite); color: var(--fog); }
+  .kicker { font-family: var(--mono); font-size: 22px; letter-spacing: .16em; text-transform: uppercase; color: var(--orange); margin-bottom: 24px; }
+  h1 { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 104px; line-height: .92; letter-spacing: .01em; }
+  h2 { font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 84px; line-height: .95; margin-bottom: 40px; }
+  h3 { font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 38px; line-height: 1; margin-bottom: 12px; }
+  p, li { font-size: 30px; line-height: 1.38; }
+  .muted { color: var(--muted); }
+  .slide.dark .muted { color: var(--muted-d); }
+  .small { font-size: 22px; line-height: 1.4; }
+  .foot { position: absolute; left: 120px; right: 120px; bottom: 44px; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 18px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+  .dark .foot { color: var(--muted-d); }
+  .foot b { color: var(--orange); font-weight: 500; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .card { background: var(--chalk); border-left: 6px solid var(--ink); padding: 32px 36px; }
+  .dark .card { background: var(--graphite-2); border-left-color: var(--fog); }
+  .card.o { border-left-color: var(--orange); }
+  .card p { font-size: 25px; }
+  .shot { width: 100%; object-fit: cover; object-position: top left; display: block; border: 2px solid var(--ink); box-shadow: 12px 12px 0 rgba(18,19,22,.18); }
+  .cap { font-family: var(--mono); font-size: 18px; letter-spacing: .06em; text-transform: uppercase; margin-top: 14px; color: var(--muted); }
+  .dark .cap { color: var(--muted-d); }
+  .tag { display: inline-block; font-family: var(--display); font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 30px; padding: 8px 20px; border-left: 6px solid; background: #F3EFE4; }
+  .t-ok { color: var(--ok); border-color: var(--ok); } .t-warn { color: var(--warn); border-color: var(--warn); } .t-bad { color: var(--bad); border-color: var(--bad); }
+  ul.clean { list-style: none; }
+  ul.clean li { padding-left: 36px; position: relative; margin-bottom: 18px; }
+  ul.clean li::before { content: ""; position: absolute; left: 0; top: 16px; width: 16px; height: 6px; background: var(--orange); }
+  .num { font-family: var(--display); font-weight: 900; font-size: 120px; line-height: 1; color: var(--orange); margin-bottom: 10px; }
+  .row { display: flex; gap: 40px; align-items: flex-start; }
+  table.sp { width: 100%; border-collapse: collapse; }
+  table.sp td { padding: 15px 18px; border-top: 2px solid var(--concrete-2); font-size: 25px; line-height: 1.3; vertical-align: top; }
+  table.sp td:first-child { font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 32px; width: 260px; white-space: nowrap; }
+  .links div { display: grid; grid-template-columns: 360px 1fr; padding: 18px 0; border-top: 2px solid #2c2d32; font-size: 30px; }
+  .links div span:first-child { font-family: var(--mono); font-size: 22px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-d); padding-top: 6px; }
+  .links .mono { font-size: 28px; }
+</style>
+</head>
+<body>
+
+<!-- 1 Title -->
+<section class="slide dark">
+  <div style="display:flex;align-items:center;gap:28px;margin-top:120px">
+    <img src="img/mark.png" alt="" style="width:120px;height:auto">
+    <div class="kicker" style="margin:0">Monad Metropolis · Trust, Identity &amp; AI Infrastructure</div>
+  </div>
+  <h1 style="font-size:300px;margin-top:40px">Baret</h1>
+  <p style="font-family:var(--display);font-weight:800;font-size:96px;text-transform:uppercase;line-height:1"><span class="orange">Check it first.</span> Then sign.</p>
+  <p class="muted" style="margin-top:44px;max-width:1300px">A pre-sign check for Monad that wallets, dapps and AI agents call before they sign: Safe, Caution or Blocked, with the reasons.</p>
+  <div class="foot"><span>usebaret.com</span><span>Live on Monad testnet · chain id 10143</span></div>
+</section>
+
+<!-- 2 Problem -->
+<section class="slide">
+  <div class="kicker">01 · The problem</div>
+  <h2>People and agents sign<br>what they cannot read</h2>
+  <div class="grid2" style="margin-top:56px">
+    <div class="card">
+      <h3>People</h3>
+      <p>A wallet shows a contract address, a function name and a wall of hex. The site offers to "enable trading"; the signature behind it is an unlimited allowance to an address that looks like the real one. The loss happens at the moment of signing.</p>
+    </div>
+    <div class="card o">
+      <h3>Agents</h3>
+      <p>An agent that can pay has a key, and a key signs whatever the model decides. A prompt injection, a wrong merchant or a changed price all end in a valid signature on the wrong transaction. Asking the same model to check itself does not help.</p>
+    </div>
+  </div>
+  <p style="margin-top:56px;font-size:34px"><b>On Monad blocks are final in under a second.</b> A bad signature is final before anyone can react, so the check has to come first, outside the wallet and outside the agent.</p>
+  <div class="foot"><span>Baret · Pitch</span><span>02</span></div>
+</section>
+
+<!-- 3 Solution -->
+<section class="slide">
+  <div class="kicker">02 · The solution</div>
+  <h2>One call before the signature</h2>
+  <div class="row" style="gap:64px">
+    <div style="flex:1.25">
+      <ul class="clean">
+        <li><b>Simulate.</b> The unsigned transaction is traced on Monad (<span class="mono" style="font-size:26px">debug_traceCall</span>): every balance change, allowance and contract touched.</li>
+        <li><b>Detect.</b> Nine detectors read the trace: allowances, permits, unknown and risky contracts, borrowed code, loss against balance, x402 shape, the on-chain reputation registry, Cleanverse identity, Nansen labels.</li>
+        <li><b>Decide.</b> The signer's own policy of 25 rules turns findings into one verdict.</li>
+        <li><b>Explain.</b> KIMI writes the verdict in plain words. It cannot change it.</li>
+      </ul>
+      <p style="margin-top:20px"><b>Fail-closed:</b> a check that cannot finish blocks.</p>
+    </div>
+    <div style="flex:.75;display:flex;flex-direction:column;gap:22px;padding-top:10px">
+      <div class="card" style="border-left-color:var(--ink)"><p class="mono" style="font-size:24px">POST /v1/analyze</p><p class="muted small">or <span class="mono">@baret/guard</span> on npm. No key needed.</p></div>
+      <span class="tag t-ok">Safe</span>
+      <span class="tag t-warn">Caution</span>
+      <span class="tag t-bad">Blocked</span>
+      <p class="small muted">Each with the reasons that led to it. A person can read it; a program can obey it.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Baret · Pitch</span><span>03</span></div>
+</section>
+
+<!-- 4 Live product -->
+<section class="slide">
+  <div class="kicker">03 · Live product</div>
+  <h2 style="margin-bottom:32px">Three applications on the layer</h2>
+  <div style="display:grid;grid-template-columns:1.55fr .62fr 1fr;gap:36px;align-items:start">
+    <div><img class="shot" src="img/01-novaswap-blocked.jpg" alt="NovaSwap demo site with the Baret panel showing Blocked" style="height:560px"><div class="cap">usebaret.com/novaswap · attack version Blocked</div></div>
+    <div><img class="shot" src="img/02-wallet-sign-blocked-window.jpg" alt="Baret web wallet signing window showing Blocked" style="height:560px"><div class="cap">Web wallet · no sign button</div></div>
+    <div><img class="shot" src="img/07-wallet-home.jpg" alt="Baret web wallet home" style="height:560px;object-position:top center"><div class="cap">wallet.usebaret.com · passkey (Mera)</div></div>
+  </div>
+  <p class="small" style="margin-top:28px">Six demo sites, each with an honest version and an attack · a passkey web wallet with no seed phrase · a browser extension wallet that refuses a Blocked request in its own window.</p>
+  <div class="foot"><span>Baret · Pitch</span><span>04</span></div>
+</section>
+
+<!-- 5 How it works -->
+<section class="slide" style="padding:56px 120px 100px">
+  <div class="kicker" style="margin-bottom:16px">04 · How it works</div>
+  <img src="img/architecture.jpg" alt="Baret architecture: callers, the Baret API, the sources it reads, the verdict and the contracts on Monad" style="width:1520px;display:block;margin:0 auto;border:2px solid var(--ink)">
+  <div class="foot"><span>docs/ARCHITECTURE.md</span><span>05</span></div>
+</section>
+
+<!-- 6 Agents -->
+<section class="slide dark">
+  <div class="kicker">05 · For agents</div>
+  <h2>A budget, rules and a kill switch</h2>
+  <div class="grid2" style="grid-template-columns:1fr 1fr;gap:56px">
+    <div>
+      <ul class="clean">
+        <li><b>PaymentGuard vault on Monad.</b> Per-merchant caps per payment, per hour and per day, enforced by the contract. The owner can revoke at any time.</li>
+        <li><b>@baret/agent-kit.</b> A signer that refuses to sign a Blocked transaction. Works with a Dynamic server wallet.</li>
+        <li><b>Qwen 3.8 Max reviewer.</b> Reads the vault, the merchant and the amount with four read-only tools and can veto a payment that does not match its intent. It can only veto; it cannot approve what the check blocked.</li>
+      </ul>
+      <p class="muted small" style="margin-top:12px">The vault's caps hold even if every off-chain check is bypassed.</p>
+    </div>
+    <div>
+      <img class="shot" src="img/06-review-veto.jpg" alt="usebaret.com/review: the Qwen reviewer vetoes a payment" style="height:430px;border-color:#2c2d32">
+      <div class="cap">usebaret.com/review · Qwen vetoes</div>
+      <img class="shot" src="img/05-agents-live-payments.jpg" alt="Live agent payments from a vault, read from Envio" style="height:200px;margin-top:22px;border-color:#2c2d32">
+      <div class="cap">usebaret.com/agents · real vault payments via Envio</div>
+    </div>
+  </div>
+  <div class="foot"><span>Baret · Pitch</span><span>06</span></div>
+</section>
+
+<!-- 7 Sponsors -->
+<section class="slide">
+  <div class="kicker">06 · Sponsor technology</div>
+  <h2 style="margin-bottom:24px">Each sponsor does work. None is a badge.</h2>
+  <table class="sp">
+    <tr><td>Chainlink CRE</td><td>A workflow fetches ScamSniffer's blacklist and writes new addresses to the on-chain ReputationRegistry every check reads.</td></tr>
+    <tr><td>Cleanverse</td><td>Before an aUSDC transfer, both parties' A-Pass credentials are read on chain; <span class="mono" style="font-size:22px">CompliantPaymentGuard</span> enforces the same in the contract.</td></tr>
+    <tr><td>Envio</td><td>HyperIndex indexes every vault, payment and registry change: wallet Activity, /agents and the Qwen reviewer read it.</td></tr>
+    <tr><td>Nansen</td><td>The profiler gives the counterparty a trust level; a fresh or unestablished wallet is blocked under stricter rules.</td></tr>
+    <tr><td>Mera</td><td>The web wallet's whole account layer: one passkey, no seed phrase; encrypted settings stored on Monad in SealedStore.</td></tr>
+    <tr><td>Dynamic</td><td>The demo agent is a Dynamic server wallet, authorised on a PaymentGuard vault and paying from it.</td></tr>
+    <tr><td>Alchemy</td><td>The analysis's chain reads (balances, code, registry, vaults) go through Alchemy's Monad RPC, batched.</td></tr>
+    <tr><td>KIMI · Qwen</td><td>KIMI explains every live verdict in plain words. Qwen 3.8 Max reviews agent payments and can only veto.</td></tr>
+  </table>
+  <div class="foot"><span>README.md · Sponsor technology</span><span>07</span></div>
+</section>
+
+<!-- 8 Proof -->
+<section class="slide">
+  <div class="kicker">07 · Proof and traction</div>
+  <h2>Used outside the team</h2>
+  <div class="row" style="gap:56px">
+    <div class="card o" style="flex:1.2">
+      <h3>Venue</h3>
+      <p>An independent developer's order book for Cleanverse Verified Assets on Monad testnet wired <span class="mono" style="font-size:22px">@baret/guard</span> into its signing path from the npm package and README alone. Their approval transaction exposed a threshold fault in our unlimited-allowance rule. We fixed it the same day; they confirmed the same transaction is now Blocked.</p>
+      <p class="mono small muted" style="margin-top:16px;font-size:18px">github.com/brutaldevvin/venue/commit/cf33716</p>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:28px 36px">
+      <div><div class="num">0.1.3</div><p class="small">@baret/guard, agent-kit and llm on npm. Two of Venue's points shipped in it.</p></div>
+      <div><div class="num">20/20</div><p class="small">demo scenarios agree with the live API (verify:demo).</p></div>
+      <div><div class="num">1,507</div><p class="small">automated tests in 135 files, plus 85 Foundry tests with fuzz and invariants.</p></div>
+      <div><div class="num">10143</div><p class="small">Everything live on Monad testnet; contracts source verified on Monad's Sourcify.</p></div>
+    </div>
+  </div>
+  <p style="margin-top:36px;font-size:26px;font-style:italic;max-width:1600px">"We integrated Baret into Venue's transaction-signing flow in one session with Codex assistance. Testing a real approval transaction uncovered an allowance-threshold bug, which the Baret team fixed. We then verified that the same transaction was correctly blocked." <span class="muted" style="font-style:normal">Venue's developer, in their integration report</span></p>
+  <p class="small" style="margin-top:24px">On chain, e.g. Dynamic agent payment through a vault: <span class="mono" style="font-size:19px">testnet.monadscan.com/tx/0x06a81dda…24ab3</span> · Cleanverse aUSDC settlement <span class="mono" style="font-size:19px">0xd93efca3…6293</span></p>
+  <div class="foot"><span>Baret · Pitch</span><span>08</span></div>
+</section>
+
+<!-- 9 Users and market -->
+<section class="slide">
+  <div class="kicker">08 · First users and market</div>
+  <h2>Any flow on Monad that ends in a signature</h2>
+  <div class="grid2" style="gap:32px 48px">
+    <div class="card o"><h3>1 · Dapps that move funds</h3><p>Starting with Venue. Show users what a request does before the wallet opens; refuse a request their own front end should never have produced.</p></div>
+    <div class="card"><h3>2 · Agent builders</h3><p>A budget, a policy and a kill switch: the vault, the pre-sign check on every payment, the owner's revoke. x402 payment flows are nearest.</p></div>
+    <div class="card"><h3>3 · Wallet teams</h3><p>Baret is the step between a site's request and the moment the sign button appears. We built two wallets on it to prove the fit.</p></div>
+    <div class="card"><h3>4 · Compliance-bound flows</h3><p>Where a Cleanverse Verified Asset moves, both parties need a verified identity; Baret checks before signing, the contract enforces on chain.</p></div>
+  </div>
+  <p style="margin-top:36px;font-size:27px"><b>Why not build it in-house?</b> It is five things: simulation, detectors kept current, a threat-data pipeline, a user-owned policy engine and the tests. With Baret it is one HTTP call.</p>
+  <div class="foot"><span>Baret · Pitch</span><span>09</span></div>
+</section>
+
+<!-- 10 Plan -->
+<section class="slide dark">
+  <div class="kicker">09 · After judging</div>
+  <h2>The plan is mostly built</h2>
+  <div class="grid3">
+    <div class="card"><div class="num" style="font-size:90px">01</div><h3 style="margin-top:16px">MetaMask Agent Wallet plugin</h3><p>Built and checked on 2026-10-07 against a real Agent Wallet on Monad testnet. It becomes our first wallet integration.</p></div>
+    <div class="card"><div class="num" style="font-size:90px">02</div><h3 style="margin-top:16px">Chrome Web Store</h3><p>The extension wallet is submitted and in review. Once public, install is two clicks instead of a zip.</p></div>
+    <div class="card"><div class="num" style="font-size:90px">03</div><h3 style="margin-top:16px">x402 payment check</h3><p>Take the x402 check and the vault to teams building paying agents on Monad; the agents playground is the one-minute trial.</p></div>
+  </div>
+  <p style="margin-top:44px">Next SDK release: Venue's three remaining points (structured error codes with retry hints, a viem example, a multi-party example).</p>
+  <p class="muted small" style="margin-top:14px">Everything stays on Monad testnet. We measure projects that call the check in their signing path, and the findings their real transactions teach us.</p>
+  <div class="foot"><span>Baret · Pitch</span><span>10</span></div>
+</section>
+
+<!-- 11 Team -->
+<section class="slide">
+  <div class="kicker">10 · Team</div>
+  <h2>Three people, the sixth version of Baret</h2>
+  <div class="grid3" style="margin-top:40px">
+    <div class="card o"><h3 style="font-size:56px">Ezgin</h3><p class="mono small muted">github.com/Aeztrest</p><p style="margin-top:20px">Engine, detectors, contracts, API, SDK, indexer, CRE workflow, deploy.</p></div>
+    <div class="card o"><h3 style="font-size:56px">Meriç</h3><p class="mono small muted">github.com/mericcintosun</p><p style="margin-top:20px">Everything you see: showcase, Baret web wallet, browser extension, brand, KIMI and Qwen integrations.</p></div>
+    <div class="card o"><h3 style="font-size:56px">Hale</h3><p class="mono small muted">github.com/seziyy</p><p style="margin-top:20px">QA and tests, demo and submission.</p></div>
+  </div>
+  <div class="foot"><span>Baret · Pitch</span><span>11</span></div>
+</section>
+
+<!-- 12 Links -->
+<section class="slide dark">
+  <div class="kicker">Try it · no account, no install</div>
+  <h2 style="font-size:120px">Check it first. <span class="orange">Then sign.</span></h2>
+  <div class="links" style="margin-top:20px">
+    <div><span>Showcase</span><span class="mono">usebaret.com</span></div>
+    <div><span>Demo site</span><span class="mono">usebaret.com/novaswap</span></div>
+    <div><span>Web wallet</span><span class="mono">wallet.usebaret.com</span></div>
+    <div><span>Repository</span><span class="mono">github.com/HackerFetch/Baret-Metropolis</span></div>
+    <div><span>Technical demo</span><span class="mono">youtu.be/JdwdpctajxM</span></div>
+    <div><span>Pitch</span><span class="mono">youtu.be/fjZsmcU3QpQ</span></div>
+    <div><span>Sponsor clips</span><span class="mono" style="font-size:22px;line-height:1.6">Cleanverse youtu.be/UGJStgCq9SM · Chainlink CRE youtu.be/uZMceqK3GEQ · Dynamic youtu.be/KLRH9O5LeJE<br>Envio youtu.be/iri7VLhC_no · Nansen youtu.be/YUZ3QInMWCw · Mera youtu.be/pgcgWSwDV98</span></div>
+  </div>
+  <div class="foot"><span>API baret-monad-api.onrender.com</span><span>Monad testnet · 10143</span></div>
+</section>
+
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 Ready to paste into the platform's form fields. Each entry has three parts: what the form asks (from `docs/QA_AND_DELIVERY.md` §8.1), the text itself, and the gates that must be true before it is submitted. Written by Hale (H14) on 2026-10-10 from what was checked live that day (API commit `16f5448`); Ezgin checks the facts (E8).
 
-**The copies to paste (2026-10-13):** every text below sits in a plain-text block: no code marks, no quote marks, links written out in full, transactions on `testnet.monadscan.com`. Copy the block's contents as they are. The main track's three long fields (at most 8,000 characters each) are in section 1.
+**The copies to paste (checked 2026-10-14):** every text below sits in a plain-text block: no code marks, no quote marks, links written out in full, transactions on `testnet.monadscan.com`. Copy the block's contents as they are. The main track's three long fields (at most 8,000 characters each) are in section 1.
 
 Rule for every entry: a prize whose feature is not working on the live URL at the freeze is not entered, and the reason goes into `docs/BOUNTIES_AND_TRACKS.md`. A **[gate]** line names what must be true first; an entry with an open gate on Monday is not submitted.
 
@@ -56,12 +56,12 @@ Everything is live on Monad testnet. Our verify:demo script sends all twenty dem
 
 **The form's three long fields (each at most 8,000 characters, plain text; written 2026-10-13):**
 
-*Problem, solution and why it is useful* (6,531 characters):
+*Problem, solution and why it is useful* (6,707 characters, limit 8,000):
 
 ```text
 THE PROBLEM
 
-People and AI agents sign transactions they cannot read. A wallet shows a contract address, a function name and a wall of hex; the site says "Enable trading" and the signature behind it is an unlimited allowance to an address that looks like the real one. The loss happens at the moment of signing, and everything that could have warned the signer (what the call really does, who the counterparty is, whether the address is already known as a drainer) exists only after the fact, in an explorer.
+People and AI agents sign transactions they cannot read. A wallet shows a contract address, a function name and a wall of hex; the site offers to enable trading, and the signature behind it is an unlimited allowance to an address that looks like the real one. The loss happens at the moment of signing, and everything that could have warned the signer (what the call really does, who the counterparty is, whether the address is already known as a drainer) exists only after the fact, in an explorer.
 
 Agents make this worse. An agent that can pay has a key, and a key signs whatever the model decides to sign. A prompt injection, a wrong merchant address or a price that changed between the plan and the payment all end in the same place: a valid signature on the wrong transaction. Asking the same model to check itself does not help, because the model that made the mistake is the one being asked.
 
@@ -89,11 +89,12 @@ PROOF
 
 Everything is live on Monad testnet (chain id 10143) and open to anyone with a browser.
 
-- Live product: https://usebaret.com (six demo sites, each with an honest version and an attack, the agents playground and the Qwen reviewer), the passkey wallet at https://wallet.usebaret.com, and the API (its health page: https://baret-monad-api.onrender.com/health).
 - Used outside the team: during the hackathon an independent developer, the author of Venue, an order book for Cleanverse Verified Assets on Monad testnet, wired @baret/guard into Venue's signing path from the npm package and its README alone. Their own approval transaction exposed a threshold fault in our unlimited-allowance rule. We fixed it the same day and they confirmed the same transaction is now Blocked. Commit: https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803. Their report: https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md.
+- Live product: https://usebaret.com (six demo sites, each with an honest version and an attack, the agents playground and the Qwen reviewer), the passkey wallet at https://wallet.usebaret.com, and the API (its health page: https://baret-monad-api.onrender.com/health).
 - Published SDK: @baret/guard, @baret/agent-kit and @baret/llm, version 0.1.3, on npm (https://www.npmjs.com/package/@baret/guard). Two of the points in Venue's report shipped in 0.1.3.
-- Tests: 1,343 automated tests in 125 files, 85 Foundry tests on the contracts including fuzz and invariant tests, and a script that sends all twenty demo scenarios to the live API and agrees on 20 of 20.
-- On chain: the contracts are verified on Monad's Sourcify, and the on-chain claims in the repository carry their transactions. For example, an agent payment from a Dynamic wallet through a vault: https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3.
+- Tests: 1,507 automated tests in 135 files, 85 Foundry tests on the contracts including fuzz and invariant tests, and a script that sends all twenty demo scenarios to the live API and agrees on 20 of 20.
+- Videos: a technical demo (2:29) at https://youtu.be/JdwdpctajxM and a pitch (1:53) at https://youtu.be/fjZsmcU3QpQ, and short videos for the sponsor integrations.
+- On chain: the contracts are source verified on Monad's Sourcify, and the on-chain claims in the repository carry their transactions. For example, an agent payment from a Dynamic wallet through a vault: https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3.
 - Repository: https://github.com/HackerFetch/Baret-Metropolis.
 
 WHY IT IS DIFFERENT
@@ -107,7 +108,7 @@ It is an open layer, not a product to be locked into. The policy is the signer's
 It is built for agents as well as people. The same check serves a browser wallet, a dapp's own confirm screen and an agent's signer, and for agents the vault's on-chain caps hold even if every off-chain check is bypassed.
 ```
 
-*Who the first users are and how we reach them* (6,136 characters). It answers the two heaviest criteria, Founder & Market Readiness (25%) and Traction & Path Forward (20%):
+*Who the first users are and how we reach them* (6,283 characters, limit 8,000). It answers the two heaviest criteria, Founder & Market Readiness (25%) and Traction & Path Forward (20%):
 
 ```text
 OUR FIRST USERS
@@ -118,23 +119,23 @@ Baret is for any product on Monad whose flow ends in a signature. Four groups, i
 
 2. Builders of agents that pay. An agent with a key needs three things before anyone will fund it: a budget, a policy and a kill switch. Baret gives all three: the PaymentGuard vault with per-merchant caps enforced on chain, the pre-sign check on every payment, and the owner's revoke. The @baret/agent-kit package wraps the agent's signer so that a Blocked payment cannot be signed, works with a Dynamic server wallet and ships a CLI; the quickstart has MCP samples. Teams building x402 payment flows on Monad are the nearest of these: Baret already checks the shape of an x402 payment.
 
-3. Wallet teams on Monad. A wallet cannot be trusted to understand what it signs unless it simulates, and a simulation alone is not a verdict. A wallet adds Baret as the step between "the site asked" and "the sign button appears". We built two wallets on the layer ourselves, a passkey wallet and a browser extension wallet, to prove that the integration fits a real signing window, and a plugin for the MetaMask Agent Wallet that puts the same gate in front of it.
+3. Wallet teams on Monad. A wallet cannot be trusted to understand what it signs unless it simulates, and a simulation alone is not a verdict. A wallet adds Baret as the step between the site's request and the moment the sign button appears. We built two wallets on the layer ourselves, a passkey wallet and a browser extension wallet, to prove that the integration fits a real signing window, and a plugin for the MetaMask Agent Wallet that puts the same gate in front of it.
 
 4. Compliance-bound payment flows. Where a Cleanverse Verified Asset moves, both parties must hold a verified identity. Baret checks the credentials before signing and the CompliantPaymentGuard contract enforces the same on chain. Venue trades exactly these assets.
 
 WHY THEY CHOOSE BARET OVER BUILDING THEIR OWN
 
-Building this in-house means building five things, not one: a transaction simulation and a parser for its trace; a set of detectors that is kept up to date as attacks change; a threat-data pipeline (an on-chain reputation registry fed by a Chainlink CRE workflow from ScamSniffer's blacklist, Nansen labels, Cleanverse credentials); a policy engine with rules the end user can change; and the tests that make any of it trustworthy (1,343 automated tests today, plus 85 Foundry tests on the contracts). None of it is the team's product. With Baret it is one HTTP call with no key, or four lines with the SDK.
+Building this in-house means building five things, not one: a transaction simulation and a parser for its trace; a set of detectors that is kept up to date as attacks change; a threat-data pipeline (an on-chain reputation registry fed by a Chainlink CRE workflow from ScamSniffer's blacklist, Nansen labels, Cleanverse credentials); a policy engine with rules the end user can change; and the tests that make any of it trustworthy (1,507 automated tests today, plus 85 Foundry tests on the contracts). None of it is the team's product. With Baret it is one HTTP call with no key, or four lines with the SDK.
 
 Three further reasons came out of the first integration:
 
 - It is fast to adopt. Venue's developer integrated from the npm package and its README alone, in one session, without talking to us first.
 - It gets better with every integrator. Venue's own approval transaction showed a gap in our unlimited-allowance rule. We fixed it the same day, and every other caller got the fix without changing a line. A team that rolls its own finds each of these gaps alone.
-- It does not capture them. The verdict is deterministic and comes with its reasons and its data sources; the policy belongs to the signer; the registry is a public contract on Monad; the SDK fails closed, so a team never ships a path where a missing answer means "sign".
+- It does not capture them. The verdict is deterministic and comes with its reasons and its data sources; the policy belongs to the signer; the registry is a public contract on Monad; the SDK fails closed, so a team never ships a path where a missing answer means sign.
 
 EVIDENCE SO FAR
 
-- The Venue integration, during the hackathon. Commit: https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803. The developer's report, with nine points of feedback: https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md. In their words: "We integrated Baret into Venue's transaction-signing flow in one session with Codex assistance. Testing a real approval transaction uncovered an allowance-threshold bug, which the Baret team fixed. We then verified that the same transaction was correctly blocked."
+- The Venue integration, during the hackathon. Commit: https://github.com/brutaldevvin/venue/commit/cf3371607ccccca80e099b9718a6a16f7c730803. The developer's report, with nine points of feedback: https://github.com/brutaldevvin/venue/blob/feat/baret-guard/docs/baret/INTEGRATION.md. In their words: We integrated Baret into Venue's transaction-signing flow in one session with Codex assistance. Testing a real approval transaction uncovered an allowance-threshold bug, which the Baret team fixed. We then verified that the same transaction was correctly blocked.
 - Three packages published on npm at version 0.1.3: https://www.npmjs.com/package/@baret/guard, https://www.npmjs.com/package/@baret/agent-kit, https://www.npmjs.com/package/@baret/llm. Version 0.1.3 was cut from Venue's feedback: a helper that tells an integrator when a verdict is expired or for the wrong chain, and the API's own error message carried on the SDK's error.
 - A public API that answers without a key, and quickstarts where every snippet was run against the live API: https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/README.md and https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/agent-kit/README.md.
 - A working quickstart page for agent builders with HTTP, TypeScript, CLI and MCP samples: https://usebaret.com/agents.
@@ -143,7 +144,7 @@ GO-TO-MARKET: HOW WE REACH THEM
 
 The plan is concrete because most of it is already built and waiting on a step outside our hands.
 
-1. Wallets, through the MetaMask Agent Wallet plugin. The plugin is built and shown on testnet: it is a gate in front of the wallet that asks Baret before the agent's wallet signs. After the event it becomes our first wallet integration and the reference we show to other wallet teams on Monad.
+1. Wallets, through the MetaMask Agent Wallet plugin. The plugin is built and was checked on 2026-10-07 against a real Agent Wallet on Monad testnet: it is a gate in front of the wallet that asks Baret before the agent's wallet signs, and it refused a flagged address and an unreachable Baret without calling the wallet. After the event it becomes our first wallet integration and the reference we show to other wallet teams on Monad.
 
 2. Everyday users, through the Chrome Web Store. The Baret extension wallet is submitted to the Chrome Web Store and in review. Once it is public, the install is two clicks instead of a zip, and every site a user opens becomes a place where Baret's verdict is seen. That is also our distribution to dapp teams: their users arrive already checked.
 
@@ -154,7 +155,7 @@ The plan is concrete because most of it is already built and waiting on a step o
 What we measure is simple: the number of projects that call the check in their signing path, and the number of findings their real transactions teach us, as Venue's did.
 ```
 
-*Steps to try the product* (6,479 characters; only the judges see it):
+*Steps to try the product* (6,782 characters, limit 8,000; only the judges see it):
 
 ```text
 No account and no login are needed. Everything runs on Monad testnet (chain id 10143). The demo sites and the reviewer work with no wallet at all.
@@ -163,33 +164,33 @@ NOTHING HAS TO BE INSTALLED. To sign with a wallet you do not need the extension
 
 BEFORE YOU START
 
-The API sleeps when idle. The first request after a quiet spell can take up to a minute. Open https://baret-monad-api.onrender.com/health once and wait for the answer; after that every check takes a few seconds.
+The API runs on a host that can sleep when idle, so the first call may take a few seconds, and up to a minute after a long quiet spell. Open https://baret-monad-api.onrender.com/health once and wait for the answer; after that every check takes a few seconds.
 
 1. THE TWO-MINUTE PATH (no wallet)
 
 - Open https://usebaret.com/novaswap. It is a fake swap site.
-- Turn on "Suspicious swap" and press "Enable dUSDC trading".
-- Baret's panel opens with the live verdict for that exact request: Blocked. The site asks for an unlimited dUSDC allowance to a look-alike address that is on Baret's reputation registry. Under the findings, "In plain words" explains it in English, Turkish or Chinese (KIMI).
-- Turn "Suspicious swap" off and press the button again: the honest swap is Safe.
+- Turn on the Suspicious swap switch and press the Enable dUSDC trading button.
+- Baret's panel opens with the live verdict for that exact request: Blocked. The site asks for an unlimited dUSDC allowance to a look-alike address that is on Baret's reputation registry. Under the findings, the In plain words section explains it in English, Turkish or Chinese (KIMI).
+- Turn the Suspicious swap switch off and press the button again: the honest swap is Safe.
 
 The five other demo sites (OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe) each have an honest version and an attack: https://usebaret.com/showcase.
 
 2. AGENTS (no wallet)
 
-- Open https://usebaret.com/agents. In the playground, pick one of the eight payments an agent might make and see Baret's answer before the agent signs. "Pay aUSDC to a verified wallet" is Safe; "Pay aUSDC to a wallet with no credential" is Blocked (Cleanverse).
-- Below it, "A real agent, paying from a real vault" shows a Dynamic server wallet's payments from its PaymentGuard vault, read live from the Envio indexer.
+- Open https://usebaret.com/agents. In the playground, pick one of the eight payments an agent might make and see Baret's answer before the agent signs. The payment named Pay aUSDC to a verified wallet is Safe; the one named Pay aUSDC to a wallet with no credential is Blocked (Cleanverse).
+- Below it, the section A real agent, paying from a real vault, shows a Dynamic server wallet's payments from its PaymentGuard vault, read live from the Envio indexer.
 - The registry lookup on the same page answers for any address. Try the addresses at the end of this text.
 - Open https://usebaret.com/review. Three payments an agent was asked to make: Qwen 3.8 Max plans, calls four read-only tools and can veto. The honest one is sent on testnet and its transaction is shown.
 
 3. THE BARET WEB WALLET (nothing to install)
 
-- Open https://usebaret.com/novaswap and press "Connect wallet". In "Connect a wallet" choose "Baret web wallet". The wallet (https://wallet.usebaret.com) opens in its own window; if the browser stops the window, allow pop-ups for the site and press again.
-- In that window press "Create my wallet". It is one passkey prompt, with no seed phrase, no email and nothing to download. If you made a wallet before, press "I already have one: open with my passkey" instead. Approve the connection and you are back on the site, connected.
-- The wallet needs a passkey provider that supports the WebAuthn PRF extension, such as iCloud Keychain or Google Password Manager. If the provider lacks PRF, the wallet says so on that screen.
-- Every signed transaction pays a small fee in testnet MON, free from the Monad faucet: https://faucet.monad.xyz. Send some to the address the wallet shows. The demo site's own "Get 100 test dUSDC" button gives the demo token.
-- Turn on "Suspicious swap" and press "Sign with your wallet": the wallet's window shows Blocked, with the reasons, and has no sign button. Turn the attack off and press again: Safe, and it can be signed.
+- Open https://usebaret.com/novaswap and press the Connect wallet button. In the Connect a wallet dialog choose Baret web wallet. The wallet (https://wallet.usebaret.com) opens in its own window; if the browser stops the window, allow pop-ups for the site and press again.
+- In that window press the Create my wallet button. It is one passkey prompt, with no seed phrase, no email and nothing to download. If you made a wallet before, press the button that opens the wallet you already have with your passkey instead. Approve the connection and you are back on the site, connected.
+- The wallet needs a passkey provider that supports the WebAuthn PRF extension, such as iCloud Keychain or Google Password Manager. If the provider lacks PRF, the wallet says so on that screen. Tested setups: Chrome or Brave on macOS with iCloud Keychain or Google Password Manager, and Safari.
+- Every signed transaction pays a small fee in testnet MON, free from the Monad faucet: https://faucet.monad.xyz. Send some to the address the wallet shows. The demo site's own Get 100 test dUSDC button gives the demo token.
+- Turn on the Suspicious swap switch and press the Sign with your wallet button: the wallet's window shows Blocked, with the reasons, and has no sign button. Turn the attack off and press again: Safe, and it can be signed.
 - You can also open https://wallet.usebaret.com directly, to see the wallet's own screens: Home, Activity, the agents' vault and the Rules.
-- The stateless test: clear the site's storage for wallet.usebaret.com (or open a fresh browser profile with the same passkey provider) and press "Open with my passkey". The same account comes back from the passkey. Under Settings, "Bring them back here" restores the rules from their encrypted copy on Monad.
+- The stateless test: clear the site's storage for wallet.usebaret.com (or open a fresh browser profile with the same passkey provider) and press Open with my passkey. The same account comes back from the passkey. Under Settings, the Bring them back here button restores the rules from their encrypted copy on Monad.
 - A passkey belongs to the domain it was made on, so the wallet is always wallet.usebaret.com.
 
 4. THE BROWSER EXTENSION WALLET (optional)
@@ -197,13 +198,13 @@ The five other demo sites (OrbitYield, PixelDrop, ClaimHub, LaunchPad and Scrybe
 You can skip this part: everything above works without it. The extension is a second wallet on the same check, for those who want to see it in the browser's own window.
 
 - The extension is submitted to the Chrome Web Store and in review, so for now it installs from a zip. Open https://usebaret.com/install and download the zip.
-- Unzip it, open chrome://extensions, turn on Developer mode and choose "Load unpacked", then pick the unzipped folder.
+- Unzip it, open chrome://extensions, turn on Developer mode and choose Load unpacked, then pick the unzipped folder.
 - Set a passphrase and write down the twelve words, then send the new address a little testnet MON from https://faucet.monad.xyz.
-- On https://usebaret.com/novaswap choose "Connect wallet", then "Baret extension" under "Wallets in this browser". Turn on the attack and press "Sign with your wallet": the extension's window shows Blocked and has no sign button. With the attack off the same button is Safe and can be signed.
+- On https://usebaret.com/novaswap choose Connect wallet, then Baret extension in the list of wallets in this browser. Turn on the attack and press the Sign with your wallet button: the extension's window shows Blocked and has no sign button. With the attack off the same button is Safe and can be signed.
 
 5. THE API AND THE SDK
 
-- One HTTP call, no key: POST https://baret-monad-api.onrender.com/v1/analyze with a network, a policy template and an unsigned transaction. A ready-to-paste command is in the repository's README under "Call it from your app": https://github.com/HackerFetch/Baret-Metropolis#call-it-from-your-app.
+- One HTTP call, no key: POST https://baret-monad-api.onrender.com/v1/analyze with a network, a policy template and an unsigned transaction. A ready-to-paste command is in the repository's README under Call it from your app: https://github.com/HackerFetch/Baret-Metropolis#call-it-from-your-app.
 - From TypeScript: npm install @baret/guard, then the four lines in https://github.com/HackerFetch/Baret-Metropolis/blob/main/packages/guard/README.md.
 - Readiness of every integration (Monad RPC, Envio, Nansen, Cleanverse, the models): https://baret-monad-api.onrender.com/health/ready.
 
@@ -220,10 +221,16 @@ WHAT IS NOT LIVE, SAID PLAINLY
 - A plain-text message (personal_sign) is not checked: there is nothing to simulate, so the wallets show the text and sign on the user's press.
 - Everything is on Monad testnet.
 
-Transactions in our texts link to https://testnet.monadscan.com. Full instructions are in the README, "Access instructions for judges": https://github.com/HackerFetch/Baret-Metropolis#access-instructions-for-judges.
+Transactions in our texts link to https://testnet.monadscan.com. Full instructions are in the README, Access instructions for judges: https://github.com/HackerFetch/Baret-Metropolis#access-instructions-for-judges.
 ```
 
-**Live link field:** <https://usebaret.com>, with: "No login needed. Start at /novaswap: turn on 'Suspicious swap' and press 'Enable dUSDC trading'. Full instructions, including the wallet and the extension: README, 'Access instructions for judges'."
+**Live link field:**
+
+```text
+https://usebaret.com
+
+No login needed. Start at https://usebaret.com/novaswap: turn on the Suspicious swap switch and press the Enable dUSDC trading button. Full instructions, including the wallet and the extension: https://github.com/HackerFetch/Baret-Metropolis#access-instructions-for-judges
+```
 
 **Traction (for the description or the pitch; H9 part 2 met on 2026-10-13):**
 
@@ -248,7 +255,7 @@ Say "the developer of Venue" or "brutaldevvin", never "a Metropolis team" or "an
 ```text
 Nansen is one of the detectors behind Baret's pre-sign verdict. Before a transaction is signed, Baret looks up the addresses it touches in Nansen's profiler: /api/v1/profiler/address/labels for the counterparty's labels (25 lookups a day on our plan), and past that budget /api/v1/profiler/address/first-funder for who funded it first. The code is in apps/server/src/sources/nansen.ts and apps/server/src/risk/detectors/reputation.ts.
 
-The segment becomes a trust level and three findings: a label tied to scams or exploits fires KNOWN_MALICIOUS_ADDRESS, a fresh wallet and a whale counterparty are reported, and the user's rule minNansenTrustLevel blocks a counterparty below the level they chose (NANSEN_TRUST_BELOW_MINIMUM). Nansen indexes Monad mainnet, so on testnet most wallets have no record: such a wallet gets the lowest trust level ("new"), which adds nothing under the Balanced or Permissive rules and blocks under Strict.
+The segment becomes a trust level and three findings: a label tied to scams or exploits fires KNOWN_MALICIOUS_ADDRESS, a fresh wallet and a whale counterparty are reported, and the user's rule minNansenTrustLevel blocks a counterparty below the level they chose (NANSEN_TRUST_BELOW_MINIMUM). Nansen indexes Monad mainnet, so on testnet most wallets have no record: such a wallet gets the lowest trust level, new, which adds nothing under the Balanced or Permissive rules and blocks under Strict.
 
 Lookups are cached for 24 hours and fail closed: when the user's rules need Nansen and it does not answer, the check counts as failed and the verdict is Blocked.
 
@@ -270,9 +277,9 @@ Live proof, checked on 2026-10-11: a transfer to an address Nansen has no record
 ```text
 Baret's agents hold Dynamic server wallets. The agent in our demo is a Dynamic MPC wallet (@dynamic-labs-wallet/node-evm; the code is in packages/agent-kit/src/dynamic.ts): its key is split between Dynamic and the machine the agent runs on, and every signature needs both. That wallet is authorised as the agent signer of a PaymentGuard vault on Monad. The vault's owner is a person on a Mera passkey wallet who can revoke it at any time.
 
-This is the "agent wallets + delegated access" combination: the Dynamic wallet can pay only listed merchants, inside per-payment, hourly and daily caps the contract enforces, and Baret checks every payment before the Dynamic wallet signs it (guardedSubmit in the SDK, or baret pay from the CLI).
+This is the agent wallets + delegated access combination: the Dynamic wallet can pay only listed merchants, inside per-payment, hourly and daily caps the contract enforces, and Baret checks every payment before the Dynamic wallet signs it (guardedSubmit in the SDK, or baret pay from the CLI).
 
-Judges can see it on https://usebaret.com/agents, under "A real agent, paying from a real vault": the agent 0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353, its vault 0x0A82671420114E47c672D5e8e23017DdCE850A35, and its payment read live from the Envio indexer: https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3.
+Judges can see it on https://usebaret.com/agents, in the section A real agent, paying from a real vault: the agent 0x306707be3CD50B1Cca5E27F838AfcfC4fD84C353, its vault 0x0A82671420114E47c672D5e8e23017DdCE850A35, and its payment read live from the Envio indexer: https://testnet.monadscan.com/tx/0x06a81dda28c49041c2bfa4b5c841b350021be408a4745ba5f56c07cc2b124ab3.
 ```
 
 **[gate]** none open; optional clip in `docs/submission/SCRIPTS.md` 3.3.
@@ -288,9 +295,9 @@ Judges can see it on https://usebaret.com/agents, under "A real agent, paying fr
 **Text:**
 
 ```text
-The Baret wallet (https://wallet.usebaret.com) has no account layer of its own: Mera is the whole of it. "Create my wallet" is one passkey ceremony, with no seed phrase, extension or email. Signing runs in a Mera session that the sidebar states ("Signing without a prompt until ..."); after 15 minutes the wallet locks itself and says so. Every request, the wallet's own vault calls included, goes through Baret's check before the sign button exists, and a Blocked request has none.
+The Baret wallet (https://wallet.usebaret.com) has no account layer of its own: Mera is the whole of it. The Create my wallet button is one passkey ceremony, with no seed phrase, extension or email. Signing runs in a Mera session that the sidebar states, with the time until which it signs without a prompt; after 15 minutes the wallet locks itself and says so. Every request, the wallet's own vault calls included, goes through Baret's check before the sign button exists, and a Blocked request has none.
 
-The stateless test: clear the site's storage or open a fresh profile, press "Open with my passkey", and the same account comes back from the passkey. The agents' vault, merchants and history then come back from the chain and the Envio indexer, and the rules come back from an encrypted copy on Monad (see our Many Keys entry).
+The stateless test: clear the site's storage or open a fresh profile, press the Open with my passkey button, and the same account comes back from the passkey. The agents' vault, merchants and history then come back from the chain and the Envio indexer, and the rules come back from an encrypted copy on Monad (see our Many Keys entry).
 
 Measured on a fork, not yet on a phone: four taps from the landing page to a confirmed send, plus the faucet.
 ```
@@ -312,11 +319,11 @@ One passkey in the Baret wallet (https://wallet.usebaret.com) mints three unrela
 
 1. The account: Mera's own namespace.
 
-2. Agent keys: sha256("baret.agent.v1:<index>"), one isolated identity per agent, handed to an agent without revealing anything about the account.
+2. Agent keys: a salt of baret.agent.v1 plus the agent's index, hashed with sha256, one isolated identity per agent, handed to an agent without revealing anything about the account.
 
-3. Sealed settings, the non-account work: a third namespace (baret.sealed.v1) derives an encryption key that never signs a transaction. It encrypts the user's rules and the names they gave their merchants, and the ciphertext is kept on Monad in a SealedStore contract (0xC094af68bE1039f70E1362C2f326542BB2DC21BB), filed under an id that is not the user's address. Baret's server relays the write and pays its gas, and it can neither read the copy nor change it. A copy written through the relay on 2026-10-10: https://testnet.monadscan.com/tx/0x719f9b6b19de3ac9ef3f5e25cea370c1a2ed23770412d051d857a7b36f86575d.
+3. Sealed settings, the non-account work: a third namespace (baret.sealed.v1) derives an encryption key that never signs a transaction. It encrypts the user's rules and the names they gave their merchants, and the ciphertext is kept on Monad in a SealedStore contract (0xC094af68bE1039f70E1362C2f326542BB2DC21BB), filed under an id that is not the user's address. Baret's server relays the write and pays its gas, and it can neither read the copy nor change it. Copies written through the relay on 2026-10-10, https://testnet.monadscan.com/tx/0x719f9b6b19de3ac9ef3f5e25cea370c1a2ed23770412d051d857a7b36f86575d, and on 2026-10-14, https://testnet.monadscan.com/tx/0x04fb365d982bce06529c16aeaa7246210b68206b1802b49e31db9cce8911fc4b.
 
-Nothing is persisted: the keys are re-derived from the passkey each time. On a new device or a fresh browser profile, "Bring them back here" asks the same passkey, decrypts the copy and restores the rules. A different passkey gets "This passkey has no encrypted copy yet."
+Nothing is persisted: the keys are re-derived from the passkey each time. On a new device or a fresh browser profile, the Bring them back here button asks the same passkey, decrypts the copy and restores the rules. A different passkey is told that it has no encrypted copy yet.
 
 How far it is tested: save, wipe the site's storage, restore with the same passkey, and a different passkey refused, all with a virtual passkey in a browser. The run on two physical devices with a syncing passkey has not been done by us yet.
 ```
@@ -338,7 +345,7 @@ Use case: Travel Rule-compliant agent payments. An AI agent pays merchants in a 
 
 Identity is coupled to movement in two places.
 
-Before signing: Baret's compliance detector reads both parties' A-Pass credentials on Monad for every transfer of a verified asset and blocks one where a party has none, naming that party ("this asset only moves between verified wallets").
+Before signing: Baret's compliance detector reads both parties' A-Pass credentials on Monad for every transfer of a verified asset and blocks one where a party has none, naming that party and saying that this asset only moves between verified wallets.
 
 In the contract: CompliantPaymentGuard checks that both parties hold an active credential of at least the owner's minimum tier before it moves anything, so an unverified merchant cannot be paid whatever the agent signs. It is deployed twice: for aUSDC at 0x6E867b840f11cC1d9c6e16d1f76D737199bc907c and for BVUSD at 0xFB70F98f6dd3A84c03B36fa2eea4C5f5De9c18Af.
 
@@ -348,7 +355,7 @@ Settled payments, each between two verified identities:
 - aUSDC, the first settlement the same day, after Cleanverse's operator minted aUSDC to the owner: 0.25 aUSDC, block 70582232, https://testnet.monadscan.com/tx/0xd93efca3ee70e3e0fb7ab74a31026eebc99f00f04d7935b10104278915c66293.
 - BVUSD, through the BVUSD guard on 2026-10-11: 0.25 BVUSD, block 70195328, https://testnet.monadscan.com/tx/0x2dd872a292e9d4e1d8b274081206e2bb70e37937621d728eeb9375eaa9cfaa6b.
 
-Judges can run the check on https://usebaret.com/agents: "Pay aUSDC to a verified wallet" (0xC448042edaC1899B023cAa0E9dA5E4a8833de873, tier 5) is Safe; "Pay aUSDC to a wallet with no credential" (0x1365566191bAA9872A64AcDce963751d5343ff49) is Blocked.
+Judges can run the check on https://usebaret.com/agents: Pay aUSDC to a verified wallet (0xC448042edaC1899B023cAa0E9dA5E4a8833de873, tier 5) is Safe; Pay aUSDC to a wallet with no credential (0x1365566191bAA9872A64AcDce963751d5343ff49) is Blocked.
 ```
 
 **Settled 2026-10-11 (D-048) in BVUSD, and 2026-10-13 in aUSDC.** Two assets, two guards, two transactions: `0x2dd8...aa6b` is BVUSD (a CVA Baret issued through Cleanverse's API) and `0xd93efca3...` is aUSDC. The text may say aUSDC settled, for that transaction only; BVUSD is never called aUSDC. That run went through a local Baret server; later the same day, with aUSDC (`0xaC0893567D43C3E7e6e35a72803df05416C1f20D`) on Render's `MONAD_TESTNET_KNOWN_CONTRACTS` (14 addresses), the same pair ran through the live API: settled `0x2052c1b9c6de8352fb7d69f9fd558e2a45552e8993371eadc00adb6b32a23942` (block 70738086, ref `ausdc-live-1`), and the payment to the wallet with no credential Blocked before signing.
@@ -387,15 +394,17 @@ A new vault shows up within seconds: one opened on 2026-10-10 had its agent, cap
 
 **The form asks:** how the project integrates Alchemy; an optional demo video (max 2 min).
 
+**Video:** not uploaded: the channel hit YouTube's daily upload limit; the field is optional and left empty.
+
 **Text:**
 
 ```text
 Alchemy's Monad RPC is where Baret reads the chain for every verdict: balances before and after, contract code, the reputation registry, the Cleanverse credentials and the vaults' caps, batched, behind every POST /v1/analyze. Every live answer lists alchemy among its sources with status ok.
 
-The trace itself (debug_traceCall, the simulation that records every internal call) goes to Monad's public RPC, which serves it on testnet; https://baret-monad-api.onrender.com/health/ready reports this as separateTraceRpc: true. We say it this way on purpose: the reads go through Alchemy, the trace does not, and the sign requests in our wallets say "Simulated on Monad before anything is signed".
+The trace itself (debug_traceCall, the simulation that records every internal call) goes to Monad's public RPC, which serves it on testnet; https://baret-monad-api.onrender.com/health/ready reports this as separateTraceRpc: true. We say it this way on purpose: the reads go through Alchemy, the trace does not, and the sign requests in our wallets say that the transaction is simulated on Monad before anything is signed.
 ```
 
-**[gate]** none. Thin by the page's own measure; entered as it is. The sign requests once read "Simulated over Alchemy RPC"; corrected on 2026-10-12, since only the reads go through Alchemy. That note is for us and is not in the text.
+**[gate]** none. Thin by the page's own measure; entered as it is.
 
 ---
 
@@ -414,7 +423,9 @@ It is simulated with the CRE CLI, with real writes on Monad testnet. It is not d
 
 The run the video shows (2026-10-13): ten addresses flagged in block 70574558, https://testnet.monadscan.com/tx/0x5d72012bb7bed6dbbe6ade3dd40d3a4243137b2482dc1205b4cbbd5f39fb1175. Afterwards the live Baret API blocks a transfer to the first of them, 0x17504785059123e758f1cd2bfa00ab45b613f9e5 (finding KNOWN_MALICIOUS_ADDRESS, reason SCAMSNIFFER_BLACKLIST), and passes the same transfer to an address that is not on the feed.
 
-The first run (2026-10-10): ten addresses flagged in https://testnet.monadscan.com/tx/0xa1b9799281003c7a6d9113007540f31735033d6fba125fa20619395b16e359e8; a transfer to the first of them, 0xa8f3762b03ae73cbbdb9173d3537c632628727a4, is still Blocked.
+The first run (2026-10-07): ten addresses flagged in https://testnet.monadscan.com/tx/0xa1b9799281003c7a6d9113007540f31735033d6fba125fa20619395b16e359e8; a transfer to the first of them, 0xa8f3762b03ae73cbbdb9173d3537c632628727a4, is still Blocked.
+
+The same workflow also ran from a second machine: https://testnet.monadscan.com/tx/0xe65521c7ea9a2fd7f5ae686ff8ffda6def6222c3794bfbe224bf3784b36c7c09.
 
 Workflow source: https://github.com/HackerFetch/Baret-Metropolis/tree/main/workflows/reputation-oracle.
 ```

@@ -54,7 +54,7 @@ The demo page, `/review`, gives the agent the same intent three times, *"Pay 0.1
 
 > Transaction matches intent: pays 100000 base units to the specified merchant from the correct vault with matching ref. Merchant is active, not paused, listed in vault, payment fits caps, and neither address is in the reputation registry.
 
-On the live page the same scenario was run and sent for real: [`0x3d33119a…3efe9`](https://testnet.monadexplorer.com/tx/0x3d33119a9e66a6ac74775bc376aad220ef00a87ad26d67f7172f73340bc3efe9), status 1, block 69808440 on Monad testnet.
+On the live page the same scenario was run and sent for real: [`0x3d33119a…3efe9`](https://testnet.monadscan.com/tx/0x3d33119a9e66a6ac74775bc376aad220ef00a87ad26d67f7172f73340bc3efe9), status 1, block 69808440 on Monad testnet.
 
 **The overpayment.** The call pays 0.90, nine times the intent. It fits the merchant's cap, and Baret has no rule that knows what the invoice said, so Baret answers Safe. Qwen vetoed: *"This is a 9x overpayment mismatch."* Nothing was signed.
 
